@@ -10,7 +10,7 @@ Check Repo Project for Kanban Board
 2. Clone [repo](https://github.com/dan-moraru/OpenRobotics) 
 3. Launch with IDE (let it download dependencies if smart enough)
 4. Open terminal and run `cd open-robotics`
-5. Run `mvn clean javafx:run`
+5. Run `mvn clean javafx:run` OR use IDE's integrated run command
 
 ## Dev Usage
 Make sure to have `Java SDK 21`
@@ -32,3 +32,4 @@ Make sure to be in directory `open-robotics` to run these commands:
 - Daniel Blackburn, 261112665
 - Muhammad Sohail, 261142698
 - Murad Novruzov, 261164063
+- Behnam Yosufi, 261125449
