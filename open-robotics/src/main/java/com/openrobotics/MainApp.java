@@ -1,5 +1,6 @@
 package com.openrobotics;
 
+import com.openrobotics.db.Database;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
@@ -8,7 +9,21 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 public class MainApp extends Application {
+
+    public static void main(String[] args) {
+        try {
+            Database.init();
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        launch(args);
+    }
+
     @Override
     public void start(Stage stage) {
         // Can create different types of scaffolding (hbox, vbox, etc)
