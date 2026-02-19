@@ -1,4 +1,4 @@
-package com.openrobotics.config;
+package com.openrobotics.fileParser;
 
 public class MockRobot {
 
