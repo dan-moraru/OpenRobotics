@@ -14,17 +14,19 @@ public class MainApp extends Application {
         // Can create different types of scaffolding (hbox, vbox, etc)
         Pane root = new Pane();
 
-        Robot myRobot = new Robot("BOT-001", 100, 150);
+        // robot now extends mapentity — constructor takes name and vector2d position
+        Robot myRobot = new Robot("BOT-001", new Vector2D(100, 150));
 
         // Rectangle represents a robot
         Rectangle robotView = new Rectangle(50, 50, Color.BLUE);
-        robotView.setX(myRobot.getX());
-        robotView.setY(myRobot.getY());
+        robotView.setX(myRobot.getPosition().getX());
+        robotView.setY(myRobot.getPosition().getY());
 
         // Give IDs or classes/labels (not sure) for organization and instrumental testing
         robotView.setId("robotShape");
 
-        Text label = new Text(myRobot.getX(), myRobot.getY() - 10, "ID: " + myRobot.getId());
+        Text label = new Text(myRobot.getPosition().getX(), myRobot.getPosition().getY() - 10,
+                "ID: " + myRobot.getName());
 
         // Must always assign children objects to their parent/root groups/objects!
         root.getChildren().addAll(robotView, label);
