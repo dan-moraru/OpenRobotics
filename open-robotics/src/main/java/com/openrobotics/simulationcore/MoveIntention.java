@@ -4,9 +4,9 @@ import com.openrobotics.*;
 
 // Represents a move intention for a robot
 public class MoveIntention {
-    int robotId;
-    Tile from; // Current tile robot is intending to move away from
-    Tile to; // Tile robot is intended to move on
+    private final int robotId;
+    private final Tile from; // Current tile robot is intending to move away from
+    private final Tile to; // Tile robot is intended to move on
 
     public MoveIntention(Tile from, Tile to, int robotId) {
         this.from = from;
