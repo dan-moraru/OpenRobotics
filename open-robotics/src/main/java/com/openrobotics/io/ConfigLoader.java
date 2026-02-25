@@ -1,4 +1,4 @@
-package com.openrobotics.fileParser;
+package com.openrobotics.io;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;

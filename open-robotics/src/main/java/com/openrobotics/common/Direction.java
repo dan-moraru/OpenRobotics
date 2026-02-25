@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.common;
 
 // movement directions for the grid
 public enum Direction {

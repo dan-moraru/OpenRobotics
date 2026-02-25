@@ -1,5 +1,8 @@
 package com.openrobotics;
 
+import com.openrobotics.map.Vector2D;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

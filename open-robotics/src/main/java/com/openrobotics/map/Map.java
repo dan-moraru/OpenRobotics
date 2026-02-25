@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.map;
 
 import java.util.ArrayList;
 import java.util.List;

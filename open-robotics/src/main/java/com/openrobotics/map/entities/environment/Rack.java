@@ -1,4 +1,7 @@
-package com.openrobotics;
+package com.openrobotics.map.entities.environment;
+
+import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.MapEntity;
 
 // storage rack entity (uml 3.3.4)
 public class Rack extends MapEntity {

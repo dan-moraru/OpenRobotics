@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.map;
 
 // simple tile in the warehouse map grid
 public class Tile {

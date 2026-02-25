@@ -1,4 +1,8 @@
-package com.openrobotics;
+package com.openrobotics.robot;
+
+import com.openrobotics.map.MapEntity;
+import com.openrobotics.task.Task;
+import com.openrobotics.map.Vector2D;
 
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook

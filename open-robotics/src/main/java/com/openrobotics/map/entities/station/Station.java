@@ -1,4 +1,7 @@
-package com.openrobotics;
+package com.openrobotics.map.entities.station;
+
+import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.MapEntity;
 
 // abstract base for station-type entities (uml 3.3.4)
 public abstract class Station extends MapEntity {

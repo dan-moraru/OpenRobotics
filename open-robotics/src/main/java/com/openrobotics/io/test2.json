@@ -1,0 +1,79 @@
+{
+  "config": {
+    "runName": "Test Simulation",
+    "tickMs": 100,
+    "maxTicks": 1000,
+    "seed": 42
+  },
+
+  "map": {
+    "width": 10,
+    "height": 10,
+    "tiles": [
+      { "x": 0, "y": 0, "isOccupied": false },
+      { "x": 1, "y": 0, "isOccupied": false },
+      { "x": 2, "y": 0, "isOccupied": true }
+    ]
+  },
+
+  "entities": {
+    "robots": [
+      {
+        "id": "BOT-001",
+        "position": { "x": 2, "y": 3 },
+        "battery": 100.0,
+        "state": "IDLE",
+        "navigationStrategy": "GREEDY"
+      },
+      {
+        "id": "BOT-002",
+        "position": { "x": 5, "y": 6 },
+        "battery": 85.5,
+        "state": "MOVING",
+        "navigationStrategy": "RTA_STAR"
+      }
+    ],
+
+    "stations": [
+      {
+        "id": "CHG-001",
+        "type": "CHARGING",
+        "position": { "x": 0, "y": 0 }
+      },
+      {
+        "id": "DEL-001",
+        "type": "DELIVERY",
+        "position": { "x": 9, "y": 9 }
+      }
+    ],
+
+    "racks": [
+      {
+        "id": "RACK-001",
+        "position": { "x": 4, "y": 4 }
+      }
+    ],
+
+    "obstacles": [
+      {
+        "id": "OBS-001",
+        "position": { "x": 2, "y": 0 }
+      }
+    ]
+  },
+
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "pickupLocation": { "x": 4, "y": 4 },
+      "dropoffLocation": { "x": 9, "y": 9 },
+      "assignedRobotId": "BOT-001"
+    }
+  ],
+
+  "simulation": {
+    "tick": 0,
+    "isRunning": true,
+    "speedMultiplier": 1.0
+  }
+}

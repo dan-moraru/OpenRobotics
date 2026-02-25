@@ -1,6 +1,8 @@
 package com.openrobotics;
 
-import com.openrobotics.db.Database;
+import com.openrobotics.common.Database;
+import com.openrobotics.map.Vector2D;
+import com.openrobotics.robot.Robot;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;

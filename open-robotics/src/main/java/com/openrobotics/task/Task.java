@@ -1,4 +1,6 @@
-package com.openrobotics;
+package com.openrobotics.task;
+
+import com.openrobotics.map.Vector2D;
 
 // runtime task assigned to a robot (warehouse entities subsystem)
 public class Task {
