@@ -1,0 +1,64 @@
+{
+  "config" : {
+    "runName" : "Warehouse Alpha",
+    "tickMs" : 100,
+    "maxTicks" : 5000,
+    "seed" : 12345
+  },
+  "map" : {
+    "width" : 10,
+    "height" : 10,
+    "tiles" : [ {
+      "x" : 5,
+      "y" : 5,
+      "isOccupied" : true
+    } ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "550e8400-e29b-41d4-a716-446655440000",
+      "name" : "Bot-Alpha",
+      "position" : {
+        "x" : 8,
+        "y" : 8
+      },
+      "battery" : 42.42,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDYNAVIGATIONSTRATEGY",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ {
+      "id" : "00000000-0000-0000-0000-000000000001",
+      "name" : "Charge-01",
+      "position" : {
+        "x" : 0,
+        "y" : 0
+      }
+    } ],
+    "racks" : [ ],
+    "obstacles" : [ ]
+  },
+  "tasks" : [ {
+    "id" : 101,
+    "pickupLocation" : {
+      "x" : 4,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 9,
+      "y" : 9
+    },
+    "priority" : 5,
+    "status" : "PENDING"
+  } ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : true,
+    "speedMultiplier" : 1.0
+  },
+  "coordination" : {
+    "type" : "RESERVATION_K",
+    "k" : 1,
+    "intersections" : null
+  }
+}

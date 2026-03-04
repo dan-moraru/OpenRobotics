@@ -1,6 +1,6 @@
 package com.openrobotics.simulationcore;
 
-import com.openrobotics.Tile;
+import com.openrobotics.map.Tile;
 
 import java.util.ArrayList;
 import java.util.Arrays;

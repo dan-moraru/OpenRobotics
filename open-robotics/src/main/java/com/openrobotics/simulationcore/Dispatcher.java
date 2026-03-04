@@ -1,7 +1,7 @@
 package com.openrobotics.simulationcore;
 
-import com.openrobotics.Robot;
-import com.openrobotics.Task;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.task.Task;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -93,5 +93,9 @@ public class Dispatcher {
 
     public int getPendingTaskCount() {
         return pendingTasks.size();
+    }
+
+    public List<Task> getAllTasks() {
+        return new ArrayList<>(pendingTasks);
     }
 }

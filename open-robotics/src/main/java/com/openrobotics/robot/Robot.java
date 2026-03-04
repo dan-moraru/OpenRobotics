@@ -4,6 +4,8 @@ import com.openrobotics.map.MapEntity;
 import com.openrobotics.task.Task;
 import com.openrobotics.map.Vector2D;
 
+import java.util.UUID;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -16,6 +18,16 @@ public class Robot extends MapEntity {
     // takes Vector2D position, delegates to MapEntity via super()
     public Robot(String name, Vector2D position) {
         super(name, position);
+        this.battery = 100.0f;
+        this.nav = null;
+        this.state = RobotState.IDLE;
+        this.currentTask = null;
+        this.stuckTicks = 0;
+    }
+
+    // Constructor for loading robots
+    public Robot(UUID id, String name, Vector2D position) {
+        super(id, name, position); // Calls the specific UUID constructor in MapEntity
         this.battery = 100.0f;
         this.nav = null;
         this.state = RobotState.IDLE;

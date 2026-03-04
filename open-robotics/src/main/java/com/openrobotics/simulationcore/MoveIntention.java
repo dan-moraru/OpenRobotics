@@ -1,6 +1,7 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.*;
+import com.openrobotics.map.Tile;
 
 // Represents a move intention for a robot
 public class MoveIntention {

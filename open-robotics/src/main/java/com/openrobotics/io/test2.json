@@ -1,9 +1,9 @@
 {
   "config": {
-    "runName": "Test Simulation",
+    "runName": "Warehouse Alpha",
     "tickMs": 100,
-    "maxTicks": 1000,
-    "seed": 42
+    "maxTicks": 5000,
+    "seed": 12345
   },
 
   "map": {
@@ -11,65 +11,47 @@
     "height": 10,
     "tiles": [
       { "x": 0, "y": 0, "isOccupied": false },
-      { "x": 1, "y": 0, "isOccupied": false },
-      { "x": 2, "y": 0, "isOccupied": true }
+      { "x": 5, "y": 5, "isOccupied": true }
     ]
   },
 
   "entities": {
     "robots": [
       {
-        "id": "BOT-001",
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Bot-Alpha",
         "position": { "x": 2, "y": 3 },
-        "battery": 100.0,
+        "battery": 95.5,
         "state": "IDLE",
-        "navigationStrategy": "GREEDY"
-      },
-      {
-        "id": "BOT-002",
-        "position": { "x": 5, "y": 6 },
-        "battery": 85.5,
-        "state": "MOVING",
-        "navigationStrategy": "RTA_STAR"
+        "navigationStrategy": "GREEDY",
+        "stuckTicks": 0
       }
     ],
-
     "stations": [
       {
-        "id": "CHG-001",
-        "type": "CHARGING",
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Charge-01",
         "position": { "x": 0, "y": 0 }
-      },
-      {
-        "id": "DEL-001",
-        "type": "DELIVERY",
-        "position": { "x": 9, "y": 9 }
       }
     ],
-
-    "racks": [
-      {
-        "id": "RACK-001",
-        "position": { "x": 4, "y": 4 }
-      }
-    ],
-
-    "obstacles": [
-      {
-        "id": "OBS-001",
-        "position": { "x": 2, "y": 0 }
-      }
-    ]
+    "racks": [],
+    "obstacles": []
   },
 
   "tasks": [
     {
-      "id": "TASK-001",
+      "id": 101,
       "pickupLocation": { "x": 4, "y": 4 },
       "dropoffLocation": { "x": 9, "y": 9 },
-      "assignedRobotId": "BOT-001"
+      "priority": 5,
+      "status": "PENDING"
     }
   ],
+
+  "coordination": {
+    "type": "RESERVATION_K",
+    "k": 1
+  },
 
   "simulation": {
     "tick": 0,

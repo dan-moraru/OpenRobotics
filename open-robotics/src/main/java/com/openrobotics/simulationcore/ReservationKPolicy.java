@@ -1,6 +1,6 @@
 package com.openrobotics.simulationcore;
 
-import com.openrobotics.Tile;
+import com.openrobotics.map.Tile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,5 +109,9 @@ public class ReservationKPolicy implements CoordinationPolicy {
         if (!containsTileByCoordinates(tiles, tileToAdd)) {
             tiles.add(tileToAdd);
         }
+    }
+
+    public int getK() {
+        return this.k;
     }
 }
