@@ -38,6 +38,11 @@ public class SimulationEngine {
         }
     }
 
+    /**
+     * Initializes the simulation based on the JSON config file.
+     * Does this by parsing the JSON file to the DTO classes, and from the DTO classes, we correctly set up the core simulation classes.
+     * @param path the JSON config file path
+     */
     private void configInitialization(String path) {
         try {
             // Load the DTO
@@ -116,16 +121,21 @@ public class SimulationEngine {
             this.seed = dto.config.seed;
             // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
 
+            // Test print, TODO: remove
             System.out.println("Simulation '" + dto.config.runName + "' loaded with "
                     + dto.entities.robots.size() + " robots and "
                     + (dto.tasks != null ? dto.tasks.size() : 0) + " tasks.");
 
         } catch (IOException e) {
+            //TODO: send error message to the frontend
             System.err.println("Error: Could not initialize simulation from file: " + e.getMessage());
         }
     }
 
-    // Helper to handle MapEntity loading
+    /**
+     * Helper to handle MapEntity loading
+     * Generic MapEntity parser called in configInitialization
+     */
     private void addEntitiesToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
         if (entityDtos == null) return;
 
@@ -136,6 +146,11 @@ public class SimulationEngine {
         }
     }
 
+    /**
+     * Saves the simulation state into a new JSON config file
+     * Does this by retrieving core simulation classes current state (fields, metadata, etc) and saves it to the DTO classes which are easily translated back to JSON format.
+     * @param path the new JSON config file path
+     */
     public void configSaving(String path) throws IOException {
         SimulationConfigDTO dto = new SimulationConfigDTO();
 
@@ -223,7 +238,10 @@ public class SimulationEngine {
         ConfigLoader.save(path, dto);
     }
 
-    // Helper to map robot to DTO
+
+    /**
+     * Helper function to map robot to DTO when saving the simulation state
+     */
     private SimulationConfigDTO.RobotDTO mapToRobotDTO(Robot robot) {
         SimulationConfigDTO.RobotDTO rDto = new SimulationConfigDTO.RobotDTO();
         rDto.id = robot.getId();
@@ -238,7 +256,9 @@ public class SimulationEngine {
         return rDto;
     }
 
-    // Helper to map entity to DTO
+    /**
+     * Helper function to map MapEntities to DTO when saving the simulation state
+     */
     private SimulationConfigDTO.MapEntityDTO mapToEntityDTO(MapEntity entity) {
         SimulationConfigDTO.MapEntityDTO eDto = new SimulationConfigDTO.MapEntityDTO();
         eDto.id = entity.getId();

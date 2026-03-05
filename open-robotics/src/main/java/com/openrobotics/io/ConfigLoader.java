@@ -11,14 +11,17 @@ import java.io.IOException;
  */
 public class ConfigLoader {
 
+    // Jackson API object translator
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private ConfigLoader() {} // Prevent instantiation
 
+    // Loads JSON file
     public static <T> T load(String path, Class<T> clazz) throws IOException {
         return mapper.readValue(new File(path), clazz);
     }
 
+    // Saves JSON file
     public static void save(String path, Object obj) throws IOException {
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File(path), obj);
     }

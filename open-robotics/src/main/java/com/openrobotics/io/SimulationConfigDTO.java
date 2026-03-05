@@ -1,7 +1,5 @@
 package com.openrobotics.io;
 
-import com.openrobotics.map.Vector2D;
-
 import java.util.List;
 import java.util.UUID;
 
