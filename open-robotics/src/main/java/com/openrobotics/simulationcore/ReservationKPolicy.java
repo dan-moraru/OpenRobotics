@@ -72,7 +72,7 @@ public class ReservationKPolicy implements CoordinationPolicy {
     }
 
     private MoveIntention[] sortByRobotId(MoveIntention[] intentions) {
-        Arrays.sort(intentions, (a, b) -> Integer.compare(a.getRobotId(), b.getRobotId()));
+        Arrays.sort(intentions, (a, b) -> a.getRobot().getId().compareTo(b.getRobot().getId()));
         return intentions;
     }
 
@@ -90,7 +90,7 @@ public class ReservationKPolicy implements CoordinationPolicy {
         return new MoveIntention(
                 intention.getFromTile(),
                 intention.getFromTile(),
-                intention.getRobotId()
+                intention.getRobot()
         );
     }
 
