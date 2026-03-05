@@ -1,41 +1,88 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.Map;
+import com.openrobotics.Robot;
+import com.openrobotics.Vector2D;
+
+/**
+ * The SimulationEngine is the core component responsible for advancing the
+ * simulation. It coordinates the progression of discrete simulation steps
+ * ("ticks") and manages interactions between robots within the environment.
+ * The engine maintains an internal tick counter that represents the number
+ * of simulation steps that have been executed.
+ */
 public class SimulationEngine {
     private int tickCounter;
-    private boolean running; // tracks if the simulation is still running
+    private Map map;
+    private Robot[] robots;
     private final CollisionManager collisionManager;
+    private Dispatcher dispatcher;
+    private CoordinationPolicy coordinationPolicy;
 
-    public SimulationEngine() {
-        tickCounter = 0;
-        running = false;
-        collisionManager = new CollisionManager();
+    /**
+     * Constructs a new simulation engine instance
+     * @param map the map representing the warehouse environment
+     * @param robots the robots
+     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
+     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
+     */
+    public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
+        this.tickCounter = 0;
+        this.map = map;
+        this.robots = robots;
+        this.collisionManager = new CollisionManager();
+        this.dispatcher = dispatcher;
+        this.coordinationPolicy = coordinationPolicy;
     }
 
-    // Runs a tick of the simulation
+    /**
+     * Runs a tick of the simulation
+     *
+     * <p>During each tick, the engine:
+     * <ul>
+     *  <li>Collects movement intentions from all robots</li>
+     *  <li>Resolves conflicts and collisions using the {@link CollisionManager}</li>
+     *  <li>Commits the approved movements by updating the position state of each robot</li>
+     * </ul>
+     * </p>
+     */
     public void tick() {
-        // TODO
+        // Collecting initial move intentions from all robots
+        MoveIntention[] intentions = collectIntentions();
+
+        // Resolving conflicts/collisions and finalizing move intentions for all robots
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(intentions);
+
+        // Commiting move intentions by updating all robot states
+        updateRobotStates(finalMoveIntentions);
+
+        incrementTickCounter();
+    }
+
+    // Collects move intentions for all robots in the simulation
+    private MoveIntention[] collectIntentions() {
+        MoveIntention[] intentions = new MoveIntention[robots.length];
+
+        // Collection MoveIntentions for each robot
+        for (int i = 0; i < robots.length; i++) {
+            intentions[i] = robots[i].getNextMove(map);
+        }
+
+        return intentions;
+    }
+
+    // Updates states for all robots based on commited move intentions
+    private void updateRobotStates(MoveIntention[] intentions) {
+        // Move all robots to `From` tile in their move intentions
+        for (MoveIntention intention : intentions) {
+            Robot robot = intention.getRobot();
+            Vector2D newPosition = intention.getFromTile().getPosition();
+            robot.setPosition(newPosition);
+        }
     }
 
     private void incrementTickCounter() {
         tickCounter++;
     }
-
-    // Collects move intentions for all robots in the simulation
-    private MoveIntention[] collectIntentions() {
-        // TODO
-
-        return null;
-    }
-
-    // Commits move intentions for all robots
-    private void CommitMoveIntentions() {
-        // TODO
-    }
-
-    // Updates states for all robots based on commited move intentions
-    private void updateRobotStates() {
-        // TODO
-    }
-
 
 }

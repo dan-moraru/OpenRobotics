@@ -1,5 +1,7 @@
 package com.openrobotics;
 
+import com.openrobotics.simulationcore.MoveIntention;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -32,6 +34,15 @@ public class Robot extends MapEntity {
     public void setState(RobotState state) { this.state = state; }
     public void setCurrentTask(Task currentTask) { this.currentTask = currentTask; }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
+
+    /**
+     * Returns a move intention for the robot based on its navigation strategy
+     * @param map the map of the warehouse environment
+     * @return a MoveIntention representing the choice for the robots next move
+     */
+    public MoveIntention getNextMove(Map map) {
+        return nav.getNextMove(this, map);
+    }
 
     // dispatcher checks this to find robots that can accept tasks
     public boolean isAvailable() {
