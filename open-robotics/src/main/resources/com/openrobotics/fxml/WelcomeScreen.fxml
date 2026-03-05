@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.text.Font?>
 
 <!--  Welcome Screen – #C2BEAE outer bg, centred dialog, click anywhere → Setup  -->
 <StackPane xmlns="http://javafx.com/javafx/21"
@@ -13,15 +17,20 @@
 
     <VBox styleClass="welcome-dialog"
           maxWidth="820" prefWidth="720"
-          minWidth="500" alignment="TOP_LEFT" spacing="0">
+          minWidth="500" alignment="TOP_CENTER" spacing="8">
 
-        <!-- Title bar  #9F9D96 -->
-        <HBox styleClass="welcome-title-bar" alignment="CENTER_LEFT" spacing="8">
-            <Label text="⚙" style="-fx-font-size: 20px; -fx-text-fill: #5D5B54;" />
-            <Label text="Open Robotics Sim  x.x"
+        <!-- Title bar with Logo  #9F9D96 -->
+        <HBox styleClass="welcome-title-bar" alignment="CENTER_LEFT" spacing="12">
+            <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
+                <image>
+                    <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                </image>
+            </ImageView>
+            <Label text="Open Robotics"
                    style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
             <Region HBox.hgrow="ALWAYS" />
-            <Label text="✕" style="-fx-text-fill: #8D8A7F; -fx-font-size: 12px; -fx-cursor: hand;" />
+            <Label text="v1.0.0"
+                   style="-fx-text-fill: #8D8A7F; -fx-font-size: 11px;" />
         </HBox>
 
         <!-- UPDATES heading -->

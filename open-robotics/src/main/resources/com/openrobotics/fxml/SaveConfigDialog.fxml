@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
@@ -14,44 +15,45 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.openrobotics.controllers.SaveConfigController"
       styleClass="dialog-root"
-      prefWidth="340" spacing="0"
-      stylesheets="@../css/theme.css">
+      prefWidth="380" spacing="0"
+      stylesheets="@../css/theme.css"
+      style="-fx-background-color: #5D5B54;">
 
-    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="8">
-        <Label text="⚙" style="-fx-font-size: 15px; -fx-text-fill: #C2BEAE;" />
-        <Label text="SAVE CONFIG FILE"
-               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #C2BEAE;" />
+    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color: #9E9B8E; -fx-padding: 10 12 10 12;">
+        <Label text="SAVE CONFIGURATION"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
     </HBox>
 
-    <VBox styleClass="dialog-body" spacing="10">
-        <Label text="Select directory"
-               style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE;" />
-        <HBox spacing="6" alignment="CENTER_LEFT">
-            <Button text="↺" styleClass="button-reset" onAction="#onResetToDefault" />
-            <ComboBox fx:id="directoryCombo" promptText="C:/"
+    <VBox styleClass="dialog-body" spacing="12"
+          style="-fx-background-color: #5D5B54; -fx-padding: 16 12 16 12;">
+        <Label text="Select save directory:"
+               style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-font-weight: bold;" />
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button text="↺" styleClass="button-reset"
+                    prefWidth="36" onAction="#onResetToDefault" />
+            <ComboBox fx:id="directoryCombo" promptText="Select directory..."
                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
-        <Label fx:id="directoryStatusLabel" text="invalid directory"
-               style="-fx-font-size: 10px; -fx-text-fill: #8D8A7F; -fx-wrap-text: true;" />
+        <Label fx:id="directoryStatusLabel" text="Directory status"
+               style="-fx-font-size: 10px; -fx-text-fill: #C2BEAE; -fx-wrap-text: true;" />
         <Button text="Browse…"
                 style="-fx-background-color: transparent; -fx-text-fill: #C2BEAE;
-                       -fx-font-size: 11px; -fx-cursor: hand; -fx-padding: 1 0 1 0;
+                       -fx-font-size: 11px; -fx-cursor: hand; -fx-padding: 2 0 2 0;
                        -fx-underline: true;"
                 onAction="#onBrowse" />
-        <HBox spacing="6" alignment="CENTER_LEFT">
+        <HBox spacing="8" alignment="CENTER_LEFT">
             <Label text="File name:"
-                   style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-pref-width: 80px;" />
+                   style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-min-width: 80px;" />
             <TextField fx:id="fileNameField" text="config"
                        HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
     </VBox>
 
-    <HBox styleClass="dialog-footer" spacing="8" alignment="CENTER_LEFT">
-        <Button text="CONFIRM" styleClass="button-confirm" prefWidth="140" onAction="#onSave" />
-        <Button text="RETURN" prefWidth="140"
-                style="-fx-background-color: #32312D; -fx-text-fill: #C2BEAE;
-                       -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 0;"
-                onAction="#onCancel" />
+    <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER"
+          style="-fx-background-color: #5D5B54; -fx-padding: 12;">
+        <Button text="SAVE" styleClass="btn-primary" prefWidth="150" onAction="#onSave" />
+        <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
     </HBox>
 </VBox>
 

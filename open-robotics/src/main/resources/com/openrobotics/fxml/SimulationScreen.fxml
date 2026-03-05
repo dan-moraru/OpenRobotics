@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.canvas.*?>
+<?import javafx.scene.text.Font?>
 
 <!--
   Simulation Screen
@@ -18,11 +21,15 @@
     <top>
         <VBox spacing="0">
             <!-- Top bar slightly lighter than setup (#4D4B45) -->
-            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="8">
-                <Label text="⚙" style="-fx-font-size: 18px; -fx-text-fill: #8D8A7F;" />
-                <VBox spacing="0">
-                    <Label text="Open Robotics Sim" styleClass="app-title" />
-                    <Label text="x.x" styleClass="version-label" />
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
+                <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
+                    <image>
+                        <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                    </image>
+                </ImageView>
+                <VBox spacing="1">
+                    <Label text="OpenRobotics" styleClass="app-title" />
+                    <Label text="v1.0.0" styleClass="version-label" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
                 <!-- Live stats -->
