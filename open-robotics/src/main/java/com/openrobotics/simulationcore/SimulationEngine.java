@@ -59,7 +59,10 @@ public class SimulationEngine {
         incrementTickCounter();
     }
 
-    // Collects move intentions for all robots in the simulation
+    /**
+     * Collects move intentions for all robots in the simulation
+     * @return an array of MoveIntentions, one for each robot in the simulation
+     */
     private MoveIntention[] collectIntentions() {
         MoveIntention[] intentions = new MoveIntention[robots.length];
 
@@ -71,7 +74,10 @@ public class SimulationEngine {
         return intentions;
     }
 
-    // Updates states for all robots based on commited move intentions
+    /**
+     * Updates states for all robots based on commited move intentions
+     * @param intentions an array of finalized MoveIntentions that are ready to be commited for every robot
+     */
     private void updateRobotStates(MoveIntention[] intentions) {
         // Move all robots to `From` tile in their move intentions
         for (MoveIntention intention : intentions) {
@@ -81,8 +87,10 @@ public class SimulationEngine {
         }
     }
 
+    /**
+     * Increments the tick counter for the simulation engine
+     */
     private void incrementTickCounter() {
         tickCounter++;
     }
-
 }
