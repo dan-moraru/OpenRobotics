@@ -1,0 +1,762 @@
+/* ============================================================
+   OpenRobotics – Global Theme
+   Colours derived by pixel-sampling the wireframe images:
+   ─────────────────────────────────────────────────────────
+   OUTER_BG      #C2BEAE  app window background (warm beige)
+   TOPBAR        #3D3C39  top title bar (very dark warm grey)
+   TOPBAR_SIM    #4D4B45  slightly lighter on sim/results screens
+   TAB_STRIP     #8D8A7F  tab strip / medium sidebar
+   SIDEBAR_SETUP #C2BEAE  setup sidebar (same as outer bg)
+   SIDEBAR_SIM   #8D8A7F  sim sidebar
+   OBJ_TILE      #5D5B54  object tiles / dark panels
+   VIEWPORT      #CDCBC3  grid canvas background
+   BOTTOM_BAR    #C2BEAE  setup bottom bar / light panels
+   START_BTN     #383632  dark action button (Start Simulation)
+   CONSOLE_BG    #32312D  console / very dark panels
+   DIALOG_BG     #5D5B54  specialty dialog background
+   DIALOG_TITLE  #706E65  dialog title bars
+   CONFIRM_GREEN #599068  ADD/CONFIRM green buttons
+   RETURN_BTN    #32312D  RETURN/neutral dark button
+   MEDIUM_TEXT   #8D8A7F  secondary labels / hints
+   LIGHT_TEXT    #C2BEAE  primary text on dark surfaces
+   ============================================================ */
+
+/* ---------- Root ------------------------------------------------ */
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 12px;
+    -fx-background: #C2BEAE;
+    -fx-base: #8D8A7F;
+    -fx-control-inner-background: #C2BEAE;
+    -fx-text-base-color: #1a1a18;
+}
+
+/* ---------- Default label --------------------------------------- */
+.label {
+    -fx-text-fill: #1a1a18;
+}
+
+.label-light {
+    -fx-text-fill: #C2BEAE;
+}
+
+.label-hint {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Top application bar --------------------------------- */
+.top-bar {
+    -fx-background-color: #3D3C39;
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar-sim {
+    -fx-background-color: #4D4B45;
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar .label, .top-bar-sim .label {
+    -fx-text-fill: #C2BEAE;
+}
+
+.app-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.version-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* ---------- Tab strip ------------------------------------------- */
+.tab-strip {
+    -fx-background-color: #8D8A7F;
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-padding: 0 0 0 6;
+}
+
+/* Active tab – lighter than strip */
+.tab-btn-active {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+/* Inactive tab */
+.tab-btn {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.tab-btn:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ---------- MenuBar in top bar ---------------------------------- */
+.menu-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+}
+
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #5D5B54;
+}
+
+.context-menu {
+    -fx-background-color: #3D3C39;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1px;
+}
+
+.menu-item .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.menu-item:hover {
+    -fx-background-color: #5D5B54;
+}
+
+/* ---------- Outer app background -------------------------------- */
+.outer-bg {
+    -fx-background-color: #C2BEAE;
+}
+
+/* ---------- Setup sidebar (light beige same as outer bg) -------- */
+.sidebar-setup {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ---------- Simulation sidebar (medium grey) -------------------- */
+.sidebar-sim {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ---------- Object tiles in Add Object panel -------------------- */
+.object-tile {
+    -fx-background-color: #5D5B54;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-pref-width: 108px;
+    -fx-pref-height: 90px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+    -fx-text-fill: #C2BEAE;
+}
+
+.object-tile:hover {
+    -fx-background-color: #706E65;
+    -fx-border-color: #C2BEAE;
+}
+
+/* ---------- Property rows (alternating) ------------------------- */
+/* Row A – same as sidebar */
+.prop-row-a {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+/* Row B – slightly darker */
+.prop-row-b {
+    -fx-background-color: #7a7870;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+/* Setup prop rows – on light beige background */
+.setup-prop-row-a {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.setup-prop-row-b {
+    -fx-background-color: #b0ad9e;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.prop-label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-pref-width: 160px;
+    -fx-min-width: 120px;
+}
+
+/* ---------- Reset button (circular ↺) -------------------------- */
+.button-reset {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+    -fx-background-radius: 13px;
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 13px;
+    -fx-border-width: 1px;
+}
+
+.button-reset:hover {
+    -fx-background-color: #706E65;
+}
+
+/* ---------- Input fields ---------------------------------------- */
+.text-field {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 3 6 3 6;
+    -fx-font-size: 11px;
+}
+
+.text-field:focused {
+    -fx-border-color: #3D3C39;
+}
+
+.combo-box-base {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .list-cell {
+    -fx-text-fill: #1a1a18;
+    -fx-background-color: transparent;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+.combo-box-base .arrow {
+    -fx-background-color: #C2BEAE;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+.spinner .text-field {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+/* ---------- CheckBox -------------------------------------------- */
+.check-box .box {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #5D5B54;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #3D3C39;
+}
+
+.check-box .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Buttons --------------------------------------------- */
+
+/* Primary / default – dark (like "START SIMULATION") */
+.button {
+    -fx-background-color: #383632;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* Neutral – medium grey (like LOAD / SAVE / RETURN) */
+.button-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.button-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* Confirm / ADD green */
+.button-confirm {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.button-confirm:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+/* Danger – dark red (QUIT) */
+.button-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.button-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+/* Playback / icon button – transparent */
+.playback-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 13px;
+    -fx-padding: 3 6 3 6;
+    -fx-background-radius: 2px;
+    -fx-cursor: hand;
+}
+
+.playback-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Speed buttons (×1 ×2 ×3) */
+.speed-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.speed-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* ---------- Viewport -------------------------------------------- */
+.viewport-pane {
+    -fx-background-color: #CDCBC3;
+}
+
+.viewport-header {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 4 10 4 10;
+    -fx-min-height: 26px;
+}
+
+.viewport-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Console --------------------------------------------- */
+.console-bg {
+    -fx-background-color: #32312D;
+}
+
+.console-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 22px;
+}
+
+.console-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.text-area {
+    -fx-background-color: #32312D;
+    -fx-text-fill: #C2BEAE;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+
+.text-area .content {
+    -fx-background-color: #32312D;
+}
+
+/* ---------- Bottom bar ------------------------------------------ */
+.bottom-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 40px;
+    -fx-min-height: 40px;
+    -fx-padding: 0 12 0 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ---------- ScrollPane ------------------------------------------ */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: #C2BEAE;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #8D8A7F;
+    -fx-background-radius: 0;
+}
+
+/* ---------- ListView -------------------------------------------- */
+.list-view {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.list-cell:selected {
+    -fx-background-color: #5D5B54;
+    -fx-text-fill: #C2BEAE;
+}
+
+.list-cell:hover:!selected {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ---------- TableView ------------------------------------------- */
+.table-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #C2BEAE;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-border-color: transparent;
+    -fx-cell-size: 24px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #8D8A7F;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #5D5B54;
+}
+
+.table-row-cell:selected .label {
+    -fx-text-fill: #C2BEAE;
+}
+
+/* ---------- TabPane --------------------------------------------- */
+.tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 26px;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1a1a18;
+}
+
+/* ---------- SplitPane ------------------------------------------- */
+.split-pane {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
+}
+
+.split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-pref-width: 2px;
+    -fx-pref-height: 2px;
+    -fx-padding: 0;
+}
+
+/* ---------- Separator ------------------------------------------- */
+.separator .line {
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* ---------- ProgressBar ----------------------------------------- */
+.progress-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 10px;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #5D5B54;
+    -fx-background-radius: 0;
+}
+
+.progress-bar .track {
+    -fx-background-color: #C2BEAE;
+    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* ---------- DIALOGS --------------------------------------------- */
+.dialog-root {
+    -fx-background-color: #5D5B54;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1px;
+}
+
+.dialog-title-bar {
+    -fx-background-color: #706E65;
+    -fx-padding: 7 10 7 8;
+    -fx-min-height: 34px;
+}
+
+.dialog-title-bar .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.dialog-body {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12 14 12 14;
+}
+
+.dialog-body .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+.dialog-footer {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 8 10 10 10;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Error/warning/info colored header strips */
+.dialog-header-error {
+    -fx-background-color: #7a1f1b;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-error .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-warning {
+    -fx-background-color: #7a6200;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-warning .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-info {
+    -fx-background-color: #1a743f;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-info .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Welcome screen -------------------------------------- */
+.welcome-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.welcome-dialog {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0, 0, 4);
+}
+
+.welcome-title-bar {
+    -fx-background-color: #9F9D96;
+    -fx-padding: 7 10 7 8;
+}
+
+.welcome-title-bar .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.welcome-body {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 10 14 10 14;
+}
+
+.welcome-click-hint {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+/* ---------- Info / status bar below viewport ------------------- */
+.info-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 2 10 2 10;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 22px;
+}
+
+.info-bar .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Results screen -------------------------------------- */
+.chart-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.chart-header {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 3 8 3 8;
+}
+
+.chart-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+}
+
+.results-bottom-panel {
+    -fx-background-color: #32312D;
+    -fx-padding: 8 12 8 12;
+}
+
+.results-bottom-panel .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.mask-legend-tile-red    { -fx-background-color: #7a1f1b; -fx-min-height: 30px; }
+.mask-legend-tile-yellow { -fx-background-color: #7a6200; -fx-min-height: 30px; }
+.mask-legend-tile-grey   { -fx-background-color: #8D8A7F; -fx-min-height: 30px; }

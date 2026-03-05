@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+  Object Description Dialog (Specialty Screen col 3, row 2)
+  Object image placeholder top, description text, ADD (green #599068) / RETURN (dark)
+-->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.ObjectDescController"
+      styleClass="dialog-root" prefWidth="340" spacing="0"
+      stylesheets="@../css/theme.css">
+
+    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="8">
+        <Label text="⚙" style="-fx-font-size: 15px; -fx-text-fill: #C2BEAE;" />
+        <Label fx:id="objectNameLabel" text="OBJECT NAME"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #C2BEAE;" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="✕"
+                style="-fx-background-color: transparent; -fx-text-fill: #8D8A7F;
+                       -fx-font-size: 11px; -fx-cursor: hand; -fx-padding: 0 4 0 4;"
+                onAction="#onClose" />
+    </HBox>
+
+    <!-- Object image placeholder -->
+    <StackPane style="-fx-background-color: #C2BEAE; -fx-min-height: 120px;"
+               VBox.vgrow="SOMETIMES">
+        <StackPane fx:id="objectImagePane"
+                   style="-fx-background-color: #C2BEAE; -fx-border-color: #8D8A7F;
+                          -fx-border-width: 1px;"
+                   maxWidth="100" maxHeight="90">
+            <Label fx:id="objectIconLabel" text="?"
+                   style="-fx-font-size: 36px; -fx-text-fill: #8D8A7F;" />
+        </StackPane>
+    </StackPane>
+
+    <!-- Description body -->
+    <VBox styleClass="dialog-body" spacing="6" VBox.vgrow="ALWAYS">
+        <Label fx:id="objectDescLabel"
+               text="Here is some information about how to use this object to construct your warehouse simulation."
+               style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-wrap-text: true;" />
+    </VBox>
+
+    <HBox styleClass="dialog-footer" spacing="8" alignment="CENTER_LEFT">
+        <Button text="ADD"    styleClass="button-confirm" prefWidth="140" onAction="#onAdd" />
+        <Button text="RETURN" prefWidth="140"
+                style="-fx-background-color: #C2BEAE; -fx-text-fill: #1a1a18;
+                       -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 0;"
+                onAction="#onClose" />
+    </HBox>
+</VBox>
+

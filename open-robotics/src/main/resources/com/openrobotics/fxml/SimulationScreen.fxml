@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.*?>
+
+<!--
+  Simulation Screen
+  topbar #4D4B45, tab strip #8D8A7F, sidebar #8D8A7F,
+  object tiles #5D5B54, viewport #CDCBC3,
+  console bg #32312D, console header #C2BEAE
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.openrobotics.controllers.SimulationController"
+            style="-fx-background-color: #C2BEAE;"
+            stylesheets="@../css/theme.css">
+
+    <top>
+        <VBox spacing="0">
+            <!-- Top bar slightly lighter than setup (#4D4B45) -->
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="8">
+                <Label text="⚙" style="-fx-font-size: 18px; -fx-text-fill: #8D8A7F;" />
+                <VBox spacing="0">
+                    <Label text="Open Robotics Sim" styleClass="app-title" />
+                    <Label text="x.x" styleClass="version-label" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <!-- Live stats -->
+                <Label fx:id="objsLabel" text="objs: 0"
+                       style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" />
+                <Label text="   " style="-fx-text-fill: transparent;" />
+                <Label fx:id="ramLabel" text="ram: – kb"
+                       style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" />
+                <Label text="   " style="-fx-text-fill: transparent;" />
+                <Label fx:id="canvasSizeLabel" text="canvas size: 600×600 tiles"
+                       style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" />
+                <Region style="-fx-min-width: 12px;" />
+                <MenuBar styleClass="menu-bar">
+                    <Menu text="File">
+                        <MenuItem text="Welcome Screen"    onAction="#onMenuWelcome" />
+                        <MenuItem text="Calculate Results" onAction="#onMenuCalculateResults" />
+                        <MenuItem text="Exit"              onAction="#onExit" />
+                    </Menu>
+                    <Menu text="Help">
+                        <MenuItem text="GitHub Page" onAction="#onMenuGithub" />
+                    </Menu>
+                </MenuBar>
+            </HBox>
+            <!-- Tab strip -->
+            <HBox styleClass="tab-strip" alignment="CENTER_LEFT">
+                <Button text="EDITOR" styleClass="tab-btn-active" onAction="#onTabEditor" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.17"
+                   style="-fx-background-color: #C2BEAE; -fx-padding: 0; -fx-box-border: transparent;">
+
+            <!-- ── LEFT SIDEBAR #8D8A7F ── -->
+            <VBox styleClass="sidebar-sim" spacing="0">
+
+                <!-- Add Object | Outliner tabs -->
+                <TabPane fx:id="outlinerTabPane"
+                         tabClosingPolicy="UNAVAILABLE"
+                         VBox.vgrow="SOMETIMES" prefHeight="340">
+
+                    <Tab text="Add Object">
+                        <VBox spacing="0" style="-fx-background-color: #8D8A7F;">
+                            <!-- 2-column grid of object tiles #5D5B54 -->
+                            <GridPane hgap="3" vgap="3"
+                                      style="-fx-padding: 6; -fx-background-color: #8D8A7F;">
+                                <Button styleClass="object-tile" userData="ROBOT"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <graphic><Label text="🤖" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                                <Button styleClass="object-tile" userData="CHARGER"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <graphic><Label text="⚡" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                                <Button styleClass="object-tile" userData="STATION"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <graphic><Label text="📦" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                                <Button styleClass="object-tile" userData="DOCK"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <graphic><Label text="🚪" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                                <Button styleClass="object-tile" userData="WALL"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                    <graphic><Label text="🧱" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                                <Button styleClass="object-tile" userData="SHELF"
+                                        onMouseClicked="#onAddObjectClick"
+                                        GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                    <graphic><Label text="🗄" style="-fx-font-size: 26px;"/></graphic>
+                                </Button>
+                            </GridPane>
+                            <Label text="To add an object, drag and drop it into the viewport.&#10;Make sure you are in edit mode."
+                                   style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;
+                                          -fx-padding: 4 8 4 8; -fx-wrap-text: true;" />
+                        </VBox>
+                    </Tab>
+
+                    <Tab text="Outliner">
+                        <VBox spacing="4"
+                              style="-fx-padding: 5; -fx-background-color: #8D8A7F;">
+                            <TextField fx:id="outlinerSearchField" promptText="Filter objects…"
+                                       style="-fx-font-size: 11px;" />
+                            <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS"
+                                      onMouseClicked="#onOutlinerSelect" />
+                        </VBox>
+                    </Tab>
+                </TabPane>
+
+                <!-- Properties panel header -->
+                <HBox style="-fx-background-color: #5D5B54; -fx-padding: 4 8 4 8;
+                             -fx-border-color: #3D3C39; -fx-border-width: 1 0 0 0;"
+                      alignment="CENTER_LEFT">
+                    <Label text="Properties"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #C2BEAE;" />
+                </HBox>
+
+                <!-- Properties rows -->
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: #8D8A7F; -fx-border-color: transparent;">
+                    <VBox fx:id="propertiesPanel" spacing="0"
+                          style="-fx-background-color: #8D8A7F;">
+                        <Label text="Select an object."
+                               style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;
+                                      -fx-padding: 6 8 6 8; -fx-wrap-text: true;" />
+                    </VBox>
+                </ScrollPane>
+
+                <!-- Short description hint -->
+                <Label fx:id="propDescLabel"
+                       text="Short description of the selected parameter."
+                       style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;
+                              -fx-padding: 4 8 6 8; -fx-wrap-text: true;
+                              -fx-border-color: #5D5B54; -fx-border-width: 1 0 0 0;" />
+
+                <!-- String setting row at very bottom (matches wireframe last row) -->
+                <HBox styleClass="prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                    <Button text="↺" styleClass="button-reset" onAction="#onResetStringProp" />
+                    <Label text="string setting (s)" styleClass="prop-label" />
+                    <TextField fx:id="strPropField" text="Hello"
+                               HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                </HBox>
+
+            </VBox>
+
+            <!-- ── VIEWPORT + CONSOLE ── -->
+            <VBox spacing="0">
+
+                <!-- Viewport header bar #8D8A7F -->
+                <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="6">
+                    <Label text="⊞" style="-fx-text-fill: #5D5B54; -fx-font-size: 13px;" />
+                    <Label text="2D Viewport"
+                           style="-fx-font-size: 11px; -fx-text-fill: #1a1a18;" />
+                    <Label fx:id="editModeLabel" text=""
+                           style="-fx-font-size: 11px; -fx-text-fill: #5D5B54;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="viewportStatusLabel" text=""
+                           style="-fx-font-size: 11px; -fx-text-fill: #1a1a18;" />
+                    <!-- Zoom -->
+                    <Button text="🔍+" styleClass="playback-btn" onAction="#onZoomIn" />
+                    <Button text="🔍-" styleClass="playback-btn" onAction="#onZoomOut" />
+                    <!-- Restart + speeds + play/pause/step -->
+                    <Button text="◀◀" styleClass="playback-btn" onAction="#onRestart" />
+                    <Button fx:id="speed1Btn" text="x1" styleClass="speed-btn" onAction="#onSpeed1" />
+                    <Button fx:id="speed2Btn" text="x2" styleClass="speed-btn" onAction="#onSpeed2" />
+                    <Button fx:id="speed3Btn" text="x3" styleClass="speed-btn" onAction="#onSpeed3" />
+                    <Button text="▶"  styleClass="playback-btn" onAction="#onPlay" />
+                    <Button text="⏸" styleClass="playback-btn" onAction="#onPause" />
+                    <Button text="▶▶" styleClass="playback-btn" onAction="#onNextFrame" />
+                </HBox>
+
+                <!-- Canvas viewport #CDCBC3 -->
+                <StackPane fx:id="viewportStack" VBox.vgrow="ALWAYS"
+                           style="-fx-background-color: #CDCBC3;">
+                    <Canvas fx:id="warehouseCanvas" />
+                </StackPane>
+
+                <!-- Tick bar + tip -->
+                <HBox styleClass="info-bar" alignment="CENTER_LEFT" spacing="8">
+                    <Label fx:id="tickDisplayLabel" text="TICK 0"
+                           style="-fx-font-size: 11px; -fx-text-fill: #1a1a18;" />
+                    <ProgressBar fx:id="simProgressBar" progress="0" prefWidth="120"
+                                 style="-fx-pref-height: 10px;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="viewportModeLabel" text="drag"
+                           style="-fx-font-size: 11px; -fx-text-fill: #8D8A7F;" />
+                    <Label text="   TIP: Object names will appear in simulation results. It is recommended to name every viewport object."
+                           style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                </HBox>
+
+                <!-- Console: header #C2BEAE, body #32312D -->
+                <VBox spacing="0" style="-fx-pref-height: 120px; -fx-min-height: 80px;">
+                    <HBox styleClass="console-header" alignment="CENTER_LEFT" spacing="6">
+                        <Label text="console" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="✕" onAction="#onClearConsole"
+                                style="-fx-background-color: transparent; -fx-cursor: hand;
+                                       -fx-text-fill: #8D8A7F; -fx-font-size: 10px;
+                                       -fx-padding: 0 4 0 4;" />
+                    </HBox>
+                    <TextArea fx:id="consoleArea" editable="false" wrapText="true"
+                              promptText=">" VBox.vgrow="ALWAYS"
+                              style="-fx-font-family: 'Consolas','Courier New',monospace;" />
+                </VBox>
+
+            </VBox>
+        </SplitPane>
+    </center>
+
+</BorderPane>
+

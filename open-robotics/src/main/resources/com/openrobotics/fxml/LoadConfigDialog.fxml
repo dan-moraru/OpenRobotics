@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+    Load Config Dialog  (Specialty Screens wireframe – bottom row, col 2)
+    ─────────────────────────────────────────────────────────────────────
+    Logo+title bar, "Select file (.txt, .json)" label,
+    dropdown (↺ reset) + hint text,
+    CONFIRM (teal) + RETURN (dark) footer.
+-->
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.LoadConfigController"
+      styleClass="dialog-root"
+      prefWidth="340" spacing="0"
+      stylesheets="@../css/theme.css">
+
+    <!-- Title bar -->
+    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="8">
+        <Label text="⚙" style="-fx-font-size: 15px; -fx-text-fill: #C2BEAE;" />
+        <Label text="LOAD CONFIG FILE"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #C2BEAE;" />
+    </HBox>
+
+    <!-- Body -->
+    <VBox styleClass="dialog-body" spacing="10">
+        <Label text="Select file (.txt, .json)"
+               style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE;" />
+
+        <!-- Dropdown row: ↺ reset + combo + ▼ arrow already in combo -->
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Button text="↺" styleClass="button-reset"
+                    onAction="#onResetToDefault" />
+            <ComboBox fx:id="configFileCombo"
+                      promptText="C:/"
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        </HBox>
+
+        <!-- Hint below dropdown -->
+        <Label fx:id="selectedPathLabel"
+               text="currently no selected config file"
+               style="-fx-font-size: 10px; -fx-text-fill: #8D8A7F; -fx-wrap-text: true;" />
+
+        <!-- Browse button -->
+        <Button text="Browse…"
+                style="-fx-background-color: transparent; -fx-text-fill: #C2BEAE;
+                       -fx-font-size: 11px; -fx-cursor: hand; -fx-padding: 1 0 1 0;
+                       -fx-underline: true;"
+                onAction="#onBrowse" />
+    </VBox>
+
+    <!-- Footer -->
+    <HBox styleClass="dialog-footer" spacing="8" alignment="CENTER_LEFT">
+        <Button text="CONFIRM" prefWidth="140"
+                onAction="#onLoad" />
+        <Button text="RETURN"  prefWidth="140"
+                style="-fx-background-color: #32312D; -fx-text-fill: #C2BEAE;
+                       -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 0;"
+                onAction="#onCancel" />
+    </HBox>
+
+</VBox>
+
