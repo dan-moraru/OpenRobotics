@@ -1,4 +1,6 @@
-package com.openrobotics;
+package com.openrobotics.common;
+
+import com.openrobotics.map.Vector2D;
 
 import java.util.ArrayList;
 import java.util.List;

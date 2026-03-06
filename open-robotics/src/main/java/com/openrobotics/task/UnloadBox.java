@@ -1,4 +1,6 @@
-package com.openrobotics;
+package com.openrobotics.task;
+
+import com.openrobotics.map.Vector2D;
 
 // specific task type for unloading a box (uml 3.3.4)
 public class UnloadBox extends Task {

@@ -1,4 +1,9 @@
-package com.openrobotics;
+package com.openrobotics.map.entities.station;
+
+import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.MapEntity;
+
+import java.util.UUID;
 
 // abstract base for station-type entities (uml 3.3.4)
 public abstract class Station extends MapEntity {
@@ -6,6 +11,12 @@ public abstract class Station extends MapEntity {
 
     public Station(String name, Vector2D position) {
         super(name, position);
+        this.isBusy = false;
+    }
+
+    // Constructor for loading stations
+    public Station(UUID id, String name, Vector2D position) {
+        super(id, name, position);
         this.isBusy = false;
     }
 

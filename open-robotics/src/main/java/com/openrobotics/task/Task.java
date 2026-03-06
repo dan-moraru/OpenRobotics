@@ -1,4 +1,7 @@
-package com.openrobotics;
+package com.openrobotics.task;
+
+import com.openrobotics.map.Tile;
+import com.openrobotics.map.Vector2D;
 
 // runtime task assigned to a robot (warehouse entities subsystem)
 public class Task {
@@ -28,5 +31,13 @@ public class Task {
     @Override
     public String toString() {
         return "Task{id=" + id + ", status=" + status + ", priority=" + priority + "}";
+    }
+
+    public Vector2D getPickup() {
+        return pickupLocation;
+    }
+
+    public Vector2D getDropoff() {
+        return dropoffLocation;
     }
 }

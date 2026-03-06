@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.map;
 
 import java.util.UUID;
 
@@ -8,8 +8,14 @@ public class MapEntity {
     private String name; // user facing label
     private Vector2D position;
 
+    // Constructor for new entities
     public MapEntity(String name, Vector2D position) {
-        this.id = UUID.randomUUID();
+        this(UUID.randomUUID(), name, position);
+    }
+
+    // Constructor for loading entities (used primarily by ConfigLoader)
+    public MapEntity(UUID id, String name, Vector2D position) {
+        this.id = id;
         this.name = name;
         this.position = position;
     }

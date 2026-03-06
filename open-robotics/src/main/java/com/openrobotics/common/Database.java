@@ -1,4 +1,4 @@
-package com.openrobotics.db;
+package com.openrobotics.common;
 
 import com.openrobotics.config.ApplicationConfig;
 import com.zaxxer.hikari.HikariConfig;

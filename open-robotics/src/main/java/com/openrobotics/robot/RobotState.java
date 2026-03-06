@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.robot;
 
 // robot state machine states (design doc 3.4.3)
 public enum RobotState {
