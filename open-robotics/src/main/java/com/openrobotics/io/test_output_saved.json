@@ -24,7 +24,7 @@
       },
       "battery" : 42.42,
       "state" : "IDLE",
-      "navigationStrategy" : "GREEDYNAVIGATIONSTRATEGY",
+      "navigationStrategy" : "NONE",
       "stuckTicks" : 0
     } ],
     "stations" : [ {

@@ -1,14 +1,9 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Tile;
+import com.openrobotics.robot.Robot;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CollisionManager {
 
@@ -18,10 +13,10 @@ public class CollisionManager {
     // - one tile per tick max by Manhattan distance
     //   and distance 0 means wait/non move, which is fine
     public boolean isLegalIntention(MoveIntention intention) {
-        if (intention == null || intention.getFromTile() == null || intention.getToTile() == null) {
-            return false;
-        }
-        if (intention.getRobotId() < 0) {
+        if (intention == null ||
+                intention.getRobot() == null ||
+                intention.getFromTile() == null ||
+                intention.getToTile() == null) {
             return false;
         }
 
@@ -51,89 +46,100 @@ public class CollisionManager {
             return new MoveIntention[0];
         }
 
-        // ======= Step 1: keep one legal intention per robot. =======
+        // ===== Step 1: keep one legal intention per robot =====
 
-        // This keeps a table of at most one MoveIntention per robot for current tick.
-        Map<Integer, MoveIntention> uniqueByRobotId = new HashMap<>();
+        Map<UUID, MoveIntention> uniqueByRobot = new HashMap<>();
 
-        // Unduplicate any duplicate intentions
         for (MoveIntention intention : intentions) {
-            if (isLegalIntention(intention) &&
-                    !uniqueByRobotId.containsKey(intention.getRobotId())) {
-
-                uniqueByRobotId.put(intention.getRobotId(), intention);
+            if (!isLegalIntention(intention)) {
+                continue;
             }
+
+            Robot robot = intention.getRobot();
+            UUID robotId = robot.getId();
+
+            uniqueByRobot.putIfAbsent(robotId, intention);
         }
 
-        // Convert the hashmap into an array
-        MoveIntention[] candidates = uniqueByRobotId.values().toArray(new MoveIntention[0]);
-        // Sort it by ascending robot id
-        Arrays.sort(candidates, (a, b) -> Integer.compare(a.getRobotId(), b.getRobotId()));
+        MoveIntention[] candidates =
+                uniqueByRobot.values().toArray(new MoveIntention[0]);
 
-        // ===== Step 2: same-target conflicts =======
+        // deterministic ordering by UUID
+        Arrays.sort(candidates, Comparator.comparing(
+                i -> i.getRobot().getId().toString()
+        ));
 
-        // Blocked robots are forced to wait for this tick.
-        Set<Integer> blockedRobots = new HashSet<>();
+        // ===== Step 2: same-target conflicts =====
 
-        // group intentions by target tile
+        Set<UUID> blockedRobots = new HashSet<>();
+
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
 
         for (MoveIntention intention : candidates) {
-            byDestination.computeIfAbsent(tileKey(intention.getToTile()), ignored -> new ArrayList<>())
+            byDestination
+                    .computeIfAbsent(tileKey(intention.getToTile()), k -> new ArrayList<>())
                     .add(intention);
         }
 
-        // Now go through each destination tile group of intentions
         for (List<MoveIntention> group : byDestination.values()) {
-            if (group.size() <= 1) { // No conflicts with groups sizes of 1 or less
+
+            if (group.size() <= 1) {
                 continue;
             }
 
-            int winnerId = Integer.MAX_VALUE;
-            for (MoveIntention intention : group) {
-                // The lowest robot id wins, all others are blocked.
-                winnerId = Math.min(winnerId, intention.getRobotId());
-            }
+            MoveIntention winner = group.stream()
+                    .min(Comparator.comparing(i -> i.getRobot().getId().toString()))
+                    .get();
+
+            UUID winnerId = winner.getRobot().getId();
 
             for (MoveIntention intention : group) {
-                if (intention.getRobotId() != winnerId) {
-                    blockedRobots.add(intention.getRobotId());
+                UUID id = intention.getRobot().getId();
+                if (!id.equals(winnerId)) {
+                    blockedRobots.add(id);
                 }
             }
         }
 
-        // ====== Step 3: swap conflicts (A moves to B's tile while B moves to A's tile). ==
-        // Rule: lower robot id wins, higher id waits.
+        // ===== Step 3: swap conflicts =====
+
         for (int i = 0; i < candidates.length; i++) {
             MoveIntention a = candidates[i];
+            UUID aId = a.getRobot().getId();
 
-            // Ignore blocked robots and robots that won't move
-            if (blockedRobots.contains(a.getRobotId()) || !isActualMove(a)) {
+            if (blockedRobots.contains(aId) || !isActualMove(a)) {
                 continue;
             }
 
-            // Now check over all other robot intentions
             for (int j = i + 1; j < candidates.length; j++) {
                 MoveIntention b = candidates[j];
-                if (blockedRobots.contains(b.getRobotId()) || !isActualMove(b)) {
+                UUID bId = b.getRobot().getId();
+
+                if (blockedRobots.contains(bId) || !isActualMove(b)) {
                     continue;
                 }
 
-                boolean isSwap = sameTile(a.getToTile(), b.getFromTile())
-                        && sameTile(b.getToTile(), a.getFromTile());
+                boolean isSwap =
+                        sameTile(a.getToTile(), b.getFromTile()) &&
+                                sameTile(b.getToTile(), a.getFromTile());
 
                 if (isSwap) {
-                    int loserId = Math.max(a.getRobotId(), b.getRobotId());
-                    blockedRobots.add(loserId);
+
+                    UUID loser = aId.toString().compareTo(bId.toString()) > 0
+                            ? aId
+                            : bId;
+
+                    blockedRobots.add(loser);
                 }
             }
         }
 
-        // ======= Step 4: return approved intentions ========
+        // ===== Step 4: return approved intentions =====
+
         List<MoveIntention> approved = new ArrayList<>();
 
         for (MoveIntention intention : candidates) {
-            if (!blockedRobots.contains(intention.getRobotId())) {
+            if (!blockedRobots.contains(intention.getRobot().getId())) {
                 approved.add(intention);
             }
         }

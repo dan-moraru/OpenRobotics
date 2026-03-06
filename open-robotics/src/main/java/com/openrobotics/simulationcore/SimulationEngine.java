@@ -12,11 +12,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * The SimulationEngine is the core component responsible for advancing the
+ * simulation. It coordinates the progression of discrete simulation steps
+ * ("ticks") and manages interactions between robots within the environment.
+ * The engine maintains an internal tick counter that represents the number
+ * of simulation steps that have been executed.
+ */
 public class SimulationEngine {
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
-    private final CollisionManager collisionManager;
     private Map map;
+    private Robot[] robots;
+    private CollisionManager collisionManager;
     private Dispatcher dispatcher;
     private CoordinationPolicy coordinationPolicy;
 
@@ -26,9 +34,27 @@ public class SimulationEngine {
     private int maxTicks;
     private long seed;
 
-    public SimulationEngine(String configFilePath) {
-        collisionManager = new CollisionManager();
+    /**
+     * Constructs a new simulation engine instance
+     * @param map the map representing the warehouse environment
+     * @param robots the robots
+     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
+     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
+     */
+    public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
+        this.tickCounter = 0;
+        this.map = map;
+        this.robots = robots;
+        this.collisionManager = new CollisionManager();
+        this.dispatcher = dispatcher;
+        this.coordinationPolicy = coordinationPolicy;
+    }
 
+    /**
+     * Constructs a new simulation engine instance based on the config file
+     * @param configFilePath the path to the config JSON file
+     */
+    public SimulationEngine(String configFilePath) {
         if (configFilePath != null) {
             configInitialization(configFilePath);
         } else {
@@ -77,6 +103,9 @@ public class SimulationEngine {
 
                 this.map.addEntity(robot);
             }
+
+            // Save all entities from file into single array for simulation field
+            this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
 
             // Generic MapEntities (Stations, Racks, Obstacles)
             addEntitiesToMap(dto.entities.stations);
@@ -210,8 +239,8 @@ public class SimulationEngine {
             for (Task task : this.dispatcher.getAllTasks()) {
                 SimulationConfigDTO.TaskDTO tDto = new SimulationConfigDTO.TaskDTO();
                 tDto.id = task.getId();
-                tDto.pickupLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getPickup().getX(), (int)task.getPickup().getY());
-                tDto.dropoffLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getDropoff().getX(), (int)task.getDropoff().getY());
+                tDto.pickupLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getPickupLocation().getX(), (int)task.getPickupLocation().getY());
+                tDto.dropoffLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getDropoffLocation().getX(), (int)task.getDropoffLocation().getY());
                 tDto.priority = task.getPriority();
                 tDto.status = task.getStatus();
                 dto.tasks.add(tDto);
@@ -273,31 +302,62 @@ public class SimulationEngine {
         return map;
     }
 
-    // Runs a tick of the simulation
+    /**
+     * Runs a tick of the simulation
+     *
+     * <p>During each tick, the engine:
+     * <ul>
+     * <li>Collects movement intentions from all robots</li>
+     * <li>Resolves conflicts and collisions using the {@link CollisionManager}</li>
+     * <li>Commits the approved movements by updating the position state of each robot</li>
+     * </ul>
+     * </p>
+     */
     public void tick() {
-        // TODO
+        // Collecting initial move intentions from all robots
+        MoveIntention[] intentions = collectIntentions();
+
+        // Resolving conflicts/collisions and finalizing move intentions for all robots
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(intentions);
+
+        // Commiting move intentions by updating all robot states
+        updateRobotStates(finalMoveIntentions);
+
+        incrementTickCounter();
     }
 
+    /**
+     * Collects move intentions for all robots in the simulation
+     * @return an array of MoveIntentions, one for each robot in the simulation
+     */
+    private MoveIntention[] collectIntentions() {
+        MoveIntention[] intentions = new MoveIntention[robots.length];
+
+        // Collection MoveIntentions for each robot
+        for (int i = 0; i < robots.length; i++) {
+            intentions[i] = robots[i].getNextMove(map);
+        }
+
+        return intentions;
+    }
+
+    /**
+     * Updates states for all robots based on commited move intentions
+     * @param intentions an array of finalized MoveIntentions that are ready to be commited for every robot
+     */
+    private void updateRobotStates(MoveIntention[] intentions) {
+        // Move all robots to 'From' tile in their move intentions
+        for (MoveIntention intention : intentions) {
+            Robot robot = intention.getRobot();
+            Vector2D newPosition = intention.getFromTile().getPosition();
+            robot.setPosition(newPosition);
+        }
+    }
+
+    /**
+     * Increments the tick counter for the simulation engine
+     */
     private void incrementTickCounter() {
         tickCounter++;
     }
-
-    // Collects move intentions for all robots in the simulation
-    private MoveIntention[] collectIntentions() {
-        // TODO
-
-        return null;
-    }
-
-    // Commits move intentions for all robots
-    private void CommitMoveIntentions() {
-        // TODO
-    }
-
-    // Updates states for all robots based on commited move intentions
-    private void updateRobotStates() {
-        // TODO
-    }
-
-
 }
