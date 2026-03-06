@@ -2,20 +2,29 @@ package com.openrobotics.simulationcore;
 
 import com.openrobotics.*;
 
-// Represents a move intention for a robot
+/**
+ * Represents a move intention for a robot
+ */
 public class MoveIntention {
-    private final int robotId;
-    private final Tile from; // Current tile robot is intending to move away from
-    private final Tile to; // Tile robot is intended to move on
+    private final Robot robot;
+    private final Tile from;
+    private final Tile to;
 
-    public MoveIntention(Tile from, Tile to, int robotId) {
+    /**
+     * Constructs a new MoveIntention object
+     *
+     * @param from the tile this move intention is going to
+     * @param to the tile this move intention is going from
+     * @param robot the robot this move intention belongs to
+     */
+    public MoveIntention(Tile from, Tile to, Robot robot) {
         this.from = from;
         this.to = to;
-        this.robotId = robotId;
+        this.robot = robot;
     }
 
-    public int getRobotId() {
-        return robotId;
+    public Robot getRobot() {
+        return robot;
     }
 
     public Tile getFromTile() {
