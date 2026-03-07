@@ -1,13 +1,27 @@
 package com.openrobotics.controllers;
 
+import com.openrobotics.AppState;
+import com.openrobotics.map.MapEntity;
+import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.environment.Rack;
+import com.openrobotics.map.entities.station.Station;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.util.ScreenNavigator;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.util.Duration;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -74,6 +88,13 @@ public class SimulationController {
     private boolean running = false;
     private boolean paused  = false;
 
+    // ── Engine binding ────────────────────────────────────────────────────
+    private SimulationEngine engine;
+    private Timeline         simLoop;
+    private double           speedFactor  = 1.0;
+    private int              localTick    = 0;
+    private static final double BASE_TICK_MS = 100.0;
+
     // ------------------------------------------------------------------ //
     //  Initialisation
     // ------------------------------------------------------------------ //
@@ -100,7 +121,32 @@ public class SimulationController {
         // Outliner search filter
         if (outlinerSearchField != null)
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
-
+        // Bind engine from shared AppState
+        engine = AppState.getEngine();
+        if (engine == null && AppState.hasConfigPath()) {
+            engine = new SimulationEngine(AppState.getConfigPath());
+            if (engine.getMap() == null) {
+                log("\u26a0 Config reload failed: " + (engine.getInitError() != null ? engine.getInitError() : "unknown error"));
+                if (viewportStatusLabel != null) {
+                    viewportStatusLabel.setText("Load failed");
+                }
+                return;
+            }
+            AppState.setEngine(engine);
+        }
+        if (engine != null && engine.getMap() != null) {
+            populateOutliner();
+            if (viewportStatusLabel != null) {
+                viewportStatusLabel.setText("Loaded " + engine.getMap().getEntities().size() + " objects");
+            }
+            log("Loaded simulation with " + engine.getMap().getEntities().size() + " entities. Press \u25b6 to start.");
+            drawViewport();
+        } else {
+            if (viewportStatusLabel != null) {
+                viewportStatusLabel.setText("No config loaded");
+            }
+            log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+        }
         log("Simulation screen ready. Configure and press ▶ to begin.");
     }
 
@@ -133,6 +179,69 @@ public class SimulationController {
         gc.setLineWidth(1.0);
         gc.strokeLine(w / 2 - 10, h / 2, w / 2 + 10, h / 2);
         gc.strokeLine(w / 2, h / 2 - 10, w / 2, h / 2 + 10);
+
+        drawEntities(gc);
+    }
+
+    /** Renders every entity from the engine onto the canvas. */
+    private void drawEntities(GraphicsContext gc) {
+        if (engine == null || engine.getMap() == null) return;
+        double tileSize = 32 * zoom;
+        double pad = Math.max(1.0, tileSize * 0.06);
+
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            double sx = viewOffsetX + entity.getPosition().getX() * tileSize;
+            double sy = viewOffsetY + entity.getPosition().getY() * tileSize;
+
+            if (entity instanceof Robot robot) {
+                gc.setFill(Color.web("#4A90E2"));
+                gc.fillRoundRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad, 5, 5);
+                Color dot = switch (robot.getState()) {
+                    case MOVING            -> Color.web("#2ECC71");
+                    case CHARGING          -> Color.web("#F1C40F");
+                    case LOADING, UNLOADING -> Color.web("#9B59B6");
+                    default                -> Color.web("#95A5A6");
+                };
+                gc.setFill(dot);
+                double r = Math.max(3.0, tileSize * 0.15);
+                gc.fillOval(sx + tileSize - r * 2 - pad, sy + pad, r * 2, r * 2);
+            } else if (entity instanceof Rack) {
+                gc.setFill(Color.web("#E8A020"));
+                gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+            } else if (entity instanceof Station) {
+                gc.setFill(Color.web("#27AE60"));
+                gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+            } else if (entity instanceof Obstacle) {
+                gc.setFill(Color.web("#5D5B54"));
+                gc.fillRect(sx, sy, tileSize, tileSize);
+            } else {
+                // Engine stores all non-robot entities as plain MapEntity;
+                // infer visual type from name so items are colour-coded.
+                String n = entity.getName().toLowerCase();
+                boolean isWall = n.contains("wall") || n.contains("obstacle");
+                if (n.contains("rack") || n.contains("shelf")) {
+                    gc.setFill(Color.web("#E8A020"));
+                } else if (n.contains("station") || n.contains("charge") || n.contains("depot")
+                        || n.contains("pickup") || n.contains("delivery")) {
+                    gc.setFill(Color.web("#27AE60"));
+                } else if (isWall) {
+                    gc.setFill(Color.web("#5D5B54"));
+                } else {
+                    gc.setFill(Color.web("#BDC3C7"));
+                }
+                if (isWall) gc.fillRect(sx, sy, tileSize, tileSize);
+                else        gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+            }
+
+            if (zoom >= 0.8 && tileSize >= 18) {
+                String lbl = entity.getName().length() > 5
+                        ? entity.getName().substring(0, 4) + "\u2026"
+                        : entity.getName();
+                gc.setFill(Color.WHITE);
+                gc.setFont(Font.font(Math.max(7.0, tileSize * 0.26)));
+                gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -191,7 +300,27 @@ public class SimulationController {
     }
 
     private void filterOutliner(String query) {
-        // TODO Sprint 3+: filter outliner items by name
+        populateOutliner();
+    }
+
+    /** Rebuilds the outliner list from the current engine map. */
+    private void populateOutliner() {
+        if (outlinerListView == null || engine == null) return;
+        String filter = (outlinerSearchField != null && outlinerSearchField.getText() != null)
+                ? outlinerSearchField.getText().toLowerCase() : "";
+        outlinerListView.getItems().clear();
+        int count = 0;
+        for (MapEntity e : engine.getMap().getEntities()) {
+            String icon  = (e instanceof Robot) ? "\ud83e\udd16 "
+                         : (e instanceof Rack)  ? "\ud83d\udce6 "
+                         : (e instanceof Station) ? "\u26a1 "
+                         : (e instanceof Obstacle) ? "\ud83e\uddf1 " : "\u25ab ";
+            String entry = icon + e.getName() + "  " + e.getPosition();
+            if (filter.isEmpty() || entry.toLowerCase().contains(filter))
+                outlinerListView.getItems().add(entry);
+            count++;
+        }
+        if (objsLabel != null) objsLabel.setText("objs: " + count);
     }
 
     private void updatePropertiesPanel(String objectName) {
@@ -216,16 +345,26 @@ public class SimulationController {
 
     @FXML
     private void onPlay() {
+        if (engine == null) {
+            log("\u26a0 No simulation loaded. Return to Setup and load a config.");
+            return;
+        }
         if (!running) {
             running = true;
             paused  = false;
-            simStatusLabel.setText("RUNNING");
-            simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("RUNNING");
+                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+            }
+            startLoop();
             log("Simulation started.");
-            // TODO Sprint 4+: start the simulation engine tick loop
         } else if (paused) {
             paused = false;
-            simStatusLabel.setText("RUNNING");
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("RUNNING");
+                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+            }
+            startLoop();
             log("Simulation resumed.");
         }
     }
@@ -234,8 +373,11 @@ public class SimulationController {
     private void onPause() {
         if (running && !paused) {
             paused = true;
-            simStatusLabel.setText("PAUSED");
-            simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
+            stopLoop();
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("PAUSED");
+                simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
+            }
             log("Simulation paused.");
         }
     }
@@ -244,27 +386,45 @@ public class SimulationController {
     private void onStop() {
         running = false;
         paused  = false;
-        simStatusLabel.setText("STOPPED");
-        simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
+        stopLoop();
+        if (simStatusLabel != null) {
+            simStatusLabel.setText("STOPPED");
+            simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
+        }
         log("Simulation stopped.");
-        // TODO Sprint 4+: stop the engine and persist partial results
     }
 
     @FXML
     private void onRestart() {
         onStop();
+        localTick = 0;
+        if (AppState.getConfigPath() != null) {
+            engine = new SimulationEngine(AppState.getConfigPath());
+            AppState.setEngine(engine);
+        }
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
-        simStatusLabel.setText("READY");
-        simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+        if (simStatusLabel != null) {
+            simStatusLabel.setText("READY");
+            simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+        }
         log("Simulation reset.");
+        populateOutliner();
         drawViewport();
     }
 
     @FXML
     private void onNextFrame() {
-        log("Step → next frame.");
-        // TODO Sprint 4+: advance simulation by one tick
+        if (engine == null) { log("\u26a0 No simulation loaded."); return; }
+        if (!running) {
+            running = true;
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("STEPPING");
+                simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
+            }
+        }
+        doTick();
+        log("Step \u2192 TICK " + localTick);
     }
 
     @FXML private void onSpeed1() { setSpeed(1);  log("Speed set to ×1."); }
@@ -272,7 +432,38 @@ public class SimulationController {
     @FXML private void onSpeed3() { setSpeed(3);  log("Speed set to ×3."); }
 
     private void setSpeed(int factor) {
-        // TODO Sprint 4+: pass speed factor to the simulation engine
+        speedFactor = factor;
+        if (running && !paused) startLoop();
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Simulation loop helpers
+    // ------------------------------------------------------------------ //
+
+    private void startLoop() {
+        if (simLoop != null) simLoop.stop();
+        simLoop = new Timeline(new KeyFrame(
+                Duration.millis(BASE_TICK_MS / speedFactor),
+                e -> doTick()
+        ));
+        simLoop.setCycleCount(Animation.INDEFINITE);
+        simLoop.play();
+    }
+
+    private void stopLoop() {
+        if (simLoop != null) {
+            simLoop.stop();
+            simLoop = null;
+        }
+    }
+
+    private void doTick() {
+        if (engine == null) return;
+        engine.tick();
+        localTick++;
+        drawViewport();
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
+        if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
     }
 
     // ------------------------------------------------------------------ //
@@ -293,6 +484,7 @@ public class SimulationController {
 
     /** Appends a line to the in-app console. */
     private void log(String message) {
+        System.out.println("[SimulationController] " + message);
         if (consoleArea != null) consoleArea.appendText(message + "\n");
     }
 

@@ -58,6 +58,7 @@ public final class ScreenNavigator {
      */
     public static void loadScreen(String fxmlPath) {
         try {
+            System.out.println("[ScreenNavigator] Loading screen: " + fxmlPath);
             FXMLLoader loader = new FXMLLoader(ScreenNavigator.class.getResource(fxmlPath));
             Parent root = loader.load();
             Scene scene = primaryStage.getScene();
@@ -68,7 +69,9 @@ public final class ScreenNavigator {
                 scene.setRoot(root);
             }
             primaryStage.show();
-        } catch (IOException e) {
+            System.out.println("[ScreenNavigator] Loaded screen: " + fxmlPath);
+        } catch (Exception e) {
+            System.err.println("[ScreenNavigator] Failed to load screen: " + fxmlPath + " -> " + e);
             throw new RuntimeException("Failed to load screen: " + fxmlPath, e);
         }
     }

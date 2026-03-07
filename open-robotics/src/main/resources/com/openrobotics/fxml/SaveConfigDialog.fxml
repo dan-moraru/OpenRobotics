@@ -31,11 +31,11 @@
                style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-font-weight: bold;" />
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Button text="↺" styleClass="button-reset"
-                    prefWidth="36" onAction="#onResetToDefault" />
+                    prefWidth="36" onAction="#onResetDirectory" />
             <ComboBox fx:id="directoryCombo" promptText="Select directory..."
                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
-        <Label fx:id="directoryStatusLabel" text="Directory status"
+        <Label fx:id="selectedDirLabel" text="Directory status"
                style="-fx-font-size: 10px; -fx-text-fill: #C2BEAE; -fx-wrap-text: true;" />
         <Button text="Browse…"
                 style="-fx-background-color: transparent; -fx-text-fill: #C2BEAE;

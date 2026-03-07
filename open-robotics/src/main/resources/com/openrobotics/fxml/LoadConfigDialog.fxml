@@ -61,7 +61,4 @@
         <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
     </HBox>
 </VBox>
-    </HBox>
-
-</VBox>
 

@@ -1,10 +1,15 @@
 package com.openrobotics.controllers;
 
+import com.openrobotics.AppState;
+import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
+import java.io.File;
 
 /**
  * Controller for {@code SetupScreen.fxml}.
@@ -112,6 +117,8 @@ public class SetupController {
     // ------------------------------------------------------------------ //
 
     @FXML private void onResetMap()          { mapCombo.getSelectionModel().selectFirst(); }
+    @FXML private void onResetRandomMap()   { randomMapCheck.setSelected(false); }
+    @FXML private void onResetRandomSeed()  { randomSeedField.setText(""); }
     @FXML private void onResetRobotCount()   { robotCountSpinner.getValueFactory().setValue(DEFAULT_ROBOT_COUNT); }
     @FXML private void onResetNavAlgo()      { navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO); }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
@@ -137,19 +144,128 @@ public class SetupController {
     //  Config File Actions
     // ------------------------------------------------------------------ //
 
-    /** Opens the Load Config specialty dialog (§4.2). */
-    @FXML
-    private void onLoadConfig() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_LOAD_CONFIG, "Load Configuration");
-        // TODO Sprint 4: read returned config and populate fields
-        statusLabel.setText("Configuration loaded.");
+    private void debugStatus(String message) {
+        statusLabel.setText(message);
+        System.out.println("[SetupController] " + message);
     }
 
-    /** Opens the Save Config specialty dialog (§4.2). */
+    private File getFallbackTestConfig() {
+        File fromWorkingDir = new File(System.getProperty("user.dir"), "test_scenario.json");
+        if (fromWorkingDir.isFile()) return fromWorkingDir;
+
+        File fromParentDir = new File(System.getProperty("user.dir"), ".." + File.separator + "test_scenario.json");
+        if (fromParentDir.isFile()) return fromParentDir;
+
+        return null;
+    }
+
+    private boolean promptAndLoadConfig() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Load Simulation Configuration");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("JSON Config (*.json)", "*.json"),
+                new FileChooser.ExtensionFilter("All Files", "*.*"));
+        File fallback = getFallbackTestConfig();
+        debugStatus("Opening config chooser...");
+        if (AppState.hasConfigPath()) {
+            File current = new File(AppState.getConfigPath());
+            File parent = current.getParentFile();
+            if (parent != null && parent.isDirectory()) {
+                chooser.setInitialDirectory(parent);
+            }
+        } else if (fallback != null) {
+            File parent = fallback.getParentFile();
+            if (parent != null && parent.isDirectory()) {
+                chooser.setInitialDirectory(parent);
+            }
+            chooser.setInitialFileName(fallback.getName());
+        }
+
+        Window owner = ScreenNavigator.getPrimaryStage() != null
+                ? ScreenNavigator.getPrimaryStage()
+                : statusLabel.getScene().getWindow();
+        File file = chooser.showOpenDialog(owner);
+        if (file == null) {
+            if (fallback != null) {
+                debugStatus("Chooser returned no file; using fallback test_scenario.json.");
+                return loadConfigFile(fallback);
+            }
+            debugStatus("Load cancelled (chooser returned no file).");
+            return false;
+        }
+        return loadConfigFile(file);
+    }
+
+    private boolean loadConfigFile(File file) {
+        AppState.clear();
+        try {
+            if (file == null || !file.isFile()) {
+                debugStatus("\u26a0 Selected file is not accessible: " + (file == null ? "null" : file.getAbsolutePath()));
+                return false;
+            }
+            debugStatus("Loading config: " + file.getAbsolutePath());
+            SimulationEngine engine = new SimulationEngine(file.getAbsolutePath());
+            if (engine.getMap() == null) {
+                String error = engine.getInitError();
+                debugStatus("\u26a0 Parse failed: " + (error != null ? error : "unknown error"));
+                return false;
+            }
+            AppState.setConfigPath(file.getAbsolutePath());
+            AppState.setEngine(engine);
+            debugStatus("\u2714 Loaded: " + file.getName()
+                    + "  (" + engine.getMap().getEntities().size() + " entities)");
+            return true;
+        } catch (Exception e) {
+            debugStatus("\u26a0 Error loading file: " + e.getClass().getSimpleName()
+                    + (e.getMessage() != null ? " - " + e.getMessage() : ""));
+            return false;
+        }
+    }
+
+    private boolean goToSimulationScreen() {
+        try {
+            debugStatus("Opening editor screen...");
+            ScreenNavigator.goToSimulation();
+            return true;
+        } catch (Exception e) {
+            debugStatus("\u26a0 Could not open editor: " + e.getClass().getSimpleName()
+                    + (e.getMessage() != null ? " - " + e.getMessage() : ""));
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /** Opens a file chooser to pick a JSON config and initialises the engine from it. */
+    @FXML
+    private void onLoadConfig() {
+        if (promptAndLoadConfig()) {
+            goToSimulationScreen();
+        }
+    }
+
+    /** Opens a file chooser to pick a save destination and writes the current engine state. */
     @FXML
     private void onSaveConfig() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration");
-        statusLabel.setText("Configuration saved.");
+        if (!AppState.hasEngine()) {
+            debugStatus("\u26a0 Load a configuration first.");
+            return;
+        }
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save Simulation Configuration");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("JSON Config (*.json)", "*.json"));
+        chooser.setInitialFileName("config_saved.json");
+        File file = chooser.showSaveDialog(statusLabel.getScene().getWindow());
+        if (file == null) {
+            debugStatus("Save cancelled.");
+            return;
+        }
+        try {
+            AppState.getEngine().configSaving(file.getAbsolutePath());
+            debugStatus("\u2714 Saved: " + file.getName());
+        } catch (Exception e) {
+            debugStatus("\u26a0 Save error: " + e.getMessage());
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -158,9 +274,33 @@ public class SetupController {
 
     @FXML
     private void onStartSimulation() {
-        if (!validate()) return;
-        // TODO Sprint 4: build RunConfig object from fields and pass to engine
-        ScreenNavigator.goToSimulation();
+        debugStatus("Start Simulation clicked.");
+        if (!AppState.hasEngine() && !AppState.hasConfigPath()) {
+            File fallback = getFallbackTestConfig();
+            if (fallback != null) {
+                debugStatus("No loaded config in memory; using fallback test config.");
+                if (!loadConfigFile(fallback)) {
+                    return;
+                }
+            } else if (!promptAndLoadConfig()) {
+                return;
+            }
+        }
+        if (!AppState.hasEngine() && AppState.hasConfigPath()) {
+            debugStatus("Rebuilding engine from saved config path.");
+            SimulationEngine engine = new SimulationEngine(AppState.getConfigPath());
+            if (engine.getMap() == null) {
+                String error = engine.getInitError();
+                debugStatus("\u26a0 Config reload failed: " + (error != null ? error : "unknown error"));
+                return;
+            }
+            AppState.setEngine(engine);
+        }
+        if (!AppState.hasEngine()) {
+            debugStatus("\u26a0 Please load a configuration file first.");
+            return;
+        }
+        goToSimulationScreen();
     }
 
     /** Basic validation – returns {@code true} if all required fields are filled. */

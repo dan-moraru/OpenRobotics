@@ -33,6 +33,7 @@ public class SimulationEngine {
     private int tickMs;
     private int maxTicks;
     private long seed;
+    private String initError;
 
     /**
      * Constructs a new simulation engine instance
@@ -55,6 +56,7 @@ public class SimulationEngine {
      * @param configFilePath the path to the config JSON file
      */
     public SimulationEngine(String configFilePath) {
+        this.initError = null;
         if (configFilePath != null) {
             configInitialization(configFilePath);
         } else {
@@ -71,6 +73,8 @@ public class SimulationEngine {
      */
     private void configInitialization(String path) {
         try {
+            this.initError = null;
+
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
@@ -150,15 +154,28 @@ public class SimulationEngine {
             this.seed = dto.config.seed;
             // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
 
+            // CollisionManager is always needed for tick()
+            this.collisionManager = new CollisionManager();
+
             // Test print, TODO: remove
             System.out.println("Simulation '" + dto.config.runName + "' loaded with "
                     + dto.entities.robots.size() + " robots and "
                     + (dto.tasks != null ? dto.tasks.size() : 0) + " tasks.");
 
-        } catch (IOException e) {
-            //TODO: send error message to the frontend
+        } catch (Exception e) {
+            this.map = null;
+            this.robots = null;
+            this.dispatcher = null;
+            this.coordinationPolicy = null;
+            this.collisionManager = null;
+            this.initError = e.getMessage();
             System.err.println("Error: Could not initialize simulation from file: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    public String getInitError() {
+        return initError;
     }
 
     /**

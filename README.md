@@ -44,6 +44,9 @@ cd C:\Users\Admin\IdeaProjects\OpenRobotics
 # Option 2: Using Maven directly
 cd open-robotics
 mvn clean compile javafx:run
+
+# Option 3: Using Maven from the repo root
+mvn -f open-robotics/pom.xml clean compile javafx:run
 ```
 
 ### Installation & Run (Mac/Linux)

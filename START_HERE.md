@@ -34,7 +34,7 @@ For UI design, CSS classes, and technical details:
 ### 🛠️ Build Tools
 - ✅ Maven Configuration (pom.xml)
 - ✅ PowerShell Build Script (Windows)
-- ✅ Bash Build Script (Mac/Linux)
+- ✅ Bash Build Script (Mac/Linux) 
 - ✅ Verification Script
 
 ### 📚 Documentation
