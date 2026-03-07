@@ -57,13 +57,13 @@ public class Dispatcher {
      * @param robots a list of all the robots in the warehouse
      * @return the number of successful assignments performed
      */
-    public int assignTasks(List<Robot> robots) {
+    public int assignTasks(Robot[] robots) {
         if (robots == null) {
-            throw new IllegalArgumentException("Robots list cannot be null");
-        } else if (robots.isEmpty()) {
-            throw new IllegalArgumentException("Robots list cannot be empty");
+            throw new IllegalArgumentException("Robots array cannot be null");
+        } else if (robots.length == 0) {
+            throw new IllegalArgumentException("Robots array cannot be empty");
         } else if (taskQueue.isEmpty()) {
-            return 0; // there are no available tasks
+            return 0; // there are no available tasks, 0 task assignments made
         }
 
         int assignmentCount = 0;
