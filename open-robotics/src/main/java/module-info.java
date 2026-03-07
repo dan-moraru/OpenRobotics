@@ -3,7 +3,6 @@ module com.openrobotics {
     requires javafx.fxml;
     requires javafx.graphics;
     requires javafx.base;
-    requires javafx.charts;
     requires javafx.swing;
     requires java.sql;
     requires java.prefs;
