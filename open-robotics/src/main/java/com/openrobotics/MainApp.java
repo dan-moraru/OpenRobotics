@@ -15,7 +15,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("OpenRobotics – Warehouse Simulation Platform");
+        primaryStage.setTitle("OpenRobotics \u2013 Warehouse Simulation Platform");
         primaryStage.setMinWidth(960);
         primaryStage.setMinHeight(640);
         primaryStage.setWidth(1280);
