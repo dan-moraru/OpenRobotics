@@ -320,6 +320,9 @@ public class SimulationEngine {
             return;
         }
 
+        // Assigning tasks to available robots
+        dispatcher.assignTasks(robots);
+
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
