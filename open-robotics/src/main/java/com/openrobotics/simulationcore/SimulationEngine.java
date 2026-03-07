@@ -314,6 +314,15 @@ public class SimulationEngine {
      * </p>
      */
     public void tick() {
+        // Checking if the warehouse workload has been completed
+        if (workloadComplete()) {
+            this.running = false;
+            return;
+        }
+
+        // Assigning tasks to available robots
+        dispatcher.assignTasks(robots);
+
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
@@ -324,6 +333,23 @@ public class SimulationEngine {
         updateRobotStates(finalMoveIntentions);
 
         incrementTickCounter();
+    }
+
+    /**
+     * Indicates if the warehouse workload has been completed. Returns true if no robot is working
+     * on a task and there are no more pending tasks available
+     * @return true if the warehouse workload is complete
+     */
+    private boolean workloadComplete() {
+        // Checking if any robot is still working on a task
+        for (Robot robot : robots) {
+            // There is a robot still working on a task
+            if (!robot.isAvailable()) {
+                return false;
+            }
+        }
+
+        return !dispatcher.hasPendingTasks(); // Checking if there are any pending tasks
     }
 
     /**

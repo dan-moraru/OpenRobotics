@@ -1,101 +1,124 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 import com.openrobotics.task.Task;
+import com.openrobotics.task.TaskStatus;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
+/**
+ * The Dispatcher manages a queue of tasks for robots to complete ordered by priority
+ */
 public class Dispatcher {
-    // Pending tasks waiting for assignment this tick (FIFO)
-    private final List<Task> pendingTasks;
+    private final PriorityQueue<Task> taskQueue;
 
+    /**
+     * Creates a priority queue for tasks
+     */
     public Dispatcher() {
-        this.pendingTasks = new ArrayList<>();
+        this.taskQueue = new PriorityQueue<>();
     }
 
-    // Adds a task to the pending queue if it is not null and not already present
+    /**
+     * Adds a task to the pending queue if it is not null and not already present
+     * @param task the task being added to the task queue
+     */
     public void addTask(Task task) {
         if (task == null) {
-            return;
+            throw new IllegalArgumentException("Task cannot be null");
+        } else if (taskQueue.contains(task)) {
+            throw new Error("Task is already in the task queue");
         }
 
-        for (Task existing : pendingTasks) {
-            if (existing.getId() == task.getId()) {
-                return;
-            }
-        }
-
-        task.setStatus("PENDING");
-        pendingTasks.add(task);
+        // Set task status as pending and add to queue
+        task.setStatus(TaskStatus.PENDING);
+        taskQueue.add(task);
     }
 
-    // Also added a bulk-add used when adding a batch of tasks
+    /**
+     * Adds tasks to the task queue in bulk
+     * @param tasks a list of tasks being added to the task queue
+     */
     public void addTasks(List<Task> tasks) {
         if (tasks == null) {
-            return;
+            throw new IllegalArgumentException("Tasks list cannot be null");
         }
+
+        // Adding tasks to task queue
         for (Task task : tasks) {
+            task.setStatus(TaskStatus.PENDING);
             addTask(task);
         }
     }
 
-    // Assign at most one task per available robot
-    // Returns the number of assignments performed for this tick
-    public int assignTasks(List<Robot> robots) {
-        if (robots == null || robots.isEmpty() || pendingTasks.isEmpty()) {
-            return 0;
+    /**
+     * Assigns at most one task per available robot
+     * @param robots a list of all the robots in the warehouse
+     * @return the number of successful assignments performed
+     */
+    public int assignTasks(Robot[] robots) {
+        if (robots == null) {
+            throw new IllegalArgumentException("Robots array cannot be null");
+        } else if (robots.length == 0) {
+            throw new IllegalArgumentException("Robots array cannot be empty");
+        } else if (taskQueue.isEmpty()) {
+            return 0; // there are no available tasks, 0 task assignments made
         }
 
-        // task order:
-        // 1) higher priority first
-        // 2) lower task id first as tie-break
-        pendingTasks.sort(Comparator
-                .comparingInt(Task::getPriority).reversed()
-                .thenComparingInt(Task::getId));
-
-        // robot order:
-        // 1) robot name
-        // 2) Id string as tie-break
-        List<Robot> robotOrder = new ArrayList<>(robots);
-        robotOrder.sort(Comparator
-                .comparing(Robot::getName, Comparator.nullsFirst(String::compareTo))
-                .thenComparing(robot -> robot.getId().toString()));
-
         int assignmentCount = 0;
-        for (Robot robot : robotOrder) {
-            if (pendingTasks.isEmpty()) {
+
+        // Assigning tasks to available robots
+        for (Robot robot : robots) {
+            if (taskQueue.isEmpty()) { // There are no more tasks left to assign
                 break;
             }
-            if (robot == null || !robot.isAvailable()) {
-                continue;
-            }
 
-            // Remove one task from queue and assign it to this robot
-            Task task = pendingTasks.remove(0);
-            task.setStatus("IN_PROGRESS");
-            robot.setCurrentTask(task);
-            assignmentCount++;
+            if (robot.isAvailable()) { // robot is available for task assignment
+                // Assign a task to the robot
+                Task task = taskQueue.poll();
+                robot.setCurrentTask(task);
+
+                // Update robot state and task status
+                robot.setState(RobotState.MOVING);
+                task.setStatus(TaskStatus.IN_PROGRESS);
+
+                assignmentCount++;
+            }
         }
 
         return assignmentCount;
     }
 
-    // Requeues a task (for future deadlock/failure recovery)
+    /**
+     * Requeues a task (for future deadlock/failure recovery)
+     * @param task the task to be requeued
+     */
     public void requeueTask(Task task) {
         addTask(task);
     }
 
+    /**
+     * Returns true if the task queue is not empty
+     * @return true if the task queue is not empty
+     */
     public boolean hasPendingTasks() {
-        return !pendingTasks.isEmpty();
+        return !taskQueue.isEmpty();
     }
 
+    /**
+     * Returns the number of pending tasks in the task queue
+     * @return the number of tasks in the task queue
+     */
     public int getPendingTaskCount() {
-        return pendingTasks.size();
+        return taskQueue.size();
     }
 
+    /**
+     * Returns a list of all the tasks in the task queue
+     * @return a list containing all the tasks in the task queue
+     */
     public List<Task> getAllTasks() {
-        return new ArrayList<>(pendingTasks);
+        return new ArrayList<>(taskQueue);
     }
 }

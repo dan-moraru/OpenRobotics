@@ -1,5 +1,7 @@
 package com.openrobotics.io;
 
+import com.openrobotics.task.TaskStatus;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -99,6 +101,6 @@ public class SimulationConfigDTO {
         public Vector2DDTO pickupLocation;
         public Vector2DDTO dropoffLocation;
         public int priority;
-        public String status;
+        public TaskStatus status;
     }
 }
