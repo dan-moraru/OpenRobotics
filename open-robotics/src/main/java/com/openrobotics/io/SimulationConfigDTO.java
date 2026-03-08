@@ -87,6 +87,7 @@ public class SimulationConfigDTO {
         public UUID id;
         public String name;
         public Vector2DDTO position;
+        public String type; // "CHARGING", "DELIVERY", or null for old configs
     }
 
     public static class RobotDTO extends MapEntityDTO {

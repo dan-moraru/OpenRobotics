@@ -3,6 +3,10 @@ package com.openrobotics.map;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.openrobotics.common.Direction;
+import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.station.ChargingStation;
+
 // warehouse grid (uml 3.3.3)
 public class Map {
     private final int width;  // number of columns (x-axis)
@@ -62,5 +66,48 @@ public class Map {
 
     public List<MapEntity> getEntities() {
         return entities;
+    }
+
+    // checks bounds and obstacle entities only, not tile.isOccupied()
+    // robot-robot conflicts are handled by collisionmanager
+    public boolean isTraversable(Vector2D pos) {
+        Tile tile = getTile(pos.getX(), pos.getY());
+        if (tile == null) return false; // out of bounds
+        for (MapEntity entity : entities) {
+            // block if an obstacle entity sits on this tile
+            if (entity instanceof Obstacle && entity.getPosition().equals(pos)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // returns traversable neighbors in direction enum order for determinism
+    public List<Vector2D> getNeighbors(Vector2D pos) {
+        List<Vector2D> neighbors = new ArrayList<>();
+        for (Direction dir : Direction.values()) {
+            Vector2D neighbor = pos.add(dir.dx, dir.dy); // apply direction delta
+            if (isTraversable(neighbor)) {
+                neighbors.add(neighbor);
+            }
+        }
+        return neighbors;
+    }
+
+    // finds nearest charging station by manhattan distance, null if none
+    public Vector2D findNearestChargingStation(Vector2D from) {
+        Vector2D nearest = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (MapEntity entity : entities) {
+            // only chargingstation counts, not generic stations
+            if (entity instanceof ChargingStation) {
+                int dist = from.manhattanDistance(entity.getPosition());
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    nearest = entity.getPosition();
+                }
+            }
+        }
+        return nearest;
     }
 }
