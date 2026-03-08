@@ -446,4 +446,17 @@ public class SimulationEngine {
     private void incrementTickCounter() {
         tickCounter++;
     }
+
+    // Getters
+    public int getTickCounter() {
+        return tickCounter;
+    }
+
+    public boolean getIsRunning() {
+        return running;
+    }
+
+    public Robot[] getRobots() {
+        return robots;
+    }
 }
