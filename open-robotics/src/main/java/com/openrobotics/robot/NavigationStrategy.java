@@ -6,8 +6,8 @@ import com.openrobotics.map.Vector2D;
 import com.openrobotics.simulationcore.MoveIntention;
 
 // strategy pattern interface for robot navigation (uml 3.3.4 / 3.4.5)
-// concrete implementations (greedy, bug, rta*) will be done later
+// concrete implementations include greedy; bug and rta* are future work
 public interface NavigationStrategy {
-    // returns the intended next position for the robot
+    // returns the robot's intended move for the current tick
     MoveIntention getNextMove(Robot robot, Map map);
 }

@@ -3,6 +3,10 @@ package com.openrobotics.simulationcore;
 import com.openrobotics.io.ConfigLoader;
 import com.openrobotics.io.SimulationConfigDTO;
 import com.openrobotics.map.*;
+import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.environment.Rack;
+import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
 import com.openrobotics.task.*;
 
@@ -33,7 +37,6 @@ public class SimulationEngine {
     private int tickMs;
     private int maxTicks;
     private long seed;
-    private String initError;
 
     /**
      * Constructs a new simulation engine instance
@@ -56,7 +59,6 @@ public class SimulationEngine {
      * @param configFilePath the path to the config JSON file
      */
     public SimulationEngine(String configFilePath) {
-        this.initError = null;
         if (configFilePath != null) {
             configInitialization(configFilePath);
         } else {
@@ -91,6 +93,9 @@ public class SimulationEngine {
                 }
             }
 
+            // seed must be set before robot creation for strategy wiring
+            this.seed = dto.config.seed;
+
             // Initialize Entities (Robots, Stations, Obstacles, etc.)
             // robots
             for (SimulationConfigDTO.RobotDTO rDto : dto.entities.robots) {
@@ -101,9 +106,13 @@ public class SimulationEngine {
                 robot.setStuckTicks(rDto.stuckTicks);
                 robot.setState(RobotState.valueOf(rDto.state));
 
-                if (rDto.navigationStrategy.equals("GREEDYNAVIGATIONSTRATEGY")) {
-                    robot.setNav(new GreedyNavigationStrategy());
-                } // greedy strategy for now to test
+                // normalize config strategy name and wire nav with seed
+                AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
+                switch (algo) {
+                    case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
+                    // BUG, RTA_STAR: future tasks
+                    default -> {} // nav stays null, getNextMove handles it safely
+                }
 
                 this.map.addEntity(robot);
             }
@@ -111,10 +120,10 @@ public class SimulationEngine {
             // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
 
-            // Generic MapEntities (Stations, Racks, Obstacles)
-            addEntitiesToMap(dto.entities.stations);
-            addEntitiesToMap(dto.entities.racks);
-            addEntitiesToMap(dto.entities.obstacles);
+            // typed entity loading to preserve instanceof checks
+            addStationsToMap(dto.entities.stations);
+            addRacksToMap(dto.entities.racks);
+            addObstaclesToMap(dto.entities.obstacles);
 
             // Initialize Dispatcher and Tasks
             this.dispatcher = new Dispatcher();
@@ -151,7 +160,7 @@ public class SimulationEngine {
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
-            this.seed = dto.config.seed;
+            // seed already set before robot creation loop
             // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
 
             // CollisionManager is always needed for tick()
@@ -168,27 +177,48 @@ public class SimulationEngine {
             this.dispatcher = null;
             this.coordinationPolicy = null;
             this.collisionManager = null;
-            this.initError = e.getMessage();
             System.err.println("Error: Could not initialize simulation from file: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public String getInitError() {
-        return initError;
-    }
-
-    /**
-     * Helper to handle MapEntity loading
-     * Generic MapEntity parser called in configInitialization
-     */
-    private void addEntitiesToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
+    // creates typed station entities, prefers dto type field over name heuristic
+    private void addStationsToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
         if (entityDtos == null) return;
-
         for (SimulationConfigDTO.MapEntityDTO eDto : entityDtos) {
             Vector2D pos = new Vector2D(eDto.position.x, eDto.position.y);
-            MapEntity entity = new MapEntity(eDto.id, eDto.name, pos);
-            this.map.addEntity(entity);
+            // type field first, name fallback for old configs without type
+            boolean isCharging = "CHARGING".equalsIgnoreCase(eDto.type)
+                    || (eDto.type == null && eDto.name != null
+                        && eDto.name.toLowerCase().contains("charg"));
+            boolean isDelivery = "DELIVERY".equalsIgnoreCase(eDto.type)
+                    || (eDto.type == null && eDto.name != null
+                        && eDto.name.toLowerCase().contains("deliver"));
+            if (isCharging) {
+                this.map.addEntity(new ChargingStation(eDto.id, eDto.name, pos));
+            } else if (isDelivery) {
+                this.map.addEntity(new DeliveryStation(eDto.id, eDto.name, pos));
+            } else {
+                this.map.addEntity(new MapEntity(eDto.id, eDto.name, pos)); // unknown type
+            }
+        }
+    }
+
+    // creates Rack entities to preserve type
+    private void addRacksToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
+        if (entityDtos == null) return;
+        for (SimulationConfigDTO.MapEntityDTO eDto : entityDtos) {
+            Vector2D pos = new Vector2D(eDto.position.x, eDto.position.y);
+            this.map.addEntity(new Rack(eDto.id, eDto.name, pos));
+        }
+    }
+
+    // creates Obstacle entities so Map.isTraversable() works
+    private void addObstaclesToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
+        if (entityDtos == null) return;
+        for (SimulationConfigDTO.MapEntityDTO eDto : entityDtos) {
+            Vector2D pos = new Vector2D(eDto.position.x, eDto.position.y);
+            this.map.addEntity(new Obstacle(eDto.id, eDto.name, pos));
         }
     }
 
@@ -232,21 +262,24 @@ public class SimulationEngine {
         dto.entities.racks = new ArrayList<>();
         dto.entities.obstacles = new ArrayList<>();
 
+        // instanceof classification so types round-trip through save/load
         for (MapEntity entity : map.getEntities()) {
             if (entity instanceof Robot) {
                 dto.entities.robots.add(mapToRobotDTO((Robot) entity));
-            } else {
+            } else if (entity instanceof ChargingStation) { // check before generic station
                 SimulationConfigDTO.MapEntityDTO eDto = mapToEntityDTO(entity);
-                String name = entity.getName().toLowerCase();
-
-                // Improved classification logic
-                if (name.contains("charge") || name.contains("station")) {
-                    dto.entities.stations.add(eDto);
-                } else if (name.contains("rack")) {
-                    dto.entities.racks.add(eDto);
-                } else {
-                    dto.entities.obstacles.add(eDto);
-                }
+                eDto.type = "CHARGING"; // persisted so loader recreates correct type
+                dto.entities.stations.add(eDto);
+            } else if (entity instanceof DeliveryStation) {
+                SimulationConfigDTO.MapEntityDTO eDto = mapToEntityDTO(entity);
+                eDto.type = "DELIVERY"; // persisted so loader recreates correct type
+                dto.entities.stations.add(eDto);
+            } else if (entity instanceof Rack) {
+                dto.entities.racks.add(mapToEntityDTO(entity));
+            } else if (entity instanceof Obstacle) {
+                dto.entities.obstacles.add(mapToEntityDTO(entity));
+            } else {
+                dto.entities.stations.add(mapToEntityDTO(entity)); // unknown type fallback
             }
         }
 
@@ -349,6 +382,9 @@ public class SimulationEngine {
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
 
+        // run per-robot state machine (charging, loading, unloading, energy)
+        updateAllRobots();
+
         incrementTickCounter();
     }
 
@@ -392,8 +428,15 @@ public class SimulationEngine {
         // Move all robots to 'From' tile in their move intentions
         for (MoveIntention intention : intentions) {
             Robot robot = intention.getRobot();
-            Vector2D newPosition = intention.getFromTile().getPosition();
+            Vector2D newPosition = intention.getToTile().getPosition();
             robot.setPosition(newPosition);
+        }
+    }
+
+    // calls update() on every robot for state machine transitions
+    private void updateAllRobots() {
+        for (Robot robot : robots) {
+            robot.update();
         }
     }
 

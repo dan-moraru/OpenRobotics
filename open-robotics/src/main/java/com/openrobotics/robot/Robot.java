@@ -2,7 +2,10 @@ package com.openrobotics.robot;
 
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
+import com.openrobotics.map.Tile;
+import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.task.Task;
+import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
 
@@ -17,24 +20,43 @@ public class Robot extends MapEntity {
     private Task currentTask;
     private int stuckTicks;
 
+    // movement fields
+    private Vector2D previousPosition; // saved before move for stuck detection
+    private boolean hasPickedUp; // false = going to pickup, true = going to dropoff
+    private Vector2D chargerTarget; // overrides task target when low battery
+    private int loadingTicksRemaining; // pickup dwell timer
+    private int unloadingTicksRemaining; // dropoff dwell timer
+
+    // provisional constants. future config task may override
+    private static final float ENERGY_PER_MOVE = 1.0f;
+    private static final float LOW_BATTERY_THRESHOLD = 20.0f;
+    private static final float CHARGE_PER_TICK = 5.0f;
+    private static final int DEFAULT_LOADING_TICKS = 1;
+    private static final int DEFAULT_UNLOADING_TICKS = 1;
+
     // takes Vector2D position, delegates to MapEntity via super()
     public Robot(String name, Vector2D position) {
         super(name, position);
-        this.battery = 100.0f;
-        this.nav = null;
-        this.state = RobotState.IDLE;
-        this.currentTask = null;
-        this.stuckTicks = 0;
+        initMovementFields();
     }
 
-    // Constructor for loading robots
+    // constructor for loading robots
     public Robot(UUID id, String name, Vector2D position) {
-        super(id, name, position); // Calls the specific UUID constructor in MapEntity
+        super(id, name, position);
+        initMovementFields();
+    }
+
+    private void initMovementFields() {
         this.battery = 100.0f;
         this.nav = null;
         this.state = RobotState.IDLE;
         this.currentTask = null;
         this.stuckTicks = 0;
+        this.previousPosition = null;
+        this.hasPickedUp = false;
+        this.chargerTarget = null;
+        this.loadingTicksRemaining = 0;
+        this.unloadingTicksRemaining = 0;
     }
 
     // getters for all fields
@@ -43,6 +65,11 @@ public class Robot extends MapEntity {
     public RobotState getState() { return state; }
     public Task getCurrentTask() { return currentTask; }
     public int getStuckTicks() { return stuckTicks; }
+    public Vector2D getPreviousPosition() { return previousPosition; }
+    public boolean isHasPickedUp() { return hasPickedUp; }
+    public void setHasPickedUp(boolean hasPickedUp) { this.hasPickedUp = hasPickedUp; }
+    public int getLoadingTicksRemaining() { return loadingTicksRemaining; }
+    public int getUnloadingTicksRemaining() { return unloadingTicksRemaining; }
 
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
@@ -51,13 +78,60 @@ public class Robot extends MapEntity {
     public void setCurrentTask(Task currentTask) { this.currentTask = currentTask; }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
 
-    /**
-     * Returns a move intention for the robot based on its navigation strategy
-     * @param map the map of the warehouse environment
-     * @return a MoveIntention representing the choice for the robots next move
-     */
+    // returns the current navigation target based on priority:
+    // charger (if set) > pickup (if not picked up) > dropoff
+    public Vector2D getTarget() {
+        if (chargerTarget != null) return chargerTarget;
+        if (currentTask == null) return null;
+        if (!hasPickedUp) return currentTask.getPickupLocation();
+        return currentTask.getDropoffLocation();
+    }
+
+    // returns a move intention, called once per tick before collision resolution
     public MoveIntention getNextMove(Map map) {
-        return nav.getNextMove(this, map);
+        previousPosition = getPosition(); // save for stuck detection in update()
+        Tile fromTile = map.getTile(getPosition().getX(), getPosition().getY());
+
+        // safety net: idle robot with a task should start moving
+        if (state == RobotState.IDLE && currentTask != null) {
+            state = RobotState.MOVING;
+        }
+
+        // only moving robots produce real move intentions
+        if (state != RobotState.MOVING) {
+            return new MoveIntention(fromTile, fromTile, this);
+        }
+
+        // low battery; check if already on a charger or redirect to one
+        if (needsCharging(LOW_BATTERY_THRESHOLD)) {
+            // check via instanceof so it works even if chargerTarget was never set
+            boolean onCharger = false;
+            for (MapEntity e : map.getEntitiesAt(getPosition())) {
+                if (e instanceof ChargingStation) {
+                    onCharger = true;
+                    break;
+                }
+            }
+            if (onCharger) {
+                state = RobotState.CHARGING;
+                chargerTarget = null; // clear override
+                return new MoveIntention(fromTile, fromTile, this);
+            }
+            // find nearest charger and override nav target
+            if (chargerTarget == null) {
+                chargerTarget = map.findNearestChargingStation(getPosition());
+            }
+        } else {
+            chargerTarget = null; // battery ok, clear charger override
+        }
+
+        // delegate to nav strategy, null-safe if no strategy is set
+        if (nav != null && getTarget() != null) {
+            return nav.getNextMove(this, map);
+        }
+
+        // no nav or no target. stay in place
+        return new MoveIntention(fromTile, fromTile, this);
     }
 
     // dispatcher checks this to find robots that can accept tasks
@@ -80,10 +154,66 @@ public class Robot extends MapEntity {
         return state.name();
     }
 
-    // per-tick update hook from mapentity — sim engine will call this
+    // per-tick update hook — called by sim engine after position commit
     @Override
     public void update() {
-        // per-tick update logic will be added as the simulation engine develops
+        switch (state) {
+            case CHARGING:
+                battery = Math.min(100.0f, battery + CHARGE_PER_TICK); // cap at 100
+                if (battery >= 100.0f) {
+                    // fully charged — resume task or go idle
+                    state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
+                }
+                break;
+
+            case LOADING:
+                loadingTicksRemaining--;
+                if (loadingTicksRemaining <= 0) {
+                    hasPickedUp = true; // pickup done, now head to dropoff
+                    state = RobotState.MOVING;
+                }
+                break;
+
+            case UNLOADING:
+                unloadingTicksRemaining--;
+                if (unloadingTicksRemaining <= 0) {
+                    // delivery done — mark task completed and reset
+                    if (currentTask != null) {
+                        currentTask.setStatus(TaskStatus.COMPLETED);
+                    }
+                    currentTask = null;
+                    hasPickedUp = false;
+                    state = RobotState.IDLE;
+                }
+                break;
+
+            case MOVING:
+                // check if robot actually moved this tick
+                if (previousPosition != null && !getPosition().equals(previousPosition)) {
+                    consumeEnergy(ENERGY_PER_MOVE);
+                    stuckTicks = 0;
+                } else {
+                    stuckTicks++;
+                }
+
+                // check arrival at pickup location
+                if (currentTask != null && !hasPickedUp
+                        && getPosition().equals(currentTask.getPickupLocation())) {
+                    state = RobotState.LOADING;
+                    loadingTicksRemaining = DEFAULT_LOADING_TICKS;
+                }
+
+                // check arrival at dropoff location
+                if (currentTask != null && hasPickedUp
+                        && getPosition().equals(currentTask.getDropoffLocation())) {
+                    state = RobotState.UNLOADING;
+                    unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
     // readable debug output
