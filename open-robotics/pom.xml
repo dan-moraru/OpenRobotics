@@ -42,6 +42,11 @@
             <version>${javafx.version}</version>
         </dependency>
 
+<dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
