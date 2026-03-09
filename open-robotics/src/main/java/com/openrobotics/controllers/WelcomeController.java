@@ -1,8 +1,8 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.util.ScreenNavigator;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -10,8 +10,7 @@ import javafx.scene.layout.VBox;
  * Controller for {@code WelcomeScreen.fxml}.
  *
  * <p>The welcome screen (§4.1.1) shows the application logo, branding, and
- * a changelog panel. Clicking anywhere on the screen navigates to the Setup
- * screen.
+ * a changelog panel. Pressing START SETUP navigates to the Setup screen.
  */
 public class WelcomeController {
 
@@ -32,10 +31,9 @@ public class WelcomeController {
     //  Event Handlers
     // ------------------------------------------------------------------ //
 
-    /** Any click on the root pane navigates to the Setup screen (§2.2.6). */
+    /** START SETUP button navigates to the Setup screen (§2.2.6). */
     @FXML
-    private void onAnyClick(MouseEvent event) {
+    private void onStartSetup(ActionEvent event) {
         ScreenNavigator.goToSetup();
     }
 }
-

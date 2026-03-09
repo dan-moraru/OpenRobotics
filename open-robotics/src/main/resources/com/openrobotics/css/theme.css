@@ -903,19 +903,8 @@
 
 /* ---------- Welcome screen -------------------------------------- */
 .welcome-root {
-    -fx-background-color: #C2BEAE;
-}
-
-.welcome-dialog {
-    -fx-background-color: #C2BEAE;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0, 0, 4);
-}
-
-.welcome-title-bar {
-    -fx-background-color: #9F9D96;
-    -fx-padding: 7 10 7 8;
+    -fx-background-color: linear-gradient(to bottom, #CDCBC3 0%, #C2BEAE 58%, #b8b4a4 100%);
+    -fx-padding: 28px;
 }
 
 /* Additional button styles */
@@ -967,21 +956,87 @@
     -fx-background-color: #2d2a26;
 }
 
-.welcome-title-bar .label {
-    -fx-text-fill: #1a1a18;
+.welcome-shell {
+    -fx-background-color: transparent;
+}
+
+.welcome-main {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 16, 0.15, 0, 4);
+    -fx-padding: 16px;
+}
+
+.welcome-hero-panel {
+    -fx-background-color: linear-gradient(to bottom right, #d1cfc4, #c4c0b1);
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-padding: 18px;
+}
+
+.welcome-hero-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #32312D;
+}
+
+.welcome-hero-copy {
     -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+.welcome-updates-panel {
+    -fx-background-color: #CDCBC3;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+}
+
+.welcome-section-title {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
-.welcome-body {
-    -fx-background-color: #C2BEAE;
-    -fx-padding: 10 14 10 14;
+.welcome-updates-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
 }
 
-.welcome-click-hint {
+.welcome-updates-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-content {
+    -fx-background-color: transparent;
+    -fx-padding: 2 2 4 2;
+}
+
+.welcome-update-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3D3C39;
+}
+
+.welcome-update-copy {
+    -fx-font-size: 11px;
     -fx-text-fill: #5D5B54;
-    -fx-font-size: 12px;
-    -fx-font-style: italic;
+}
+
+.welcome-footer {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 2 2 2;
+}
+
+.welcome-footer-hint {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D5B54;
 }
 
 /* ---------- Info / status bar below viewport ------------------- */
