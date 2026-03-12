@@ -902,101 +902,138 @@
 }
 
 /* ---------- Welcome screen -------------------------------------- */
+
+/* ── Root ─────────────────────────────────────────────────────── */
 .welcome-root {
-    -fx-background-color: linear-gradient(to bottom, #CDCBC3 0%, #C2BEAE 58%, #b8b4a4 100%);
-    -fx-padding: 28px;
-}
-
-/* Additional button styles */
-.btn-danger {
-    -fx-background-color: #AA8478;
-    -fx-text-fill: white;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-
-.btn-danger:hover {
-    -fx-background-color: #8b6c63;
-}
-
-.btn-neutral {
-    -fx-background-color: #56544D;
-    -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-
-.btn-neutral:hover {
-    -fx-background-color: #4a4945;
-}
-
-.btn-success {
-    -fx-background-color: #599068;
-    -fx-text-fill: white;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-
-.btn-success:hover {
-    -fx-background-color: #4a7d56;
-}
-
-.btn-primary {
-    -fx-background-color: #383632;
-    -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-
-.btn-primary:hover {
-    -fx-background-color: #2d2a26;
+    -fx-background-color: linear-gradient(to bottom right, #D4D1C3 0%, #C2BEAE 55%, #ADA99A 100%);
+    -fx-padding: 0;
 }
 
 .welcome-shell {
-    -fx-background-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.30), 40, 0.10, 0, 8);
 }
 
-.welcome-main {
+/* ── Version badge ────────────────────────────────────────────── */
+.welcome-version-badge {
+    -fx-background-color: #5D5B54;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 9 3 9;
+    -fx-background-radius: 2;
+}
+
+/* ── Body container ───────────────────────────────────────────── */
+.welcome-body {
     -fx-background-color: #C2BEAE;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 16, 0.15, 0, 4);
-    -fx-padding: 16px;
 }
 
+/* ── Hero panel (left) ────────────────────────────────────────── */
 .welcome-hero-panel {
-    -fx-background-color: linear-gradient(to bottom right, #d1cfc4, #c4c0b1);
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-padding: 18px;
+    -fx-background-color: linear-gradient(to bottom, #CDCBC3 0%, #C2BEAE 60%, #BAB7A8 100%);
+    -fx-padding: 0;
+}
+
+/* Logo + wordmark zone — tall, centered, dark bg for contrast */
+.welcome-hero-logo-zone {
+    -fx-background-color: #32312D;
+    -fx-min-height: 160px;
+    -fx-pref-height: 160px;
+    -fx-padding: 28 36 28 36;
+    -fx-alignment: CENTER;
+}
+
+.welcome-hero-wordmark {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+    /* Wide tracked capitals for gravitas */
+    -fx-letter-spacing: 6;
+}
+
+.welcome-hero-release {
+    -fx-font-size: 11px;
+    -fx-text-fill: #706E65;
+    -fx-font-weight: bold;
+}
+
+/* Thin separator line */
+.welcome-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.40;
+}
+
+/* Copy zone: headline + body */
+.welcome-hero-copy-zone {
+    -fx-padding: 30 36 24 36;
+}
+
+.welcome-eyebrow {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
 }
 
 .welcome-hero-title {
-    -fx-font-size: 22px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
-    -fx-text-fill: #32312D;
+    -fx-text-fill: #1a1a18;
+    -fx-line-spacing: 4;
 }
 
 .welcome-hero-copy {
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-text-fill: #4D4B45;
+    -fx-line-spacing: 3;
 }
 
-.welcome-updates-panel {
-    -fx-background-color: #CDCBC3;
+/* CTA row */
+.welcome-cta-row {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 20 36 24 36;
     -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-padding: 10px;
+    -fx-border-width: 0;
+}
+
+/* Override btn-primary for welcome screen: larger, more presence */
+.welcome-cta-row .btn-primary {
+    -fx-font-size: 12px;
+    -fx-padding: 10 24 10 24;
+    -fx-cursor: hand;
+}
+
+.welcome-cta-row .btn-primary:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* ── Panel divider ────────────────────────────────────────────── */
+.welcome-panel-divider {
+    -fx-background-color: #8D8A7F;
+}
+
+/* ── Changelog panel (right) ──────────────────────────────────── */
+.welcome-updates-panel {
+    -fx-background-color: #BAB7A8;
+}
+
+.welcome-updates-header {
+    -fx-background-color: #32312D;
+    -fx-padding: 14 16 14 16;
 }
 
 .welcome-section-title {
-    -fx-text-fill: #3D3C39;
+    -fx-text-fill: #C2BEAE;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
+}
+
+.welcome-updates-count {
+    -fx-background-color: #5D5B54;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 10;
 }
 
 .welcome-updates-scroll {
@@ -1012,25 +1049,58 @@
 
 .welcome-updates-content {
     -fx-background-color: transparent;
-    -fx-padding: 2 2 4 2;
+    -fx-padding: 0;
+}
+
+/* Individual entry */
+.welcome-update-entry {
+    -fx-padding: 18 18 16 18;
+    -fx-background-color: transparent;
+}
+
+.welcome-update-entry:hover {
+    -fx-background-color: rgba(61, 60, 57, 0.08);
+}
+
+.welcome-update-entry-header {
+    -fx-padding: 0 0 7 0;
+}
+
+.welcome-update-version {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 7 2 7;
+    -fx-background-radius: 2;
 }
 
 .welcome-update-title {
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: #3D3C39;
+    -fx-text-fill: #1a1a18;
 }
 
 .welcome-update-copy {
     -fx-font-size: 11px;
-    -fx-text-fill: #5D5B54;
+    -fx-text-fill: #4D4B45;
+    -fx-line-spacing: 2;
 }
 
+.welcome-update-separator {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.30;
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
 .welcome-footer {
-    -fx-background-color: #C2BEAE;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1 0 0 0;
-    -fx-padding: 8 2 2 2;
+    -fx-background-color: #32312D;
+    -fx-padding: 11 16 11 16;
+}
+
+.welcome-footer-tip {
+    -fx-text-fill: #706E65;
+    -fx-font-size: 11px;
 }
 
 .welcome-footer-hint {
