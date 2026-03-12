@@ -91,10 +91,12 @@
 .tab-btn {
     -fx-background-color: #8D8A7F;
     -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-border-width: 0;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
 }
 
 .tab-btn:hover {
@@ -104,21 +106,26 @@
 .tab-btn-active {
     -fx-background-color: #C2BEAE;
     -fx-text-fill: #1a1a18;
-    -fx-padding: 8px 16px;
-    -fx-border-width: 0;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
 }
 
 /* Object tiles */
 .object-tile {
     -fx-background-color: #5D5B54;
-    -fx-border-color: #3D3C39;
-    -fx-border-width: 1;
-    -fx-padding: 12px;
-    -fx-min-width: 60px;
-    -fx-min-height: 60px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-pref-width: 108px;
+    -fx-pref-height: 90px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
     -fx-text-fill: #C2BEAE;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
 }
 
 .object-tile:hover {
@@ -454,11 +461,11 @@
 
 /* ---------- Input fields ---------------------------------------- */
 .text-field {
-    -fx-background-color: #8D8A7F;
+    -fx-background-color: #d4d1c4;
     -fx-text-fill: #1a1a18;
-    -fx-border-color: #5D5B54;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
     -fx-padding: 3 6 3 6;
     -fx-font-size: 11px;
 }
@@ -470,8 +477,8 @@
 .combo-box-base {
     -fx-background-color: #C2BEAE;
     -fx-border-color: #8D8A7F;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
     -fx-font-size: 11px;
 }
 
@@ -556,7 +563,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -571,7 +578,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -586,7 +593,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -617,9 +624,10 @@
     -fx-font-weight: bold;
     -fx-padding: 2 8 2 8;
     -fx-cursor: hand;
-    -fx-background-radius: 0;
+    -fx-background-radius: 4;
     -fx-border-color: #8D8A7F;
     -fx-border-width: 1px;
+    -fx-border-radius: 4;
 }
 
 .speed-btn:hover {
