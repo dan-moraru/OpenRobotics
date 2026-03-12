@@ -23,6 +23,8 @@ public class WelcomeController {
 
     @FXML
     private void initialize() {
+        // TEMPORARY DEBUG LINE
+        System.out.println(javafx.scene.text.Font.getDefault());
         // TODO Sprint 6: fetch real changelog / version history from DB or
         //  bundled resource file and populate changelogContent dynamically.
     }

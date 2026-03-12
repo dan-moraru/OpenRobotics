@@ -4,7 +4,6 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
-<!-- Welcome Screen: branded intro + release notes. Button only to continue. -->
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.openrobotics.controllers.WelcomeController"
@@ -12,51 +11,50 @@
            styleClass="welcome-root"
            stylesheets="@../css/theme.css">
 
-    <VBox styleClass="welcome-shell" maxWidth="1020" prefWidth="960" spacing="0">
+    <!-- Shell fills the entire window — no maxWidth constraint -->
+    <VBox styleClass="welcome-shell" spacing="0"
+          StackPane.alignment="CENTER">
 
         <!-- TOP BAR -->
         <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
-            <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+            <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
                 <image>
                     <Image url="@../img/logo_color.png" backgroundLoading="true"/>
                 </image>
             </ImageView>
             <VBox spacing="2">
                 <Label text="OpenRobotics" styleClass="app-title"/>
-                <Label text="warehouse simulation platform" styleClass="version-label"/>
+                <Label text="Warehouse Simulation Platform" styleClass="version-label"/>
             </VBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="v1.0.0" styleClass="welcome-version-badge"/>
         </HBox>
 
         <!-- BODY -->
-        <HBox styleClass="welcome-body" spacing="0" VBox.vgrow="ALWAYS">
+        <HBox spacing="0" VBox.vgrow="ALWAYS">
 
-            <!-- LEFT: hero -->
+            <!-- LEFT: hero panel -->
             <VBox styleClass="welcome-hero-panel" spacing="0" HBox.hgrow="ALWAYS">
 
-                <!-- Logo watermark + wordmark -->
-                <StackPane styleClass="welcome-hero-logo-zone">
-                    <ImageView fitHeight="110" fitWidth="110" preserveRatio="true" opacity="0.08"
-                               StackPane.alignment="CENTER">
+                <!-- Logo watermark + wordmark zone -->
+                <StackPane styleClass="welcome-hero-logo-zone" VBox.vgrow="ALWAYS">
+                    <ImageView fitHeight="180" fitWidth="180" preserveRatio="true"
+                               opacity="0.06" StackPane.alignment="CENTER">
                         <image>
                             <Image url="@../img/logo_color.png" backgroundLoading="true"/>
                         </image>
                     </ImageView>
-                    <VBox alignment="CENTER" spacing="6">
+                    <VBox alignment="CENTER" spacing="8">
                         <Label text="OPENROBOTICS" styleClass="welcome-hero-wordmark"/>
-                        <Label text="v1.0.0 — Sprint 3 Release" styleClass="welcome-hero-release"/>
                     </VBox>
                 </StackPane>
 
                 <Region styleClass="welcome-divider" minHeight="1" maxHeight="1" prefHeight="1"/>
 
-                <!-- Copy -->
+                <!-- Copy zone -->
                 <VBox styleClass="welcome-hero-copy-zone" spacing="16">
                     <Label text="WAREHOUSE SIMULATION PLATFORM" styleClass="welcome-eyebrow"/>
                     <Label text="Build, simulate, and compare multi-robot warehouse behavior."
-                           styleClass="welcome-hero-title" wrapText="true"/>
-                    <Label text="Configure realistic task flows, test navigation and coordination strategies, and inspect metrics from repeatable simulation runs — all in one place."
+                            styleClass="welcome-hero-title" wrapText="true"/>
+                    <Label text="Configure realistic task flows, test navigation and coordination strategies, and inspect metrics from repeatable simulation runs. Everything in one place!"
                            styleClass="welcome-hero-copy" wrapText="true"/>
                 </VBox>
 
@@ -64,9 +62,9 @@
 
                 <Region styleClass="welcome-divider" minHeight="1" maxHeight="1" prefHeight="1"/>
 
-                <!-- CTA: button ONLY — no onMouseClicked on rootPane -->
+                <!-- CTA -->
                 <HBox styleClass="welcome-cta-row" alignment="CENTER_LEFT" spacing="14">
-                    <Button text="START SETUP  →" styleClass="btn-primary" onAction="#onStartSetup"/>
+                    <Button text="START SETUP  &#x2192;" styleClass="btn-primary" onAction="#onStartSetup"/>
                 </HBox>
 
             </VBox>
@@ -75,7 +73,7 @@
             <Region styleClass="welcome-panel-divider" minWidth="1" maxWidth="1"/>
 
             <!-- RIGHT: changelog -->
-            <VBox styleClass="welcome-updates-panel" prefWidth="340" minWidth="300" maxWidth="360" spacing="0">
+            <VBox styleClass="welcome-updates-panel" prefWidth="360" minWidth="320" maxWidth="400" spacing="0">
 
                 <HBox styleClass="welcome-updates-header" alignment="CENTER_LEFT" spacing="8">
                     <Label text="LATEST UPDATES" styleClass="welcome-section-title"/>
@@ -83,7 +81,8 @@
                     <Label text="3 sprints" styleClass="welcome-updates-count"/>
                 </HBox>
 
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="welcome-updates-scroll">
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            styleClass="welcome-updates-scroll" hbarPolicy="NEVER">
                     <VBox fx:id="changelogContent" styleClass="welcome-updates-content" spacing="0">
 
                         <VBox styleClass="welcome-update-entry">
@@ -124,7 +123,7 @@
 
         <!-- FOOTER -->
         <HBox styleClass="welcome-footer" alignment="CENTER_LEFT" spacing="0">
-            <Label text="💡  Name objects early — they appear in simulation output and reports."
+            <Label text="Multi-robot warehouse simulation — configure, run, and compare experiments."
                    styleClass="welcome-footer-tip"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="COMP 361 · McGill University · 2026" styleClass="welcome-footer-hint"/>
