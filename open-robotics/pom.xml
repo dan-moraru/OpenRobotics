@@ -50,11 +50,11 @@
             <version>10.17.0</version>
         </dependency>
 
-        <dependency>
+        <!-- <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.5.16</version>
-        </dependency>
+        </dependency> -->
 
         <!-- Connection pool -->
         <dependency>
