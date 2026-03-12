@@ -1,6 +1,5 @@
 package com.openrobotics;
 
-import com.openrobotics.common.Database;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.robot.Robot;
@@ -19,8 +18,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 
 public class MainApp extends Application {
 
