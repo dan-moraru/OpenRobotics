@@ -91,10 +91,12 @@
 .tab-btn {
     -fx-background-color: #8D8A7F;
     -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-border-width: 0;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
 }
 
 .tab-btn:hover {
@@ -104,21 +106,26 @@
 .tab-btn-active {
     -fx-background-color: #C2BEAE;
     -fx-text-fill: #1a1a18;
-    -fx-padding: 8px 16px;
-    -fx-border-width: 0;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
 }
 
 /* Object tiles */
 .object-tile {
     -fx-background-color: #5D5B54;
-    -fx-border-color: #3D3C39;
-    -fx-border-width: 1;
-    -fx-padding: 12px;
-    -fx-min-width: 60px;
-    -fx-min-height: 60px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-pref-width: 108px;
+    -fx-pref-height: 90px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
     -fx-text-fill: #C2BEAE;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
 }
 
 .object-tile:hover {
@@ -454,11 +461,11 @@
 
 /* ---------- Input fields ---------------------------------------- */
 .text-field {
-    -fx-background-color: #8D8A7F;
+    -fx-background-color: #d4d1c4;
     -fx-text-fill: #1a1a18;
-    -fx-border-color: #5D5B54;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
     -fx-padding: 3 6 3 6;
     -fx-font-size: 11px;
 }
@@ -470,8 +477,8 @@
 .combo-box-base {
     -fx-background-color: #C2BEAE;
     -fx-border-color: #8D8A7F;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
     -fx-font-size: 11px;
 }
 
@@ -540,7 +547,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-border-color: transparent;
     -fx-cursor: hand;
 }
@@ -556,7 +563,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -571,7 +578,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -586,7 +593,7 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 6 14 6 14;
-    -fx-background-radius: 0;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
 }
 
@@ -617,9 +624,10 @@
     -fx-font-weight: bold;
     -fx-padding: 2 8 2 8;
     -fx-cursor: hand;
-    -fx-background-radius: 0;
+    -fx-background-radius: 4;
     -fx-border-color: #8D8A7F;
     -fx-border-width: 1px;
+    -fx-border-radius: 4;
 }
 
 .speed-btn:hover {
@@ -902,86 +910,217 @@
 }
 
 /* ---------- Welcome screen -------------------------------------- */
+
 .welcome-root {
     -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
 }
 
-.welcome-dialog {
+/* Shell fills the full window — no card float */
+.welcome-shell {
+    -fx-pref-width: infinity;
+    -fx-pref-height: infinity;
+}
+
+/* ── Top bar already handled by global .top-bar ── */
+
+/* ── Hero panel (left) ────────────────────────────────────────── */
+.welcome-hero-panel {
     -fx-background-color: #C2BEAE;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0, 0, 4);
 }
 
-.welcome-title-bar {
-    -fx-background-color: #9F9D96;
-    -fx-padding: 7 10 7 8;
+/* Logo + wordmark zone — dark, tall, centered */
+.welcome-hero-logo-zone {
+    -fx-background-color: #2A2926;
+    -fx-min-height: 220px;
+    -fx-pref-height: 260px;
+    -fx-padding: 40 48 40 48;
+    -fx-alignment: CENTER;
 }
 
-/* Additional button styles */
-.btn-danger {
-    -fx-background-color: #AA8478;
-    -fx-text-fill: white;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
+.welcome-hero-wordmark {
+    -fx-font-size: 42px;
     -fx-font-weight: bold;
-}
-
-.btn-danger:hover {
-    -fx-background-color: #8b6c63;
-}
-
-.btn-neutral {
-    -fx-background-color: #56544D;
     -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
+}
+
+/* Thin separator */
+.welcome-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.35;
+}
+
+/* Copy zone */
+.welcome-hero-copy-zone {
+    -fx-padding: 36 48 28 48;
+    -fx-background-color: #C2BEAE;
+}
+
+.welcome-eyebrow {
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
 }
 
-.btn-neutral:hover {
-    -fx-background-color: #4a4945;
-}
-
-.btn-success {
-    -fx-background-color: #599068;
-    -fx-text-fill: white;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
+.welcome-hero-title {
+    -fx-font-size: 19px;
     -fx-font-weight: bold;
-}
-
-.btn-success:hover {
-    -fx-background-color: #4a7d56;
-}
-
-.btn-primary {
-    -fx-background-color: #383632;
-    -fx-text-fill: #C2BEAE;
-    -fx-padding: 8px 16px;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-
-.btn-primary:hover {
-    -fx-background-color: #2d2a26;
-}
-
-.welcome-title-bar .label {
     -fx-text-fill: #1a1a18;
+}
+
+.welcome-hero-copy {
     -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+/* CTA row */
+.welcome-cta-row {
+    -fx-background-color: #BAB7A8;
+    -fx-padding: 22 48 26 48;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-cta-row .button {
+    -fx-font-size: 12px;
+    -fx-padding: 11 28 11 28;
+    -fx-background-radius: 6;
+    -fx-background-color: #2A2926;
+    -fx-text-fill: #C2BEAE;
+    -fx-cursor: hand;
+}
+
+.welcome-cta-row .button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* ── Panel divider ────────────────────────────────────────────── */
+.welcome-panel-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.5;
+}
+
+/* ── Changelog panel (right) ──────────────────────────────────── */
+.welcome-updates-panel {
+    -fx-background-color: #ADA99A;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-header {
+    -fx-background-color: #2A2926;
+    -fx-padding: 16 18 16 18;
+    -fx-min-height: 52px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+}
+
+.welcome-section-title {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
-.welcome-body {
-    -fx-background-color: #C2BEAE;
-    -fx-padding: 10 14 10 14;
+.welcome-updates-count {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 10;
 }
 
-.welcome-click-hint {
-    -fx-text-fill: #5D5B54;
+.welcome-updates-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.welcome-updates-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-scroll .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-content {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Individual entry */
+.welcome-update-entry {
+    -fx-padding: 20 20 18 20;
+    -fx-background-color: transparent;
+    -fx-spacing: 8;
+}
+
+.welcome-update-entry:hover {
+    -fx-background-color: rgba(42, 41, 38, 0.10);
+}
+
+.welcome-update-entry-header {
+    -fx-padding: 0 0 6 0;
+    -fx-spacing: 10;
+}
+
+.welcome-update-version {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 6;
+}
+
+.welcome-update-title {
     -fx-font-size: 12px;
-    -fx-font-style: italic;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.welcome-update-copy {
+    -fx-font-size: 11px;
+    -fx-text-fill: #4D4B45;
+    -fx-line-spacing: 2;
+}
+
+.welcome-update-separator {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.45;
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.welcome-footer {
+    -fx-background-color: #2A2926;
+    -fx-padding: 13 18 13 18;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-footer-tip {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 11px;
+}
+
+.welcome-footer-hint {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4D4B45;
 }
 
 /* ---------- Info / status bar below viewport ------------------- */

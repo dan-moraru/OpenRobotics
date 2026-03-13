@@ -6,6 +6,7 @@ module com.openrobotics {
     requires com.fasterxml.jackson.databind;
     requires com.zaxxer.hikari;
     requires flyway.core;
+    requires javafx.swing;
     requires java.sql;
     requires java.prefs;
     requires java.desktop;
