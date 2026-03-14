@@ -3,6 +3,8 @@ package com.openrobotics.task;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 
+import java.util.Objects;
+
 /**
  * Represents tasks that will be assigned to robots during the simulation of a warehouses workload
  */
@@ -48,7 +50,12 @@ public class Task implements Comparable<Task> {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
     public int compareTo(Task task) {
-        return this.priority - task.priority;
+        return Integer.compare(task.priority, this.priority);
     }
 }

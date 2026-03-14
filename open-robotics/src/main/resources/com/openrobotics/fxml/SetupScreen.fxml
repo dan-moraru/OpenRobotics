@@ -68,7 +68,7 @@
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetRobotCount" />
                         <Label text="robot count" styleClass="prop-label" />
-                        <Spinner fx:id="robotCountSpinner" min="1" max="50" initialValue="4"
+                        <Spinner fx:id="robotCountSpinner"
                                  editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- nav algorithm -->
@@ -87,7 +87,7 @@
                     <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK" />
                         <Label text="reservation k" styleClass="prop-label" />
-                        <Spinner fx:id="reservationKSpinner" min="1" max="20" initialValue="3"
+                        <Spinner fx:id="reservationKSpinner"
                                  editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- workload mode -->

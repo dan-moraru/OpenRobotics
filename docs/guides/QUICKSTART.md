@@ -5,7 +5,8 @@
 ### Step 1: Verify Installation
 ```powershell
 # Windows - Open PowerShell and run:
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+# Replace <PROJECT_PATH> with your local clone path:
+cd <PROJECT_PATH>
 .\verify.ps1
 ```
 
@@ -23,12 +24,12 @@ mvn clean compile javafx:run
 
 ### Step 3: Open in IDE
 1. **IntelliJ IDEA**
-   - File → Open → Select `C:\Users\Admin\IdeaProjects\OpenRobotics`
-   - Select `open-robotics` folder as Maven project root
+   - File → Open → Select `<PROJECT_PATH>`
+   - Select `<PROJECT_PATH>/open-robotics` as Maven project root
    - Right-click `MainApp.java` → Run
 
 2. **Visual Studio Code**
-   - Open folder: `C:\Users\Admin\IdeaProjects\OpenRobotics`
+   - Open folder: `<PROJECT_PATH>`
    - Install "Extension Pack for Java"
    - Run: `Ctrl+Shift+D` → Select Java
 

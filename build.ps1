@@ -28,11 +28,26 @@ Write-Host "[INFO] Building project..." -ForegroundColor Cyan
 Write-Host ""
 
 # Change to project directory
-Push-Location $projectPath
+if (-not (Test-Path $projectPath -PathType Container)) {
+    Write-Host "[ERROR] Project path not found: $projectPath" -ForegroundColor Red
+    exit 1
+}
+
+try {
+    Push-Location $projectPath -ErrorAction Stop
+} catch {
+    Write-Host "[ERROR] Could not enter project path: $projectPath" -ForegroundColor Red
+    exit 1
+}
 
 # Clean and compile
 Write-Host "[STEP 1] Cleaning build artifacts..." -ForegroundColor Yellow
 & mvn clean -q
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Maven clean failed with exit code $LASTEXITCODE" -ForegroundColor Red
+    Pop-Location
+    exit $LASTEXITCODE
+}
 
 Write-Host "[STEP 2] Compiling Java source files..." -ForegroundColor Yellow
 & mvn compile -q
@@ -48,9 +63,15 @@ Write-Host ""
 
 # Run the application
 & mvn javafx:run
+$runExitCode = $LASTEXITCODE
 
 Pop-Location
 
 Write-Host ""
-Write-Host "Build complete!" -ForegroundColor Green
+if ($runExitCode -eq 0) {
+    Write-Host "Build complete!" -ForegroundColor Green
+} else {
+    Write-Host "[ERROR] Application failed to start (exit code $runExitCode)" -ForegroundColor Red
+    exit $runExitCode
+}
 

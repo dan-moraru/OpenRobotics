@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +36,7 @@ public class SimulationControllerTest extends ApplicationTest {
     @Test
     void play_logs_started_message() {
         clickOn("▶");
+        WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertTrue(console.getText().contains("Simulation started."));
     }
@@ -43,6 +45,7 @@ public class SimulationControllerTest extends ApplicationTest {
     void pause_after_play_logs_paused_message() {
         clickOn("▶");
         clickOn("⏸");
+        WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertTrue(console.getText().contains("Simulation paused."));
     }
@@ -51,6 +54,7 @@ public class SimulationControllerTest extends ApplicationTest {
     void restart_logs_reset_message() {
         clickOn("▶");  // start first so restart has something to stop
         clickOn("◀◀");
+        WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertTrue(console.getText().contains("Simulation reset."));
     }

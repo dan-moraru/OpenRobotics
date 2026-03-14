@@ -18,8 +18,8 @@ public class MainApp extends Application {
         primaryStage.setTitle("OpenRobotics \u2013 Warehouse Simulation Platform");
         primaryStage.setMinWidth(960);
         primaryStage.setMinHeight(640);
-        primaryStage.setWidth(1280);
-        primaryStage.setHeight(820);
+        primaryStage.setWidth(1920);
+        primaryStage.setHeight(1080);
 
         ScreenNavigator.setPrimaryStage(primaryStage);
         ScreenNavigator.goToWelcome();

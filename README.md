@@ -35,7 +35,7 @@ A modern JavaFX-based multi-robot warehouse simulation platform with real-time v
 
 ### Installation & Run (Windows)
 ```powershell
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+cd <PROJECT_ROOT>
 
 # Option 1: Using verification script (recommended)
 .\verify.ps1      # Check everything is set up
@@ -51,7 +51,7 @@ mvn -f open-robotics/pom.xml clean compile javafx:run
 
 ### Installation & Run (Mac/Linux)
 ```bash
-cd ~/IdeaProjects/OpenRobotics/open-robotics
+cd <PROJECT_ROOT>/open-robotics
 mvn clean compile javafx:run
 ```
 
@@ -134,12 +134,12 @@ Setup Screen (configuration)
 ## 🔌 IDE Setup
 
 ### IntelliJ IDEA
-1. File → Open → Select `C:\Users\Admin\IdeaProjects\OpenRobotics`
+1. File → Open → Select `<PROJECT_ROOT>`
 2. Right-click `MainApp.java` → Run
 3. (Optional) Settings → JavaFX → Set Scene Builder path for visual editing
 
 ### VS Code
-1. Open folder: `C:\Users\Admin\IdeaProjects\OpenRobotics`
+1. Open folder: `<PROJECT_ROOT>`
 2. Install "Extension Pack for Java"
 3. Open terminal and run: `cd open-robotics && mvn javafx:run`
 
@@ -161,8 +161,11 @@ Setup Screen (configuration)
 - [ ] Colors match wireframe design
 
 ## 📝 Dev Usage
-
-The following tools make development easier:
+- `./verify.ps1` (Windows): Validates Java/Maven, key files, and build wiring.
+- `./build.ps1` (Windows): Cleans, compiles, then runs JavaFX app.
+- `./build.sh` (macOS/Linux): Packages and runs app via Maven.
+- `mvn -f open-robotics/pom.xml test`: Runs test suite from repo root.
+- `mvn -f open-robotics/pom.xml clean package -DskipTests`: Fast local packaging.
 
 ## Authors
 - Dan Moraru, 261227203

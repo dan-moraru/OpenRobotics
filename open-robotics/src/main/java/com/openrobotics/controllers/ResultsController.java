@@ -42,6 +42,7 @@ public class ResultsController {
     @FXML private Label     tableInfoLabel;
     @FXML private Label     tablePageLabel;
     private int currentTablePage = 0;
+    private int totalTablePages = 6;
 
     // ── DISPLAY SETTINGS ────────────────────────────────────────────────
     @FXML private Spinner<Integer> columnCountSpinner;
@@ -156,13 +157,15 @@ public class ResultsController {
 
     @FXML
     private void onNextTable() {
-        currentTablePage++;
-        updateTablePage();
+        if (currentTablePage < totalTablePages - 1) {
+            currentTablePage++;
+            updateTablePage();
+        }
     }
 
     private void updateTablePage() {
         if (tablePageLabel != null)
-            tablePageLabel.setText((currentTablePage + 1) + "/6");
+            tablePageLabel.setText((currentTablePage + 1) + "/" + totalTablePages);
     }
 
     // ------------------------------------------------------------------ //
@@ -174,12 +177,32 @@ public class ResultsController {
 
     @FXML
     private void onPrevMask() {
-        if (maskPageLabel != null) maskPageLabel.setText("prev mask");
+        // TODO Sprint 6: implement mask pagination
     }
 
     @FXML
     private void onNextMask() {
-        if (maskPageLabel != null) maskPageLabel.setText("next mask");
+        // TODO Sprint 6: implement mask pagination
+    }
+
+    @FXML
+    private void onResetShowAllRobots() {
+        if (showAllRobotsCheck != null) showAllRobotsCheck.setSelected(true);
+    }
+
+    @FXML
+    private void onResetShowEnergy() {
+        if (showEnergyCheck != null) showEnergyCheck.setSelected(true);
+    }
+
+    @FXML
+    private void onResetShowCollisions() {
+        if (showCollisionsCheck != null) showCollisionsCheck.setSelected(true);
+    }
+
+    @FXML
+    private void onResetShowDeadlocks() {
+        if (showDeadlocksCheck != null) showDeadlocksCheck.setSelected(true);
     }
 
     @FXML

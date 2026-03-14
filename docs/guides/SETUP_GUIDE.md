@@ -18,8 +18,11 @@ This document explains how to set up the JavaFX visual builder (SceneBuilder) an
 # Or use Chocolatey:
 choco install openjdk21
 
-# Linux/Mac:
+# macOS:
 brew install openjdk@21
+
+# Linux (APT example):
+sudo apt update && sudo apt install openjdk-21-jdk
 ```
 
 #### 2. Install Maven
@@ -38,7 +41,7 @@ Download from: https://gluonhq.com/products/scene-builder/
 
 #### IntelliJ IDEA Setup
 1. **Open the Project**
-   - File → Open → `C:\Users\Admin\IdeaProjects\OpenRobotics`
+   - File → Open → `<PROJECT_PATH>`
    - Select the `open-robotics` folder as the Maven project root
 
 2. **Configure JavaFX Plugin in IntelliJ**
@@ -60,7 +63,7 @@ To use Scene Builder with our project:
 ### Method 1: Using PowerShell Script (Windows)
 ```powershell
 # Navigate to project root
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+cd <PROJECT_PATH>
 
 # Run the build script
 .\build.ps1
@@ -68,7 +71,7 @@ cd C:\Users\Admin\IdeaProjects\OpenRobotics
 
 ### Method 2: Using Maven Directly
 ```bash
-cd C:\Users\Admin\IdeaProjects\OpenRobotics\open-robotics
+cd <PROJECT_PATH>/open-robotics
 
 # Compile only
 mvn clean compile
@@ -117,7 +120,7 @@ open-robotics/
 │   └── test/
 │       └── java/com/openrobotics/            # Unit tests
 ├── pom.xml                                    # Maven configuration
-└── module-info.java                           # Java module descriptor
+└── src/main/java/module-info.java             # Java module descriptor
 ```
 
 ## Screen Navigation

@@ -44,6 +44,9 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
      */
     public void setObjectType(String type) {
         this.objectType = type;
+        if (propsOverview != null) {
+            propsOverview.getChildren().clear();
+        }
         switch (type) {
             case "ROBOT" -> {
                 objectIconLabel.setText("🤖");
@@ -93,7 +96,9 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
                         "around walls. Used to define aisle structure.");
             }
             default -> {
+                objectIconLabel.setText("?");
                 objectNameLabel.setText(type);
+                objectTypeLabel.setText("");
                 objectDescLabel.setText("No description available.");
             }
         }

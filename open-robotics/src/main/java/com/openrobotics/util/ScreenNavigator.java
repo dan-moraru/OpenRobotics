@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * Utility class that centralises all screen/dialog transitions.
@@ -59,8 +60,15 @@ public final class ScreenNavigator {
     public static void loadScreen(String fxmlPath) {
         try {
             System.out.println("[ScreenNavigator] Loading screen: " + fxmlPath);
-            FXMLLoader loader = new FXMLLoader(ScreenNavigator.class.getResource(fxmlPath));
+            URL url = ScreenNavigator.class.getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalArgumentException("FXML resource not found: " + fxmlPath);
+            }
+            FXMLLoader loader = new FXMLLoader(url);
             Parent root = loader.load();
+            if (primaryStage == null) {
+                throw new IllegalStateException("Primary stage not set. Call ScreenNavigator.setPrimaryStage first.");
+            }
             Scene scene = primaryStage.getScene();
             if (scene == null) {
                 scene = new Scene(root);
@@ -96,14 +104,21 @@ public final class ScreenNavigator {
      */
     public static FXMLLoader openDialog(String fxmlPath, String title) {
         try {
-            FXMLLoader loader = new FXMLLoader(ScreenNavigator.class.getResource(fxmlPath));
+            URL url = ScreenNavigator.class.getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalArgumentException("FXML resource not found: " + fxmlPath);
+            }
+            FXMLLoader loader = new FXMLLoader(url);
             Parent root = loader.load();
+            if (primaryStage == null) {
+                throw new IllegalStateException("Primary stage not set. Call ScreenNavigator.setPrimaryStage first.");
+            }
 
             Stage dialogStage = new Stage();
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(primaryStage);
             dialogStage.initStyle(StageStyle.UNDECORATED);
-            if (!title.isBlank()) dialogStage.setTitle(title);
+            if (title != null && !title.isBlank()) dialogStage.setTitle(title);
 
             // Pass the stage to the controller so it can close itself
             Object controller = loader.getController();
@@ -137,8 +152,11 @@ public final class ScreenNavigator {
     /** Show the Exit-confirmation dialog; returns {@code true} if user confirmed exit. */
     public static boolean confirmExit() {
         FXMLLoader loader = openDialog(DIALOG_EXIT_CONFIRM, "Exit");
-        ExitConfirmResultHolder holder = loader.getController();
-        return holder != null && holder.isConfirmed();
+        Object controller = loader.getController();
+        if (controller instanceof ExitConfirmResultHolder holder) {
+            return holder.isConfirmed();
+        }
+        return false;
     }
 
     // ------------------------------------------------------------------ //

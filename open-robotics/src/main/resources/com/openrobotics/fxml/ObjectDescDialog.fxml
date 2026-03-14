@@ -5,7 +5,7 @@
 
 <!--
   Object Description Dialog (Specialty Screen col 3, row 2)
-  Object image placeholder top, description text, ADD (green #599068) / RETURN (dark)
+       Object image placeholder top, description text, ADD (green #599068) / CLOSE (dark)
 -->
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.openrobotics.controllers.ObjectDescController"
@@ -19,6 +19,7 @@
                style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
         <Region HBox.hgrow="ALWAYS" />
         <Button text="✕"
+              accessibleText="Close dialog"
                 style="-fx-background-color: transparent; -fx-text-fill: #8D8A7F;
                        -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 0 4 0 4;"
                 onAction="#onClose" />
@@ -31,7 +32,7 @@
                    style="-fx-background-color: #C2BEAE; -fx-border-color: #8D8A7F;
                           -fx-border-width: 1;"
                    maxWidth="100" maxHeight="100">
-            <Label fx:id="objectIconLabel" text="?"
+            <Label fx:id="objectIconLabel" text="?" accessibleText="Placeholder icon for object type"
                    style="-fx-font-size: 48px; -fx-text-fill: #8D8A7F;" />
         </StackPane>
     </StackPane>

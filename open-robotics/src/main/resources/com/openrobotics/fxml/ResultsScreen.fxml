@@ -143,11 +143,14 @@
                         <HBox spacing="6" alignment="CENTER_LEFT">
                             <Label text="columns:" style="-fx-pref-width:75px;
                                    -fx-font-size:11px; -fx-text-fill:#C2BEAE;" />
-                            <Spinner fx:id="columnCountSpinner" min="1" max="10"
-                                     initialValue="2" editable="true" prefWidth="55" />
+                            <Spinner fx:id="columnCountSpinner" editable="true" prefWidth="55">
+                                <valueFactory>
+                                    <SpinnerValueFactory.IntegerSpinnerValueFactory min="1" max="10" initialValue="2" />
+                                </valueFactory>
+                            </Spinner>
                         </HBox>
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset"
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetShowAllRobots"
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
@@ -157,7 +160,7 @@
                             <CheckBox fx:id="showAllRobotsCheck" selected="true" />
                         </HBox>
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset"
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetShowEnergy"
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
@@ -167,7 +170,7 @@
                             <CheckBox fx:id="showEnergyCheck" selected="true" />
                         </HBox>
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset"
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetShowCollisions"
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
@@ -177,7 +180,7 @@
                             <CheckBox fx:id="showCollisionsCheck" selected="true" />
                         </HBox>
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset"
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetShowDeadlocks"
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />

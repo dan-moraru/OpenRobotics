@@ -52,181 +52,6 @@
     -fx-alignment: center-left;
 }
 
-.top-bar-sim {
-    -fx-background-color: #4D4B45;
-    -fx-padding: 8px 12px;
-    -fx-spacing: 8px;
-    -fx-alignment: center-left;
-}
-
-.app-title {
-    -fx-text-fill: #C2BEAE;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-}
-
-.version-label {
-    -fx-text-fill: #8D8A7F;
-    -fx-font-size: 10px;
-}
-
-/* Sidebar styles */
-.sidebar-setup {
-    -fx-background-color: #C2BEAE;
-    -fx-padding: 0;
-}
-
-.sidebar-sim {
-    -fx-background-color: #8D8A7F;
-    -fx-padding: 0;
-}
-
-/* Tab strip */
-.tab-strip {
-    -fx-background-color: #8D8A7F;
-    -fx-padding: 0;
-    -fx-spacing: 0;
-}
-
-.tab-btn {
-    -fx-background-color: #8D8A7F;
-    -fx-text-fill: #C2BEAE;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-padding: 4 14 4 14;
-    -fx-background-radius: 4 4 0 0;
-    -fx-cursor: hand;
-    -fx-border-color: transparent;
-}
-
-.tab-btn:hover {
-    -fx-background-color: #9d9a8f;
-}
-
-.tab-btn-active {
-    -fx-background-color: #C2BEAE;
-    -fx-text-fill: #1a1a18;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-padding: 4 14 4 14;
-    -fx-background-radius: 4 4 0 0;
-    -fx-cursor: hand;
-    -fx-border-color: transparent;
-}
-
-/* Object tiles */
-.object-tile {
-    -fx-background-color: #5D5B54;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-pref-width: 108px;
-    -fx-pref-height: 90px;
-    -fx-cursor: hand;
-    -fx-alignment: CENTER;
-    -fx-text-fill: #C2BEAE;
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
-}
-
-.object-tile:hover {
-    -fx-background-color: #6d6b64;
-}
-
-.object-tile:pressed {
-    -fx-background-color: #4d4b45;
-}
-
-/* Property rows */
-.setup-prop-row-a {
-    -fx-background-color: #8D8A7F;
-    -fx-padding: 6px 8px;
-    -fx-spacing: 6px;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: #C2BEAE;
-}
-
-.setup-prop-row-b {
-    -fx-background-color: #C2BEAE;
-    -fx-padding: 6px 8px;
-    -fx-spacing: 6px;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: #8D8A7F;
-}
-
-.prop-row-a {
-    -fx-background-color: #5D5B54;
-    -fx-padding: 6px 8px;
-    -fx-spacing: 6px;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: #8D8A7F;
-}
-
-.prop-row-b {
-    -fx-background-color: #8D8A7F;
-    -fx-padding: 6px 8px;
-    -fx-spacing: 6px;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: #5D5B54;
-}
-
-.prop-label {
-    -fx-text-fill: #1a1a18;
-    -fx-font-size: 10px;
-    -fx-font-weight: bold;
-    -fx-min-width: 120px;
-}
-
-.button-reset {
-    -fx-background-color: #5D5B54;
-    -fx-text-fill: #C2BEAE;
-    -fx-padding: 4px 8px;
-    -fx-font-size: 11px;
-    -fx-border-width: 0;
-    -fx-min-width: 32px;
-}
-
-.button-reset:hover {
-    -fx-background-color: #6d6b64;
-}
-
-/* Viewport header */
-.viewport-header {
-    -fx-background-color: #8D8A7F;
-    -fx-padding: 6px 8px;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: #5D5B54;
-}
-
-/* Playback buttons */
-.playback-btn {
-    -fx-background-color: #8D8A7F;
-    -fx-text-fill: #1a1a18;
-    -fx-padding: 4px 10px;
-    -fx-font-size: 10px;
-    -fx-border-width: 0;
-}
-
-.playback-btn:hover {
-    -fx-background-color: #9d9a8f;
-}
-
-.speed-btn {
-    -fx-background-color: #C2BEAE;
-    -fx-text-fill: #1a1a18;
-    -fx-padding: 4px 10px;
-    -fx-font-size: 10px;
-    -fx-border-width: 0;
-}
-
-.speed-btn:hover {
-    -fx-background-color: #d0cebd;
-}
-
-.speed-btn:selected {
-    -fx-background-color: #1a1a18;
-    -fx-text-fill: #C2BEAE;
-}
-
 /* Dialog styles */
 .dialog-root {
     -fx-background-color: #5D5B54;
@@ -274,51 +99,59 @@
     -fx-spacing: 8px;
     -fx-alignment: center-right;
 }
+
+.top-bar {
     -fx-min-height: 42px;
     -fx-pref-height: 42px;
     -fx-padding: 0 16 0 10;
 }
 
 .top-bar-sim {
-    -fx-background-color: #4D4B45;
+    -fx-background-color: #C2BEAE;
     -fx-min-height: 42px;
     -fx-pref-height: 42px;
     -fx-padding: 0 16 0 10;
 }
 
 .top-bar .label, .top-bar-sim .label {
-    -fx-text-fill: #C2BEAE;
+    -fx-text-fill: #3D3C39;
 }
 
 .app-title {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #C2BEAE;
+    -fx-text-fill: #2A2926;
 }
 
 .version-label {
     -fx-font-size: 10px;
-    -fx-text-fill: #8D8A7F;
+    -fx-text-fill: #5D5B54;
 }
 
 /* ---------- Tab strip ------------------------------------------- */
 .tab-strip {
-    -fx-background-color: #8D8A7F;
+    -fx-background-color: #C2BEAE;
     -fx-pref-height: 28px;
     -fx-min-height: 28px;
     -fx-padding: 0 0 0 6;
 }
 
+.sim-tab-strip {
+    -fx-padding: 0;
+}
+
 /* Active tab – lighter than strip */
 .tab-btn-active {
-    -fx-background-color: #C2BEAE;
-    -fx-text-fill: #1a1a18;
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-padding: 4 14 4 14;
-    -fx-background-radius: 0;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
     -fx-cursor: hand;
-    -fx-border-color: transparent;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
 }
 
 /* Inactive tab */
@@ -343,9 +176,47 @@
     -fx-padding: 0;
 }
 
+.menu-bar-top {
+    -fx-padding: 0 0 0 10;
+    -fx-background-insets: 0;
+    -fx-background-color: #C2BEAE;
+}
+
+.menu-bar-top > .container {
+    -fx-spacing: 14px;
+}
+
+.menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 2;
+}
+
+.menu-bar-top > .container > .menu-button > .label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.menu-bar-top > .container > .menu-button:hover,
+.menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #B8B4A6;
+}
+
 .menu-bar .menu .label {
     -fx-text-fill: #C2BEAE;
     -fx-font-size: 12px;
+}
+
+.menu-bar-top .menu .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
+}
+
+.menu-bar-top .menu-button > .label,
+.menu-bar-top .menu > .label,
+.menu-bar-top .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
 }
 
 .menu-bar .menu:hover, .menu-bar .menu:showing {
@@ -388,19 +259,112 @@
 
 /* ---------- Object tiles in Add Object panel -------------------- */
 .object-tile {
-    -fx-background-color: #5D5B54;
-    -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-pref-width: 108px;
-    -fx-pref-height: 90px;
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #4D4B45;
+    -fx-border-width: 2px;
+    -fx-pref-width: 100px;
+    -fx-pref-height: 100px;
+    -fx-min-width: 100px;
+    -fx-min-height: 100px;
+    -fx-max-width: 100px;
+    -fx-max-height: 100px;
     -fx-cursor: hand;
     -fx-alignment: CENTER;
-    -fx-text-fill: #C2BEAE;
+    -fx-text-fill: #2A2926;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
 }
 
 .object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* ---------- Sidebar tab pane polish ---------------------------- */
+.sidebar-tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 28px;
+    -fx-tab-max-height: 28px;
+    -fx-control-inner-background: #8D8A7F;
+    -fx-base: #8D8A7F;
+    -fx-body-color: #8D8A7F;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.sidebar-tab-pane > .tab-header-area > .tab-header-background {
     -fx-background-color: #706E65;
-    -fx-border-color: #C2BEAE;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area > .tab-content {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane .tab-header-area {
+    -fx-background-color: #706E65;
+    -fx-padding: 2 4 0 4;
+}
+
+.sidebar-tab-pane .headers-region {
+    -fx-spacing: 4px;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #6F6D65;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 4 12 4 12;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1A1A18;
+}
+
+.sidebar-filter-field {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-text-fill: #2A2926;
+}
+
+.sidebar-filter-field:focused {
+    -fx-border-color: #3D3C39;
 }
 
 /* ---------- Property rows (alternating) ------------------------- */
@@ -556,6 +520,43 @@
     -fx-background-color: #4D4B45;
 }
 
+/* Ensure the EDITOR tab keeps its custom shape/colors instead of inheriting generic button styles. */
+.button.tab-btn-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
+}
+
+.button.tab-btn-active:hover {
+    -fx-background-color: #C2BEAE;
+}
+
+/* Keep sidebar object tiles light with dark edge despite global .button defaults. */
+.button.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.button.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.button.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
 /* Neutral – medium grey (like LOAD / SAVE / RETURN) */
 .button-neutral {
     -fx-background-color: #8D8A7F;
@@ -603,11 +604,14 @@
 
 /* Playback / icon button – transparent */
 .playback-btn {
-    -fx-background-color: transparent;
+    -fx-background-color: #C2BEAE;
     -fx-text-fill: #1a1a18;
-    -fx-font-size: 13px;
-    -fx-padding: 3 6 3 6;
-    -fx-background-radius: 2px;
+    -fx-font-size: 10px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 3px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
     -fx-cursor: hand;
 }
 
@@ -644,6 +648,12 @@
     -fx-background-color: #8D8A7F;
     -fx-padding: 4 10 4 10;
     -fx-min-height: 26px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 0 1 0;
+}
+
+.viewport-header > .center {
+    -fx-alignment: center;
 }
 
 .viewport-header .label {
@@ -729,7 +739,7 @@
     -fx-text-fill: #C2BEAE;
 }
 
-.list-cell:hover:!selected {
+.list-cell:hover {
     -fx-background-color: #9e9b8e;
 }
 
@@ -1137,6 +1147,129 @@
     -fx-font-size: 11px;
 }
 
+/* ---------- Simulation screen helpers --------------------------- */
+.sim-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.sim-main-split {
+    -fx-background-color: #C2BEAE;
+    -fx-box-border: transparent;
+    -fx-padding: 0;
+}
+
+.sim-main-split > .split-pane-divider,
+.sim-vsplit > .split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.object-grid {
+    -fx-padding: 6;
+    -fx-background-color: #8D8A7F;
+}
+
+.sim-help-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-wrap-text: true;
+}
+
+.properties-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+.properties-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.properties-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+}
+
+.properties-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.prop-desc-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 6 8;
+    -fx-wrap-text: true;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 0 0 0;
+}
+
+.sim-stat-label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.sim-stat-spacer {
+    -fx-min-width: 12px;
+}
+
+.viewport-icon-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 13px;
+}
+
+.viewport-subtle-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
+.viewport-title-label,
+.viewport-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-overlay {
+    -fx-background-color: rgba(194, 190, 174, 0.92);
+    -fx-padding: 2 8 2 8;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.sim-tip-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.console-shell {
+    -fx-min-height: 80px;
+    -fx-pref-height: 120px;
+}
+
+.console-clear-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 10px;
+    -fx-padding: 0 4 0 4;
+}
+
+.console-clear-btn:hover {
+    -fx-text-fill: #5D5B54;
+}
+
 /* ---------- Results screen -------------------------------------- */
 .chart-panel {
     -fx-background-color: #C2BEAE;
@@ -1167,3 +1300,23 @@
 .mask-legend-tile-red    { -fx-background-color: #7a1f1b; -fx-min-height: 30px; }
 .mask-legend-tile-yellow { -fx-background-color: #7a6200; -fx-min-height: 30px; }
 .mask-legend-tile-grey   { -fx-background-color: #8D8A7F; -fx-min-height: 30px; }
+
+/* ---------- Simulation top menu visibility override ------------ */
+.top-bar-sim .menu-bar-top > .container > .menu-button {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-padding: 2 10 2 10;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button > .label,
+.top-bar-sim .menu-bar-top .menu > .label,
+.top-bar-sim .menu-bar-top .label {
+    -fx-text-fill: #1A1A18;
+    -fx-font-weight: bold;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #A9A494;
+}

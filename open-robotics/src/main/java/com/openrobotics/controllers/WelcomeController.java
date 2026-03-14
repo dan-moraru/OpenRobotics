@@ -6,6 +6,8 @@ import javafx.fxml.FXML;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.util.logging.Logger;
+
 /**
  * Controller for {@code WelcomeScreen.fxml}.
  *
@@ -13,6 +15,7 @@ import javafx.scene.layout.VBox;
  * a changelog panel. Pressing START SETUP navigates to the Setup screen.
  */
 public class WelcomeController {
+    private static final Logger LOGGER = Logger.getLogger(WelcomeController.class.getName());
 
     @FXML private StackPane rootPane;
     @FXML private VBox      changelogContent;
@@ -23,8 +26,7 @@ public class WelcomeController {
 
     @FXML
     private void initialize() {
-        // TEMPORARY DEBUG LINE
-        System.out.println(javafx.scene.text.Font.getDefault());
+        LOGGER.fine("Default JavaFX font: " + javafx.scene.text.Font.getDefault());
         // TODO Sprint 6: fetch real changelog / version history from DB or
         //  bundled resource file and populate changelogContent dynamically.
     }

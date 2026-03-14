@@ -1,5 +1,10 @@
 # OpenRobotics UI Implementation Summary
 
+## Assumed Working Directory
+
+Unless noted otherwise, commands and relative paths are from the repository root (`OpenRobotics`).
+When running Maven goals, either `cd open-robotics` first or use `mvn -f open-robotics/pom.xml ...` from repo root.
+
 ## ✅ Completed Tasks
 
 ### 1. FXML Structure
@@ -34,8 +39,8 @@ All controller classes are fully implemented:
 
 ### 4. Asset Management
 - ✅ Logo images copied to resources folder:
-  - `src/main/resources/com/openrobotics/img/logo_color.png`
-  - `src/main/resources/com/openrobotics/img/logo_black.png`
+   - `open-robotics/src/main/resources/com/openrobotics/img/logo_color.png`
+   - `open-robotics/src/main/resources/com/openrobotics/img/logo_black.png`
 - ✅ Images integrated into all major screens
 - ✅ Resource directories properly structured
 
@@ -101,13 +106,13 @@ open-robotics/
 
 ### Quick Start (Windows PowerShell)
 ```powershell
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+cd path\to\OpenRobotics
 .\build.ps1
 ```
 
 ### Quick Start (Mac/Linux)
 ```bash
-cd ~/IdeaProjects/OpenRobotics/open-robotics
+cd path/to/OpenRobotics/open-robotics
 mvn clean compile javafx:run
 ```
 

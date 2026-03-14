@@ -28,11 +28,15 @@ public class ApplicationConfig {
         dbUrl = envOrProp("DB_URL", props.getProperty("db.url"));
         dbUser = envOrProp("DB_USER", props.getProperty("db.user"));
         dbPassword = envOrProp("DB_PASSWORD", props.getProperty("db.password"));
-        if (dbUrl == null || dbUser == null || dbPassword == null) {
+        if (isBlank(dbUrl) || isBlank(dbUser) || isBlank(dbPassword)) {
             throw new IllegalStateException(
                 "Missing database config. Set db.url, db.user, db.password in " + CONFIG_RESOURCE
                     + " or DB_URL, DB_USER, DB_PASSWORD environment variables.");
         }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /**

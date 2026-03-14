@@ -18,9 +18,10 @@ $script:warnings = 0
 
 function Write-Section {
     param([string]$Title)
+    $trimmedTitle = if ($Title.Length -gt 62) { $Title.Substring(0, 62) } else { $Title }
     Write-Host ""
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║ $($Title.PadRight(62)) ║" -ForegroundColor Cyan
+    Write-Host "║ $($trimmedTitle.PadRight(62)) ║" -ForegroundColor Cyan
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 }
 
@@ -132,6 +133,11 @@ Write-Section "3. Build Configuration"
 
 # Check Maven POM
 Write-Host "Validating pom.xml..."
+if (-not (Test-Path "$mavenProject/pom.xml")) {
+    Write-Error-Custom "pom.xml not found at: $mavenProject/pom.xml"
+    exit 1
+}
+
 $pomContent = Get-Content "$mavenProject/pom.xml" -Raw
 if ($pomContent -match "javafx-maven-plugin") {
     Write-Success "JavaFX Maven plugin configured"
@@ -183,7 +189,7 @@ if (-not $SkipCompile) {
         Pop-Location
     }
 } else {
-    Write-Host "Skipping compilation (use -SkipCompile to skip this message)" -ForegroundColor Gray
+    Write-Host "Compilation skipped (requested via -SkipCompile)" -ForegroundColor Gray
 }
 
 Write-Host ""

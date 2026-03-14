@@ -5,39 +5,51 @@ $out  = "C:\Users\Admin\IdeaProjects\OpenRobotics\img_analysis.txt"
 $results = @()
 
 function SamplePx($bmp, $name, $x, $y) {
+    if ($x -lt 0 -or $y -lt 0 -or $x -ge $bmp.Width -or $y -ge $bmp.Height) {
+        return "  $name at ($x,$y) = out of bounds for image ${($bmp.Width)}x${($bmp.Height)}"
+    }
     $px = $bmp.GetPixel($x, $y)
     return "  $name at ($x,$y) = #$('{0:X2}{1:X2}{2:X2}' -f $px.R,$px.G,$px.B)  RGB($($px.R),$($px.G),$($px.B))"
 }
 
 # ─── RESULTS SCREEN ─────────────────────────────────────────────────
-$bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - RESULTS.png")
-$results += "=== RESULTS SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
-$results += SamplePx $bmp "outer_bg"          5    5
-$results += SamplePx $bmp "topbar_bg"         100  15
-$results += SamplePx $bmp "tab_editor_btn"    80   47
-$results += SamplePx $bmp "tab_results_btn"   140  47
-$results += SamplePx $bmp "chart_panel_bg"    200  200
-$results += SamplePx $bmp "chart_header_bg"   200  75
-$results += SamplePx $bmp "table_header_bg"   200  450
-$results += SamplePx $bmp "table_row_bg"      200  490
-$results += SamplePx $bmp "table_row_alt"     200  510
-$results += SamplePx $bmp "display_settings"  100  780
-$results += SamplePx $bmp "opt_summary"       300  780
-$results += SamplePx $bmp "viewport_right_bg" 1000 300
-$results += SamplePx $bmp "mask_legend_bg"    1000 780
-$results += SamplePx $bmp "mask_red"          880  810
-$results += SamplePx $bmp "mask_yellow"       960  810
-$results += SamplePx $bmp "mask_grey"         1040 810
-$results += SamplePx $bmp "new_sim_btn"       355  870
-$results += SamplePx $bmp "view_history_btn"  540  870
-$results += SamplePx $bmp "export_btn"        1250 870
-$results += SamplePx $bmp "bottom_bar_bg"     700  900
-$bmp.Dispose()
-$results += ""
+$bmp = $null
+try {
+    $bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - RESULTS.png")
+    $results += "=== RESULTS SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
+    $results += SamplePx $bmp "outer_bg"          5    5
+    $results += SamplePx $bmp "topbar_bg"         100  15
+    $results += SamplePx $bmp "tab_editor_btn"    80   47
+    $results += SamplePx $bmp "tab_results_btn"   140  47
+    $results += SamplePx $bmp "chart_panel_bg"    200  200
+    $results += SamplePx $bmp "chart_header_bg"   200  75
+    $results += SamplePx $bmp "table_header_bg"   200  450
+    $results += SamplePx $bmp "table_row_bg"      200  490
+    $results += SamplePx $bmp "table_row_alt"     200  510
+    $results += SamplePx $bmp "display_settings"  100  780
+    $results += SamplePx $bmp "opt_summary"       300  780
+    $results += SamplePx $bmp "viewport_right_bg" 1000 300
+    $results += SamplePx $bmp "mask_legend_bg"    1000 780
+    $results += SamplePx $bmp "mask_red"          880  810
+    $results += SamplePx $bmp "mask_yellow"       960  810
+    $results += SamplePx $bmp "mask_grey"         1040 810
+    $results += SamplePx $bmp "new_sim_btn"       355  870
+    $results += SamplePx $bmp "view_history_btn"  540  870
+    $results += SamplePx $bmp "export_btn"        1250 870
+    $results += SamplePx $bmp "bottom_bar_bg"     700  900
+} catch {
+    $results += "=== RESULTS SCREEN ==="
+    $results += "  Failed to analyze file '1440p Desktop - RESULTS.png': $($_.Exception.Message)"
+} finally {
+    if ($null -ne $bmp) { $bmp.Dispose() }
+    $results += ""
+}
 
 # ─── SETUP SCREEN ───────────────────────────────────────────────────
-$bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - SETUP SCREEN.png")
-$results += "=== SETUP SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
+$bmp = $null
+try {
+    $bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - SETUP SCREEN.png")
+    $results += "=== SETUP SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
 $results += SamplePx $bmp "outer_bg"        5    5
 $results += SamplePx $bmp "topbar_bg"       100  15
 $results += SamplePx $bmp "topbar_logo"     18   20
@@ -62,12 +74,19 @@ $results += SamplePx $bmp "load_btn"        820  995
 $results += SamplePx $bmp "save_btn"        930  995
 $results += SamplePx $bmp "start_btn"       1100 995
 $results += SamplePx $bmp "start_btn_txt"   1120 995
-$bmp.Dispose()
-$results += ""
+} catch {
+    $results += "=== SETUP SCREEN ==="
+    $results += "  Failed to analyze file '1440p Desktop - SETUP SCREEN.png': $($_.Exception.Message)"
+} finally {
+    if ($null -ne $bmp) { $bmp.Dispose() }
+    $results += ""
+}
 
 # ─── SIMULATION SCREEN ──────────────────────────────────────────────
-$bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - SIMULATION SCREEN.png")
-$results += "=== SIMULATION SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
+$bmp = $null
+try {
+    $bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - SIMULATION SCREEN.png")
+    $results += "=== SIMULATION SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
 $results += SamplePx $bmp "outer_bg"          5    5
 $results += SamplePx $bmp "topbar_bg"         100  15
 $results += SamplePx $bmp "tab_strip_bg"      100  47
@@ -90,12 +109,19 @@ $results += SamplePx $bmp "play_btn"          260  838
 $results += SamplePx $bmp "speed_btn"         295  838
 $results += SamplePx $bmp "tick_label"        260  858
 $results += SamplePx $bmp "tip_text"          700  1005
-$bmp.Dispose()
-$results += ""
+} catch {
+    $results += "=== SIMULATION SCREEN ==="
+    $results += "  Failed to analyze file '1440p Desktop - SIMULATION SCREEN.png': $($_.Exception.Message)"
+} finally {
+    if ($null -ne $bmp) { $bmp.Dispose() }
+    $results += ""
+}
 
 # ─── WELCOME SCREEN ─────────────────────────────────────────────────
-$bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - WELCOME SCREEN.png")
-$results += "=== WELCOME SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
+$bmp = $null
+try {
+    $bmp = [System.Drawing.Bitmap]::new("$base\1440p Desktop - WELCOME SCREEN.png")
+    $results += "=== WELCOME SCREEN ($($bmp.Width)x$($bmp.Height)) ==="
 $results += SamplePx $bmp "outer_bg"          5    5
 $results += SamplePx $bmp "topbar_bg"         100  15
 $results += SamplePx $bmp "dialog_bg"         720  300
@@ -105,12 +131,19 @@ $results += SamplePx $bmp "dialog_body"       720  350
 $results += SamplePx $bmp "changelog_text"    740  340
 $results += SamplePx $bmp "bottom_strip"      720  625
 $results += SamplePx $bmp "click_hint"        900  628
-$bmp.Dispose()
-$results += ""
+} catch {
+    $results += "=== WELCOME SCREEN ==="
+    $results += "  Failed to analyze file '1440p Desktop - WELCOME SCREEN.png': $($_.Exception.Message)"
+} finally {
+    if ($null -ne $bmp) { $bmp.Dispose() }
+    $results += ""
+}
 
 # ─── SPECIALTY SCREENS ──────────────────────────────────────────────
-$bmp = [System.Drawing.Bitmap]::new("$base\Specialty Screens.png")
-$results += "=== SPECIALTY SCREENS ($($bmp.Width)x$($bmp.Height)) ==="
+$bmp = $null
+try {
+    $bmp = [System.Drawing.Bitmap]::new("$base\Specialty Screens.png")
+    $results += "=== SPECIALTY SCREENS ($($bmp.Width)x$($bmp.Height)) ==="
 # Row 1: loading | error | warning | info  (y~40-240)
 # Row 2: quit | load | obj-desc | save     (y~265-480)
 # Bottom bar: menu items                   (y~515-674)
@@ -159,8 +192,13 @@ $results += SamplePx $bmp "menu_bar_bg"          200  560
 $results += SamplePx $bmp "menu_file_item"       60   587
 $results += SamplePx $bmp "menu_help_item"       245  561
 $results += SamplePx $bmp "menu_calc_item"       375  587
-$bmp.Dispose()
-$results += ""
+} catch {
+    $results += "=== SPECIALTY SCREENS ==="
+    $results += "  Failed to analyze file 'Specialty Screens.png': $($_.Exception.Message)"
+} finally {
+    if ($null -ne $bmp) { $bmp.Dispose() }
+    $results += ""
+}
 
 $results | Out-File -FilePath $out -Encoding utf8
 Write-Host "Done"

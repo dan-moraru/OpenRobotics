@@ -49,17 +49,17 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
 
     @FXML
     private void initialize() {
-        directoryCombo.getItems().addAll(loadRecentDirs());
-        if (!directoryCombo.getItems().isEmpty()) {
-            directoryCombo.getSelectionModel().selectFirst();
-        }
-
         directoryCombo.valueProperty().addListener((obs, o, n) -> {
             if (n != null) {
                 selectedDirectory = new File(n);
                 selectedDirLabel.setText(n);
             }
         });
+
+        directoryCombo.getItems().addAll(loadRecentDirs());
+        if (!directoryCombo.getItems().isEmpty()) {
+            directoryCombo.getSelectionModel().selectFirst();
+        }
 
         fileNameField.setText("experiment_" +
                 java.time.LocalDate.now().toString() + ".json");
@@ -96,11 +96,35 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
 
     @FXML
     private void onSave() {
-        if (selectedDirectory != null) {
-            saveRecentDir(selectedDirectory.getAbsolutePath());
-            // TODO Sprint 4: serialise current RunConfig to JSON and write to
-            //   selectedDirectory / fileNameField.getText()
+        if (selectedDirectory == null) {
+            selectedDirLabel.setText("Select a directory before saving.");
+            return;
         }
+        String fileName = fileNameField.getText() == null ? "" : fileNameField.getText().trim();
+        if (fileName.isEmpty()) {
+            selectedDirLabel.setText("File name cannot be empty.");
+            return;
+        }
+        if (!fileName.matches("^[^\\\\/:*?\"<>|\p{Cntrl}]+$")) {
+            selectedDirLabel.setText("File name contains invalid characters.");
+            return;
+        }
+        if (!selectedDirectory.exists()) {
+            selectedDirLabel.setText("Selected directory does not exist.");
+            return;
+        }
+        if (!selectedDirectory.isDirectory()) {
+            selectedDirLabel.setText("Selected path is not a directory.");
+            return;
+        }
+        if (!selectedDirectory.canWrite()) {
+            selectedDirLabel.setText("Selected directory is not writable.");
+            return;
+        }
+
+        saveRecentDir(selectedDirectory.getAbsolutePath());
+        // TODO Sprint 4: serialise current RunConfig to JSON and write to
+        //   selectedDirectory / fileName
         close();
     }
 

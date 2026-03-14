@@ -8,7 +8,7 @@
     ─────────────────────────────────────────────────────────────────────
     Logo+title bar, "Select file (.txt, .json)" label,
     dropdown (↺ reset) + hint text,
-    CONFIRM (teal) + RETURN (dark) footer.
+       LOAD (teal) + CANCEL (dark) footer.
 -->
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -32,9 +32,13 @@
                style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-font-weight: bold;" />
 
         <!-- Dropdown row: ↺ reset + combo -->
-        <HBox spacing="8" alignment="CENTER_LEFT">
-            <Button text="↺" styleClass="button-reset"
-                    prefWidth="36" onAction="#onResetToDefault" />
+              <HBox spacing="8" alignment="CENTER_LEFT">
+                     <Button accessibleText="Reset to default" text="↺" styleClass="button-reset"
+                                   prefWidth="36" onAction="#onResetToDefault">
+                            <tooltip>
+                                   <Tooltip text="Reset to default" />
+                            </tooltip>
+                     </Button>
             <ComboBox fx:id="configFileCombo"
                       promptText="Select file..."
                       HBox.hgrow="ALWAYS" maxWidth="Infinity"

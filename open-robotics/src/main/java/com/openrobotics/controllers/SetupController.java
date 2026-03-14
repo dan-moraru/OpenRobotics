@@ -83,6 +83,11 @@ public class SetupController {
                 "baseline_small", "narrow_aisles", "many_intersections"));
         mapCombo.getSelectionModel().selectFirst();
 
+        robotCountSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, DEFAULT_ROBOT_COUNT));
+        reservationKSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, DEFAULT_RESERVATION_K));
+
         // Navigation algorithm
         navAlgoCombo.setItems(FXCollections.observableArrayList(
                 "GREEDY", "BUG", "RTA_STAR"));
@@ -197,7 +202,6 @@ public class SetupController {
     }
 
     private boolean loadConfigFile(File file) {
-        AppState.clear();
         try {
             if (file == null || !file.isFile()) {
                 debugStatus("\u26a0 Selected file is not accessible: " + (file == null ? "null" : file.getAbsolutePath()));
@@ -210,6 +214,7 @@ public class SetupController {
                 debugStatus("\u26a0 Parse failed: " + (error != null ? error : "unknown error"));
                 return false;
             }
+            AppState.clear();
             AppState.setConfigPath(file.getAbsolutePath());
             AppState.setEngine(engine);
             debugStatus("\u2714 Loaded: " + file.getName()
@@ -275,6 +280,7 @@ public class SetupController {
     @FXML
     private void onStartSimulation() {
         debugStatus("Start Simulation clicked.");
+        if (!validate()) return;
         if (!AppState.hasEngine() && !AppState.hasConfigPath()) {
             File fallback = getFallbackTestConfig();
             if (fallback != null) {
@@ -288,7 +294,13 @@ public class SetupController {
         }
         if (!AppState.hasEngine() && AppState.hasConfigPath()) {
             debugStatus("Rebuilding engine from saved config path.");
-            SimulationEngine engine = new SimulationEngine(AppState.getConfigPath());
+            SimulationEngine engine;
+            try {
+                engine = new SimulationEngine(AppState.getConfigPath());
+            } catch (Exception e) {
+                debugStatus("\u26a0 Config reload failed: " + e.getMessage());
+                return;
+            }
             if (engine.getMap() == null) {
                 String error = engine.getInitError();
                 debugStatus("\u26a0 Config reload failed: " + (error != null ? error : "unknown error"));

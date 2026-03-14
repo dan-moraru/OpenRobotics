@@ -6,7 +6,7 @@
 
 ### 1️⃣ **Quick Start (5 minutes)**
 ```powershell
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+cd <PROJECT_ROOT>
 .\verify.ps1    # Check setup
 .\build.ps1     # Build & run
 ```
@@ -201,7 +201,7 @@ src/main/resources/com/openrobotics/img/
 3. ✅ Run with integrated terminal
 
 ### Maven (Command Line)
-1. ✅ `cd open-robotics`
+1. ✅ `cd OpenRobotics`
 2. ✅ `mvn clean compile javafx:run`
 
 ---
@@ -268,7 +268,7 @@ Total Lines:        2000+
 **To begin:**
 ```powershell
 # 1. Navigate to project
-cd C:\Users\Admin\IdeaProjects\OpenRobotics
+cd <PROJECT_ROOT>
 
 # 2. Verify everything is set up
 .\verify.ps1

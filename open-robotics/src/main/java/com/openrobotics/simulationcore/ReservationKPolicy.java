@@ -13,20 +13,18 @@ import java.util.Set;
 // This first version works as k=1 (basically reserve the next tile only)
 public class ReservationKPolicy implements CoordinationPolicy {
     private final int k;
-    private final Set<Tile> reservedTiles;
 
     public ReservationKPolicy(int k) {
         if (k < 1) {
             throw new IllegalArgumentException("k must be >= 1");
         }
         this.k = k;
-        this.reservedTiles = new HashSet<>();
     }
 
     @Override
     public MoveIntention[] apply(MoveIntention[] intentions) {
-        // Reservations are per tick at least for now
-        reservedTiles.clear();
+        Set<Tile> reservedTiles = new HashSet<>();
+        Set<String> approvedEdges = new HashSet<>();
 
         MoveIntention[] ordered = sortByRobotId(copyNonNull(intentions));
         List<MoveIntention> result = new ArrayList<>(ordered.length);
@@ -45,11 +43,20 @@ public class ReservationKPolicy implements CoordinationPolicy {
                 continue;
             }
 
+            // prevent opposite-direction swaps (A->B while B->A)
+            String edge = edgeKey(intention.getFromTile(), intention.getToTile());
+            String reverse = edgeKey(intention.getToTile(), intention.getFromTile());
+            if (approvedEdges.contains(reverse)) {
+                result.add(forceWait(intention));
+                continue;
+            }
+
             // reserve only one tile for now (k=1).
             // other robots targeting the same tile in the same tick will be forced to wait
             if (k >= 1) {
                 addTileByCoordinates(reservedTiles, destination);
             }
+            approvedEdges.add(edge);
             // and keep the move intention as approved
             result.add(intention);
         }
@@ -72,8 +79,18 @@ public class ReservationKPolicy implements CoordinationPolicy {
     }
 
     private MoveIntention[] sortByRobotId(MoveIntention[] intentions) {
-        Arrays.sort(intentions, (a, b) -> a.getRobot().getId().compareTo(b.getRobot().getId()));
+        if (intentions == null || intentions.length == 0) {
+            return new MoveIntention[0];
+        }
+        Arrays.sort(intentions, java.util.Comparator.comparing(
+                (MoveIntention i) -> i == null || i.getRobot() == null ? null : i.getRobot().getId(),
+                java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())
+        ));
         return intentions;
+    }
+
+    private String edgeKey(Tile from, Tile to) {
+        return from.getX() + "," + from.getY() + "->" + to.getX() + "," + to.getY();
     }
 
     private boolean hasTiles(MoveIntention intention) {

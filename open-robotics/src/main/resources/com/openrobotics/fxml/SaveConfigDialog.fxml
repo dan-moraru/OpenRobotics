@@ -30,8 +30,12 @@
         <Label text="Select save directory:"
                style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-font-weight: bold;" />
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Button text="↺" styleClass="button-reset"
-                    prefWidth="36" onAction="#onResetDirectory" />
+                     <Button accessibleText="Reset directory to default" text="↺" styleClass="button-reset"
+                                   prefWidth="36" onAction="#onResetDirectory">
+                            <tooltip>
+                                   <Tooltip text="Reset directory to default" />
+                            </tooltip>
+                     </Button>
             <ComboBox fx:id="directoryCombo" promptText="Select directory..."
                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
