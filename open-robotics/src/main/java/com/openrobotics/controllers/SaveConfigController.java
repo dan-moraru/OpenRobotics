@@ -105,7 +105,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             selectedDirLabel.setText("File name cannot be empty.");
             return;
         }
-        if (!fileName.matches("^[^\\\\/:*?\"<>|\p{Cntrl}]+$")) {
+        if (!fileName.matches("^[^\\\\/:\\*?\"<>|\\p{Cntrl}]+$")) {
             selectedDirLabel.setText("File name contains invalid characters.");
             return;
         }
