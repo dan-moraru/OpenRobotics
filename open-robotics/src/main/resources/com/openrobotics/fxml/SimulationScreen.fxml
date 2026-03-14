@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+
+<!--
+  Simulation Screen
+  topbar #4D4B45, tab strip #8D8A7F, sidebar #8D8A7F,
+  object tiles #5D5B54, viewport #CDCBC3,
+  console bg #32312D, console header #C2BEAE
+-->
+
+<BorderPane prefHeight="1080.0" prefWidth="1920.0" styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
+
+    <top>
+        <VBox spacing="0">
+           <children>
+               <!-- Top bar slightly lighter than setup (#4D4B45) -->
+               <HBox alignment="CENTER_LEFT" spacing="12" styleClass="top-bar-sim">
+                  <children>
+                      <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
+                          <image>
+                              <Image url="@../img/logo_color.png" />
+                          </image>
+                      </ImageView>
+                      <VBox spacing="1">
+                         <children>
+                             <Label styleClass="app-title" text="OpenRobotics" />
+                             <Label styleClass="version-label" text="v1.0.0" />
+                         </children>
+                      </VBox>
+                      <MenuBar style="-fx-text-base-color: #C2BEAE;" styleClass="menu-bar menu-bar-top">
+                         <menus>
+                             <Menu style="-fx-text-fill: #1A1A18;" text="File">
+                                <items>
+                                    <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
+                                    <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results" />
+                                    <MenuItem onAction="#onExit" text="Exit" />
+                                </items>
+                             </Menu>
+                             <Menu style="-fx-text-fill: #1A1A18;" text="Help">
+                                <items>
+                                    <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
+                                </items>
+                             </Menu>
+                         </menus>
+                      </MenuBar>
+                      <Region HBox.hgrow="ALWAYS" />
+                      <!-- Live stats -->
+                      <Label fx:id="objsLabel" styleClass="sim-stat-label" text="objs: 0" />
+                      <Region minWidth="12" />
+                      <Label fx:id="ramLabel" styleClass="sim-stat-label" text="ram: – kb" />
+                      <Region minWidth="12" />
+                      <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="canvas size: 600×600 tiles" />
+                  </children>
+               </HBox>
+               <!-- Tab strip -->
+               <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
+                  <children>
+                      <Region minWidth="232.0" />
+                      <Button onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
+                  </children>
+               </HBox>
+           </children>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.17" styleClass="sim-main-split">
+           <items>
+   
+               <!-- ── LEFT SIDEBAR #8D8A7F ── -->
+               <VBox maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
+      <children>
+      
+                      <!-- Add Object | Outliner tabs -->
+                      <TabPane fx:id="outlinerTabPane" maxHeight="430" prefHeight="410" styleClass="sidebar-tab-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="NEVER">
+         <tabs>
+         
+                             <Tab text="Add Object">
+            <content>
+                                    <VBox spacing="0" styleClass="sidebar-panel">
+                                       <children>
+                                           <!-- 2-column grid of object tiles #5D5B54 -->
+                                           <GridPane alignment="CENTER" hgap="4" styleClass="object-grid" vgap="4">
+                                              <children>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="ROBOT" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/robot.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="CHARGER" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/charger.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="STATION" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/station.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="DOCK" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/dock.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="WALL" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/wall.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="SHELF" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                                      <graphic>
+                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                              <image>
+                                                      <Image url="@../img/shelf.png" />
+                                                   </image>
+                                                          </ImageView>
+                                                      </graphic>
+                                                  </Button>
+                                              </children>
+                                       <columnConstraints>
+                                          <ColumnConstraints />
+                                          <ColumnConstraints />
+                                       </columnConstraints>
+                                       <rowConstraints>
+                                          <RowConstraints />
+                                          <RowConstraints />
+                                          <RowConstraints />
+                                       </rowConstraints>
+                                           </GridPane>
+                                           <Label prefHeight="38.0" prefWidth="229.0" styleClass="sim-help-label" text="To add an object, drag and drop it into the viewport." />
+                                       </children>
+                                    </VBox>
+            </content>
+                             </Tab>
+         
+                             <Tab text="Outliner">
+            <content>
+                                    <VBox spacing="4" styleClass="sidebar-panel">
+                                       <children>
+                                           <TextField fx:id="outlinerSearchField" promptText="Filter objects…" styleClass="sidebar-filter-field" />
+                                           <ListView fx:id="outlinerListView" onMouseClicked="#onOutlinerSelect" VBox.vgrow="ALWAYS" />
+                                       </children>
+                                    </VBox>
+            </content>
+                             </Tab>
+         </tabs>
+                      </TabPane>
+      
+                      <!-- Properties panel header -->
+                      <HBox alignment="CENTER_LEFT" styleClass="properties-header">
+         <children>
+                             <Label styleClass="properties-title" text="Properties" />
+         </children>
+                      </HBox>
+      
+                      <!-- Properties rows -->
+                      <ScrollPane fitToWidth="true" styleClass="properties-scroll" VBox.vgrow="ALWAYS">
+         <content>
+                             <VBox fx:id="propertiesPanel" spacing="0" styleClass="properties-panel">
+                                <children>
+                                    <Label styleClass="sim-help-label" text="Select an object." />
+                                </children>
+                             </VBox>
+         </content>
+                      </ScrollPane>
+      
+                      <!-- String setting row at very bottom (matches wireframe last row) -->
+                      <HBox alignment="CENTER_LEFT" spacing="5" styleClass="prop-row-a" />
+      </children>
+   
+               </VBox>
+   
+               <!-- ── VIEWPORT + CONSOLE ── -->
+               <VBox spacing="0">
+      <children>
+      
+                             <!-- Viewport header bar #8D8A7F -->
+                             <BorderPane styleClass="viewport-header">
+                                 <left>
+                                     <HBox alignment="CENTER_LEFT" spacing="6">
+                                         <children>
+                                             <Label styleClass="viewport-icon-label" text="⊞" />
+                                             <Label styleClass="viewport-title-label" text="2D Viewport" />
+                                             <Label fx:id="editModeLabel" styleClass="viewport-subtle-label" text="" />
+                                         </children>
+                                     </HBox>
+                                 </left>
+                                 <center>
+                                     <Label fx:id="viewportStatusLabel" styleClass="viewport-status-label" text="" />
+                                 </center>
+                                 <right>
+                                     <HBox alignment="CENTER_RIGHT" spacing="6">
+                                         <children>
+                                             <!-- Zoom -->
+                                             <Button onAction="#onZoomIn" styleClass="playback-btn" text="zoom+" />
+                                             <Button onAction="#onZoomOut" styleClass="playback-btn" text="zoom-" />
+                                             <!-- Restart + speeds + play/pause/step -->
+                                             <Button onAction="#onRestart" styleClass="playback-btn" text="◀◀" />
+                                             <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
+                                             <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
+                                             <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />
+                                             <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
+                                             <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
+                                             <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
+                                         </children>
+                                     </HBox>
+                                 </right>
+                             </BorderPane>
+      
+                      <SplitPane dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
+         <items>
+                             <VBox spacing="0">
+                                <children>
+                                    <!-- Canvas viewport #CDCBC3 -->
+                                    <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">
+                                       <children>
+                                           <Canvas fx:id="warehouseCanvas" />
+                                                         <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" mouseTransparent="true" pickOnBounds="false" spacing="8" styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">
+                                                             <children>
+                                                                 <Label fx:id="tickDisplayLabel" styleClass="tick-label" text="TICK 0" />
+                                                                 <ProgressBar fx:id="simProgressBar" prefHeight="10.0" prefWidth="120.0" progress="0.0" />
+                                                             </children>
+                                                             <StackPane.margin>
+                                                                 <Insets bottom="10.0" left="10.0" />
+                                                             </StackPane.margin>
+                                                         </HBox>
+                                       </children>
+                                    </StackPane>
+            
+                                    <!-- Tick bar + tip -->
+                                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="info-bar">
+               <children>
+                                           <Label fx:id="viewportModeLabel" styleClass="viewport-subtle-label" text="drag" />
+                                                         <Region HBox.hgrow="ALWAYS" />
+                                           <Label styleClass="sim-tip-label" text="   TIP: Object names will appear in simulation results. It is recommended to name every viewport object." />
+               </children>
+                                    </HBox>
+                                </children>
+                             </VBox>
+         
+                             <!-- Console: header #C2BEAE, body #32312D -->
+                             <VBox minHeight="80" prefHeight="120" spacing="0" styleClass="console-shell">
+            <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
+                                       <children>
+                                           <Label text="console" />
+                                           <Region HBox.hgrow="ALWAYS" />
+                                           <Label styleClass="console-clear-label" text="clear" />
+                                           <Button onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
+                                       </children>
+                                    </HBox>
+                                    <TextArea fx:id="consoleArea" editable="false" promptText="&gt;" wrapText="true" VBox.vgrow="ALWAYS" />
+            </children>
+                             </VBox>
+         </items>
+                      </SplitPane>
+      </children>
+   
+               </VBox>
+           </items>
+        </SplitPane>
+    </center>
+
+</BorderPane>

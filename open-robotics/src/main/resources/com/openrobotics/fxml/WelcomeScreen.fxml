@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane fx:id="rootPane" prefHeight="820" prefWidth="1280" styleClass="welcome-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.WelcomeController">
+
+    <!-- Shell fills the entire window — no maxWidth constraint -->
+    <VBox spacing="0" styleClass="welcome-shell" StackPane.alignment="CENTER">
+
+        <!-- TOP BAR -->
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="top-bar">
+            <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
+                <image>
+                    <Image backgroundLoading="true" url="@../img/logo_color.png" />
+                </image>
+            </ImageView>
+            <VBox spacing="2">
+                <Label styleClass="app-title" text="OpenRobotics" />
+                <Label styleClass="version-label" text="Warehouse Simulation Platform" />
+            </VBox>
+        </HBox>
+
+        <!-- BODY -->
+        <HBox spacing="0" VBox.vgrow="ALWAYS">
+
+            <!-- LEFT: hero panel -->
+            <VBox spacing="0" styleClass="welcome-hero-panel" HBox.hgrow="ALWAYS">
+
+                <!-- Logo watermark + wordmark zone -->
+                <StackPane styleClass="welcome-hero-logo-zone" VBox.vgrow="ALWAYS">
+                    <ImageView fitHeight="180" fitWidth="180" opacity="0.06" preserveRatio="true" StackPane.alignment="CENTER">
+                        <image>
+                            <Image backgroundLoading="true" url="@../img/logo_color.png" />
+                        </image>
+                    </ImageView>
+                    <VBox alignment="CENTER" spacing="8">
+                        <Label styleClass="welcome-hero-wordmark" text="OPENROBOTICS" />
+                    </VBox>
+                </StackPane>
+
+                <Region maxHeight="1" minHeight="1" prefHeight="1" styleClass="welcome-divider" />
+
+                <!-- Copy zone -->
+                <VBox spacing="16" styleClass="welcome-hero-copy-zone">
+                    <Label styleClass="welcome-eyebrow" text="WAREHOUSE SIMULATION PLATFORM" />
+                    <Label styleClass="welcome-hero-title" text="Build, simulate, and compare multi-robot warehouse behavior." wrapText="true" />
+                    <Label styleClass="welcome-hero-copy" text="Configure realistic task flows, test navigation and coordination strategies, and inspect metrics from repeatable simulation runs. Everything in one place!" wrapText="true" />
+                </VBox>
+
+                <Region VBox.vgrow="ALWAYS" />
+
+                <Region maxHeight="1" minHeight="1" prefHeight="1" styleClass="welcome-divider" />
+
+                <!-- CTA -->
+                <HBox alignment="CENTER_LEFT" spacing="14" styleClass="welcome-cta-row">
+                    <Button onAction="#onStartSetup" styleClass="button-confirm" style="-fx-background-color: #1a743f;" text="START SETUP  →" />
+                </HBox>
+
+            </VBox>
+
+            <!-- Vertical divider -->
+            <Region maxWidth="1" minWidth="1" styleClass="welcome-panel-divider" />
+
+            <!-- RIGHT: changelog -->
+            <VBox maxWidth="400" minWidth="320" prefWidth="360" spacing="0" styleClass="welcome-updates-panel">
+
+                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="welcome-updates-header">
+                    <Label styleClass="welcome-section-title" text="LATEST UPDATES" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label styleClass="welcome-updates-count" text="3 sprints" />
+                    <VBox.margin>
+                        <Insets left="-1.0" />
+                    </VBox.margin>
+                </HBox>
+
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="welcome-updates-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="changelogContent" spacing="0" styleClass="welcome-updates-content">
+
+                        <VBox styleClass="welcome-update-entry">
+                            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="welcome-update-entry-header">
+                                <Label styleClass="welcome-update-version" text="v0.3.0" />
+                                <Label styleClass="welcome-update-title" text="Sprint 3 · UI Skeleton" />
+                            </HBox>
+                            <Label styleClass="welcome-update-copy" text="Complete UI skeleton with all major screens wired through ScreenNavigator. Viewport, panels, playback controls, and results dashboard ready for simulation engine integration." wrapText="true" />
+                        </VBox>
+
+                        <Region maxHeight="1" minHeight="1" prefHeight="1" styleClass="welcome-update-separator" />
+
+                        <VBox styleClass="welcome-update-entry">
+                            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="welcome-update-entry-header">
+                                <Label styleClass="welcome-update-version" text="v0.2.0" />
+                                <Label styleClass="welcome-update-title" text="Sprint 2 · Design" />
+                            </HBox>
+                            <Label styleClass="welcome-update-copy" text="Class design, UML, and technical specs finalized. Maven project structure established with JavaFX 21 FXML support and PostgreSQL JDBC integration." wrapText="true" />
+                        </VBox>
+
+                        <Region maxHeight="1" minHeight="1" prefHeight="1" styleClass="welcome-update-separator" />
+
+                        <VBox styleClass="welcome-update-entry">
+                            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="welcome-update-entry-header">
+                                <Label styleClass="welcome-update-version" text="v0.1.0" />
+                                <Label styleClass="welcome-update-title" text="Sprint 1 · Spec" />
+                            </HBox>
+                            <Label styleClass="welcome-update-copy" text="Specification baseline: branding, color palette, screen mockups, database schema, API contracts, and sprint plan delivered." wrapText="true" />
+                        </VBox>
+
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </HBox>
+
+        <!-- FOOTER -->
+        <HBox alignment="CENTER_LEFT" spacing="0" styleClass="welcome-footer">
+            <Label styleClass="welcome-footer-tip" text="Multi-robot warehouse simulation — configure, run, and compare experiments." />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label styleClass="welcome-footer-hint" text="COMP 361 · McGill University · 2026" />
+        </HBox>
+
+    </VBox>
+</StackPane>

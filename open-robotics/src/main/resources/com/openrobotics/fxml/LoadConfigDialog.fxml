@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+    Load Config Dialog  (Specialty Screens wireframe – bottom row, col 2)
+    ─────────────────────────────────────────────────────────────────────
+    Logo+title bar, "Select file (.txt, .json)" label,
+    dropdown (↺ reset) + hint text,
+       LOAD (teal) + CANCEL (dark) footer.
+-->
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.LoadConfigController"
+      styleClass="dialog-root"
+      prefWidth="380" spacing="0"
+      stylesheets="@../css/theme.css"
+      style="-fx-background-color: #8F8C80;">
+
+    <!-- Title bar #B7B4A5 -->
+    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color: #B7B4A5; -fx-padding: 10 12 10 12;">
+        <Label text="LOAD CONFIGURATION"
+               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
+    </HBox>
+
+    <!-- Body -->
+    <VBox styleClass="dialog-body" spacing="12"
+          style="-fx-background-color: #8F8C80; -fx-padding: 16 12 16 12;">
+        <Label text="Select configuration file (.txt, .json):"
+               style="-fx-font-size: 11px; -fx-text-fill: #C2BEAE; -fx-font-weight: bold;" />
+
+        <!-- Dropdown row: ↺ reset + combo -->
+              <HBox spacing="8" alignment="CENTER_LEFT">
+                     <Button accessibleText="Reset to default" text="↺" styleClass="button-reset"
+                                   prefWidth="36" onAction="#onResetToDefault">
+                            <tooltip>
+                                   <Tooltip text="Reset to default" />
+                            </tooltip>
+                     </Button>
+            <ComboBox fx:id="configFileCombo"
+                      promptText="Select file..."
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                      style="-fx-background-color: #C2BEAE;" />
+        </HBox>
+
+        <!-- Hint below dropdown -->
+        <Label fx:id="selectedPathLabel"
+               text="No configuration file selected"
+               style="-fx-font-size: 10px; -fx-text-fill: #1a1a18; -fx-wrap-text: true;" />
+
+        <!-- Browse button -->
+        <Button text="Browse Files…"
+                style="-fx-background-color: transparent; -fx-text-fill: #1a1a18;
+                       -fx-font-size: 11px; -fx-cursor: hand; -fx-padding: 2 0 2 0;
+                       -fx-underline: true;"
+                onAction="#onBrowse" />
+    </VBox>
+
+    <!-- Footer -->
+    <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER"
+          style="-fx-background-color: #8F8C80; -fx-padding: 12;">
+        <Button text="LOAD" styleClass="button-green" prefWidth="150" onAction="#onLoad" />
+        <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
+    </HBox>
+</VBox>
+

@@ -1,0 +1,172 @@
+package com.openrobotics.controllers;
+
+import com.openrobotics.util.ScreenNavigator;
+import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.prefs.Preferences;
+
+/**
+ * Controller for {@code SaveConfigDialog.fxml}.
+ *
+ * <p>Implements {@link ScreenNavigator.DialogController} so the navigator
+ * can inject the owning dialog stage for self-close behaviour.
+ */
+public class SaveConfigController implements ScreenNavigator.DialogController {
+
+    @FXML private TextField        fileNameField;
+    @FXML private ComboBox<String> directoryCombo;
+    @FXML private Label            selectedDirLabel;
+
+    private Stage  dialogStage;
+    private File   selectedDirectory;
+
+    private static final String PREFS_KEY  = "recentSaveDirs";
+    private static final int    MAX_RECENT = 8;
+    private static final String DEFAULT_DIR =
+            System.getProperty("user.home") + File.separator + ".open-robotics"
+                    + File.separator + "configs";
+
+    // ------------------------------------------------------------------ //
+    //  DialogController
+    // ------------------------------------------------------------------ //
+
+    @Override
+    public void setDialogStage(Stage stage) {
+        this.dialogStage = stage;
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Initialisation
+    // ------------------------------------------------------------------ //
+
+    @FXML
+    private void initialize() {
+        directoryCombo.valueProperty().addListener((obs, o, n) -> {
+            if (n != null) {
+                selectedDirectory = new File(n);
+                selectedDirLabel.setText(n);
+            }
+        });
+
+        directoryCombo.getItems().addAll(loadRecentDirs());
+        if (!directoryCombo.getItems().isEmpty()) {
+            directoryCombo.getSelectionModel().selectFirst();
+        }
+
+        fileNameField.setText("experiment_" +
+                java.time.LocalDate.now().toString() + ".json");
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Event Handlers
+    // ------------------------------------------------------------------ //
+
+    @FXML
+    private void onResetDirectory() {
+        selectedDirectory = new File(DEFAULT_DIR);
+        selectedDirLabel.setText(DEFAULT_DIR);
+        if (!directoryCombo.getItems().contains(DEFAULT_DIR)) {
+            directoryCombo.getItems().add(0, DEFAULT_DIR);
+        }
+        directoryCombo.getSelectionModel().select(DEFAULT_DIR);
+    }
+
+    @FXML
+    private void onBrowse() {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("Select Save Directory");
+        File result = chooser.showDialog(dialogStage);
+        if (result != null) {
+            selectedDirectory = result;
+            selectedDirLabel.setText(result.getAbsolutePath());
+            if (!directoryCombo.getItems().contains(result.getAbsolutePath())) {
+                directoryCombo.getItems().add(0, result.getAbsolutePath());
+            }
+            directoryCombo.getSelectionModel().select(result.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    private void onSave() {
+        if (selectedDirectory == null) {
+            selectedDirLabel.setText("Select a directory before saving.");
+            return;
+        }
+        String fileName = fileNameField.getText() == null ? "" : fileNameField.getText().trim();
+        if (fileName.isEmpty()) {
+            selectedDirLabel.setText("File name cannot be empty.");
+            return;
+        }
+        if (!fileName.matches("^[^\\\\/:*?\"<>|\\p{Cntrl}]+$")) {
+            selectedDirLabel.setText("File name contains invalid characters.");
+            return;
+        }
+        if (!selectedDirectory.exists()) {
+            selectedDirLabel.setText("Selected directory does not exist.");
+            return;
+        }
+        if (!selectedDirectory.isDirectory()) {
+            selectedDirLabel.setText("Selected path is not a directory.");
+            return;
+        }
+        if (!selectedDirectory.canWrite()) {
+            selectedDirLabel.setText("Selected directory is not writable.");
+            return;
+        }
+
+        saveRecentDir(selectedDirectory.getAbsolutePath());
+        // TODO Sprint 4: serialise current RunConfig to JSON and write to
+        //   selectedDirectory / fileName
+        close();
+    }
+
+    @FXML
+    private void onCancel() {
+        selectedDirectory = null;
+        close();
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Result accessors
+    // ------------------------------------------------------------------ //
+
+    public File getSelectedDirectory() { return selectedDirectory; }
+    public String getFileName()        { return fileNameField.getText().trim(); }
+
+    // ------------------------------------------------------------------ //
+    //  Helpers
+    // ------------------------------------------------------------------ //
+
+    private void close() {
+        if (dialogStage != null) dialogStage.close();
+    }
+
+    private List<String> loadRecentDirs() {
+        Preferences prefs = Preferences.userNodeForPackage(SaveConfigController.class);
+        List<String> dirs = new ArrayList<>();
+        for (int i = 0; i < MAX_RECENT; i++) {
+            String d = prefs.get(PREFS_KEY + i, null);
+            if (d != null) dirs.add(d);
+        }
+        return dirs;
+    }
+
+    private void saveRecentDir(String dir) {
+        Preferences prefs = Preferences.userNodeForPackage(SaveConfigController.class);
+        List<String> current = loadRecentDirs();
+        current.remove(dir);
+        current.add(0, dir);
+        for (int i = 0; i < Math.min(current.size(), MAX_RECENT); i++) {
+            prefs.put(PREFS_KEY + i, current.get(i));
+        }
+    }
+}
+
