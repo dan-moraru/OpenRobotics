@@ -243,6 +243,7 @@
                                      <HBox alignment="CENTER_RIGHT" spacing="6">
                                          <children>
                                              <!-- Zoom -->
+                                             <Button onAction="#onReturnToOrigin" styleClass="playback-btn" text="⌖" />
                                              <Button onAction="#onZoomIn" styleClass="playback-btn" text="zoom+" />
                                              <Button onAction="#onZoomOut" styleClass="playback-btn" text="zoom-" />
                                              <!-- Restart + speeds + play/pause/step -->

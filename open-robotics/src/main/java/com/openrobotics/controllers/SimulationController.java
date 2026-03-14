@@ -993,6 +993,15 @@ public class SimulationController {
 
     @FXML private void onZoomIn()  { zoom = Math.min(zoom * 1.2, 10.0); drawViewport(); }
     @FXML private void onZoomOut() { zoom = Math.max(zoom / 1.2, 0.2);  drawViewport(); }
+    
+    @FXML
+    private void onReturnToOrigin() {
+        viewOffsetX = 0;
+        viewOffsetY = 0;
+        zoom = 1.0;
+        drawViewport();
+        log("Viewport reset to origin.");
+    }
 
     // ------------------------------------------------------------------ //
     //  Console
