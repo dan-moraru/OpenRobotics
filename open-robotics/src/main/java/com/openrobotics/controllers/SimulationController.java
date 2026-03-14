@@ -76,6 +76,7 @@ public class SimulationController {
     @FXML private Label     viewportModeLabel;
     @FXML private Label     editModeLabel;
     @FXML private Label     viewportStatusLabel;
+    @FXML private Label     tipLabel;
     @FXML private Label     tickDisplayLabel;
 
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
@@ -133,6 +134,7 @@ public class SimulationController {
     private CanvasObject draggingOnCanvas = null;  // object being moved within canvas
     private CanvasObject clipboard = null;
     private int nextObjId = 1;
+    private Timeline tipRotationLoop;
 
     // ------------------------------------------------------------------ //
     //  Canvas object model
@@ -236,9 +238,11 @@ public class SimulationController {
         // Pre-load icons and initialize tips
         IconLoader.preloadAllIcons();
         updateSelectionLabel();
+        startTipRotation();
 
         if (editModeLabel    != null) editModeLabel.setText("edit mode");
         if (viewportModeLabel != null) viewportModeLabel.setText("right-click to pan, left-click to select");
+        if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
     }
@@ -748,6 +752,17 @@ public class SimulationController {
             String tip = ViewportTips.getRandomSelectionTip();
             viewportStatusLabel.setText("select — " + tip);
         }
+    }
+
+    /** Starts the tip rotation timer, cycling a new tip every 5 seconds. */
+    private void startTipRotation() {
+        tipRotationLoop = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            if (tipLabel != null) {
+                tipLabel.setText("TIP: " + ViewportTips.nextTip());
+            }
+        }));
+        tipRotationLoop.setCycleCount(Animation.INDEFINITE);
+        tipRotationLoop.play();
     }
 
     // ------------------------------------------------------------------ //

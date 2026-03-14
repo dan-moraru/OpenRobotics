@@ -283,7 +283,7 @@
                <children>
                                            <Label fx:id="viewportModeLabel" styleClass="viewport-subtle-label" text="drag" />
                                                          <Region HBox.hgrow="ALWAYS" />
-                                           <Label styleClass="sim-tip-label" text="   TIP: Object names will appear in simulation results. It is recommended to name every viewport object." />
+                                           <Label fx:id="tipLabel" styleClass="sim-tip-label" text="" />
                </children>
                                     </HBox>
                                 </children>
