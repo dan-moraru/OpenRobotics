@@ -24,6 +24,7 @@
         "battery": 95.5,
         "state": "IDLE",
         "navigationStrategy": "GREEDY",
+        "sensorStrategy": "RANGE",
         "stuckTicks": 0
       }
     ],

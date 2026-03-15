@@ -8,6 +8,9 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
+import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
+import com.openrobotics.robot.sensors.ProximitySensor;
+import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
 
 import java.io.IOException;
@@ -108,8 +111,15 @@ public class SimulationEngine {
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
                 switch (algo) {
                     case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                    // BUG, RTA_STAR: future tasks
+                    // TODO: BUG, RTA_STAR: future tasks
                     default -> {} // nav stays null, getNextMove handles it safely
+                }
+                // do same with sensor strategy
+                SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
+                switch (sensorType) {
+                    case PROXIMITY -> robot.setSensor(new ProximitySensor());
+                    case RANGE -> robot.setSensor(new RangeSensor());
+                    default -> robot.setSensor(new ProximitySensor()); //I think its fine to make Proximity default?>
                 }
 
                 this.map.addEntity(robot);
@@ -321,7 +331,8 @@ public class SimulationEngine {
         rDto.battery = robot.getBattery();
         rDto.state = robot.getState().name();
         rDto.stuckTicks = robot.getStuckTicks();
-        rDto.navigationStrategy = (robot.getNav() != null) ? robot.getNav().getClass().getSimpleName().toUpperCase() : "NONE";
+        rDto.navigationStrategy = (robot.getNav() != null) ? robot.getNav().toString() : "NONE";
+        rDto.sensorStrategy = (robot.getSensor() != null) ? robot.getSensor().toString() : "NONE";
         return rDto;
     }
 

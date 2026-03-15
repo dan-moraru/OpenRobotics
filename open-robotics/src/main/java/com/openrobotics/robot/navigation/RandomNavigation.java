@@ -1,8 +1,9 @@
-package com.openrobotics.robot;
+package com.openrobotics.robot.navigation;
 
 import com.openrobotics.common.Direction;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.robot.Robot;
 import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.Random;
@@ -36,5 +37,10 @@ public class RandomNavigation implements NavigationStrategy {
                 return new MoveIntention(map.getTile(position.getY(), position.getX()), map.getTile(newX, newY), robot);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "RANDOM";
     }
 }
