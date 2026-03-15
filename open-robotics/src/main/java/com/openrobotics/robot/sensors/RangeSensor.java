@@ -5,6 +5,7 @@ import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.robot.Robot;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +53,7 @@ public class RangeSensor implements SensorStrategy {
             }
         }
 
-        return new Sensor((List<MapEntity>) detected);
+        return new Sensor(new ArrayList<>(detected));
     }
 
     // Calculates rough robot heading (not entirely precise) for ray-casting
