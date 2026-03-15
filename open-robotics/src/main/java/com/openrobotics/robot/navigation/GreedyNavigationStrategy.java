@@ -1,8 +1,11 @@
-package com.openrobotics.robot;
+package com.openrobotics.robot.navigation;
 
 import com.openrobotics.map.Map;
+import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
@@ -35,12 +38,19 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
     public MoveIntention getNextMove(Robot robot, Map map) {
         Vector2D current = robot.getPosition();
         Tile fromTile = map.getTile(current.getX(), current.getY());
-
         Vector2D target = robot.getTarget();
 
-        // no target or already at target — stay in place
+        // no target or already at target -> stay in place
         if (target == null || current.equals(target)) {
             return stayIntention(fromTile, robot);
+        }
+
+        // Get last scan from robot and see whats blocking
+        Set<Vector2D> blockedBySensors = new HashSet<>();
+        Sensor sensorScan = robot.getLastScan();
+        for (MapEntity entity : sensorScan.getDetectedEntities()) {
+            // If robot sees anything, its considered blocked
+            blockedBySensors.add(entity.getPosition());
         }
 
         RobotNavState state = getOrCreateState(robot);
@@ -59,11 +69,11 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
             state.pathStack.push(current);
         }
 
-        // get traversable neighbors excluding visited positions
+        // get traversable neighbors excluding visited positions and blocked entities
         List<Vector2D> neighbors = map.getNeighbors(current);
         List<Vector2D> unvisited = new ArrayList<>();
         for (Vector2D n : neighbors) {
-            if (!state.visited.contains(n)) {
+            if (!state.visited.contains(n) && !blockedBySensors.contains(n)) {
                 unvisited.add(n);
             }
         }
@@ -113,6 +123,7 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
 
     // seeded random tie-break among candidates (spec cs7: deterministic)
     private Vector2D pickBest(List<Vector2D> candidates, Vector2D target, Random rng) {
+        if (candidates.isEmpty()) return null;
         if (candidates.size() == 1) return candidates.get(0);
 
         // find minimum manhattan distance among candidates
@@ -129,17 +140,20 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
                 best.add(c);
             }
         }
-
         return best.get(rng.nextInt(best.size()));
     }
 
     // per-robot state with seed = baseseed xor uuid hash (spec cs7 determinism)
     private RobotNavState getOrCreateState(Robot robot) {
-        return navStates.computeIfAbsent(robot.getId(),
-                id -> new RobotNavState(baseSeed ^ id.hashCode()));
+        return navStates.computeIfAbsent(robot.getId(), id -> new RobotNavState(baseSeed ^ id.hashCode()));
     }
 
     private MoveIntention stayIntention(Tile tile, Robot robot) {
         return new MoveIntention(tile, tile, robot);
+    }
+
+    @Override
+    public String toString() {
+        return "GREEDY";
     }
 }

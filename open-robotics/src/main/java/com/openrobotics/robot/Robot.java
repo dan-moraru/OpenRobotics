@@ -4,18 +4,21 @@ import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.robot.navigation.NavigationStrategy;
+import com.openrobotics.simulationcore.MoveIntention;
+import com.openrobotics.robot.sensors.Sensor;
+import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
-
-import com.openrobotics.simulationcore.MoveIntention;
 
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
     private float battery;
     private NavigationStrategy nav;
+    private SensorStrategy sensor;
     private RobotState state;
     private Task currentTask;
     private int stuckTicks;
@@ -26,6 +29,7 @@ public class Robot extends MapEntity {
     private Vector2D chargerTarget; // overrides task target when low battery
     private int loadingTicksRemaining; // pickup dwell timer
     private int unloadingTicksRemaining; // dropoff dwell timer
+    private Sensor lastScan; // keeps track of the last scan record of the robot
 
     // provisional constants. future config task may override
     private static final float ENERGY_PER_MOVE = 1.0f;
@@ -49,6 +53,7 @@ public class Robot extends MapEntity {
     private void initMovementFields() {
         this.battery = 100.0f;
         this.nav = null;
+        this.sensor = null;
         this.state = RobotState.IDLE;
         this.currentTask = null;
         this.stuckTicks = 0;
@@ -62,6 +67,8 @@ public class Robot extends MapEntity {
     // getters for all fields
     public float getBattery() { return battery; }
     public NavigationStrategy getNav() { return nav; }
+    public SensorStrategy getSensor() { return sensor; }
+    public Sensor getLastScan() { return lastScan; }
     public RobotState getState() { return state; }
     public Task getCurrentTask() { return currentTask; }
     public int getStuckTicks() { return stuckTicks; }
@@ -74,6 +81,7 @@ public class Robot extends MapEntity {
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
     public void setNav(NavigationStrategy nav) { this.nav = nav; }
+    public void setSensor(SensorStrategy sensor) { this.sensor = sensor; }
     public void setState(RobotState state) { this.state = state; }
     public void setCurrentTask(Task currentTask) { this.currentTask = currentTask; }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
@@ -89,6 +97,11 @@ public class Robot extends MapEntity {
 
     // returns a move intention, called once per tick before collision resolution
     public MoveIntention getNextMove(Map map) {
+        // Update data sensor first
+        if (this.sensor != null) {
+            this.lastScan = this.sensor.scan(this, map);
+        }
+
         previousPosition = getPosition(); // save for stuck detection in update()
         Tile fromTile = map.getTile(getPosition().getX(), getPosition().getY());
 

@@ -13,6 +13,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -22,8 +24,8 @@ import java.io.File;
 public class MainApp extends Application {
 
     private SimulationEngine engine;
-    private Pane simContainer; // The area where robots are drawn
-    private final int TILE_SIZE = 40; // Scale: 1 tile = 40 pixels
+    private Pane simContainer;
+    private final int TILE_SIZE = 40;
 
     public static void main(String[] args) {
 //        try {
@@ -39,25 +41,26 @@ public class MainApp extends Application {
     public void start(Stage stage) {
         BorderPane root = new BorderPane();
 
-        // 1. Setup Toolbar
+        // --- TOOLBAR SETUP ---
         HBox toolbar = new HBox(10);
         toolbar.setPadding(new Insets(10));
         toolbar.setStyle("-fx-background-color: #eeeeee;");
 
         Button loadBtn = new Button("Load Configuration");
         loadBtn.setOnAction(e -> handleLoadConfig(stage));
+
         Button testSaveBtn = new Button("Test Save Cycle");
         testSaveBtn.setOnAction(e -> handleTestSaveCycle(stage));
 
         toolbar.getChildren().addAll(loadBtn, testSaveBtn);
         root.setTop(toolbar);
 
-        // 2. Setup Simulation Container
+        // --- SIMULATION VIEWPORT ---
         simContainer = new Pane();
         root.setCenter(simContainer);
 
         Scene scene = new Scene(root, 1000, 800);
-        stage.setTitle("OpenRobotics Simulation Test");
+        stage.setTitle("OpenRobotics Simulation & Strategy Debugger");
         stage.setScene(scene);
         stage.show();
     }
@@ -65,34 +68,25 @@ public class MainApp extends Application {
     private void handleLoadConfig(Stage stage) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Simulation Config");
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("JSON Files", "*.json")
-        );
-
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
         File selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
-            // Initialize the engine with the file
             this.engine = new SimulationEngine(selectedFile.getAbsolutePath());
-
-            // Refresh the UI to show the loaded data
             renderSimulation();
         }
     }
 
     private void handleTestSaveCycle(Stage stage) {
-        // 1. Load an initial file
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Initial Config for Test");
         File inputFile = fileChooser.showOpenDialog(stage);
         if (inputFile == null) return;
 
         try {
-            // Initialize engine
             this.engine = new SimulationEngine(inputFile.getAbsolutePath());
 
-            // 2. Make a programmatic change
-            // Let's find the first robot and change its battery and move it
+            // Programmatic change for verification
             Robot testBot = null;
             for (MapEntity e : engine.getMap().getEntities()) {
                 if (e instanceof Robot) {
@@ -103,34 +97,36 @@ public class MainApp extends Application {
 
             if (testBot != null) {
                 System.out.println("Modifying " + testBot.getName() + " for test...");
-                testBot.setBattery(42.42f); // Specific value to look for later
-                testBot.setPosition(new Vector2D(8, 8)); // Move to a specific spot
+                testBot.setBattery(42.42f);
+                testBot.setPosition(new Vector2D(8, 8));
             }
 
-            // 3. Save to a NEW file
+            // Save to new file
             File outputFile = new File(inputFile.getParent(), "test_output_saved.json");
             engine.configSaving(outputFile.getAbsolutePath());
             System.out.println("Test file saved to: " + outputFile.getAbsolutePath());
 
-            // 4. Verification: Peek into the saved file to see if changes stuck
-            // We can reload the engine from the NEW file to see if the UI updates
+            // Reload and Render to verify UI reflects saved/loaded data
             this.engine = new SimulationEngine(outputFile.getAbsolutePath());
             renderSimulation();
 
-            // Final Console Verification
-            for (MapEntity e : engine.getMap().getEntities()) {
-                if (e instanceof Robot && e.getName().equals(testBot.getName())) {
-                    Robot reloadedBot = (Robot) e;
-                    if (reloadedBot.getBattery() == 42.42f && reloadedBot.getPosition().getX() == 8) {
-                        System.out.println("SUCCESS: Save cycle verified. Battery and Position persisted.");
-                    } else {
-                        System.err.println("FAILURE: Data did not persist correctly.");
+            // Console Verification
+            if (testBot != null) {
+                final String botName = testBot.getName();
+                for (MapEntity e : engine.getMap().getEntities()) {
+                    if (e instanceof Robot && e.getName().equals(botName)) {
+                        Robot reloadedBot = (Robot) e;
+                        if (reloadedBot.getBattery() == 42.42f && reloadedBot.getPosition().getX() == 8) {
+                            System.out.println("SUCCESS: Save cycle verified. Battery, Position, and Strategies persisted.");
+                        } else {
+                            System.err.println("FAILURE: Data did not persist correctly.");
+                        }
                     }
                 }
             }
 
         } catch (Exception ex) {
-            System.err.println("Test failed with error: " + ex.getMessage());
+            System.err.println("Test failed: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -138,34 +134,51 @@ public class MainApp extends Application {
     private void renderSimulation() {
         if (engine == null || engine.getMap() == null) return;
 
-        // Clear previous view
         simContainer.getChildren().clear();
 
-        // 1. Draw the Grid/Map Entities
         for (MapEntity entity : engine.getMap().getEntities()) {
             Vector2D pos = entity.getPosition();
-
-            // Calculate pixel coordinates based on TILE_SIZE
             double x = pos.getX() * TILE_SIZE;
             double y = pos.getY() * TILE_SIZE;
 
             if (entity instanceof Robot) {
-                // Draw Robot as Blue Square
+                Robot robot = (Robot) entity;
+
+                // Draw Robot
                 Rectangle robotView = new Rectangle(TILE_SIZE - 4, TILE_SIZE - 4, Color.BLUE);
                 robotView.setX(x + 2);
                 robotView.setY(y + 2);
 
-                Text label = new Text(x, y - 5, "Robot: " + entity.getName());
-                simContainer.getChildren().addAll(robotView, label);
+                // Strategy Names (Using Reflection for clean UI names)
+                String navName = (robot.getNav() != null)
+                        ? robot.getNav().getClass().getSimpleName().replace("NavigationStrategy", "")
+                        : "NONE";
+                String sensorName = (robot.getSensor() != null)
+                        ? robot.getSensor().getClass().getSimpleName().replace("Sensor", "")
+                        : "NONE";
+
+                // Labels
+                Text nameLabel = new Text(x, y - 30, robot.getName() + " (" + (int)robot.getBattery() + "%)");
+                nameLabel.setFont(Font.font("Verdana", FontWeight.BOLD, 10));
+
+                Text strategyLabel = new Text(x, y - 18, "Nav: " + navName);
+                strategyLabel.setFont(Font.font("Verdana", 9));
+                strategyLabel.setFill(Color.DARKSLATEGRAY);
+
+                Text sensorLabel = new Text(x, y - 8, "Sens: " + sensorName);
+                sensorLabel.setFont(Font.font("Verdana", 9));
+                sensorLabel.setFill(Color.DARKSLATEGRAY);
+
+                simContainer.getChildren().addAll(robotView, nameLabel, strategyLabel, sensorLabel);
             } else {
-                // Draw other entities (Stations, Obstacles) as Grey Squares
-                Rectangle entityView = new Rectangle(TILE_SIZE, TILE_SIZE, Color.GRAY);
+                // Draw static environment
+                Rectangle entityView = new Rectangle(TILE_SIZE, TILE_SIZE, Color.LIGHTGRAY);
                 entityView.setX(x);
                 entityView.setY(y);
+                entityView.setStroke(Color.WHITE);
                 simContainer.getChildren().add(entityView);
             }
         }
-
-        System.out.println("UI Rendered with " + engine.getMap().getEntities().size() + " entities.");
+        System.out.println("UI Rendered.");
     }
 }
