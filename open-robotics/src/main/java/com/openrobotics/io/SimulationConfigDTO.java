@@ -94,6 +94,7 @@ public class SimulationConfigDTO {
         public float battery;
         public String state; // Maps to RobotState enum
         public String navigationStrategy;
+        public String sensorStrategy;
         public int stuckTicks;
     }
 
