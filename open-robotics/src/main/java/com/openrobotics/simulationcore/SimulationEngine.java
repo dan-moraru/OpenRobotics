@@ -8,7 +8,9 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
+import com.openrobotics.robot.navigation.BugNavigationStrategy;
 import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
+import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
 import com.openrobotics.robot.sensors.ProximitySensor;
 import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
@@ -81,6 +83,9 @@ public class SimulationEngine {
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
+            // initialize collision manager
+            this.collisionManager = new CollisionManager();
+
             // Initialize the Map
             this.map = new Map(dto.map.width, dto.map.height);
 
@@ -111,8 +116,9 @@ public class SimulationEngine {
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
                 switch (algo) {
                     case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                    // TODO: BUG, RTA_STAR: future tasks
-                    default -> {} // nav stays null, getNextMove handles it safely
+                    case BUG -> robot.setNav(new BugNavigationStrategy(this.seed));
+                    case RTA_STAR -> robot.setNav(new RtaStarNavigationStrategy(this.seed));
+                    default -> {}
                 }
                 // do same with sensor strategy
                 SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);

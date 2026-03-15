@@ -4,6 +4,7 @@ import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.simulationcore.MoveIntention;
@@ -45,13 +46,19 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
             return stayIntention(fromTile, robot);
         }
 
-        // Get last scan from robot and see whats blocking
+        // get sensor-blocked positions (obstacles only, null-safe)
         Set<Vector2D> blockedBySensors = new HashSet<>();
         Sensor sensorScan = robot.getLastScan();
-        for (MapEntity entity : sensorScan.getDetectedEntities()) {
-            // If robot sees anything, its considered blocked
-            blockedBySensors.add(entity.getPosition());
+        if (sensorScan != null) {
+            for (MapEntity entity : sensorScan.getDetectedEntities()) {
+                // only treat obstacle positions as hard blockers
+                // racks/stations are traversable, robot-robot conflicts handled by collisionmanager
+                if (entity instanceof Obstacle) {
+                    blockedBySensors.add(entity.getPosition());
+                }
+            }
         }
+        blockedBySensors.remove(target);
 
         RobotNavState state = getOrCreateState(robot);
 
