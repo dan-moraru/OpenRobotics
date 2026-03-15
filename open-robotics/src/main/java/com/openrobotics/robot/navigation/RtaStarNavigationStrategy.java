@@ -54,8 +54,9 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
             state.hTable.clear();
         }
 
-        // build candidate neighbors (traversable and not sensor-blocked)
+        // get adjacent walkable tiles (map already filters out obstacles and out-of-bounds)
         List<Vector2D> neighbors = map.getNeighbors(current);
+        // further filter out tiles that the sensor detected as blocked
         List<Vector2D> candidates = new ArrayList<>();
         for (Vector2D n : neighbors) {
             if (!blocked.contains(n)) {
@@ -73,25 +74,31 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
         int minF = Integer.MAX_VALUE;
         for (int i = 0; i < candidates.size(); i++) {
             Vector2D n = candidates.get(i);
+            // use learned heuristic if we've visited this tile before, otherwise manhattan
             int h = state.hTable.getOrDefault(n, n.manhattanDistance(target));
+            // total cost = 1 step to get there + estimated remaining distance
             fValues[i] = 1 + h;
+            // track the best score so we can find ties later
             if (fValues[i] < minF) minF = fValues[i];
         }
 
-        // deterministic tie-break: collect all candidates at min f, pick with seeded rng
+        // collect all candidates tied at the best f-value
         List<Integer> tieIndices = new ArrayList<>();
         for (int i = 0; i < fValues.length; i++) {
             if (fValues[i] == minF) tieIndices.add(i);
         }
+        // pick randomly among ties (seeded rng for determinism)
         int chosenIdx = tieIndices.get(state.rng.nextInt(tieIndices.size()));
         Vector2D chosen = candidates.get(chosenIdx);
 
-        // learn: set current cell's h to second-best f (makes dead ends expensive over time)
+        // learn: update current cell's h so future visits make better decisions
         int learnedValue;
         if (candidates.size() == 1) {
+            // only one option, learn its cost
             learnedValue = fValues[0];
         } else {
             // find second-smallest f-value in single pass (no sorting needed)
+            // second-best because best is where we just moved to
             int smallest = Integer.MAX_VALUE;
             int secondSmallest = Integer.MAX_VALUE;
             for (int f : fValues) {
@@ -104,7 +111,7 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
             }
             learnedValue = secondSmallest;
         }
-        // h never decreases; take the max of current value and learned value
+        // h never decreases; only update if learned value is higher than current
         int currentH = state.hTable.getOrDefault(current, current.manhattanDistance(target));
         state.hTable.put(current, Math.max(currentH, learnedValue));
 
@@ -112,10 +119,12 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
         return new MoveIntention(fromTile, toTile, robot);
     }
 
-    // collect sensor-blocked positions (obstacles only, null-safe, target-exempt)
+    // collect sensor-blocked positions: only obstacles count as blockers,
+    // racks/stations are valid destinations, robot conflicts handled by collisionmanager
     private Set<Vector2D> getSensorBlockedPositions(Robot robot, Vector2D target) {
         Set<Vector2D> blocked = new HashSet<>();
         Sensor scan = robot.getLastScan();
+        // null-safe: robots without sensors still work
         if (scan != null) {
             for (MapEntity entity : scan.getDetectedEntities()) {
                 if (entity instanceof Obstacle) {
@@ -123,6 +132,7 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
                 }
             }
         }
+        // never block the target tile (so robots can reach their destination)
         blocked.remove(target);
         return blocked;
     }

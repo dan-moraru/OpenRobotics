@@ -198,20 +198,26 @@ public class BugNavigationStrategy implements NavigationStrategy {
     }
 
     // bresenham line rasterization from start to target, used as bug2 m-line
+    // returns every grid cell on the straight line between two points
     private Set<Vector2D> computeMLine(Vector2D from, Vector2D to) {
         Set<Vector2D> line = new HashSet<>();
         int x0 = from.getX(), y0 = from.getY();
         int x1 = to.getX(), y1 = to.getY();
+        // absolute distance in each axis
         int dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+        // step direction: +1 or -1 depending on which way we're going
         int sx = x0 < x1 ? 1 : -1;
         int sy = y0 < y1 ? 1 : -1;
+        // error term tracks when to step in x vs y
         int err = dx - dy;
 
         while (true) {
             line.add(new Vector2D(x0, y0));
             if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
+            // step horizontally if error favors x
             if (e2 > -dy) { err -= dy; x0 += sx; }
+            // step vertically if error favors y
             if (e2 < dx) { err += dx; y0 += sy; }
         }
         return line;
@@ -261,15 +267,18 @@ public class BugNavigationStrategy implements NavigationStrategy {
     // seeded random tie-break among candidates closest to target
     private Vector2D pickBest(List<Vector2D> candidates, Vector2D target, Random rng) {
         if (candidates.size() == 1) return candidates.get(0);
+        // find the shortest manhattan distance among all candidates
         int minDist = Integer.MAX_VALUE;
         for (Vector2D c : candidates) {
             int d = c.manhattanDistance(target);
             if (d < minDist) minDist = d;
         }
+        // collect all candidates tied at that shortest distance
         List<Vector2D> best = new ArrayList<>();
         for (Vector2D c : candidates) {
             if (c.manhattanDistance(target) == minDist) best.add(c);
         }
+        // pick randomly among ties (seeded rng for determinism)
         return best.get(rng.nextInt(best.size()));
     }
 
