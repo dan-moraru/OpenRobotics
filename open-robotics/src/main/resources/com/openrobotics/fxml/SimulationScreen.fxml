@@ -76,11 +76,11 @@
                       </MenuBar>
                       <Region HBox.hgrow="ALWAYS" />
                       <!-- Live stats -->
-                      <Label fx:id="objsLabel" styleClass="sim-stat-label" text="objs: 0" />
+                      <Label fx:id="objsLabel" styleClass="sim-stat-label" text="Objects: 0" />
                       <Region minWidth="12" />
-                      <Label fx:id="ramLabel" styleClass="sim-stat-label" text="ram: – kb" />
+                      <Label fx:id="ramLabel" styleClass="sim-stat-label" text="RAM: – KB" />
                       <Region minWidth="12" />
-                      <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="canvas size: 600×600 tiles" />
+                      <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="Canvas Size: 600×600 tiles" />
                   </children>
                </HBox>
                <!-- Tab strip -->
