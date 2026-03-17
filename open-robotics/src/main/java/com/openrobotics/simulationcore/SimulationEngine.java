@@ -51,7 +51,10 @@ public class SimulationEngine {
         this.robots = robots;
         this.collisionManager = new CollisionManager();
         this.dispatcher = dispatcher;
-        this.coordinationPolicy = coordinationPolicy;
+        // Default to a coordination policy if none is configured
+        this.coordinationPolicy = (coordinationPolicy != null)
+                ? coordinationPolicy
+                : CoordinationPolicy.noOp();
     }
 
     /**
@@ -75,6 +78,10 @@ public class SimulationEngine {
      */
     private void configInitialization(String path) {
         try {
+            this.collisionManager = new CollisionManager();
+            // Start from default policy so configs without a coordination section still run.
+            this.coordinationPolicy = CoordinationPolicy.noOp();
+
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
@@ -145,8 +152,10 @@ public class SimulationEngine {
 
                 } else if ("TRAFFIC_RULES".equals(dto.coordination.type)) {
                     Set<Tile> intersectionTiles = new HashSet<>();
-                    for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
-                        intersectionTiles.add(this.map.getTile(v.x, v.y));
+                    if (dto.coordination.intersections != null) {
+                        for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
+                            intersectionTiles.add(this.map.getTile(v.x, v.y));
+                        }
                     }
                     this.coordinationPolicy = new TrafficRulesPolicy(intersectionTiles);
                 }
@@ -348,6 +357,7 @@ public class SimulationEngine {
      * <p>During each tick, the engine:
      * <ul>
      * <li>Collects movement intentions from all robots</li>
+     * <li>Applies the active {@link CoordinationPolicy} to those intentions</li>
      * <li>Resolves conflicts and collisions using the {@link CollisionManager}</li>
      * <li>Commits the approved movements by updating the position state of each robot</li>
      * </ul>
@@ -366,8 +376,12 @@ public class SimulationEngine {
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
-        // Resolving conflicts/collisions and finalizing move intentions for all robots
-        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(intentions);
+        // Let the configured coordination policy reshape the raw intentions first
+        // before the collision manager runs
+        MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(intentions);
+
+        // Resolve remaining conflicts after the policy-specific coordination stage.
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
 
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
