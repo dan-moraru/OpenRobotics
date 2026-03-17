@@ -11,10 +11,16 @@ import com.openrobotics.robot.*;
 import com.openrobotics.task.*;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * The SimulationEngine is the core component responsible for advancing the
@@ -24,6 +30,10 @@ import java.util.Set;
  * of simulation steps that have been executed.
  */
 public class SimulationEngine {
+    private record ReservationKey(int timeStep, Vector2D position) {} // One slot in res table.
+    // Represents one robots full res attempt for the current tick.
+    private record ReservationRequest(UUID robotId, MoveIntention move, List<ReservationKey> window) {}
+
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
     private Map map;
@@ -37,6 +47,13 @@ public class SimulationEngine {
     private int tickMs;
     private int maxTicks;
     private long seed;
+
+    // Central Reservation_K state owned by the engine.
+    // The outer key is the absolute time step and the inner map records which robot
+    // owns a tile at that step.
+    private final java.util.Map<Integer, java.util.Map<Vector2D, UUID>> reservationTable = new HashMap<>();
+    // Secondary index so all outstanding reservations for a robot can be cleared quickly.
+    private final java.util.Map<UUID, Set<ReservationKey>> reservationsByRobot = new HashMap<>();
 
     /**
      * Constructs a new simulation engine instance
@@ -376,9 +393,15 @@ public class SimulationEngine {
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
-        // Let the configured coordination policy reshape the raw intentions first
-        // before the collision manager runs
-        MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(intentions);
+        MoveIntention[] coordinatedIntentions;
+        if (coordinationPolicy instanceof ReservationKPolicy reservationPolicy) {
+            // Reservation_K is engine-managed because it needs shared access to the
+            // global reservation table, deterministic path planning, and cleanup hooks.
+            coordinatedIntentions = applyReservationWindowPolicy(intentions, reservationPolicy);
+        } else {
+            // Traffic rules and no-op coordination still use the generic policy hook.
+            coordinatedIntentions = coordinationPolicy.apply(intentions);
+        }
 
         // Resolve remaining conflicts after the policy-specific coordination stage.
         MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
@@ -388,6 +411,16 @@ public class SimulationEngine {
 
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
+
+        if (coordinationPolicy instanceof ReservationKPolicy) {
+            // The first slot of each granted window corresponds to the step that was just
+            // attempted this tick, so it becomes stale regardless of whether the move
+            // succeeded after the final collision pass.
+            releaseReservationsForTimeStep(tickCounter + 1);
+            // Robots that stopped moving after the state-machine update should not retain
+            // any future reservations, because their next path segment will change.
+            releaseReservationsForInactiveRobots();
+        }
 
         incrementTickCounter();
     }
@@ -445,6 +478,320 @@ public class SimulationEngine {
     }
 
     /**
+     * Applies the engine-managed Reservation_K policy for the current tick.
+     *
+     * <p>The engine replans a short path segment for each robot, attempts to reserve
+     * a sliding window of future tile-time slots, and only allows the first movement
+     * step when the entire requested window is granted.</p>
+     *
+     * @param intentions the raw intentions collected for the current tick
+     * @param reservationPolicy the active Reservation_K policy configuration
+     * @return the coordinated intentions to pass into collision resolution
+     */
+    private MoveIntention[] applyReservationWindowPolicy(MoveIntention[] intentions, ReservationKPolicy reservationPolicy) {
+        java.util.Map<UUID, MoveIntention> rawIntentionsByRobot = indexIntentionsByRobot(intentions);
+        List<Robot> orderedRobots = getRobotsInReservationOrder();
+        List<ReservationRequest> requests = new ArrayList<>(orderedRobots.size());
+
+        // Replanning happens every tick. Each robot drops the future portion of its old
+        // window before requesting a fresh sliding window from its current position.
+        for (Robot robot : orderedRobots) {
+            releaseFutureReservationsForRobot(robot.getId());
+            requests.add(buildReservationRequest(robot, rawIntentionsByRobot.get(robot.getId()), reservationPolicy.getK()));
+        }
+
+        List<MoveIntention> results = new ArrayList<>(requests.size());
+        for (ReservationRequest request : requests) {
+            if (request.window().isEmpty()) {
+                results.add(request.move());
+                continue;
+            }
+
+            // Reservation grants are atomic: any conflicting slot forces the whole
+            // request to fail and the robot must wait for this tick.
+            if (hasReservationConflict(request.robotId(), request.window())) {
+                results.add(CoordinationPolicy.forceWait(request.move()));
+                continue;
+            }
+
+            reserveWindow(request.robotId(), request.window());
+            results.add(request.move());
+        }
+
+        return results.toArray(new MoveIntention[0]);
+    }
+
+    /**
+     * Builds a reservation request for a single robot.
+     *
+     * <p>The request contains the first movement step to execute when successful and
+     * the full list of tile-time slots that must be reserved atomically.</p>
+     *
+     * @param robot the robot requesting reservations
+     * @param rawIntention the robot's original intention for the tick, if any
+     * @param k the maximum reservation window size
+     * @return the reservation request for this robot
+     */
+    private ReservationRequest buildReservationRequest(Robot robot, MoveIntention rawIntention, int k) {
+        MoveIntention wait = createWaitIntention(robot, rawIntention);
+
+        // Reservation windows are only meaningful for robots that are actively moving
+        // toward a concrete target.
+        if (robot.getState() != RobotState.MOVING || robot.getTarget() == null) {
+            return new ReservationRequest(robot.getId(), wait, List.of());
+        }
+
+        List<Vector2D> pathSegment = planReservationPathSegment(robot.getPosition(), robot.getTarget(), k);
+        if (pathSegment.isEmpty()) {
+            return new ReservationRequest(robot.getId(), wait, List.of());
+        }
+
+        Tile fromTile = wait.getFromTile();
+        Vector2D firstStep = pathSegment.get(0);
+        Tile toTile = map.getTile(firstStep.getX(), firstStep.getY());
+        MoveIntention move = new MoveIntention(fromTile, toTile, robot);
+
+        List<ReservationKey> window = new ArrayList<>(pathSegment.size());
+        for (int i = 0; i < pathSegment.size(); i++) {
+            window.add(new ReservationKey(tickCounter + i + 1, pathSegment.get(i)));
+        }
+
+        return new ReservationRequest(robot.getId(), move, window);
+    }
+
+    /**
+     * Creates a wait intention for a robot.
+     *
+     * @param robot the robot that should wait
+     * @param rawIntention the robot's original intention, possibly null
+     * @return a wait intention that keeps the robot on its current tile
+     */
+    private MoveIntention createWaitIntention(Robot robot, MoveIntention rawIntention) {
+        if (rawIntention != null && CoordinationPolicy.hasTiles(rawIntention)) {
+            return CoordinationPolicy.forceWait(rawIntention);
+        }
+
+        Tile currentTile = map.getTile(robot.getPosition().getX(), robot.getPosition().getY());
+        return new MoveIntention(currentTile, currentTile, robot);
+    }
+
+    /**
+     * Plans a deterministic short path segment toward a goal using breadth-first search.
+     *
+     * <p>The returned path excludes the start position and contains at most {@code k}
+     * movement steps. Neighbor expansion follows {@link Map#getNeighbors(Vector2D)} so
+     * tie-breaking stays deterministic.</p>
+     *
+     * @param start the robot's current position
+     * @param goal the current navigation goal
+     * @param k the maximum number of steps to include in the segment
+     * @return a list of future positions representing the next path segment
+     */
+    private List<Vector2D> planReservationPathSegment(Vector2D start, Vector2D goal, int k) {
+        if (start == null || goal == null || start.equals(goal)) {
+            return List.of();
+        }
+
+        Queue<Vector2D> frontier = new ArrayDeque<>();
+        frontier.add(start);
+
+        Set<Vector2D> visited = new HashSet<>();
+        visited.add(start);
+
+        java.util.Map<Vector2D, Vector2D> previous = new HashMap<>();
+
+        // Breadth-first search gives a deterministic shortest path because Map.getNeighbors()
+        // already returns traversable neighbors in a fixed direction order.
+        while (!frontier.isEmpty()) {
+            Vector2D current = frontier.remove();
+            if (current.equals(goal)) {
+                break;
+            }
+
+            for (Vector2D neighbor : map.getNeighbors(current)) {
+                if (visited.add(neighbor)) {
+                    previous.put(neighbor, current);
+                    frontier.add(neighbor);
+                }
+            }
+        }
+
+        if (!visited.contains(goal)) {
+            return List.of();
+        }
+
+        Deque<Vector2D> reversedPath = new ArrayDeque<>();
+        Vector2D cursor = goal;
+        while (!cursor.equals(start)) {
+            reversedPath.push(cursor);
+            cursor = previous.get(cursor);
+        }
+
+        List<Vector2D> pathSegment = new ArrayList<>(Math.min(k, reversedPath.size()));
+        while (!reversedPath.isEmpty() && pathSegment.size() < k) {
+            pathSegment.add(reversedPath.pop());
+        }
+
+        return pathSegment;
+    }
+
+    /**
+     * Indexes the current tick's raw intentions by robot id.
+     *
+     * @param intentions the raw intentions collected by the engine
+     * @return a map from robot id to its first non-null intention
+     */
+    private java.util.Map<UUID, MoveIntention> indexIntentionsByRobot(MoveIntention[] intentions) {
+        java.util.Map<UUID, MoveIntention> indexed = new HashMap<>();
+        for (MoveIntention intention : CoordinationPolicy.copyNonNull(intentions)) {
+            indexed.putIfAbsent(intention.getRobotId(), intention);
+        }
+        return indexed;
+    }
+
+    /**
+     * Returns the simulation robots in deterministic reservation-evaluation order.
+     *
+     * @return the robots sorted by UUID string
+     */
+    private List<Robot> getRobotsInReservationOrder() {
+        List<Robot> ordered = new ArrayList<>(List.of(robots));
+        ordered.sort(Comparator.comparing(robot -> robot.getId().toString()));
+        return ordered;
+    }
+
+    /**
+     * Checks whether any requested reservation slot is already owned by another robot.
+     *
+     * @param robotId the robot requesting the window
+     * @param requestedWindow the requested tile-time slots
+     * @return true when at least one slot conflicts with another reservation
+     */
+    private boolean hasReservationConflict(UUID robotId, List<ReservationKey> requestedWindow) {
+        for (ReservationKey key : requestedWindow) {
+            UUID existingOwner = getReservationOwner(key.timeStep(), key.position());
+            if (existingOwner != null && !existingOwner.equals(robotId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Reserves every slot in a granted reservation window for a robot.
+     *
+     * @param robotId the robot receiving the reservation grant
+     * @param window the granted tile-time slots
+     */
+    private void reserveWindow(UUID robotId, List<ReservationKey> window) {
+        for (ReservationKey key : window) {
+            reservationTable
+                    .computeIfAbsent(key.timeStep(), unused -> new HashMap<>())
+                    .put(key.position(), robotId);
+            reservationsByRobot
+                    .computeIfAbsent(robotId, unused -> new HashSet<>())
+                    .add(key);
+        }
+    }
+
+    /**
+     * Releases all future reservations owned by a robot after the current tick.
+     *
+     * @param robotId the robot whose future reservations should be removed
+     */
+    private void releaseFutureReservationsForRobot(UUID robotId) {
+        releaseReservationsMatching(robotId, key -> key.timeStep() > tickCounter);
+    }
+
+    /**
+     * Releases every reservation slot associated with a completed simulation time step.
+     *
+     * @param timeStep the absolute time step to clear from the reservation table
+     */
+    private void releaseReservationsForTimeStep(int timeStep) {
+        java.util.Map<Vector2D, UUID> reservationsAtStep = reservationTable.remove(timeStep);
+        if (reservationsAtStep == null) {
+            return;
+        }
+
+        for (java.util.Map.Entry<Vector2D, UUID> entry : reservationsAtStep.entrySet()) {
+            ReservationKey key = new ReservationKey(timeStep, entry.getKey());
+            removeReservationKey(entry.getValue(), key);
+        }
+    }
+
+    private void releaseReservationsForInactiveRobots() {
+        for (Robot robot : robots) {
+            if (robot.getState() != RobotState.MOVING || robot.getTarget() == null) {
+                clearReservationsForRobot(robot.getId());
+            }
+        }
+    }
+
+    /**
+     * Releases all reservations owned by a robot that satisfy the supplied predicate.
+     *
+     * @param robotId the robot whose reservations are being inspected
+     * @param predicate decides which reservation keys to release
+     */
+    private void releaseReservationsMatching(UUID robotId, java.util.function.Predicate<ReservationKey> predicate) {
+        Set<ReservationKey> ownedReservations = reservationsByRobot.get(robotId);
+        if (ownedReservations == null || ownedReservations.isEmpty()) {
+            return;
+        }
+
+        List<ReservationKey> toRelease = new ArrayList<>();
+        for (ReservationKey key : ownedReservations) {
+            if (predicate.test(key)) {
+                toRelease.add(key);
+            }
+        }
+
+        for (ReservationKey key : toRelease) {
+            removeReservationFromTable(robotId, key);
+        }
+    }
+
+    /**
+     * Removes a reservation from both the global table and the per-robot index.
+     *
+     * @param robotId the robot that owns the reservation
+     * @param key the tile-time slot to remove
+     */
+    private void removeReservationFromTable(UUID robotId, ReservationKey key) {
+        java.util.Map<Vector2D, UUID> reservationsAtStep = reservationTable.get(key.timeStep());
+        if (reservationsAtStep != null) {
+            UUID currentOwner = reservationsAtStep.get(key.position());
+            if (robotId.equals(currentOwner)) {
+                reservationsAtStep.remove(key.position());
+                if (reservationsAtStep.isEmpty()) {
+                    reservationTable.remove(key.timeStep());
+                }
+            }
+        }
+
+        removeReservationKey(robotId, key);
+    }
+
+    /**
+     * Removes a reservation key from the per-robot index and cleans up empty sets.
+     *
+     * @param robotId the robot that owns the reservation
+     * @param key the reservation key to remove
+     */
+    private void removeReservationKey(UUID robotId, ReservationKey key) {
+        Set<ReservationKey> ownedReservations = reservationsByRobot.get(robotId);
+        if (ownedReservations == null) {
+            return;
+        }
+
+        ownedReservations.remove(key);
+        if (ownedReservations.isEmpty()) {
+            reservationsByRobot.remove(robotId);
+        }
+    }
+
+    /**
      * Increments the tick counter for the simulation engine
      */
     private void incrementTickCounter() {
@@ -462,5 +809,28 @@ public class SimulationEngine {
 
     public Robot[] getRobots() {
         return robots;
+    }
+
+    void clearReservationsForRobot(UUID robotId) {
+        releaseReservationsMatching(robotId, key -> true);
+    }
+
+    /**
+     * Returns the robot that owns a given tile-time reservation slot.
+     *
+     * @param timeStep the absolute time step of the reservation
+     * @param position the reserved tile position
+     * @return the owning robot id, or null when the slot is free
+     */
+    UUID getReservationOwner(int timeStep, Vector2D position) {
+        java.util.Map<Vector2D, UUID> reservationsAtStep = reservationTable.get(timeStep);
+        if (reservationsAtStep == null) {
+            return null;
+        }
+        return reservationsAtStep.get(position);
+    }
+
+    int getReservationCountForRobot(UUID robotId) {
+        return reservationsByRobot.getOrDefault(robotId, Set.of()).size();
     }
 }
