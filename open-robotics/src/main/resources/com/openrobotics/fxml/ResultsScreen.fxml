@@ -33,7 +33,7 @@
                     <Label text="v1.0.0" styleClass="version-label" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="ramLabel" text="ram: – kb"
+                <Label fx:id="ramLabel" text="RAM: – KB"
                        style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" />
                 <Region style="-fx-min-width: 12px;" />
                 <MenuBar styleClass="menu-bar">
@@ -141,7 +141,7 @@
                                style="-fx-font-size: 10px; -fx-font-weight: bold;
                                       -fx-text-fill: #8D8A7F;" />
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Label text="columns:" style="-fx-pref-width:75px;
+                            <Label text="Columns:" style="-fx-pref-width:75px;
                                    -fx-font-size:11px; -fx-text-fill:#C2BEAE;" />
                             <Spinner fx:id="columnCountSpinner" editable="true" prefWidth="55">
                                 <valueFactory>
@@ -154,7 +154,7 @@
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
-                            <Label text="show all robots"
+                            <Label text="Show all robots"
                                    style="-fx-pref-width:105px;-fx-font-size:11px;
                                           -fx-text-fill:#C2BEAE;" />
                             <CheckBox fx:id="showAllRobotsCheck" selected="true" />
@@ -164,7 +164,7 @@
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
-                            <Label text="show energy"
+                            <Label text="Show energy"
                                    style="-fx-pref-width:105px;-fx-font-size:11px;
                                           -fx-text-fill:#C2BEAE;" />
                             <CheckBox fx:id="showEnergyCheck" selected="true" />
@@ -174,7 +174,7 @@
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
-                            <Label text="show collisions"
+                            <Label text="Show collisions"
                                    style="-fx-pref-width:105px;-fx-font-size:11px;
                                           -fx-text-fill:#C2BEAE;" />
                             <CheckBox fx:id="showCollisionsCheck" selected="true" />
@@ -184,7 +184,7 @@
                                     style="-fx-min-width:20px;-fx-max-width:20px;
                                            -fx-min-height:20px;-fx-max-height:20px;
                                            -fx-font-size:10px;-fx-padding:0;" />
-                            <Label text="show deadlocks"
+                            <Label text="Show deadlocks"
                                    style="-fx-pref-width:105px;-fx-font-size:11px;
                                           -fx-text-fill:#C2BEAE;" />
                             <CheckBox fx:id="showDeadlocksCheck" selected="true" />
@@ -296,7 +296,7 @@
                     <Label text="Mask Settings"
                            style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
                     <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="View objects"
+                        <Label text="View Objects"
                                style="-fx-pref-width:100px;-fx-font-size:11px;" />
                         <CheckBox fx:id="viewObjectsCheck" selected="true"
                                   onAction="#onToggleViewObjects" />
