@@ -295,7 +295,7 @@
             <children>
                                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                        <children>
-                                           <Label text="console" />
+                                           <Label text="Console" />
                                            <Region HBox.hgrow="ALWAYS" />
                                            <Button onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
                                        </children>

@@ -240,8 +240,8 @@ public class SimulationController {
         updateSelectionLabel();
         startTipRotation();
 
-        if (editModeLabel    != null) editModeLabel.setText("edit mode");
-        if (viewportModeLabel != null) viewportModeLabel.setText("right-click to pan, left-click to select");
+        if (editModeLabel    != null) editModeLabel.setText("Edit mode");
+        if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
@@ -750,7 +750,7 @@ public class SimulationController {
     private void updateSelectionLabel() {
         if (viewportStatusLabel != null) {
             String tip = ViewportTips.getRandomSelectionTip();
-            viewportStatusLabel.setText("select — " + tip);
+            viewportStatusLabel.setText("Select — " + tip);
         }
     }
 
@@ -823,7 +823,7 @@ public class SimulationController {
                 count++;
             }
         }
-        if (objsLabel != null) objsLabel.setText("objs: " + count);
+        if (objsLabel != null) objsLabel.setText("Objects: " + count);
     }
 
     /** Refreshes the Outliner list and the objs: counter. */
@@ -836,7 +836,7 @@ public class SimulationController {
                 outlinerBacking.add(obj);
             }
         }
-        if (objsLabel != null) objsLabel.setText("objs: " + outlinerBacking.size());
+        if (objsLabel != null) objsLabel.setText("Objects: " + outlinerBacking.size());
     }
 
     // ------------------------------------------------------------------ //
