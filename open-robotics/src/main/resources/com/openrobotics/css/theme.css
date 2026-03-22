@@ -1305,9 +1305,9 @@
     -fx-font-size: 11px;
 }
 
-.mask-legend-tile-red    { -fx-background-color: #7a1f1b; -fx-min-height: 30px; }
-.mask-legend-tile-yellow { -fx-background-color: #7a6200; -fx-min-height: 30px; }
-.mask-legend-tile-grey   { -fx-background-color: #8D8A7F; -fx-min-height: 30px; }
+.mask-legend-tile-red    { -fx-background-color: #7a1f1b; -fx-min-height: 30px; -fx-background-radius: 4;}
+.mask-legend-tile-yellow { -fx-background-color: #7a6200; -fx-min-height: 30px; -fx-background-radius: 4;}
+.mask-legend-tile-grey   { -fx-background-color: #8D8A7F; -fx-min-height: 30px; -fx-background-radius: 4;}
 
 /* ---------- Simulation top menu visibility override ------------ */
 .top-bar-sim .menu-bar-top > .container > .menu-button {
