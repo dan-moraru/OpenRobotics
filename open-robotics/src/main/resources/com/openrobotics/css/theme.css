@@ -991,6 +991,15 @@
     -fx-text-fill: #4D4B45;
 }
 
+.welcome-features-list {
+    -fx-padding: 8 0 0 0;
+}
+
+.welcome-feature-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
 /* CTA row */
 .welcome-cta-row {
     -fx-background-color: #BAB7A8;

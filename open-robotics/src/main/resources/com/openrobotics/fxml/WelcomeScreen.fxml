@@ -35,7 +35,7 @@
             <VBox styleClass="welcome-hero-panel" spacing="0" HBox.hgrow="ALWAYS">
 
                 <!-- Logo watermark + wordmark zone -->
-                <StackPane styleClass="welcome-hero-logo-zone" VBox.vgrow="ALWAYS">
+                <StackPane styleClass="welcome-hero-logo-zone">
                     <ImageView fitHeight="180" fitWidth="180" preserveRatio="true"
                                opacity="0.06" StackPane.alignment="CENTER">
                         <image>
@@ -56,6 +56,11 @@
                             styleClass="welcome-hero-title" wrapText="true"/>
                     <Label text="Configure realistic task flows, test navigation and coordination strategies, and inspect metrics from repeatable simulation runs. Everything in one place!"
                            styleClass="welcome-hero-copy" wrapText="true"/>
+                    <VBox styleClass="welcome-features-list" spacing="10">
+                            <Label text="— Configure multi-robot warehouse layouts with a drag-and-drop editor" styleClass="welcome-feature-item" wrapText="true"/>
+                            <Label text="— Run repeatable simulations with full playback and speed control" styleClass="welcome-feature-item" wrapText="true"/>
+                            <Label text="— Compare results across experiments with charts and collision maps" styleClass="welcome-feature-item" wrapText="true"/>
+                    </VBox>
                 </VBox>
 
                 <Region VBox.vgrow="ALWAYS"/>
