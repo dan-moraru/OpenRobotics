@@ -58,7 +58,8 @@
                              <Label styleClass="version-label" text="v1.0.0" />
                          </children>
                       </VBox>
-                      <MenuBar useSystemMenuBar="false" style="-fx-text-base-color: #C2BEAE; -fx-background-color: transparent; -fx-padding: 0;" styleClass="menu-bar-top">
+                      <!-- .menu-bar CSS sets background transparent and padding 0 -->
+                      <MenuBar useSystemMenuBar="false" style="-fx-text-base-color: #C2BEAE;" styleClass="menu-bar-top">
                          <menus>
                              <Menu style="-fx-text-fill: #C2BEAE;" text="File">
                                 <items>

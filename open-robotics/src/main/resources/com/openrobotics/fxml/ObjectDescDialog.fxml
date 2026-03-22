@@ -9,46 +9,40 @@
 -->
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.openrobotics.controllers.ObjectDescController"
-      styleClass="dialog-root" prefWidth="340" spacing="0"
-      stylesheets="@../css/theme.css"
-      style="-fx-background-color: #C2BEAE;">
+      styleClass="dialog-root object-desc-dialog-root" prefWidth="340" spacing="0"
+      stylesheets="@../css/theme.css">
 
-    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12"
-          style="-fx-background-color: #C2BEAE; -fx-padding: 10 12 10 12; -fx-border-width: 0 0 1 0; -fx-border-color: #8D8A7F;">
+    <HBox styleClass="dialog-title-bar object-desc-dialog-title" alignment="CENTER_LEFT" spacing="12">
         <Label fx:id="objectNameLabel" text="Object Description"
-               style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1a1a18;" />
+               styleClass="dialog-title-label-dark" />
         <Region HBox.hgrow="ALWAYS" />
         <Button text="✕"
-              accessibleText="Close dialog"
-                style="-fx-background-color: transparent; -fx-text-fill: #8D8A7F;
-                       -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 0 4 0 4;"
+                accessibleText="Close dialog"
+                styleClass="dialog-close-btn"
                 onAction="#onClose" />
     </HBox>
 
     <!-- Object image placeholder -->
-    <StackPane style="-fx-background-color: #C2BEAE; -fx-min-height: 140; -fx-padding: 16;"
+    <StackPane styleClass="object-desc-dialog-body"
+               style="-fx-min-height: 140; -fx-padding: 16;"
                VBox.vgrow="SOMETIMES">
         <StackPane fx:id="objectImagePane"
-                   style="-fx-background-color: #C2BEAE; -fx-border-color: #8D8A7F;
-                          -fx-border-width: 1;"
+                   style="-fx-background-color: #C2BEAE; -fx-border-color: #8D8A7F; -fx-border-width: 1;"
                    maxWidth="100" maxHeight="100">
             <Label fx:id="objectIconLabel" text="?" accessibleText="Placeholder icon for object type"
-                   style="-fx-font-size: 48px; -fx-text-fill: #8D8A7F;" />
+                   styleClass="dialog-icon-label" />
         </StackPane>
     </StackPane>
 
     <!-- Description body -->
-    <VBox styleClass="dialog-body" spacing="8" VBox.vgrow="ALWAYS"
-          style="-fx-background-color: #C2BEAE; -fx-padding: 12;">
+    <VBox styleClass="dialog-body object-desc-dialog-body" spacing="8" VBox.vgrow="ALWAYS">
         <Label fx:id="objectDescLabel"
                text="Select an object type to add to your simulation. Each object type has specific properties and behaviors."
-               style="-fx-font-size: 11px; -fx-text-fill: #1a1a18; -fx-wrap-text: true;" />
+               styleClass="dialog-body-text" />
     </VBox>
 
-    <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER"
-          style="-fx-background-color: #C2BEAE; -fx-padding: 12; -fx-border-width: 1 0 0 0; -fx-border-color: #8D8A7F;">
+    <HBox styleClass="dialog-footer object-desc-dialog-footer" spacing="12" alignment="CENTER">
         <Button text="ADD" styleClass="btn-success" prefWidth="150" onAction="#onAdd" />
         <Button text="CLOSE" styleClass="btn-neutral" prefWidth="150" onAction="#onClose" />
     </HBox>
 </VBox>
-

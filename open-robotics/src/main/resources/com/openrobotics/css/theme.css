@@ -229,7 +229,12 @@
     -fx-border-width: 1px;
 }
 
-.menu-item .label {
+.menu-item > .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.context-menu .menu-item > .label {
     -fx-text-fill: #C2BEAE;
     -fx-font-size: 11px;
 }
@@ -857,30 +862,18 @@
 
 .dialog-title-bar {
     -fx-background-color: #706E65;
-    -fx-padding: 7 10 7 8;
+    -fx-padding: 10 12 10 12;
     -fx-min-height: 34px;
-}
-
-.dialog-title-bar .label {
-    -fx-text-fill: #C2BEAE;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
 }
 
 .dialog-body {
     -fx-background-color: #5D5B54;
-    -fx-padding: 12 14 12 14;
-}
-
-.dialog-body .label {
-    -fx-text-fill: #C2BEAE;
-    -fx-font-size: 11px;
-    -fx-wrap-text: true;
+    -fx-padding: 16 12 16 12;
 }
 
 .dialog-footer {
     -fx-background-color: #5D5B54;
-    -fx-padding: 8 10 10 10;
+    -fx-padding: 12;
     -fx-border-color: #3D3C39;
     -fx-border-width: 1 0 0 0;
 }
@@ -1319,4 +1312,285 @@
 .top-bar-sim .menu-bar-top > .container > .menu-button:hover,
 .top-bar-sim .menu-bar-top > .container > .menu-button:showing {
     -fx-background-color: #A9A494;
+}
+
+/* ================================================================
+   SEMANTIC BUTTON ALIASES
+   These map short names used in FXML to the canonical button styles.
+   ================================================================ */
+
+/* btn-primary / btn-success → confirm green (ADD, LOAD, SAVE) */
+.btn-primary,
+.btn-success {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+/* btn-danger → danger red (QUIT) */
+.btn-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+/* btn-neutral → medium grey (RETURN, CANCEL) */
+.btn-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ================================================================
+   PER-DIALOG COLOR OVERRIDES
+   Each dialog has its own colour theme; these classes override the
+   background of the base dialog-root/title-bar/body/footer classes.
+   ================================================================ */
+
+/* Load Config – lighter beige theme */
+.load-dialog-root   { -fx-background-color: #8F8C80; }
+.load-dialog-title  { -fx-background-color: #B7B4A5; }
+.load-dialog-body   { -fx-background-color: #8F8C80; }
+.load-dialog-footer { -fx-background-color: #8F8C80; }
+
+/* Save Config – custom title bar tint */
+.save-dialog-title  { -fx-background-color: #9E9B8E; }
+
+/* Object Desc – light (outer-bg) theme */
+.object-desc-dialog-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.object-desc-dialog-title {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.object-desc-dialog-body {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 12;
+}
+
+.object-desc-dialog-footer {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ================================================================
+   DIALOG LABEL & BUTTON UTILITY CLASSES
+   Replace common inline style patterns in dialog FXML.
+   ================================================================ */
+
+/* Bold title label on dark dialog bg */
+.dialog-title-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Bold title label on light dialog bg */
+.dialog-title-label-dark {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Section / field label on dark bg */
+.dialog-body-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Section / field label on light bg */
+.dialog-body-label-dark {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Regular body text on light bg */
+.dialog-body-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+/* Small hint text – dark on light bg */
+.dialog-hint-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+/* Small hint text – light on dark bg */
+.dialog-dim-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #C2BEAE;
+    -fx-wrap-text: true;
+}
+
+/* Warning text (unsaved data, etc.) */
+.dialog-warning-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #E0B200;
+    -fx-wrap-text: true;
+}
+
+/* Large icon placeholder in object desc dialog */
+.dialog-icon-label {
+    -fx-font-size: 48px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Transparent close / dismiss button */
+.dialog-close-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 0 4 0 4;
+}
+
+/* Inline "Browse Files…" link-style button – light text */
+.dialog-browse-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}
+
+/* Inline "Browse Files…" link-style button – dark text */
+.dialog-browse-btn-dark {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}
+
+/* ================================================================
+   RESULTS SCREEN UTILITY CLASSES
+   Replace inline styles on the results / mask-viewport panels.
+   ================================================================ */
+
+/* Overlay label centred on a canvas ("MASKS ON VIEWPORT") */
+.viewport-overlay-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Mask legend panel (viewport-tinted bg + top border) */
+.mask-legend-panel {
+    -fx-background-color: #CDCBC3;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Mask settings panel (beige bg + top border) */
+.mask-settings-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Tiny legend labels under colour tiles */
+.mask-legend-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-pref-width: 66px;
+    -fx-wrap-text: true;
+}
+
+/* Bold title inside mask legend / settings panels */
+.mask-panel-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Subtitle / info text inside mask panels */
+.mask-panel-subtitle {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+/* Section heading inside results-bottom-panel (dark bg, muted) */
+.results-section-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Info rows inside results-bottom-panel */
+.results-info-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Setting row label: light text + fixed width */
+.results-setting-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #C2BEAE;
+    -fx-pref-width: 105px;
+}
+
+/* Smaller reset button variant used in the results bottom panel */
+.button-reset-sm {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-background-radius: 10px;
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+}
+
+.button-reset-sm:hover {
+    -fx-background-color: #706E65;
+}
+
+/* Chart container (injects chart nodes) */
+.chart-container {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8;
 }

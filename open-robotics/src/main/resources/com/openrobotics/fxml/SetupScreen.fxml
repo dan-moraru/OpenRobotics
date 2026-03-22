@@ -13,7 +13,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.openrobotics.controllers.SetupController"
-            style="-fx-background-color: #C2BEAE;"
+            styleClass="outer-bg"
             stylesheets="@../css/theme.css">
 
     <top>
@@ -48,14 +48,13 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.22"
-                   style="-fx-background-color: #C2BEAE; -fx-padding: 0; -fx-box-border: transparent;">
+        <SplitPane dividerPositions="0.22">
 
             <!-- ── ZONE 1 – Config sidebar (same beige as outer bg) ── -->
             <ScrollPane fitToWidth="true" styleClass="sidebar-setup"
                         style="-fx-min-width: 190px; -fx-pref-width: 240px;">
                 <VBox fx:id="configPanel" spacing="0"
-                      style="-fx-background-color: #C2BEAE; -fx-padding: 0 0 20 0;">
+                      styleClass="outer-bg" style="-fx-padding: 0 0 20 0;">
 
                     <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
                     <!-- map -->
@@ -158,8 +157,7 @@
             <BorderPane style="-fx-background-color: #CECCC4;">
                 <top>
                     <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
-                        <Label text="2D Viewport"
-                               style="-fx-text-fill: #1a1a18; -fx-font-size: 11px;" />
+                        <Label text="2D Viewport" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Label text="Disabled"
                                style="-fx-text-fill: #8D8A7F; -fx-font-size: 11px;" />
