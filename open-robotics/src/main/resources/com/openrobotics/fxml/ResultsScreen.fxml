@@ -25,7 +25,7 @@
             <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
                 <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
                     <image>
-                        <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                        <Image url="@../img/logo_black.png" backgroundLoading="true"/>
                     </image>
                 </ImageView>
                 <VBox spacing="1">
