@@ -53,6 +53,10 @@ public class SetupController {
     // ── RUN META ────────────────────────────────────────────────────────
     @FXML private TextField runNameField;
 
+    // ── CANVAS ──────────────────────────────────────────────────────────
+    @FXML private Spinner<Integer> canvasWidthSpinner;
+    @FXML private Spinner<Integer> canvasHeightSpinner;
+
     // ── STATUS ──────────────────────────────────────────────────────────
     @FXML private Label statusLabel;
 
@@ -71,6 +75,7 @@ public class SetupController {
     private static final String DEFAULT_MAX_TICKS    = "30000";
     private static final String DEFAULT_TICK_MS      = "50";
     private static final String DEFAULT_RUN_NAME     = "experiment_1";
+    private static final int    DEFAULT_CANVAS_TILES = 30;
 
     // ------------------------------------------------------------------ //
     //  Initialisation
@@ -103,6 +108,16 @@ public class SetupController {
                 "SPAWN_RATE", "FIXED_LIST"));
         workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE);
 
+        // Canvas size (separate width × height)
+        canvasWidthSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5000, AppState.getCanvasWidthTiles()));
+        canvasHeightSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5000, AppState.getCanvasHeightTiles()));
+        canvasWidthSpinner.valueProperty().addListener((obs, o, n) ->
+            AppState.setCanvasDimensions(n, AppState.getCanvasHeightTiles()));
+        canvasHeightSpinner.valueProperty().addListener((obs, o, n) ->
+            AppState.setCanvasDimensions(AppState.getCanvasWidthTiles(), n));
+
         // Default text fields
         spawnRateField.setText(DEFAULT_SPAWN_RATE);
         maxTasksField.setText(DEFAULT_MAX_TASKS);
@@ -134,6 +149,10 @@ public class SetupController {
     @FXML private void onResetMaxTicks()     { maxTicksField.setText(DEFAULT_MAX_TICKS); }
     @FXML private void onResetTickMs()       { tickMsField.setText(DEFAULT_TICK_MS); }
     @FXML private void onResetRunName()      { runNameField.setText(DEFAULT_RUN_NAME); }
+    @FXML private void onResetCanvasTiles()  {
+        canvasWidthSpinner.getValueFactory().setValue(DEFAULT_CANVAS_TILES);
+        canvasHeightSpinner.getValueFactory().setValue(DEFAULT_CANVAS_TILES);
+    }
 
     // ------------------------------------------------------------------ //
     //  Blocked preview click (§4.1.2 – viewport is disabled in setup)

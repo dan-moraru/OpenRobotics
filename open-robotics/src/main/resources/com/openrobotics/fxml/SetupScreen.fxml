@@ -150,6 +150,14 @@
                         <TextField fx:id="runNameField" text="experiment_1"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
+                    <!-- canvas size (width × height) -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
+                        <Label text="canvas (tiles)" styleClass="prop-label" />
+                        <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
+                        <Label text="×" style="-fx-font-size: 11px; -fx-padding: 0 2 0 2;" />
+                        <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
+                    </HBox>
                 </VBox>
             </ScrollPane>
 
@@ -178,7 +186,7 @@
             <Region HBox.hgrow="ALWAYS" />
             <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig" />
             <Button text="SAVE" styleClass="button-neutral" onAction="#onSaveConfig" />
-            <Button text="START SIMULATION" onAction="#onStartSimulation" />
+            <Button text="START SIMULATION" styleClass="button-green" onAction="#onStartSimulation" />
         </HBox>
     </bottom>
 

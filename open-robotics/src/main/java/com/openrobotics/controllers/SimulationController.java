@@ -96,9 +96,19 @@ public class SimulationController {
     // ── Viewport navigation state ─────────────────────────────────────────
     private double lastMouseX;
     private double lastMouseY;
+    private double viewportMouseX = -1;  // last known mouse X over viewport (-1 = unset)
+    private double viewportMouseY = -1;
     private double viewOffsetX = 0;
     private double viewOffsetY = 0;
     private double zoom        = 1.0;
+
+    // ── Canvas logical size (tiles) – read from AppState on init ──────────
+    private int     canvasWidthTiles;
+    private int     canvasHeightTiles;
+    // Tile offset applied to all entity/object rendering so they are centred in the border
+    private int     entityOffsetTileX = 0;
+    private int     entityOffsetTileY = 0;
+    private boolean viewportCentered  = false;  // ensures we only auto-centre once
 
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
@@ -167,21 +177,44 @@ public class SimulationController {
 
     @FXML
     private void initialize() {
+        // Read canvas size from shared state (set in Setup screen)
+        canvasWidthTiles  = AppState.getCanvasWidthTiles();
+        canvasHeightTiles = AppState.getCanvasHeightTiles();
+
         // Bind canvas size to the viewport stack so it fills the pane
         warehouseCanvas.widthProperty().bind(viewportStack.widthProperty());
         warehouseCanvas.heightProperty().bind(viewportStack.heightProperty());
 
-        // Redraw whenever size changes
-        warehouseCanvas.widthProperty().addListener(e -> drawViewport());
-        warehouseCanvas.heightProperty().addListener(e -> drawViewport());
+        // Redraw whenever size changes; centre canvas on first layout
+        warehouseCanvas.widthProperty().addListener((obs, oldW, newW) -> {
+            if (!viewportCentered && newW.doubleValue() > 0 && warehouseCanvas.getHeight() > 0) {
+                centerViewportOnCanvas();
+                viewportCentered = true;
+            }
+            drawViewport();
+        });
+        warehouseCanvas.heightProperty().addListener((obs, oldH, newH) -> {
+            if (!viewportCentered && warehouseCanvas.getWidth() > 0 && newH.doubleValue() > 0) {
+                centerViewportOnCanvas();
+                viewportCentered = true;
+            }
+            drawViewport();
+        });
 
         // Viewport mouse interactions
         viewportStack.setOnMousePressed(this::onViewportMousePressed);
         viewportStack.setOnMouseDragged(this::onViewportMouseDragged);
         viewportStack.setOnMouseReleased(this::onViewportMouseReleased);
+        viewportStack.setOnMouseMoved(e -> { viewportMouseX = e.getX(); viewportMouseY = e.getY(); });
         viewportStack.setOnScroll(e -> {
             double factor = e.getDeltaY() > 0 ? 1.1 : 0.9;
+            double mouseX = e.getX();
+            double mouseY = e.getY();
+            double oldZoom = zoom;
             zoom = Math.max(0.2, Math.min(zoom * factor, 10.0));
+            double zoomRatio = zoom / oldZoom;
+            viewOffsetX = mouseX - zoomRatio * (mouseX - viewOffsetX);
+            viewOffsetY = mouseY - zoomRatio * (mouseY - viewOffsetY);
             drawViewport();
         });
 
@@ -222,6 +255,28 @@ public class SimulationController {
 
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
+
+            // Compute canvas to tightly fit the loaded entities, then centre them inside.
+            // The user's configured size (from SetupScreen) sets a minimum — the canvas
+            // never shrinks below that, but entities are always centred within whatever size results.
+            if (!loadedMap.getEntities().isEmpty()) {
+                int maxTileX = 0, maxTileY = 0;
+                for (MapEntity entity : loadedMap.getEntities()) {
+                    maxTileX = Math.max(maxTileX, (int) entity.getPosition().getX());
+                    maxTileY = Math.max(maxTileY, (int) entity.getPosition().getY());
+                }
+                int entitySpanX = maxTileX + 1;   // number of tiles the map occupies
+                int entitySpanY = maxTileY + 1;
+                // Default canvas = entity span + 2 tiles of padding (1 each side)
+                canvasWidthTiles  = Math.max(AppState.getCanvasWidthTiles(),  entitySpanX + 2);
+                canvasHeightTiles = Math.max(AppState.getCanvasHeightTiles(), entitySpanY + 2);
+                // Offset so entities are centred inside the border
+                entityOffsetTileX = (canvasWidthTiles  - entitySpanX) / 2;
+                entityOffsetTileY = (canvasHeightTiles - entitySpanY) / 2;
+            }
+            if (canvasSizeLabel != null)
+                canvasSizeLabel.setText("canvas size: " + canvasWidthTiles + "×" + canvasHeightTiles + " tiles");
+
             populateOutliner();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("Loaded " + loadedMap.getEntities().size() + " objects");
@@ -251,6 +306,13 @@ public class SimulationController {
     //  Viewport rendering
     // ------------------------------------------------------------------ //
 
+    /** Centers the viewport so the canvas border is centred in the visible area. */
+    private void centerViewportOnCanvas() {
+        double tileSize = 32.0 * zoom;
+        viewOffsetX = (warehouseCanvas.getWidth()  - canvasWidthTiles  * tileSize) / 2.0;
+        viewOffsetY = (warehouseCanvas.getHeight() - canvasHeightTiles * tileSize) / 2.0;
+    }
+
     /** Draws the warehouse grid and all placed objects on the canvas. */
     private void drawViewport() {
         GraphicsContext gc = warehouseCanvas.getGraphicsContext2D();
@@ -276,6 +338,15 @@ public class SimulationController {
         gc.strokeLine(w / 2 - 10, h / 2, w / 2 + 10, h / 2);
         gc.strokeLine(w / 2, h / 2 - 10, w / 2, h / 2 + 10);
 
+        // Canvas boundary rectangle
+        double bx = viewOffsetX;
+        double by = viewOffsetY;
+        double bw = canvasWidthTiles  * tileSize;
+        double bh = canvasHeightTiles * tileSize;
+        gc.setStroke(Color.web("#5D5B54"));
+        gc.setLineWidth(2.0);
+        gc.strokeRect(bx, by, bw, bh);
+
         drawEntities(gc);
     }
 
@@ -286,8 +357,8 @@ public class SimulationController {
         double pad = Math.max(1.0, tileSize * 0.06);
 
         for (MapEntity entity : engine.getMap().getEntities()) {
-            double sx = viewOffsetX + entity.getPosition().getX() * tileSize;
-            double sy = viewOffsetY + entity.getPosition().getY() * tileSize;
+            double sx = viewOffsetX + (entity.getPosition().getX() + entityOffsetTileX) * tileSize;
+            double sy = viewOffsetY + (entity.getPosition().getY() + entityOffsetTileY) * tileSize;
 
             javafx.scene.image.Image entityIcon = resolveEntityIcon(entity);
             boolean useFullTileIcon = isWallLikeEntity(entity);
@@ -354,8 +425,8 @@ public class SimulationController {
 
     /** Draws a single canvas object at its tile position. */
     private void drawObject(GraphicsContext gc, CanvasObject obj, double tileSize) {
-        double px = obj.tileX * tileSize + viewOffsetX;
-        double py = obj.tileY * tileSize + viewOffsetY;
+        double px = (obj.tileX + entityOffsetTileX) * tileSize + viewOffsetX;
+        double py = (obj.tileY + entityOffsetTileY) * tileSize + viewOffsetY;
         double ow = obj.widthTiles()  * tileSize;
         double oh = obj.heightTiles() * tileSize;
 
@@ -489,8 +560,8 @@ public class SimulationController {
             // Update status label with live position feedback
             if (viewportStatusLabel != null) {
                 double tileSize = 32 * zoom;
-                int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize);
-                int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize);
+                int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
+                int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
                 viewportStatusLabel.setText(
                         "dragging(" + e.getDragboard().getString().toLowerCase()
                         + ")  →  (" + tx + ", " + ty + ")");
@@ -505,8 +576,10 @@ public class SimulationController {
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
-            int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize);
-            int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize);
+            int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
+            int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
+            tx = Math.max(0, Math.min(tx, canvasWidthTiles  - entityOffsetTileX - 1));
+            ty = Math.max(0, Math.min(ty, canvasHeightTiles - entityOffsetTileY - 1));
 
             CanvasObject obj = new CanvasObject(type, tx, ty, nextObjId++);
             objects.add(obj);
@@ -529,6 +602,8 @@ public class SimulationController {
         viewportStack.requestFocus();
         lastMouseX = e.getX();
         lastMouseY = e.getY();
+        viewportMouseX = e.getX();
+        viewportMouseY = e.getY();
 
         if (e.getButton() == MouseButton.PRIMARY) {
             // Left click: selection only
@@ -551,10 +626,12 @@ public class SimulationController {
         double dy = e.getY() - lastMouseY;
 
         if (draggingOnCanvas != null && e.getButton() == MouseButton.PRIMARY) {
-            // Left-drag: move selected object – snap to nearest tile
+            // Left-drag: move selected object – snap to nearest tile, clamped to canvas
             double tileSize = 32 * zoom;
-            int newTX = (int) Math.floor((e.getX() - viewOffsetX) / tileSize);
-            int newTY = (int) Math.floor((e.getY() - viewOffsetY) / tileSize);
+            int newTX = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
+            int newTY = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
+            newTX = Math.max(0, Math.min(newTX, canvasWidthTiles  - entityOffsetTileX - 1));
+            newTY = Math.max(0, Math.min(newTY, canvasHeightTiles - entityOffsetTileY - 1));
             draggingOnCanvas.tileX = newTX;
             draggingOnCanvas.tileY = newTY;
             if (viewportStatusLabel != null)
@@ -592,8 +669,8 @@ public class SimulationController {
         double tileSize = 32 * zoom;
         for (int i = objects.size() - 1; i >= 0; i--) {
             CanvasObject obj = objects.get(i);
-            double px = obj.tileX * tileSize + viewOffsetX;
-            double py = obj.tileY * tileSize + viewOffsetY;
+            double px = (obj.tileX + entityOffsetTileX) * tileSize + viewOffsetX;
+            double py = (obj.tileY + entityOffsetTileY) * tileSize + viewOffsetY;
             double ow = obj.widthTiles()  * tileSize;
             double oh = obj.heightTiles() * tileSize;
             if (sx >= px && sx < px + ow && sy >= py && sy < py + oh)
@@ -697,8 +774,12 @@ public class SimulationController {
         // Position (editable)
         HBox posBox = new HBox(8);
         posBox.setPrefHeight(30);
-        Spinner<Integer> xSpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, obj.tileX));
-        Spinner<Integer> ySpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, obj.tileY));
+        int maxTX = Math.max(0, canvasWidthTiles  - entityOffsetTileX - 1);
+        int maxTY = Math.max(0, canvasHeightTiles - entityOffsetTileY - 1);
+        int clampedX = Math.max(0, Math.min(obj.tileX, maxTX));
+        int clampedY = Math.max(0, Math.min(obj.tileY, maxTY));
+        Spinner<Integer> xSpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTX, clampedX));
+        Spinner<Integer> ySpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTY, clampedY));
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -991,16 +1072,26 @@ public class SimulationController {
     //  Viewport zoom buttons
     // ------------------------------------------------------------------ //
 
-    @FXML private void onZoomIn()  { zoom = Math.min(zoom * 1.2, 10.0); drawViewport(); }
-    @FXML private void onZoomOut() { zoom = Math.max(zoom / 1.2, 0.2);  drawViewport(); }
-    
-    @FXML
-    private void onReturnToOrigin() {
-        viewOffsetX = 0;
-        viewOffsetY = 0;
-        zoom = 1.0;
+    @FXML private void onZoomIn() {
+        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
+        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double oldZoom = zoom;
+        zoom = Math.min(zoom * 1.2, 10.0);
+        double r = zoom / oldZoom;
+        viewOffsetX = px - r * (px - viewOffsetX);
+        viewOffsetY = py - r * (py - viewOffsetY);
         drawViewport();
-        log("Viewport reset to origin.");
+    }
+
+    @FXML private void onZoomOut() {
+        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
+        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double oldZoom = zoom;
+        zoom = Math.max(zoom / 1.2, 0.2);
+        double r = zoom / oldZoom;
+        viewOffsetX = px - r * (px - viewOffsetX);
+        viewOffsetY = py - r * (py - viewOffsetY);
+        drawViewport();
     }
 
     // ------------------------------------------------------------------ //

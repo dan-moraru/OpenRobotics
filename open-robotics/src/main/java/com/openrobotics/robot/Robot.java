@@ -13,6 +13,8 @@ import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
 
+import com.openrobotics.simulationcore.MoveIntention;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {

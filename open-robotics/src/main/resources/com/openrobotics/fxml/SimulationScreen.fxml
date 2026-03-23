@@ -255,6 +255,11 @@
                                              <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
                                              <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
                                              <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
+                                             <Separator orientation="VERTICAL" style="-fx-padding: 0 6 0 6;" />
+                                             <HBox spacing="4" alignment="CENTER_RIGHT" style="-fx-padding: 0 4 0 0;">
+                                                 <Button onAction="#onTabEditor" styleClass="screen-tab-active" text="EDITOR" />
+                                                 <Button onAction="#onViewResults" styleClass="screen-tab-inactive" text="RESULTS" />
+                                             </HBox>
                                          </children>
                                      </HBox>
                                  </right>

@@ -1,290 +1,347 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+
 <?import javafx.scene.canvas.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
 <!--
-  Results Screen
-  topbar #4D4B45, tab strip #8D8A7F (EDITOR inactive, RESULTS active),
-  chart panels #C2BEAE, chart headers #8D8A7F,
-  table rows alternating #C2BEAE/#8D8A7F,
-  bottom settings panel #32312D,
-  right mask viewport #CDCBC3
+  Results Screen — matches "1440p Desktop - RESULTS.png" Figma design.
+  Topbar      #3D3C39   (reused via .top-bar-sim)
+  Tab strip   #C2BEAE   EDITOR (inactive) | RESULTS (active)
+  Chart area  #C2BEAE   two paginated line charts side-by-side
+  Table area  #C2BEAE   alternating-row TableView
+  Bottom bar  #32312D   display settings + optimisation summary
+  Right panel #CDCBC3   2D mask viewport + legend + mask settings
 -->
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.openrobotics.controllers.ResultsController"
-            styleClass="outer-bg"
-            stylesheets="@../css/theme.css">
 
+<BorderPane prefHeight="900" prefWidth="1440" style="-fx-background-color: #C2BEAE;" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.ResultsController">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- TOP: app bar + tab strip                                  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
     <top>
         <VBox spacing="0">
-            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
+
+            <!-- App title bar -->
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="top-bar-sim">
                 <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
                     <image>
-                        <Image url="@../img/logo_black.png" backgroundLoading="true"/>
+                        <Image backgroundLoading="true" url="@../img/logo_color.png" />
                     </image>
                 </ImageView>
                 <VBox spacing="1">
-                    <Label text="OpenRobotics" styleClass="app-title" />
-                    <Label text="v1.0.0" styleClass="version-label" />
+                    <Label styleClass="app-title" text="OpenRobotics" />
+                    <Label styleClass="version-label" text="v1.0.0" />
                 </VBox>
-                <Region HBox.hgrow="ALWAYS" />
-                <!-- RAM label uses #C2BEAE fill – intentional on this screen -->
-                <Label fx:id="ramLabel" text="RAM: – KB"
-                       style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" />
-                <Region style="-fx-min-width: 12px;" />
-                <MenuBar styleClass="menu-bar">
+                <Region minWidth="24" />
+                <MenuBar styleClass="menu-bar menu-bar-top">
                     <Menu text="File">
-                        <MenuItem text="Welcome Screen" onAction="#onMenuWelcome" />
-                        <MenuItem text="Exit"           onAction="#onExit" />
+                        <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
+                        <MenuItem onAction="#onExit" text="Exit" />
                     </Menu>
                     <Menu text="Help">
-                        <MenuItem text="GitHub Page" onAction="#onMenuGithub" />
+                        <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
                     </Menu>
                 </MenuBar>
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="ramLabel" style="-fx-text-fill: #C2BEAE; -fx-font-size: 11px;" text="ram: – kb" />
             </HBox>
-            <!-- EDITOR (inactive) + RESULTS (active) -->
-            <HBox styleClass="tab-strip" alignment="CENTER_LEFT">
-                <Button text="EDITOR"  styleClass="tab-btn"        onAction="#onTabEditor" />
-                <Button text="RESULTS" styleClass="tab-btn-active"  onAction="#onTabResults" />
-            </HBox>
+
         </VBox>
     </top>
 
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- CENTRE: viewport-header (with nav buttons) + SplitPane   -->
+    <!-- ══════════════════════════════════════════════════════════ -->
     <center>
-        <!-- .split-pane CSS already sets bg #C2BEAE, padding 0 -->
-        <SplitPane dividerPositions="0.57">
+        <VBox spacing="0">
 
-            <!-- ── LEFT+CENTRE: charts + table + settings ── -->
-            <VBox spacing="0" styleClass="outer-bg">
+            <!-- Viewport-style header bar — mirrors SimulationScreen exactly -->
+            <BorderPane styleClass="viewport-header">
+                <left>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label styleClass="viewport-icon-label" text="⊞" />
+                        <Label styleClass="viewport-title-label" text="Results" />
+                    </HBox>
+                </left>
+                <right>
+                    <HBox alignment="CENTER_RIGHT" spacing="4" style="-fx-padding: 0 4 0 0;">
+                        <Button onAction="#onTabEditor" styleClass="screen-tab-inactive" text="EDITOR" />
+                        <Button onAction="#onTabResults" styleClass="screen-tab-active" text="RESULTS" />
+                    </HBox>
+                </right>
+            </BorderPane>
 
-                <!-- Two paginated charts side-by-side -->
-                <HBox spacing="0" style="-fx-min-height: 260px; -fx-pref-height: 300px;">
+        <SplitPane dividerPositions="0.58" style="-fx-background-color: #C2BEAE; -fx-padding: 0; -fx-box-border: transparent;" VBox.vgrow="ALWAYS">
 
-                    <!-- Chart 1 – right divider border -->
-                    <VBox HBox.hgrow="ALWAYS" spacing="0"
-                          style="-fx-border-color: #8D8A7F; -fx-border-width: 0 1 0 0;">
-                        <HBox styleClass="chart-header" alignment="CENTER_LEFT" spacing="6">
-                            <!-- .playback-btn already sets font-size 10px -->
-                            <Button text="◀" styleClass="playback-btn" onAction="#onPrevChart" />
-                            <Button text="▶" styleClass="playback-btn" onAction="#onNextChart" />
-                            <!-- .chart-header .label already sets font-size 10px -->
-                            <Label fx:id="chartPageLabel" text="1/10" />
+            <!-- ─────────────────────────────────────────────── -->
+            <!-- LEFT+CENTRE column                             -->
+            <!-- ─────────────────────────────────────────────── -->
+            <VBox spacing="0" style="-fx-background-color: #C2BEAE;">
+
+                <!-- ╔══════════════ TWO CHARTS ══════════════╗ -->
+                <HBox spacing="0" style="-fx-pref-height: 290px; -fx-min-height: 220px;                              -fx-border-color: #8D8A7F; -fx-border-width: 0 0 1 0;" VBox.vgrow="SOMETIMES">
+
+                    <!-- Chart 1 ─────────────────────────── -->
+                    <VBox spacing="0" style="-fx-border-color: #8D8A7F; -fx-border-width: 0 1 0 0;" HBox.hgrow="ALWAYS">
+
+                        <!-- Chart 1 header -->
+                        <HBox alignment="CENTER_LEFT" spacing="6" styleClass="chart-header">
+                            <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="axis_title" />
+                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="graph title" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button onAction="#onPrevChart" styleClass="playback-btn" text="◀" />
+                            <Button onAction="#onNextChart" styleClass="playback-btn" text="▶" />
+                            <Label fx:id="chartPageLabel" style="-fx-font-size: 10px;" text="1/10" />
                         </HBox>
-                        <StackPane fx:id="chartContainer1" VBox.vgrow="ALWAYS"
-                                   styleClass="chart-container">
-                            <Label text="Chart 1 – inject LineChart here"
-                                   styleClass="label-hint" />
+
+                        <!-- Chart 1 body -->
+                        <StackPane fx:id="chartContainer1" style="-fx-background-color: #C2BEAE;" VBox.vgrow="ALWAYS">
+                            <LineChart animated="false" createSymbols="false" legendVisible="false" styleClass="results-chart">
+                                <xAxis>
+                                    <NumberAxis label="axis_title" lowerBound="0" side="BOTTOM" tickUnit="1" upperBound="3" />
+                                </xAxis>
+                                <yAxis>
+                                    <NumberAxis label="axis_title" lowerBound="0" side="LEFT" tickUnit="100" upperBound="400" />
+                                </yAxis>
+                            </LineChart>
+                            <!-- Legend overlay (top-right) -->
+                            <VBox alignment="TOP_RIGHT" mouseTransparent="true" spacing="3" style="-fx-padding: 8 12 0 0;                                          -fx-background-color: transparent;" StackPane.alignment="TOP_RIGHT">
+                                <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;" text="legend" />
+                                <HBox alignment="CENTER_LEFT" spacing="4">
+                                    <Pane style="-fx-background-color: #AA3333;                                                  -fx-min-width: 14px; -fx-max-width: 14px;                                                  -fx-min-height: 14px; -fx-max-height: 14px;" />
+                                    <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;" text="label" />
+                                </HBox>
+                            </VBox>
                         </StackPane>
                     </VBox>
 
-                    <!-- Chart 2 -->
-                    <VBox HBox.hgrow="ALWAYS" spacing="0">
-                        <HBox styleClass="chart-header" alignment="CENTER_LEFT" spacing="6">
-                            <Button text="◀" styleClass="playback-btn" onAction="#onPrevChart2" />
-                            <Button text="▶" styleClass="playback-btn" onAction="#onNextChart2" />
-                            <Label fx:id="chartPage2Label" text="2/10" />
+                    <!-- Chart 2 ─────────────────────────── -->
+                    <VBox spacing="0" HBox.hgrow="ALWAYS">
+
+                        <!-- Chart 2 header -->
+                        <HBox alignment="CENTER_LEFT" spacing="6" styleClass="chart-header">
+                            <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="axis_title" />
+                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="graph title" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button onAction="#onPrevChart2" styleClass="playback-btn" text="◀" />
+                            <Button onAction="#onNextChart2" styleClass="playback-btn" text="▶" />
+                            <Label fx:id="chartPage2Label" style="-fx-font-size: 10px;" text="2/10" />
                         </HBox>
-                        <StackPane fx:id="chartContainer2" VBox.vgrow="ALWAYS"
-                                   styleClass="chart-container">
-                            <Label text="Chart 2 – inject LineChart here"
-                                   styleClass="label-hint" />
+
+                        <!-- Chart 2 body -->
+                        <StackPane fx:id="chartContainer2" style="-fx-background-color: #C2BEAE;" VBox.vgrow="ALWAYS">
+                            <LineChart animated="false" createSymbols="false" legendVisible="false" styleClass="results-chart">
+                                <xAxis>
+                                    <NumberAxis label="axis_title" lowerBound="0" side="BOTTOM" tickUnit="1" upperBound="3" />
+                                </xAxis>
+                                <yAxis>
+                                    <NumberAxis label="axis_title" lowerBound="0" side="LEFT" tickUnit="100" upperBound="400" />
+                                </yAxis>
+                            </LineChart>
+                            <!-- Legend overlay (top-right) -->
+                            <VBox alignment="TOP_RIGHT" mouseTransparent="true" spacing="3" style="-fx-padding: 8 12 0 0;                                          -fx-background-color: transparent;" StackPane.alignment="TOP_RIGHT">
+                                <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;" text="legend" />
+                                <HBox alignment="CENTER_LEFT" spacing="4">
+                                    <Pane style="-fx-background-color: #AA3333;                                                  -fx-min-width: 14px; -fx-max-width: 14px;                                                  -fx-min-height: 14px; -fx-max-height: 14px;" />
+                                    <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;" text="label" />
+                                </HBox>
+                            </VBox>
                         </StackPane>
                     </VBox>
                 </HBox>
+                <!-- ╚══════════════ /TWO CHARTS ═════════════╝ -->
 
-                <Separator />
+                <!-- ╔════════════ TABLE SECTION ═════════════╗ -->
 
-                <!-- Table header + pagination -->
-                <HBox styleClass="chart-header" alignment="CENTER_LEFT" spacing="10">
-                    <!-- tableTitle uses 11px bold – intentional override of .chart-header .label 10px -->
-                    <Label fx:id="tableTitle" text="TABLE TITLE"
-                           style="-fx-font-weight: bold; -fx-font-size: 11px;" />
-                    <!-- .chart-header .label already sets font-size 10px -->
-                    <Label fx:id="tableInfoLabel" text="rows: 0   columns: 0" />
+                <!-- Table title / info / pagination bar -->
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="chart-header">
+                    <Label fx:id="tableTitle" style="-fx-font-weight: bold; -fx-font-size: 11px;" text="TABLE TITLE" />
+                    <Label fx:id="tableInfoLabel" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="rows: 200   columns: 2" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button text="◀" styleClass="playback-btn" onAction="#onPrevTable" />
-                    <Button text="▶" styleClass="playback-btn" onAction="#onNextTable" />
-                    <Label fx:id="tablePageLabel" text="1/6" />
+                    <Button onAction="#onPrevTable" styleClass="playback-btn" text="◀" />
+                    <Button onAction="#onNextTable" styleClass="playback-btn" text="▶" />
+                    <Label fx:id="tablePageLabel" style="-fx-font-size: 10px;" text="1/6" />
                 </HBox>
 
-                <!-- Data table with alternating rows -->
-                <TableView fx:id="robotStatsTable" VBox.vgrow="ALWAYS">
+                <!-- Data table (rows alternate via CSS .table-row-cell:odd) -->
+                <TableView fx:id="robotStatsTable" style="-fx-border-color: transparent;" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colRobotId"         text="Robot ID"  prefWidth="70" />
-                        <TableColumn fx:id="colNavAlgo"         text="Algorithm" prefWidth="80" />
-                        <TableColumn fx:id="colTasksDone"       text="Tasks"     prefWidth="55" />
-                        <TableColumn fx:id="colDistance"        text="Distance"  prefWidth="70" />
-                        <TableColumn fx:id="colEnergy"          text="Energy"    prefWidth="70" />
-                        <TableColumn fx:id="colIdleTicks"       text="Idle Tks"  prefWidth="65" />
-                        <TableColumn fx:id="colWaitTicks"       text="Wait Tks"  prefWidth="65" />
-                        <TableColumn fx:id="colRobotCollisions" text="Coll."     prefWidth="45" />
-                        <TableColumn fx:id="colDeadlocks"       text="DLs"       prefWidth="40" />
+                        <TableColumn fx:id="colRobotId" prefWidth="75" text="Robot ID" />
+                        <TableColumn fx:id="colNavAlgo" prefWidth="85" text="Algorithm" />
+                        <TableColumn fx:id="colTasksDone" prefWidth="60" text="Tasks" />
+                        <TableColumn fx:id="colDistance" prefWidth="72" text="Distance" />
+                        <TableColumn fx:id="colEnergy" prefWidth="72" text="Energy" />
+                        <TableColumn fx:id="colIdleTicks" prefWidth="68" text="Idle Tks" />
+                        <TableColumn fx:id="colWaitTicks" prefWidth="68" text="Wait Tks" />
+                        <TableColumn fx:id="colRobotCollisions" prefWidth="50" text="Coll." />
+                        <TableColumn fx:id="colDeadlocks" prefWidth="44" text="DLs" />
                     </columns>
                 </TableView>
+                <!-- ╚════════════ /TABLE SECTION ════════════╝ -->
 
-                <!-- Bottom panel #32312D: display settings + optimization summary -->
-                <!-- .results-bottom-panel .label already handles text-fill #C2BEAE and font-size 11px -->
-                <HBox styleClass="results-bottom-panel" spacing="20" alignment="TOP_LEFT">
+                <!-- ╔══════════ BOTTOM DARK PANEL ═══════════╗ -->
+                <HBox alignment="TOP_LEFT" spacing="24" styleClass="results-bottom-panel">
 
-                    <!-- Display settings -->
-                    <VBox spacing="5" prefWidth="200">
-                        <Label text="RESULTS DISPLAY SETTINGS"
-                               styleClass="results-section-title" />
-                        <HBox spacing="6" alignment="CENTER_LEFT">
-                            <!-- pref-width is layout-specific; color+size handled by .results-bottom-panel .label -->
-                            <Label text="Columns:" style="-fx-pref-width: 75px;" />
+                    <!-- Display settings column -->
+                    <VBox minWidth="210" spacing="6">
+                        <Label styleClass="results-section-title" text="RESULTS DISPLAY SETTINGS" />
+
+                        <!-- columns spinner row -->
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Label style="-fx-pref-width: 80px; -fx-font-size: 11px;                                           -fx-text-fill: #8D8A7F;" text="columns:" />
                             <Spinner fx:id="columnCountSpinner" editable="true" prefWidth="55">
                                 <valueFactory>
-                                    <SpinnerValueFactory.IntegerSpinnerValueFactory min="1" max="10" initialValue="2" />
+                                    <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="2" max="10" min="1" />
                                 </valueFactory>
                             </Spinner>
                         </HBox>
-                        <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset-sm" onAction="#onResetShowAllRobots" />
-                            <!-- pref-width is layout-specific; color+size handled by .results-bottom-panel .label -->
-                            <Label text="Show all robots" style="-fx-pref-width: 105px;" />
+
+                        <!-- axis_setting row -->
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Button onAction="#onResetShowAllRobots" styleClass="button-reset" text="↺" />
+                            <Label style="-fx-pref-width: 90px; -fx-font-size: 11px;                                           -fx-text-fill: #8D8A7F;" text="axis_setting" />
+                            <Pane styleClass="results-setting-swatch" />
                             <CheckBox fx:id="showAllRobotsCheck" selected="true" />
                         </HBox>
-                        <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset-sm" onAction="#onResetShowEnergy" />
-                            <Label text="Show energy" style="-fx-pref-width: 105px;" />
+
+                        <!-- data_setting rows -->
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Button onAction="#onResetShowEnergy" styleClass="button-reset" text="↺" />
+                            <Label style="-fx-pref-width: 90px; -fx-font-size: 11px;                                           -fx-text-fill: #8D8A7F;" text="data_setting_1" />
+                            <Pane styleClass="results-setting-swatch" />
                             <CheckBox fx:id="showEnergyCheck" selected="true" />
                         </HBox>
-                        <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset-sm" onAction="#onResetShowCollisions" />
-                            <Label text="Show collisions" style="-fx-pref-width: 105px;" />
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Button onAction="#onResetShowCollisions" styleClass="button-reset" text="↺" />
+                            <Label style="-fx-pref-width: 90px; -fx-font-size: 11px;                                           -fx-text-fill: #8D8A7F;" text="data_setting_2" />
+                            <Pane styleClass="results-setting-swatch" />
                             <CheckBox fx:id="showCollisionsCheck" selected="true" />
                         </HBox>
-                        <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Button text="↺" styleClass="button-reset-sm" onAction="#onResetShowDeadlocks" />
-                            <Label text="Show deadlocks" style="-fx-pref-width: 105px;" />
+                        <HBox alignment="CENTER_LEFT" spacing="6">
+                            <Button onAction="#onResetShowDeadlocks" styleClass="button-reset" text="↺" />
+                            <Label style="-fx-pref-width: 90px; -fx-font-size: 11px;                                           -fx-text-fill: #8D8A7F;" text="data_setting_3" />
+                            <Pane styleClass="results-setting-swatch" />
                             <CheckBox fx:id="showDeadlocksCheck" selected="true" />
                         </HBox>
                     </VBox>
 
-                    <!-- Optimization summary (3 cols) -->
-                    <HBox spacing="20" alignment="TOP_LEFT" HBox.hgrow="ALWAYS">
-                        <VBox spacing="2" fx:id="optSummaryCol1">
-                            <Label text="OPTIMIZATION SUMMARY" styleClass="results-section-title" />
-                            <Label text="info1: ______" styleClass="results-info-label" />
-                            <Label text="info2: ______" styleClass="results-info-label" />
-                            <Label text="info3: ______" styleClass="results-info-label" />
-                            <Label text="info4: ______" styleClass="results-info-label" />
-                            <Label text="info5: ______" styleClass="results-info-label" />
-                            <Label text="info6: ______" styleClass="results-info-label" />
-                            <Label text="info7: ______" styleClass="results-info-label" />
+                    <!-- Optimisation summary: 3 equal-width columns -->
+                    <HBox alignment="TOP_LEFT" spacing="28" HBox.hgrow="ALWAYS">
+                        <VBox fx:id="optSummaryCol1" spacing="3">
+                            <Label styleClass="results-section-title" text="OPTIMIZATION SUMMARY" />
+                            <Label styleClass="results-opt-label" text="stat1: ______" />
+                            <Label styleClass="results-opt-label" text="stat2: ______" />
+                            <Label styleClass="results-opt-label" text="stat3: ______" />
+                            <Label styleClass="results-opt-label" text="stat4: ______" />
+                            <Label styleClass="results-opt-label" text="stat5: ______" />
+                            <Label styleClass="results-opt-label" text="stat6: ______" />
+                            <Label styleClass="results-opt-label" text="stat7: ______" />
                         </VBox>
-                        <VBox spacing="2" fx:id="optSummaryCol2">
-                            <Label text=" " styleClass="results-info-label" />
-                            <Label text="info1: ______" styleClass="results-info-label" />
-                            <Label text="info2: ______" styleClass="results-info-label" />
-                            <Label text="info3: ______" styleClass="results-info-label" />
-                            <Label text="info4: ______" styleClass="results-info-label" />
-                            <Label text="info5: ______" styleClass="results-info-label" />
-                            <Label text="info6: ______" styleClass="results-info-label" />
-                            <Label text="info7: ______" styleClass="results-info-label" />
+                        <VBox fx:id="optSummaryCol2" spacing="3">
+                            <Label style="-fx-font-size: 10px;" text=" " />
+                            <Label styleClass="results-opt-label" text="stat1: ______" />
+                            <Label styleClass="results-opt-label" text="stat2: ______" />
+                            <Label styleClass="results-opt-label" text="stat3: ______" />
+                            <Label styleClass="results-opt-label" text="stat4: ______" />
+                            <Label styleClass="results-opt-label" text="stat5: ______" />
+                            <Label styleClass="results-opt-label" text="stat6: ______" />
+                            <Label styleClass="results-opt-label" text="stat7: ______" />
                         </VBox>
-                        <VBox spacing="2" fx:id="optSummaryCol3">
-                            <Label text=" " styleClass="results-info-label" />
-                            <Label text="info1: ______" styleClass="results-info-label" />
-                            <Label text="info2: ______" styleClass="results-info-label" />
-                            <Label text="info3: ______" styleClass="results-info-label" />
-                            <Label text="info4: ______" styleClass="results-info-label" />
-                            <Label text="info5: ______" styleClass="results-info-label" />
-                            <Label text="info6: ______" styleClass="results-info-label" />
-                            <Label text="info7: ______" styleClass="results-info-label" />
+                        <VBox fx:id="optSummaryCol3" spacing="3">
+                            <Label style="-fx-font-size: 10px;" text=" " />
+                            <Label styleClass="results-opt-label" text="stat1: ______" />
+                            <Label styleClass="results-opt-label" text="stat2: ______" />
+                            <Label styleClass="results-opt-label" text="stat3: ______" />
+                            <Label styleClass="results-opt-label" text="stat4: ______" />
+                            <Label styleClass="results-opt-label" text="stat5: ______" />
+                            <Label styleClass="results-opt-label" text="stat6: ______" />
+                            <Label styleClass="results-opt-label" text="stat7: ______" />
                         </VBox>
                     </HBox>
+
                 </HBox>
+                <!-- ╚══════════ /BOTTOM DARK PANEL ═══════════╝ -->
 
                 <!-- NEW SIMULATION / VIEW HISTORY -->
-                <HBox styleClass="chart-header" alignment="CENTER_LEFT" spacing="10">
-                    <Button text="NEW SIMULATION" onAction="#onNewExperiment" />
-                    <Button text="VIEW HISTORY" styleClass="button-neutral"
-                            onAction="#onViewHistory" />
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="results-actions-bar">
+                    <Button onAction="#onNewExperiment" text="NEW SIMULATION" />
+                    <Button onAction="#onViewHistory" styleClass="button-neutral" text="VIEW HISTORY" />
                 </HBox>
 
             </VBox>
+            <!-- ─────────────── /LEFT COLUMN ─────────────── -->
 
-            <!-- ── RIGHT: 2D Mask Viewport + settings ── -->
-            <VBox spacing="0" styleClass="outer-bg" style="-fx-min-width: 240px;">
+            <!-- ─────────────────────────────────────────────── -->
+            <!-- RIGHT column: 2D Mask Viewport                  -->
+            <!-- ─────────────────────────────────────────────── -->
+            <VBox spacing="0" style="-fx-background-color: #C2BEAE; -fx-min-width: 300px;">
 
-                <!-- Mask viewport header -->
-                <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="5">
-                    <!-- Bold override intentional; .viewport-header .label handles color+size -->
-                    <Label text="2D Mask Viewport"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;" />
+                <!-- Viewport header bar -->
+                <HBox alignment="CENTER_LEFT" spacing="5" styleClass="viewport-header">
+                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="2D Mask Viewport" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <!-- .playback-btn already sets font-size 10px -->
-                    <Button text="🔍+" styleClass="playback-btn" onAction="#onMaskZoomIn" />
-                    <Button text="🔍-" styleClass="playback-btn" onAction="#onMaskZoomOut" />
-                    <Button text="◀"  styleClass="playback-btn" onAction="#onPrevMask" />
-                    <Button text="▶"  styleClass="playback-btn" onAction="#onNextMask" />
-                    <!-- 10px override intentional: viewport header default is 11px -->
-                    <Label fx:id="maskPageLabel" text="1/3"
-                           style="-fx-font-size: 10px;" />
+                    <Button onAction="#onMaskZoomIn" styleClass="playback-btn" text="+" />
+                    <Button onAction="#onMaskZoomOut" styleClass="playback-btn" text="−" />
+                    <Button onAction="#onPrevMask" styleClass="playback-btn" text="◀" />
+                    <Button onAction="#onNextMask" styleClass="playback-btn" text="▶" />
+                    <Label fx:id="maskPageLabel" style="-fx-font-size: 10px;" text="1/3" />
                 </HBox>
 
-                <!-- Mask canvas – .viewport-pane sets #CDCBC3 -->
-                <StackPane fx:id="heatmapContainer" VBox.vgrow="ALWAYS"
-                           styleClass="viewport-pane">
+                <!-- Mask canvas (#CDCBC3 grid area) -->
+                <StackPane fx:id="heatmapContainer" style="-fx-background-color: #CDCBC3;" VBox.vgrow="ALWAYS">
                     <Canvas fx:id="heatmapCanvas" />
-                    <Label text="MASKS ON VIEWPORT" styleClass="viewport-overlay-label" />
+                    <Label style="-fx-font-size: 13px; -fx-font-weight: bold;                                   -fx-text-fill: #8D8A7F;" text="MASKS ON VIEWPORT" />
                 </StackPane>
 
-                <!-- Mask legend – .mask-legend-panel sets #CDCBC3 bg + top border -->
-                <VBox spacing="4" styleClass="mask-legend-panel">
-                    <Label fx:id="maskTitleLabel" text="Title of mask"
-                           styleClass="mask-panel-title" />
-                    <Label fx:id="maskSubtitleLabel" text="x: something"
-                           styleClass="mask-panel-subtitle" />
-                    <HBox spacing="4">
-                        <Pane styleClass="mask-legend-tile-red"    prefWidth="66" />
-                        <Pane styleClass="mask-legend-tile-yellow" prefWidth="66" />
-                        <Pane styleClass="mask-legend-tile-grey"   prefWidth="66" />
+                <!-- Mask colour legend -->
+                <VBox spacing="5" style="-fx-background-color: #CDCBC3; -fx-padding: 10 12 10 12;                              -fx-border-color: #8D8A7F; -fx-border-width: 1 0 0 0;">
+                    <Label fx:id="maskTitleLabel" style="-fx-font-size: 11px; -fx-font-weight: bold;                                   -fx-text-fill: #1a1a18;" text="Title of mask" />
+                    <Label fx:id="maskSubtitleLabel" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="x: something" />
+                    <!-- Colour bar tiles -->
+                    <HBox spacing="3">
+                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-red" />
+                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-yellow" />
+                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-grey" />
                     </HBox>
-                    <HBox spacing="4">
-                        <!-- .mask-legend-label sets 9px, #5D5B54, pref-width 66, wrap -->
-                        <Label text="≥ 30"    styleClass="mask-legend-label" />
-                        <Label text="15 – 30" styleClass="mask-legend-label" />
-                        <Label text="≤ 15"    styleClass="mask-legend-label" />
+                    <!-- Legend labels -->
+                    <HBox spacing="3">
+                        <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;                                       -fx-pref-width: 70px; -fx-wrap-text: true;" text="≥ higher than 30" />
+                        <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;                                       -fx-pref-width: 70px; -fx-wrap-text: true;" text="&gt; higher than 15, ≤ lower than 30" />
+                        <Label style="-fx-font-size: 9px; -fx-text-fill: #5D5B54;                                       -fx-pref-width: 70px; -fx-wrap-text: true;" text="≤ lower than 15" />
                     </HBox>
                 </VBox>
 
-                <!-- Mask settings – .mask-settings-panel sets #C2BEAE bg + top border -->
-                <VBox spacing="4" styleClass="mask-settings-panel">
-                    <Label text="Mask Settings" styleClass="mask-panel-title" />
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <!-- pref-width layout-specific; 11px needed (root default is 12px) -->
-                        <Label text="View Objects"
-                               style="-fx-pref-width: 100px; -fx-font-size: 11px;" />
-                        <CheckBox fx:id="viewObjectsCheck" selected="true"
-                                  onAction="#onToggleViewObjects" />
+                <!-- Mask settings panel -->
+                <VBox spacing="5" style="-fx-background-color: #C2BEAE; -fx-padding: 10 12 10 12;                              -fx-border-color: #8D8A7F; -fx-border-width: 1 0 0 0;">
+                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold;                                   -fx-text-fill: #1a1a18;" text="Mask Settings" />
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label style="-fx-pref-width: 100px; -fx-font-size: 11px;" text="View objects" />
+                        <CheckBox fx:id="viewObjectsCheck" onAction="#onToggleViewObjects" selected="true" />
                     </HBox>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Something"
-                               style="-fx-pref-width: 100px; -fx-font-size: 11px;" />
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label style="-fx-pref-width: 100px; -fx-font-size: 11px;" text="Something" />
                         <CheckBox fx:id="maskOpt1Check" selected="true" />
                     </HBox>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Something"
-                               style="-fx-pref-width: 100px; -fx-font-size: 11px;" />
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label style="-fx-pref-width: 100px; -fx-font-size: 11px;" text="Something" />
                         <CheckBox fx:id="maskOpt2Check" selected="true" />
                     </HBox>
                 </VBox>
 
-                <!-- Export -->
-                <HBox styleClass="chart-header" alignment="CENTER_RIGHT">
-                    <Button text="⬇  EXPORT PACKAGE" onAction="#onExport" />
+                <!-- Export action bar -->
+                <HBox alignment="CENTER_RIGHT" styleClass="results-actions-bar">
+                    <Button onAction="#onExport" styleClass="button-green" text="⬇  EXPORT PACKAGE" />
                 </HBox>
 
             </VBox>
+            <!-- ─────────────── /RIGHT COLUMN ─────────────── -->
+
         </SplitPane>
+
+        </VBox>
     </center>
 
 </BorderPane>
