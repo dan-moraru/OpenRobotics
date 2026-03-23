@@ -58,6 +58,7 @@
                              <Label styleClass="version-label" text="v1.0.0" />
                          </children>
                       </VBox>
+                      <Region minWidth="24" />
                       <MenuBar style="-fx-text-base-color: #C2BEAE;" styleClass="menu-bar menu-bar-top">
                          <menus>
                              <Menu style="-fx-text-fill: #1A1A18;" text="File">
@@ -83,11 +84,10 @@
                       <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="canvas size: 600×600 tiles" />
                   </children>
                </HBox>
-               <!-- Tab strip -->
+               <!-- Tab strip (EDITOR button moved to viewport header) -->
                <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
                   <children>
                       <Region minWidth="232.0" />
-                      <Button onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
                   </children>
                </HBox>
            </children>
@@ -253,6 +253,11 @@
                                              <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
                                              <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
                                              <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
+                                             <Separator orientation="VERTICAL" style="-fx-padding: 0 6 0 6;" />
+                                             <HBox spacing="4" alignment="CENTER_RIGHT" style="-fx-padding: 0 4 0 0;">
+                                                 <Button onAction="#onTabEditor" styleClass="screen-tab-active" text="EDITOR" />
+                                                 <Button onAction="#onViewResults" styleClass="screen-tab-inactive" text="RESULTS" />
+                                             </HBox>
                                          </children>
                                      </HBox>
                                  </right>
