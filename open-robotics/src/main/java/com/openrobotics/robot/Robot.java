@@ -13,6 +13,8 @@ import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
 
+import com.openrobotics.simulationcore.MoveIntention;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -104,6 +106,10 @@ public class Robot extends MapEntity {
 
         previousPosition = getPosition(); // save for stuck detection in update()
         Tile fromTile = map.getTile(getPosition().getX(), getPosition().getY());
+        if (fromTile == null) {
+            throw new IllegalStateException("Robot is on an invalid tile at "
+                    + getPosition().getX() + "," + getPosition().getY());
+        }
 
         // safety net: idle robot with a task should start moving
         if (state == RobotState.IDLE && currentTask != null) {
@@ -132,7 +138,15 @@ public class Robot extends MapEntity {
             }
             // find nearest charger and override nav target
             if (chargerTarget == null) {
-                chargerTarget = map.findNearestChargingStation(getPosition());
+                Vector2D nearest = map.findNearestChargingStation(getPosition());
+                if (nearest != null) {
+                    chargerTarget = nearest;
+                } else {
+                    System.err.println("[Robot] No charging station found for robot " + getName()
+                            + " at " + getPosition() + " with battery=" + battery);
+                    state = RobotState.IDLE;
+                    return new MoveIntention(fromTile, fromTile, this);
+                }
             }
         } else {
             chargerTarget = null; // battery ok, clear charger override

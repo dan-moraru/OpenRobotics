@@ -42,6 +42,10 @@ public class SimulationEngine {
     private int tickMs;
     private int maxTicks;
     private long seed;
+    private boolean initialized;
+
+    // Add a private variable to store initialization errors
+    private String initError;
 
     /**
      * Constructs a new simulation engine instance
@@ -52,11 +56,13 @@ public class SimulationEngine {
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
         this.tickCounter = 0;
+        this.running = false;
         this.map = map;
         this.robots = robots;
         this.collisionManager = new CollisionManager();
         this.dispatcher = dispatcher;
         this.coordinationPolicy = coordinationPolicy;
+        this.initialized = map != null && robots != null && dispatcher != null && coordinationPolicy != null;
     }
 
     /**
@@ -70,6 +76,7 @@ public class SimulationEngine {
             // Default initialization if no file is provided
             this.tickCounter = 0;
             this.running = false;
+            this.initialized = false;
         }
     }
 
@@ -80,6 +87,9 @@ public class SimulationEngine {
      */
     private void configInitialization(String path) {
         try {
+            this.initError = null;
+            this.initialized = false;
+
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
@@ -104,13 +114,14 @@ public class SimulationEngine {
 
             // Initialize Entities (Robots, Stations, Obstacles, etc.)
             // robots
-            for (SimulationConfigDTO.RobotDTO rDto : dto.entities.robots) {
-                Vector2D pos = new Vector2D(rDto.position.x, rDto.position.y);
-                Robot robot = new Robot(rDto.id, rDto.name, pos);
+            if (dto.entities != null && dto.entities.robots != null) {
+                for (SimulationConfigDTO.RobotDTO rDto : dto.entities.robots) {
+                    Vector2D pos = new Vector2D(rDto.position.x, rDto.position.y);
+                    Robot robot = new Robot(rDto.id, rDto.name, pos);
 
-                robot.setBattery(rDto.battery);
-                robot.setStuckTicks(rDto.stuckTicks);
-                robot.setState(RobotState.valueOf(rDto.state));
+                    robot.setBattery(rDto.battery);
+                    robot.setStuckTicks(rDto.stuckTicks);
+                    robot.setState(RobotState.valueOf(rDto.state));
 
                 // normalize config strategy name and wire nav with seed
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
@@ -125,11 +136,11 @@ public class SimulationEngine {
                 switch (sensorType) {
                     case PROXIMITY -> robot.setSensor(new ProximitySensor());
                     case RANGE -> robot.setSensor(new RangeSensor());
-                    default -> robot.setSensor(new ProximitySensor()); //I think its fine to make Proximity default?>
+                    default -> robot.setSensor(new ProximitySensor());
                 }
-
                 this.map.addEntity(robot);
-            }
+            }  // closes for loop
+        }  
 
             // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
@@ -177,14 +188,26 @@ public class SimulationEngine {
             // seed already set before robot creation loop
             // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
 
+            // CollisionManager is always needed for tick()
+            this.collisionManager = new CollisionManager();
+                this.initialized = this.map != null && this.robots != null && this.dispatcher != null
+                    && this.coordinationPolicy != null && this.collisionManager != null;
+
             // Test print, TODO: remove
             System.out.println("Simulation '" + dto.config.runName + "' loaded with "
                     + dto.entities.robots.size() + " robots and "
                     + (dto.tasks != null ? dto.tasks.size() : 0) + " tasks.");
 
-        } catch (IOException e) {
-            //TODO: send error message to the frontend
-            System.err.println("Error: Could not initialize simulation from file: " + e.getMessage());
+        } catch (Exception e) {
+            this.initError = "Could not initialize simulation (" + e.getClass().getName() + "): " + e.getMessage();
+            this.map = null;
+            this.robots = null;
+            this.dispatcher = null;
+            this.coordinationPolicy = null;
+            this.collisionManager = null;
+            this.initialized = false;
+            System.err.println("Error: " + initError);
+            e.printStackTrace();
         }
     }
 
@@ -234,6 +257,9 @@ public class SimulationEngine {
      * @param path the new JSON config file path
      */
     public void configSaving(String path) throws IOException {
+        if (map == null) {
+            throw new IOException("map is not initialized");
+        }
         SimulationConfigDTO dto = new SimulationConfigDTO();
 
         // Config Metadata
@@ -317,7 +343,11 @@ public class SimulationEngine {
         } else if (coordinationPolicy instanceof TrafficRulesPolicy) {
             dto.coordination.type = "TRAFFIC_RULES";
             dto.coordination.intersections = new ArrayList<>();
-            // map intersection tiles?
+            for (Tile tile : ((TrafficRulesPolicy) coordinationPolicy).getIntersectionTiles()) {
+                if (tile != null) {
+                    dto.coordination.intersections.add(new SimulationConfigDTO.Vector2DDTO(tile.getX(), tile.getY()));
+                }
+            }
         }
 
         ConfigLoader.save(path, dto);
@@ -340,6 +370,16 @@ public class SimulationEngine {
         rDto.navigationStrategy = (robot.getNav() != null) ? robot.getNav().toString() : "NONE";
         rDto.sensorStrategy = (robot.getSensor() != null) ? robot.getSensor().toString() : "NONE";
         return rDto;
+    }
+
+    private String navigationStrategyKey(Robot robot) {
+        if (robot == null || robot.getNav() == null) {
+            return "NONE";
+        }
+        if (robot.getNav() instanceof GreedyNavigationStrategy) {
+            return AlgorithmType.GREEDY.name();
+        }
+        return "NONE";
     }
 
     /**
@@ -371,6 +411,9 @@ public class SimulationEngine {
      * </p>
      */
     public void tick() {
+        if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
+            throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
+        }
         // Checking if the warehouse workload has been completed
         if (workloadComplete()) {
             this.running = false;
@@ -432,8 +475,11 @@ public class SimulationEngine {
      * @param intentions an array of finalized MoveIntentions that are ready to be commited for every robot
      */
     private void updateRobotStates(MoveIntention[] intentions) {
-        // Move all robots to 'From' tile in their move intentions
+        // Move robots to their "to" tile when present.
         for (MoveIntention intention : intentions) {
+            if (intention == null || intention.getRobot() == null || intention.getToTile() == null) {
+                continue;
+            }
             Robot robot = intention.getRobot();
             Vector2D newPosition = intention.getToTile().getPosition();
             robot.setPosition(newPosition);
@@ -465,5 +511,13 @@ public class SimulationEngine {
 
     public Robot[] getRobots() {
         return robots;
+    }
+
+    /**
+     * Returns the initialization error message, if any.
+     * @return the initialization error message or null if no error occurred.
+     */
+    public String getInitError() {
+        return initError;
     }
 }

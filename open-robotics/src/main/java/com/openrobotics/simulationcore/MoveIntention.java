@@ -16,8 +16,8 @@ public class MoveIntention {
     /**
      * Constructs a new MoveIntention object
      *
-     * @param from the tile this move intention is going to
-     * @param to the tile this move intention is going from
+    * @param from the tile this move intention is going from
+    * @param to the tile this move intention is going to
      * @param robot the robot this move intention belongs to
      */
     public MoveIntention(Tile from, Tile to, Robot robot) {

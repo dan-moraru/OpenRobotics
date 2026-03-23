@@ -28,7 +28,7 @@ public class Dispatcher {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
         } else if (taskQueue.contains(task)) {
-            throw new Error("Task is already in the task queue");
+            throw new IllegalStateException("Task is already in the task queue");
         }
 
         // Set task status as pending and add to queue
@@ -47,8 +47,9 @@ public class Dispatcher {
 
         // Adding tasks to task queue
         for (Task task : tasks) {
-            task.setStatus(TaskStatus.PENDING);
-            addTask(task);
+            if (task != null) {
+                addTask(task);
+            }
         }
     }
 
@@ -72,6 +73,10 @@ public class Dispatcher {
         for (Robot robot : robots) {
             if (taskQueue.isEmpty()) { // There are no more tasks left to assign
                 break;
+            }
+
+            if (robot == null) {
+                continue;
             }
 
             if (robot.isAvailable()) { // robot is available for task assignment
@@ -119,6 +124,8 @@ public class Dispatcher {
      * @return a list containing all the tasks in the task queue
      */
     public List<Task> getAllTasks() {
-        return new ArrayList<>(taskQueue);
+        List<Task> tasks = new ArrayList<>(taskQueue);
+        tasks.sort(Task::compareTo);
+        return tasks;
     }
 }

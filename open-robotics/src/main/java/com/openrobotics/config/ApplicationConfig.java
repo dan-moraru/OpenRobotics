@@ -28,11 +28,15 @@ public class ApplicationConfig {
         dbUrl = envOrProp("DB_URL", props.getProperty("db.url"));
         dbUser = envOrProp("DB_USER", props.getProperty("db.user"));
         dbPassword = envOrProp("DB_PASSWORD", props.getProperty("db.password"));
-        if (dbUrl == null || dbUser == null || dbPassword == null) {
+        if (isBlank(dbUrl) || isBlank(dbUser) || isBlank(dbPassword)) {
             throw new IllegalStateException(
                 "Missing database config. Set db.url, db.user, db.password in " + CONFIG_RESOURCE
                     + " or DB_URL, DB_USER, DB_PASSWORD environment variables.");
         }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /**
@@ -47,8 +51,7 @@ public class ApplicationConfig {
     }
 
     /**
-     * Loads properties from application.config on the classpath.
-     * Lines starting with # or % are comments and ignored.
+     * Loads properties from application.config on the classpath. Lines starting with # are comments and ignored.
      * @return a Properties object containing the key-value pairs from the config file, or empty if the file is not found
      * @throws IOException if there is an error reading the config file
      */

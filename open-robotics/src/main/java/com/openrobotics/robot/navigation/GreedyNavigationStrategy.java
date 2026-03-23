@@ -98,6 +98,10 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
             else farther.add(n);
         }
 
+        if (state.backtracking && (!sideways.isEmpty() || !farther.isEmpty() || !closer.isEmpty())) {
+            state.backtracking = false;
+        }
+
         Vector2D next = null;
 
         // priority: closer > sideways > farther > backtrack

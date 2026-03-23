@@ -17,6 +17,7 @@ import java.sql.SQLException;
 public final class Database {
 
     private static volatile HikariDataSource dataSource;
+    private static volatile boolean shutdown;
 
     private Database() {}
 
@@ -27,6 +28,9 @@ public final class Database {
      * @throws SQLException if there is an error connecting to the database or running migrations
      */
     public static synchronized void init() throws IOException, SQLException {
+        if (shutdown) {
+            throw new IllegalStateException("Database has been shut down and cannot be re-initialized in this process.");
+        }
         if (dataSource != null) {
             return;
         }
@@ -59,6 +63,9 @@ public final class Database {
         if (dataSource == null) {
             throw new IllegalStateException("Database not initialized. Call Database.init() at startup.");
         }
+        if (shutdown) {
+            throw new IllegalStateException("Database has been shut down.");
+        }
         return dataSource;
     }
 
@@ -68,5 +75,17 @@ public final class Database {
      */
     public static Connection getConnection() throws SQLException {
         return getDataSource().getConnection();
+    }
+
+    /**
+     * Closes the shared Hikari pool and marks the DB layer as shut down.
+     */
+    public static synchronized void shutdown() {
+        HikariDataSource ds = dataSource;
+        dataSource = null;
+        shutdown = true;
+        if (ds != null && !ds.isClosed()) {
+            ds.close();
+        }
     }
 }
