@@ -77,6 +77,10 @@ public class SimulationController {
     @FXML private Label     editModeLabel;
     @FXML private Label     viewportStatusLabel;
     @FXML private Label     tipLabel;
+    @FXML private CheckMenuItem toggleSidebarItem;
+    @FXML private CheckMenuItem toggleConsoleItem;
+    @FXML private VBox sidebarPanel;
+    @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
 
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
@@ -1092,6 +1096,31 @@ public class SimulationController {
         viewOffsetX = px - r * (px - viewOffsetX);
         viewOffsetY = py - r * (py - viewOffsetY);
         drawViewport();
+    }
+
+    @FXML
+    private void onReturnToOrigin() {
+        viewOffsetX = 0;
+        viewOffsetY = 0;
+        zoom = 1.0;
+        drawViewport();
+        log("Viewport reset to origin.");
+    }
+
+    @FXML
+    private void onToggleSidebar() {
+        if (sidebarPanel != null) {
+            sidebarPanel.setVisible(toggleSidebarItem.isSelected());
+            sidebarPanel.setManaged(toggleSidebarItem.isSelected());
+        }
+    }
+
+    @FXML
+    private void onToggleConsole() {
+        if (consoleShell != null) {
+            consoleShell.setVisible(toggleConsoleItem.isSelected());
+            consoleShell.setManaged(toggleConsoleItem.isSelected());
+        }
     }
 
     // ------------------------------------------------------------------ //

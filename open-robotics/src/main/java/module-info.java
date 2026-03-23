@@ -8,6 +8,7 @@ module com.openrobotics {
     requires flyway.core;
     requires javafx.swing;
     requires java.sql;
+    requires org.postgresql.jdbc;
     requires java.prefs;
     requires java.desktop;
 

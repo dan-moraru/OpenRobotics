@@ -136,9 +136,11 @@ public class SimulationEngine {
                 switch (sensorType) {
                     case PROXIMITY -> robot.setSensor(new ProximitySensor());
                     case RANGE -> robot.setSensor(new RangeSensor());
-                    default -> robot.setSensor(new ProximitySensor()); //I think its fine to make Proximity default?>
+                    default -> robot.setSensor(new ProximitySensor());
                 }
-            }
+                this.map.addEntity(robot);
+            }  // closes for loop
+        }  
 
             // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
@@ -377,7 +379,7 @@ public class SimulationEngine {
         if (robot.getNav() instanceof GreedyNavigationStrategy) {
             return AlgorithmType.GREEDY.name();
         }
-        return AlgorithmType.UNKNOWN.name();
+        return "NONE";
     }
 
     /**
