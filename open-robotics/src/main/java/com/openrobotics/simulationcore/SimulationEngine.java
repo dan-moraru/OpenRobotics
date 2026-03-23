@@ -8,6 +8,11 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
+import com.openrobotics.robot.navigation.BugNavigationStrategy;
+import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
+import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
+import com.openrobotics.robot.sensors.ProximitySensor;
+import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
 
 import java.io.IOException;
@@ -88,6 +93,9 @@ public class SimulationEngine {
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
+            // initialize collision manager
+            this.collisionManager = new CollisionManager();
+
             // Initialize the Map
             this.map = new Map(dto.map.width, dto.map.height);
 
@@ -115,15 +123,20 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                    // normalize config strategy name and wire nav with seed
-                    AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
-                    switch (algo) {
-                        case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                        // BUG, RTA_STAR: future tasks
-                        default -> {} // nav stays null, getNextMove handles it safely
-                    }
-
-                    this.map.addEntity(robot);
+                // normalize config strategy name and wire nav with seed
+                AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
+                switch (algo) {
+                    case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
+                    case BUG -> robot.setNav(new BugNavigationStrategy(this.seed));
+                    case RTA_STAR -> robot.setNav(new RtaStarNavigationStrategy(this.seed));
+                    default -> {}
+                }
+                // do same with sensor strategy
+                SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
+                switch (sensorType) {
+                    case PROXIMITY -> robot.setSensor(new ProximitySensor());
+                    case RANGE -> robot.setSensor(new RangeSensor());
+                    default -> robot.setSensor(new ProximitySensor()); //I think its fine to make Proximity default?>
                 }
             }
 
@@ -352,7 +365,8 @@ public class SimulationEngine {
         rDto.battery = robot.getBattery();
         rDto.state = robot.getState().name();
         rDto.stuckTicks = robot.getStuckTicks();
-        rDto.navigationStrategy = navigationStrategyKey(robot);
+        rDto.navigationStrategy = (robot.getNav() != null) ? robot.getNav().toString() : "NONE";
+        rDto.sensorStrategy = (robot.getSensor() != null) ? robot.getSensor().toString() : "NONE";
         return rDto;
     }
 

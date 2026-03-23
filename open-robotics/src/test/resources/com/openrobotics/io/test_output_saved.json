@@ -22,9 +22,11 @@
         "x" : 8,
         "y" : 8
       },
+      "type" : null,
       "battery" : 42.42,
       "state" : "IDLE",
-      "navigationStrategy" : "NONE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "RANGE",
       "stuckTicks" : 0
     } ],
     "stations" : [ {
@@ -33,7 +35,8 @@
       "position" : {
         "x" : 0,
         "y" : 0
-      }
+      },
+      "type" : "CHARGING"
     } ],
     "racks" : [ ],
     "obstacles" : [ ]

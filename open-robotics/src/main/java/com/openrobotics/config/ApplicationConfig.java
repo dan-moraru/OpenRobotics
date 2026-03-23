@@ -51,7 +51,8 @@ public class ApplicationConfig {
     }
 
     /**
-     * Loads properties from application.config on the classpath. Lines starting with # are comments and ignored.
+     * Loads properties from application.config on the classpath.
+     * Lines starting with # or % are comments and ignored.
      * @return a Properties object containing the key-value pairs from the config file, or empty if the file is not found
      * @throws IOException if there is an error reading the config file
      */
@@ -65,7 +66,7 @@ public class ApplicationConfig {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
-                    if (line.isEmpty() || line.startsWith("#")) {
+                    if (line.isEmpty() || line.startsWith("#") || line.startsWith("%")) {
                         continue;
                     }
                     int eq = line.indexOf('=');

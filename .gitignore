@@ -31,5 +31,4 @@ out/
 Thumbs.db
 
 # Local Config
-.open-robotics/src/main/resources/application.config
-open-robotics/src/main/resources/application.config
+**/application.config
