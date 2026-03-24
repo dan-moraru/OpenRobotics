@@ -8,7 +8,10 @@ import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.map.entities.station.Station;
 import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
+import com.openrobotics.robot.sensors.ProximitySensor;
 import com.openrobotics.simulationcore.SimulationEngine;
+import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
 import com.openrobotics.util.ViewportTips;
@@ -91,6 +94,10 @@ public class SimulationController {
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
 
+    // ── TAB STRIP ─────────────────────────────────────────────────────────
+    @FXML private Button editorTabBtn;
+    @FXML private Button resultsTabBtn;
+
     // ── PLAYBACK ────────────────────────────────────────────────────────
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
@@ -125,6 +132,7 @@ public class SimulationController {
     private int              localTick    = 0;
     private static final double BASE_TICK_MS = 100.0;
     private static final Color VIEWPORT_BG_COLOR = Color.web("#CDCBC3");
+    private static final Color VIEWPORT_BG_OUTSIDE_COLOR = Color.web("#A8A598");
     private static final Color VIEWPORT_GRID_COLOR = Color.web("#B0ADA5");
     private static final Color VIEWPORT_CROSSHAIR_COLOR = Color.web("#5D5B54");
     private static final Color ENTITY_ROBOT_COLOR = Color.web("#4D4B45");
@@ -136,45 +144,26 @@ public class SimulationController {
     private static final Color ENTITY_STATION_COLOR = Color.web("#599068");
     private static final Color ENTITY_OBSTACLE_COLOR = Color.web("#5D5B54");
     private static final Color ENTITY_FALLBACK_COLOR = Color.web("#8D8A7F");
-    private static final Color ENTITY_LABEL_COLOR = Color.web("#C2BEAE");
+    private static final Color ENTITY_LABEL_COLOR = Color.web("#1a1a18");
     private static final Color OBJECT_SELECTION_COLOR = Color.web("#C2BEAE");
     // ── Object rendering ──────────────────────────────────────────────────
     // Uses IconLoader utility for icon caching
 
     // ── Canvas object state ───────────────────────────────────────────────
-    private final List<CanvasObject> objects = new ArrayList<>();
+
     private final List<Object> outlinerBacking = new ArrayList<>();
-    private CanvasObject selectedObject  = null;
-    private CanvasObject draggingOnCanvas = null;  // object being moved within canvas
-    private CanvasObject clipboard = null;
+    private MapEntity selectedEntity = null;
+    private MapEntity draggingOnCanvas = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
+    // Animation state
+    private boolean animating = false;
+    private double animationProgress = 0.0;
+    private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
+    private static final int ANIMATION_FRAMES = 5;
+
     // ------------------------------------------------------------------ //
-    //  Canvas object model
-    // ------------------------------------------------------------------ //
-
-    /** Represents an object placed on the 2D warehouse canvas. */
-    private static class CanvasObject {
-        String type;
-        String name;
-        int tileX;
-        int tileY;
-        boolean selected;
-
-        CanvasObject(String type, int tileX, int tileY, int id) {
-            this.type  = type;
-            this.tileX = tileX;
-            this.tileY = tileY;
-            this.name  = type.toLowerCase() + "_" + id;
-        }
-
-        /** Width of the object in tiles. */
-        int widthTiles()  { return 1; }
-        /** Height of the object in tiles. */
-        int heightTiles() { return 1; }
-    }
-
     // ------------------------------------------------------------------ //
     //  Initialisation
     // ------------------------------------------------------------------ //
@@ -323,14 +312,23 @@ public class SimulationController {
         double w = warehouseCanvas.getWidth();
         double h = warehouseCanvas.getHeight();
 
-        // Background
-        gc.setFill(VIEWPORT_BG_COLOR);
+        // Background – darker outside the allocated map area
+        gc.setFill(VIEWPORT_BG_OUTSIDE_COLOR);
         gc.fillRect(0, 0, w, h);
+
+        double tileSize = 32 * zoom;
+
+        // Canvas (map) boundary – fill lighter inside
+        double bx = viewOffsetX;
+        double by = viewOffsetY;
+        double bw = canvasWidthTiles  * tileSize;
+        double bh = canvasHeightTiles * tileSize;
+        gc.setFill(VIEWPORT_BG_COLOR);
+        gc.fillRect(bx, by, bw, bh);
 
         // Grid lines
         gc.setStroke(VIEWPORT_GRID_COLOR);
         gc.setLineWidth(0.5);
-        double tileSize = 32 * zoom;
         for (double x = viewOffsetX % tileSize; x < w; x += tileSize)
             gc.strokeLine(x, 0, x, h);
         for (double y = viewOffsetY % tileSize; y < h; y += tileSize)
@@ -343,10 +341,6 @@ public class SimulationController {
         gc.strokeLine(w / 2, h / 2 - 10, w / 2, h / 2 + 10);
 
         // Canvas boundary rectangle
-        double bx = viewOffsetX;
-        double by = viewOffsetY;
-        double bw = canvasWidthTiles  * tileSize;
-        double bh = canvasHeightTiles * tileSize;
         gc.setStroke(Color.web("#5D5B54"));
         gc.setLineWidth(2.0);
         gc.strokeRect(bx, by, bw, bh);
@@ -361,8 +355,17 @@ public class SimulationController {
         double pad = Math.max(1.0, tileSize * 0.06);
 
         for (MapEntity entity : engine.getMap().getEntities()) {
-            double sx = viewOffsetX + (entity.getPosition().getX() + entityOffsetTileX) * tileSize;
-            double sy = viewOffsetY + (entity.getPosition().getY() + entityOffsetTileY) * tileSize;
+            double ex = entity.getPosition().getX();
+            double ey = entity.getPosition().getY();
+
+            if (animating && entity instanceof Robot && prevRobotPositions.containsKey(entity.getId())) {
+                com.openrobotics.map.Vector2D prev = prevRobotPositions.get(entity.getId());
+                ex = prev.getX() + (ex - prev.getX()) * animationProgress;
+                ey = prev.getY() + (ey - prev.getY()) * animationProgress;
+            }
+
+            double sx = viewOffsetX + (ex + entityOffsetTileX) * tileSize;
+            double sy = viewOffsetY + (ey + entityOffsetTileY) * tileSize;
 
             javafx.scene.image.Image entityIcon = resolveEntityIcon(entity);
             boolean useFullTileIcon = isWallLikeEntity(entity);
@@ -413,46 +416,16 @@ public class SimulationController {
             }
 
             if (zoom >= 0.8 && tileSize >= 18) {
-                String lbl = entity.getName().length() > 5
-                        ? entity.getName().substring(0, 4) + "\u2026"
+                double fontSize = Math.max(6.0, tileSize * 0.18);
+                double maxLabelWidth = tileSize - 2 * pad - 2;
+                int maxChars = Math.max(2, (int)(maxLabelWidth / (fontSize * 0.55)));
+                String lbl = entity.getName().length() > maxChars
+                        ? entity.getName().substring(0, maxChars - 1) + "\u2026"
                         : entity.getName();
                 gc.setFill(ENTITY_LABEL_COLOR);
-                gc.setFont(Font.font(Math.max(7.0, tileSize * 0.26)));
-                gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2);
+                gc.setFont(Font.font(fontSize));
+                gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
             }
-        }
-        // Placed objects
-        for (CanvasObject obj : objects) {
-            drawObject(gc, obj, tileSize);
-        }
-    }
-
-    /** Draws a single canvas object at its tile position. */
-    private void drawObject(GraphicsContext gc, CanvasObject obj, double tileSize) {
-        double px = (obj.tileX + entityOffsetTileX) * tileSize + viewOffsetX;
-        double py = (obj.tileY + entityOffsetTileY) * tileSize + viewOffsetY;
-        double ow = obj.widthTiles()  * tileSize;
-        double oh = obj.heightTiles() * tileSize;
-
-        // Skip if fully out of view
-        double cw = warehouseCanvas.getWidth();
-        double ch = warehouseCanvas.getHeight();
-        if (px + ow < 0 || px > cw || py + oh < 0 || py > ch) return;
-
-        // Draw icon using IconLoader utility
-        javafx.scene.image.Image img = IconLoader.getIcon(obj.type);
-        if (img != null && !img.isError()) {
-            gc.drawImage(img, px, py, ow, oh);
-        } else {
-            gc.setFill(Color.web(objectBodyColor(obj.type)));
-            gc.fillRect(px, py, ow, oh);
-        }
-
-        // Selection highlight border
-        if (obj.selected) {
-            gc.setStroke(OBJECT_SELECTION_COLOR);
-            gc.setLineWidth(2.0);
-            gc.strokeRect(px + 1, py + 1, ow - 2, oh - 2);
         }
     }
 
@@ -528,6 +501,23 @@ public class SimulationController {
     }
 
     // ------------------------------------------------------------------ //
+    //  Map-bounds helpers (clamp positions to the engine map, not the canvas)
+    // ------------------------------------------------------------------ //
+
+    private int maxMapTileX() {
+        if (engine != null && engine.getMap() != null) return engine.getMap().getWidth() - 1;
+        return Math.max(0, canvasWidthTiles - entityOffsetTileX - 1);
+    }
+
+    private int maxMapTileY() {
+        if (engine != null && engine.getMap() != null) return engine.getMap().getHeight() - 1;
+        return Math.max(0, canvasHeightTiles - entityOffsetTileY - 1);
+    }
+
+    private int clampTileX(int tx) { return Math.max(0, Math.min(tx, maxMapTileX())); }
+    private int clampTileY(int ty) { return Math.max(0, Math.min(ty, maxMapTileY())); }
+
+    // ------------------------------------------------------------------ //
     //  Drag FROM sidebar tile → canvas  (JavaFX DnD API)
     // ------------------------------------------------------------------ //
 
@@ -548,7 +538,8 @@ public class SimulationController {
         if (source.getGraphic() != null) {
             javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
             params.setFill(javafx.scene.paint.Color.TRANSPARENT);
-            db.setDragView(source.getGraphic().snapshot(params, null), e.getX(), e.getY());
+            javafx.scene.image.WritableImage snap = source.getGraphic().snapshot(params, null);
+            db.setDragView(snap, snap.getWidth() / 2, snap.getHeight() / 2);
         }
 
         if (viewportStatusLabel != null)
@@ -564,8 +555,8 @@ public class SimulationController {
             // Update status label with live position feedback
             if (viewportStatusLabel != null) {
                 double tileSize = 32 * zoom;
-                int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
-                int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
+                int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+                int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
                 viewportStatusLabel.setText(
                         "dragging(" + e.getDragboard().getString().toLowerCase()
                         + ")  →  (" + tx + ", " + ty + ")");
@@ -574,28 +565,52 @@ public class SimulationController {
         e.consume();
     }
 
-    /** Creates a new CanvasObject at the tile where the user dropped. */
+    /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
         Dragboard db = e.getDragboard();
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
-            int tx = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
-            int ty = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
-            tx = Math.max(0, Math.min(tx, canvasWidthTiles  - entityOffsetTileX - 1));
-            ty = Math.max(0, Math.min(ty, canvasHeightTiles - entityOffsetTileY - 1));
+            int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+            int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
 
-            CanvasObject obj = new CanvasObject(type, tx, ty, nextObjId++);
-            objects.add(obj);
-            selectObject(obj);
-            updateOutliner();
+            if (engine != null && engine.getMap() != null) {
+                MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId++);
+                if (entity != null) {
+                    engine.addEntity(entity);
+                    selectEntity(entity);
+                }
+            }
+
+            populateOutliner();
             drawViewport();
 
-            log("Added " + obj.name + " at tile (" + tx + ", " + ty + ").");
+            log("Added " + type + " at tile (" + tx + ", " + ty + ").");
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             e.setDropCompleted(true);
         }
         e.consume();
+    }
+
+    private MapEntity createEntityFromType(String type, int x, int y, String name) {
+        java.util.UUID id = java.util.UUID.randomUUID();
+        com.openrobotics.map.Vector2D pos = new com.openrobotics.map.Vector2D(x, y);
+        String upperType = type.toUpperCase();
+        if ("ROBOT".equals(upperType)) {
+            Robot robot = new Robot(id, name, pos);
+            robot.setNav(new GreedyNavigationStrategy(42L));
+            robot.setSensor(new ProximitySensor());
+            return robot;
+        } else if ("CHARGER".equals(upperType) || "CHARGING".equals(upperType)) {
+            return new ChargingStation(id, name, pos);
+        } else if ("STATION".equals(upperType) || "DOCK".equals(upperType) || "DELIVERY".equals(upperType)) {
+            return new DeliveryStation(id, name, pos);
+        } else if ("RACK".equals(upperType) || "SHELF".equals(upperType)) {
+            return new Rack(id, name, pos);
+        } else if ("WALL".equals(upperType) || "OBSTACLE".equals(upperType)) {
+            return new Obstacle(id, name, pos);
+        }
+        return new MapEntity(id, name, pos);
     }
 
     // ------------------------------------------------------------------ //
@@ -611,12 +626,12 @@ public class SimulationController {
 
         if (e.getButton() == MouseButton.PRIMARY) {
             // Left click: selection only
-            CanvasObject hit = objectAtScreenPos(e.getX(), e.getY());
-            if (hit != null) {
-                selectObject(hit);
-                draggingOnCanvas = hit;
+            MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
+            if (entityHit != null) {
+                selectEntity(entityHit);
+                draggingOnCanvas = null;
             } else {
-                selectObject(null);
+                selectEntity(null);
                 draggingOnCanvas = null;
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
@@ -630,17 +645,14 @@ public class SimulationController {
         double dy = e.getY() - lastMouseY;
 
         if (draggingOnCanvas != null && e.getButton() == MouseButton.PRIMARY) {
-            // Left-drag: move selected object – snap to nearest tile, clamped to canvas
+            // Left-drag: move selected entity – snap to nearest tile, clamped to map bounds
             double tileSize = 32 * zoom;
-            int newTX = (int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX;
-            int newTY = (int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY;
-            newTX = Math.max(0, Math.min(newTX, canvasWidthTiles  - entityOffsetTileX - 1));
-            newTY = Math.max(0, Math.min(newTY, canvasHeightTiles - entityOffsetTileY - 1));
-            draggingOnCanvas.tileX = newTX;
-            draggingOnCanvas.tileY = newTY;
+            int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+            int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+            draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
             if (viewportStatusLabel != null)
                 viewportStatusLabel.setText(
-                        "dragging(" + draggingOnCanvas.name
+                        "dragging(" + draggingOnCanvas.getName()
                         + ")  →  (" + newTX + ", " + newTY + ")");
             drawViewport();
         } else if (e.getButton() == MouseButton.SECONDARY) {
@@ -656,8 +668,8 @@ public class SimulationController {
 
     private void onViewportMouseReleased(MouseEvent e) {
         if (draggingOnCanvas != null) {
-            log("Moved " + draggingOnCanvas.name
-                + " to tile (" + draggingOnCanvas.tileX + ", " + draggingOnCanvas.tileY + ").");
+            log("Moved " + draggingOnCanvas.getName()
+                + " to tile (" + (int)draggingOnCanvas.getPosition().getX() + ", " + (int)draggingOnCanvas.getPosition().getY() + ").");
             draggingOnCanvas = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
@@ -668,17 +680,17 @@ public class SimulationController {
     //  Hit-testing
     // ------------------------------------------------------------------ //
 
-    /** Returns the topmost object whose rendered area contains (sx, sy), or null. */
-    private CanvasObject objectAtScreenPos(double sx, double sy) {
+    /** Returns the topmost engine entity whose rendered area contains (sx, sy), or null. */
+    private MapEntity entityAtScreenPos(double sx, double sy) {
+        if (engine == null || engine.getMap() == null) return null;
         double tileSize = 32 * zoom;
-        for (int i = objects.size() - 1; i >= 0; i--) {
-            CanvasObject obj = objects.get(i);
-            double px = (obj.tileX + entityOffsetTileX) * tileSize + viewOffsetX;
-            double py = (obj.tileY + entityOffsetTileY) * tileSize + viewOffsetY;
-            double ow = obj.widthTiles()  * tileSize;
-            double oh = obj.heightTiles() * tileSize;
-            if (sx >= px && sx < px + ow && sy >= py && sy < py + oh)
-                return obj;
+        List<MapEntity> entities = engine.getMap().getEntities();
+        for (int i = entities.size() - 1; i >= 0; i--) {
+            MapEntity entity = entities.get(i);
+            double px = (entity.getPosition().getX() + entityOffsetTileX) * tileSize + viewOffsetX;
+            double py = (entity.getPosition().getY() + entityOffsetTileY) * tileSize + viewOffsetY;
+            if (sx >= px && sx < px + tileSize && sy >= py && sy < py + tileSize)
+                return entity;
         }
         return null;
     }
@@ -688,41 +700,51 @@ public class SimulationController {
     // ------------------------------------------------------------------ //
 
     private void deleteSelected() {
-        if (selectedObject == null) return;
-        log("Deleted " + selectedObject.name + ".");
-        objects.remove(selectedObject);
-        selectedObject = null;
-        updateOutliner();
+        if (selectedEntity == null) return;
+        log("Deleted " + selectedEntity.getName() + ".");
+        if (engine != null) {
+            engine.removeEntity(selectedEntity);
+        }
+        selectedEntity = null;
+        populateOutliner();
         drawViewport();
     }
 
     private void copySelected() {
-        if (selectedObject == null) return;
-        clipboard = selectedObject;
-        log("Copied " + clipboard.name + ".");
+        if (selectedEntity == null) return;
+        clipboardEntity = selectedEntity;
+        log("Copied " + clipboardEntity.getName() + ".");
     }
 
     private void pasteClipboard() {
-        if (clipboard == null) return;
-        CanvasObject copy = new CanvasObject(clipboard.type, clipboard.tileX + 1, clipboard.tileY + 1, nextObjId++);
-        objects.add(copy);
-        selectObject(copy);
-        updateOutliner();
+        if (clipboardEntity == null || engine == null || engine.getMap() == null) return;
+        int newX = clampTileX((int)clipboardEntity.getPosition().getX() + 1);
+        int newY = clampTileY((int)clipboardEntity.getPosition().getY() + 1);
+        MapEntity copy = createEntityFromType(
+            clipboardEntity instanceof Robot ? "ROBOT" :
+            clipboardEntity instanceof ChargingStation ? "CHARGER" :
+            clipboardEntity instanceof DeliveryStation ? "STATION" :
+            clipboardEntity instanceof Rack ? "RACK" : "OBSTACLE",
+            newX, newY, clipboardEntity.getName() + "_copy");
+        engine.addEntity(copy);
+        selectEntity(copy);
+        populateOutliner();
         drawViewport();
-        log("Pasted " + copy.name + " at tile (" + copy.tileX + ", " + copy.tileY + ").");
+        log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
     }
 
-    private void selectObject(CanvasObject obj) {
-        if (selectedObject != null) selectedObject.selected = false;
-        selectedObject = obj;
+    private MapEntity clipboardEntity = null;
 
-        if (obj != null) {
-            obj.selected = true;
-            // Sync outliner highlight
-            int idx = objects.indexOf(obj);
-            if (outlinerListView != null && idx >= 0)
-                outlinerListView.getSelectionModel().select(idx);
-            showPropertiesFor(obj);
+    private void selectEntity(MapEntity entity) {
+        selectedEntity = entity;
+
+        if (entity != null) {
+            if (engine != null && engine.getMap() != null) {
+                int idx = engine.getMap().getEntities().indexOf(entity);
+                if (outlinerListView != null && idx >= 0)
+                    outlinerListView.getSelectionModel().select(idx);
+            }
+            showPropertiesFor(entity);
         } else {
             if (outlinerListView != null)
                 outlinerListView.getSelectionModel().clearSelection();
@@ -732,66 +754,62 @@ public class SimulationController {
         drawViewport();
     }
 
-    private void showPropertiesFor(CanvasObject obj) {
+    private void showPropertiesFor(MapEntity entity) {
         if (propertiesPanel == null) return;
         propertiesPanel.getChildren().clear();
 
-        // Title
-        Label title = new Label(obj.name);
+        String typeName = entity.getClass().getSimpleName();
+
+        Label title = new Label(entity.getName());
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
         propertiesPanel.getChildren().add(title);
 
-        // Separator
         Separator sep = new Separator();
         propertiesPanel.getChildren().add(sep);
 
-        // Type (read-only)
         HBox typeBox = new HBox(8);
         typeBox.getChildren().addAll(
                 new Label("Type:"),
-                new Label(obj.type) {{ setStyle("-fx-text-fill: #666;"); }}
+                new Label(typeName) {{ setStyle("-fx-text-fill: #666;"); }}
         );
         propertiesPanel.getChildren().add(typeBox);
 
-        // UUID (read-only, using name as unique ID for now)
         HBox uuidBox = new HBox(8);
         uuidBox.getChildren().addAll(
                 new Label("UUID:"),
-            new Label(obj.name) {{ setStyle("-fx-text-fill: #3D3C39; -fx-font-family: monospace;"); }}
+            new Label(entity.getId().toString()) {{ setStyle("-fx-text-fill: #3D3C39; -fx-font-family: monospace;"); }}
         );
         propertiesPanel.getChildren().add(uuidBox);
 
-        // Name (editable)
         HBox nameBox = new HBox(8);
-        TextField nameField = new TextField(obj.name);
+        TextField nameField = new TextField(entity.getName());
         nameField.setStyle("-fx-font-size: 11;");
         nameField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && !newVal.isBlank()) {
-                obj.name = newVal;
-                updateOutliner();
+                entity.setName(newVal);
+                populateOutliner();
                 drawViewport();
             }
         });
         nameBox.getChildren().addAll(new Label("Name:"), nameField);
         propertiesPanel.getChildren().add(nameBox);
 
-        // Position (editable)
         HBox posBox = new HBox(8);
         posBox.setPrefHeight(30);
-        int maxTX = Math.max(0, canvasWidthTiles  - entityOffsetTileX - 1);
-        int maxTY = Math.max(0, canvasHeightTiles - entityOffsetTileY - 1);
-        int clampedX = Math.max(0, Math.min(obj.tileX, maxTX));
-        int clampedY = Math.max(0, Math.min(obj.tileY, maxTY));
-        Spinner<Integer> xSpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTX, clampedX));
-        Spinner<Integer> ySpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTY, clampedY));
+        int maxTX = maxMapTileX();
+        int maxTY = maxMapTileY();
+        int posX = (int) entity.getPosition().getX();
+        int posY = (int) entity.getPosition().getY();
+        Spinner<Integer> xSpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTX, posX));
+        Spinner<Integer> ySpinner = new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, maxTY, posY));
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            obj.tileX = newVal;
+            entity.setPosition(new com.openrobotics.map.Vector2D(newVal, (int)entity.getPosition().getY()));
             drawViewport();
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            obj.tileY = newVal;
+            entity.setPosition(new com.openrobotics.map.Vector2D((int)entity.getPosition().getX(), newVal));
             drawViewport();
         });
         posBox.getChildren().addAll(
@@ -801,26 +819,15 @@ public class SimulationController {
         );
         propertiesPanel.getChildren().add(posBox);
 
-        // Type-specific properties (extensible)
-        addTypeSpecificProperties(obj);
-    }
-
-    /** Add type-specific property editors. Designed to be easily extensible. */
-    private void addTypeSpecificProperties(CanvasObject obj) {
-        switch (obj.type.toUpperCase()) {
-            case "ROBOT":
-                Label robotProps = new Label("Robot configuration: [TODO]");
-                propertiesPanel.getChildren().add(robotProps);
-                break;
-            case "RACK", "SHELF":
-                Label rackProps = new Label("Rack configuration: [TODO]");
-                propertiesPanel.getChildren().add(rackProps);
-                break;
-            case "CHARGER":
-                Label chargerProps = new Label("Charger settings: [TODO]");
-                propertiesPanel.getChildren().add(chargerProps);
-                break;
-            // Add more types as needed
+        if (entity instanceof Robot robot) {
+            Label robotProps = new Label("Battery: " + robot.getBattery() + " | State: " + robot.getState());
+            propertiesPanel.getChildren().add(robotProps);
+        } else if (entity instanceof Station) {
+            Label stationProps = new Label("Station configuration");
+            propertiesPanel.getChildren().add(stationProps);
+        } else if (entity instanceof Rack) {
+            Label rackProps = new Label("Rack configuration");
+            propertiesPanel.getChildren().add(rackProps);
         }
     }
 
@@ -879,8 +886,8 @@ public class SimulationController {
         if (idx < 0 || idx >= outlinerBacking.size()) return;
 
         Object selected = outlinerBacking.get(idx);
-        if (selected instanceof CanvasObject canvasObject) {
-            selectObject(canvasObject);
+        if (selected instanceof MapEntity mapEntity) {
+            selectEntity(mapEntity);
         }
     }
 
@@ -908,20 +915,21 @@ public class SimulationController {
                 count++;
             }
         }
-        if (objsLabel != null) objsLabel.setText("Objects: " + count);
-    }
 
-    /** Refreshes the Outliner list and the objs: counter. */
-    private void updateOutliner() {
-        if (outlinerListView != null) {
-            outlinerListView.getItems().clear();
-            outlinerBacking.clear();
-            for (CanvasObject obj : objects) {
-                outlinerListView.getItems().add(obj.type + ":  " + obj.name);
-                outlinerBacking.add(obj);
+        if (engine.getDispatcher() != null) {
+            for (Task task : engine.getDispatcher().getAllTasks()) {
+                String icon = "\u2b07 ";
+                String entry = icon + "Task #" + task.getId() + " " + task.getStatus() 
+                    + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
+                if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
+                    outlinerListView.getItems().add(entry);
+                    outlinerBacking.add(task);
+                    count++;
+                }
             }
         }
-        if (objsLabel != null) objsLabel.setText("Objects: " + outlinerBacking.size());
+
+        if (objsLabel != null) objsLabel.setText("Objects: " + count);
     }
 
     // ------------------------------------------------------------------ //
@@ -1065,11 +1073,53 @@ public class SimulationController {
 
     private void doTick() {
         if (engine == null) return;
+        if (animating) return;
+
+        if (engine.getRobots() != null) {
+            prevRobotPositions.clear();
+            for (Robot robot : engine.getRobots()) {
+                prevRobotPositions.put(robot.getId(), new com.openrobotics.map.Vector2D(
+                    robot.getPosition().getX(), robot.getPosition().getY()));
+            }
+        }
+
         engine.tick();
         localTick++;
-        drawViewport();
+
+        populateOutliner();
+
+        if (engine.getRobots() != null && engine.getRobots().length > 0) {
+            startAnimation();
+        } else {
+            drawViewport();
+        }
+
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
         if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
+    }
+
+    private void startAnimation() {
+        animating = true;
+        animationProgress = 0.0;
+        Timeline animTimeline = new Timeline();
+        final int totalFrames = ANIMATION_FRAMES;
+        for (int i = 0; i < totalFrames; i++) {
+            final int frame = i;
+            animTimeline.getKeyFrames().add(new KeyFrame(
+                Duration.millis((frame + 1) * BASE_TICK_MS / speedFactor / totalFrames),
+                e -> {
+                    animationProgress = (double)(frame + 1) / totalFrames;
+                    drawViewport();
+                }
+            ));
+        }
+        animTimeline.setOnFinished(e -> {
+            animating = false;
+            animationProgress = 0.0;
+            prevRobotPositions.clear();
+            drawViewport();
+        });
+        animTimeline.play();
     }
 
     // ------------------------------------------------------------------ //
@@ -1141,7 +1191,11 @@ public class SimulationController {
     //  Navigation & Menu
     // ------------------------------------------------------------------ //
 
-    @FXML private void onTabEditor() { /* already on editor tab */ }
+    @FXML private void onTabEditor() {
+        if (editorTabBtn  != null) { editorTabBtn.getStyleClass().setAll("tab-btn-active");  }
+        if (resultsTabBtn != null) { resultsTabBtn.getStyleClass().setAll("tab-btn"); }
+        /* already on editor tab – no navigation needed */
+    }
 
     @FXML
     private void onMenuWelcome() { ScreenNavigator.goToWelcome(); }
@@ -1157,7 +1211,11 @@ public class SimulationController {
     }
 
     @FXML
-    private void onViewResults() { ScreenNavigator.goToResults(); }
+    private void onViewResults() {
+        if (editorTabBtn  != null) { editorTabBtn.getStyleClass().setAll("tab-btn");  }
+        if (resultsTabBtn != null) { resultsTabBtn.getStyleClass().setAll("tab-btn-active"); }
+        ScreenNavigator.goToResults();
+    }
 
     @FXML
     private void onExit() {

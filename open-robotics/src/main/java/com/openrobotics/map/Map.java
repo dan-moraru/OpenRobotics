@@ -57,6 +57,11 @@ public class Map {
         entities.add(entity);
     }
 
+    // remove a map entity from the entity list
+    public boolean removeEntity(MapEntity entity) {
+        return entities.remove(entity);
+    }
+
     // get all entities at a given position
     public List<MapEntity> getEntitiesAt(Vector2D pos) {
         List<MapEntity> result = new ArrayList<>();

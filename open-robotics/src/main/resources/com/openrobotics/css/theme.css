@@ -1692,6 +1692,24 @@
     -fx-stroke-width: 2;
 }
 
+/* Bar chart styling (tasks / energy charts on results screen) */
+.results-chart .chart-bar {
+    -fx-bar-fill: #5D5B54;
+}
+
+.results-chart .default-color0.chart-bar {
+    -fx-bar-fill: #599068;
+}
+
+/* Stat label inside the dark bottom panel */
+.results-opt-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-family: "Monospace";
+}
+
+
+
 /* Screen navigation buttons — used in both Simulation and Results screens.
    Active  = green  (you are currently on this screen)
    Inactive = dark gray (navigate away to this screen) */
