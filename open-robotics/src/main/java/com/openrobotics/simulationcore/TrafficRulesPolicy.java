@@ -1,5 +1,6 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
     }
 
     @Override
-    public MoveIntention[] apply(MoveIntention[] intentions) {
+    public MoveIntention[] apply(Map map, MoveIntention[] intentions) {
 
         MoveIntention[] ordered = sortByRobotId(copyNonNull(intentions));
         // output list

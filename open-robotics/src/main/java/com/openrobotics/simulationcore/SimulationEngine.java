@@ -446,8 +446,11 @@ public class SimulationEngine {
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
+        // Apply the selected coordination policy first.
+        MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(map, intentions);
+
         // Resolving conflicts/collisions and finalizing move intentions for all robots
-        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(intentions);
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
 
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
