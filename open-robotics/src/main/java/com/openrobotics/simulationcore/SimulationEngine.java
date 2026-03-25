@@ -466,6 +466,11 @@ public class SimulationEngine {
      * @return true if the warehouse workload is complete
      */
     private boolean workloadComplete() {
+        // If there are pending tasks, the workload is not complete
+        if (dispatcher.hasPendingTasks()) {
+            return false;
+        }
+
         // If no tasks were ever added, there is no workload to complete
         if (dispatcher.getTotalTasksAdded() == 0) {
             return false;
