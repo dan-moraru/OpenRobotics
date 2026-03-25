@@ -24,6 +24,28 @@
     -fx-font-size: 10px;
 }
 
+.charts-row {
+    -fx-pref-height: 280px;
+    -fx-min-height: 200px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.chart-col {
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
+.chart-container {
+    -fx-background-color: #C2BEAE;
+}
+
+.chart-section-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
 /* Bottom settings panel */
 .results-bottom-panel {
     -fx-background-color: #32312D;
@@ -175,4 +197,23 @@
 
 .results-chart .default-color0.chart-bar {
     -fx-bar-fill: #599068;
+}
+
+.table-info-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.heatmap-container {
+    -fx-background-color: #CDCBC3;
+}
+
+.overlay-setting-label {
+    -fx-pref-width: 100px;
+    -fx-font-size: 11px;
+}
+
+.run-name-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
 }
