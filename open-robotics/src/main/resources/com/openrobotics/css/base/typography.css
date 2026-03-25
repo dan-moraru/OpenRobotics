@@ -1,0 +1,28 @@
+/* ============================================================
+   OpenRobotics – Typography
+   Label variants, app title, version, and status text.
+   ============================================================ */
+
+.label {
+    -fx-text-fill: #1a1a18;
+}
+
+.label-light {
+    -fx-text-fill: #C2BEAE;
+}
+
+.label-hint {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+.app-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2A2926;
+}
+
+.version-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}

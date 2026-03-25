@@ -1,0 +1,173 @@
+/* ============================================================
+   OpenRobotics – Dialogs
+   Base dialog structure, per-dialog color themes,
+   and label/button utility classes for dialog content.
+   ============================================================ */
+
+/* Base dialog structure */
+.dialog-root {
+    -fx-background-color: #5D5B54;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.dialog-title-bar {
+    -fx-background-color: #706E65;
+    -fx-padding: 8px 12px;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #5D5B54;
+    -fx-background-radius: 8 8 0 0;
+    -fx-border-radius: 8 8 0 0;
+    -fx-min-height: 34px;
+}
+
+.dialog-title-bar .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.dialog-body {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12 14 12 14;
+}
+
+.dialog-body .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+.dialog-footer {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+    -fx-background-radius: 0 0 8 8;
+    -fx-border-radius: 0 0 8 8;
+}
+
+/* Colored header strips */
+.dialog-header-error {
+    -fx-background-color: #7a1f1b;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-error .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-warning {
+    -fx-background-color: #7a6200;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-warning .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-info {
+    -fx-background-color: #1a743f;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-info .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Per-dialog color overrides */
+.load-dialog-root   { -fx-background-color: #8F8C80; }
+.load-dialog-title  { -fx-background-color: #B7B4A5; }
+.load-dialog-body   { -fx-background-color: #8F8C80; }
+.load-dialog-footer { -fx-background-color: #8F8C80; }
+
+.save-dialog-title  { -fx-background-color: #9E9B8E; }
+
+.object-desc-dialog-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.object-desc-dialog-title {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.object-desc-dialog-body {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 12;
+}
+
+.object-desc-dialog-footer {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Label utility classes */
+.dialog-title-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.dialog-title-label-dark {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.dialog-body-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.dialog-body-label-dark {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.dialog-body-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+.dialog-hint-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+.dialog-dim-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #C2BEAE;
+    -fx-wrap-text: true;
+}
+
+.dialog-warning-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #E0B200;
+    -fx-wrap-text: true;
+}
+
+.dialog-icon-label {
+    -fx-font-size: 48px;
+    -fx-text-fill: #8D8A7F;
+}
+
+.console-clear-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7a1f1b;
+    -fx-cursor: default;
+}
