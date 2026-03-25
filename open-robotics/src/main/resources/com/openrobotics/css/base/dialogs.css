@@ -106,6 +106,17 @@
     -fx-padding: 12;
 }
 
+.object-image-zone {
+    -fx-min-height: 140;
+    -fx-padding: 16;
+}
+
+.object-image-pane {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1;
+}
+
 .object-desc-dialog-footer {
     -fx-background-color: #C2BEAE;
     -fx-border-color: #8D8A7F;
@@ -141,6 +152,13 @@
     -fx-font-size: 11px;
     -fx-text-fill: #1a1a18;
     -fx-wrap-text: true;
+}
+
+.dialog-field-label {
+    -fx-min-width: 80px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
 }
 
 .dialog-hint-label {
