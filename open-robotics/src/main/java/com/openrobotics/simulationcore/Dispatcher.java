@@ -12,12 +12,14 @@ import java.util.*;
  */
 public class Dispatcher {
     private final PriorityQueue<Task> taskQueue;
+    private int totalTasksAdded;
 
     /**
      * Creates a priority queue for tasks
      */
     public Dispatcher() {
         this.taskQueue = new PriorityQueue<>();
+        this.totalTasksAdded = 0;
     }
 
     /**
@@ -34,6 +36,7 @@ public class Dispatcher {
         // Set task status as pending and add to queue
         task.setStatus(TaskStatus.PENDING);
         taskQueue.add(task);
+        totalTasksAdded++;
     }
 
     /**
@@ -61,9 +64,7 @@ public class Dispatcher {
     public int assignTasks(Robot[] robots) {
         if (robots == null) {
             throw new IllegalArgumentException("Robots array cannot be null");
-        } else if (robots.length == 0) {
-            throw new IllegalArgumentException("Robots array cannot be empty");
-        } else if (taskQueue.isEmpty()) {
+        } else if (robots.length == 0 || taskQueue.isEmpty()) {
             return 0; // there are no available tasks, 0 task assignments made
         }
 
@@ -127,5 +128,14 @@ public class Dispatcher {
         List<Task> tasks = new ArrayList<>(taskQueue);
         tasks.sort(Task::compareTo);
         return tasks;
+    }
+
+    /**
+     * Returns the total number of tasks ever added to this dispatcher.
+     * Used to distinguish "no tasks were configured" from "all tasks completed".
+     * @return the total number of tasks added since construction
+     */
+    public int getTotalTasksAdded() {
+        return totalTasksAdded;
     }
 }

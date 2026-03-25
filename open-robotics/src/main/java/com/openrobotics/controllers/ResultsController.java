@@ -1,72 +1,87 @@
 package com.openrobotics.controllers;
 
+import com.openrobotics.AppState;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.simulationcore.SimulationEngine;
+import com.openrobotics.task.Task;
+import com.openrobotics.task.TaskStatus;
 import com.openrobotics.util.ScreenNavigator;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
+
 /**
  * Controller for {@code ResultsScreen.fxml}.
  *
- * <p>Displays the post-simulation results dashboard (§4.1.3 Results).
+ * <p>Displays the post-simulation results dashboard with real statistics
+ * pulled from the active {@link SimulationEngine} in {@link AppState}.
  */
 public class ResultsController {
 
     // ── TOP BAR ─────────────────────────────────────────────────────────
     @FXML private Label ramLabel;
+    @FXML private Label simTicksLabel;
+    @FXML private Label simStatusLabel;
+    @FXML private Label runNameLabel;
 
     // ── CHARTS ──────────────────────────────────────────────────────────
     @FXML private StackPane chartContainer1;
     @FXML private StackPane chartContainer2;
-    @FXML private Label     chartPageLabel;
-    @FXML private Label     chartPage2Label;
-    private int currentChartPage  = 0;
-    private int currentChartPage2 = 1;
-    private int totalChartPages   = 10;
 
     // ── TABLE ───────────────────────────────────────────────────────────
-    @FXML private TableView<Object>          robotStatsTable;
-    @FXML private TableColumn<Object,String> colRobotId;
-    @FXML private TableColumn<Object,String> colNavAlgo;
-    @FXML private TableColumn<Object,String> colTasksDone;
-    @FXML private TableColumn<Object,String> colDistance;
-    @FXML private TableColumn<Object,String> colEnergy;
-    @FXML private TableColumn<Object,String> colIdleTicks;
-    @FXML private TableColumn<Object,String> colWaitTicks;
-    @FXML private TableColumn<Object,String> colRobotCollisions;
-    @FXML private TableColumn<Object,String> colDeadlocks;
+    @FXML private TableView<Robot>          robotStatsTable;
+    @FXML private TableColumn<Robot,String> colRobotId;
+    @FXML private TableColumn<Robot,String> colNavAlgo;
+    @FXML private TableColumn<Robot,String> colTasksDone;
+    @FXML private TableColumn<Robot,String> colDistance;
+    @FXML private TableColumn<Robot,String> colEnergy;
+    @FXML private TableColumn<Robot,String> colIdleTicks;
+    @FXML private TableColumn<Robot,String> colWaitTicks;
+    @FXML private TableColumn<Robot,String> colBattery;
+    @FXML private TableColumn<Robot,String> colState;
     @FXML private Label     tableTitle;
     @FXML private Label     tableInfoLabel;
-    @FXML private Label     tablePageLabel;
-    private int currentTablePage = 0;
-    private int totalTablePages = 6;
 
-    // ── DISPLAY SETTINGS ────────────────────────────────────────────────
-    @FXML private Spinner<Integer> columnCountSpinner;
-    @FXML private CheckBox         showAllRobotsCheck;
-    @FXML private CheckBox         showEnergyCheck;
-    @FXML private CheckBox         showCollisionsCheck;
-    @FXML private CheckBox         showDeadlocksCheck;
+    // ── SUMMARY STATS ────────────────────────────────────────────────────
+    @FXML private Label statTotalTicks;
+    @FXML private Label statTotalTasks;
+    @FXML private Label statCompletedTasks;
+    @FXML private Label statPendingTasks;
+    @FXML private Label statThroughput;
+    @FXML private Label statCompletionRate;
 
-    // ── OPT SUMMARY COLUMNS ─────────────────────────────────────────────
-    @FXML private VBox optSummaryCol1;
-    @FXML private VBox optSummaryCol2;
-    @FXML private VBox optSummaryCol3;
+    @FXML private Label statAvgTasks;
+    @FXML private Label statAvgDistance;
+    @FXML private Label statAvgEnergy;
+    @FXML private Label statAvgIdlePct;
+    @FXML private Label statAvgStuckPct;
+    @FXML private Label statAvgBattery;
+
+    @FXML private Label statBestRobot;
+    @FXML private Label statWorstRobot;
+    @FXML private Label statMostDistance;
+    @FXML private Label statMostEnergy;
+    @FXML private Label statMostIdle;
+    @FXML private Label statTotalDistance;
 
     // ── MASK VIEWPORT ───────────────────────────────────────────────────
     @FXML private StackPane heatmapContainer;
     @FXML private Canvas    heatmapCanvas;
-    @FXML private Label     maskPageLabel;
+    @FXML private Label     heatmapPlaceholder;
     @FXML private Label     maskTitleLabel;
     @FXML private Label     maskSubtitleLabel;
 
     // ── MASK SETTINGS ────────────────────────────────────────────────────
     @FXML private CheckBox viewObjectsCheck;
     @FXML private CheckBox maskOpt1Check;
-    @FXML private CheckBox maskOpt2Check;
 
     // ------------------------------------------------------------------ //
     //  Initialisation
@@ -74,12 +89,6 @@ public class ResultsController {
 
     @FXML
     private void initialize() {
-        if (chartPageLabel  != null) chartPageLabel.setText("1/" + totalChartPages);
-        if (chartPage2Label != null) chartPage2Label.setText("2/" + totalChartPages);
-        if (tablePageLabel  != null) tablePageLabel.setText("1/6");
-        if (maskPageLabel   != null) maskPageLabel.setText("1/3");
-        if (ramLabel        != null) ramLabel.setText("ram: – kb");
-
         // Bind mask canvas size
         if (heatmapCanvas != null && heatmapContainer != null) {
             heatmapCanvas.widthProperty().bind(heatmapContainer.widthProperty());
@@ -88,8 +97,221 @@ public class ResultsController {
             heatmapCanvas.heightProperty().addListener(e -> drawMaskCanvas());
         }
 
-        // TODO Sprint 6: load results for the most recent completed run from DB
+        // Update RAM display
+        updateRamLabel();
+
+        // Load real data from engine
+        SimulationEngine engine = AppState.getEngine();
+        if (engine != null && engine.getRobots() != null) {
+            populateTable(engine);
+            populateCharts(engine);
+            populateSummary(engine);
+            if (heatmapPlaceholder != null) heatmapPlaceholder.setText("");
+        }
     }
+
+    private void updateRamLabel() {
+        if (ramLabel != null) {
+            long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
+            ramLabel.setText("RAM: " + usedKb + " KB");
+        }
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Table population
+    // ------------------------------------------------------------------ //
+
+    private void populateTable(SimulationEngine engine) {
+        Robot[] robots = engine.getRobots();
+        if (robots == null || robots.length == 0) return;
+
+        // Configure columns with cell value factories
+        colRobotId.setCellValueFactory(cd ->
+                new SimpleStringProperty(cd.getValue().getName()));
+        colNavAlgo.setCellValueFactory(cd ->
+                new SimpleStringProperty(cd.getValue().getNav() != null
+                        ? cd.getValue().getNav().getClass().getSimpleName()
+                                .replace("NavigationStrategy", "")
+                        : "None"));
+        colTasksDone.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.valueOf(cd.getValue().getTasksCompleted())));
+        colDistance.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.valueOf(cd.getValue().getTotalDistanceMoved())));
+        colEnergy.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.format("%.1f", cd.getValue().getTotalEnergyConsumed())));
+        colIdleTicks.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.valueOf(cd.getValue().getTotalIdleTicks())));
+        colWaitTicks.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.valueOf(cd.getValue().getStuckTicks())));
+        colBattery.setCellValueFactory(cd ->
+                new SimpleStringProperty(String.format("%.0f%%", cd.getValue().getBattery())));
+        colState.setCellValueFactory(cd ->
+                new SimpleStringProperty(cd.getValue().getState().name()));
+
+        ObservableList<Robot> data = FXCollections.observableArrayList(robots);
+        robotStatsTable.setItems(data);
+
+        if (tableInfoLabel != null) {
+            tableInfoLabel.setText("robots: " + robots.length);
+        }
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Chart population
+    // ------------------------------------------------------------------ //
+
+    private void populateCharts(SimulationEngine engine) {
+        Robot[] robots = engine.getRobots();
+        if (robots == null || robots.length == 0) return;
+
+        // Chart 1: Tasks completed per robot (bar chart)
+        if (chartContainer1 != null) {
+            chartContainer1.getChildren().clear();
+            CategoryAxis xAxis1 = new CategoryAxis();
+            xAxis1.setLabel("Robot");
+            NumberAxis yAxis1 = new NumberAxis();
+            yAxis1.setLabel("Tasks");
+            BarChart<String, Number> tasksChart = new BarChart<>(xAxis1, yAxis1);
+            tasksChart.setLegendVisible(false);
+            tasksChart.setAnimated(false);
+            tasksChart.getStyleClass().add("results-chart");
+
+            XYChart.Series<String, Number> tasksSeries = new XYChart.Series<>();
+            tasksSeries.setName("Tasks");
+            for (Robot r : robots) {
+                String label = r.getName().length() > 8
+                        ? r.getName().substring(0, 7) + "\u2026" : r.getName();
+                tasksSeries.getData().add(new XYChart.Data<>(label, r.getTasksCompleted()));
+            }
+            tasksChart.getData().add(tasksSeries);
+            chartContainer1.getChildren().add(tasksChart);
+        }
+
+        // Chart 2: Energy consumed per robot (bar chart)
+        if (chartContainer2 != null) {
+            chartContainer2.getChildren().clear();
+            CategoryAxis xAxis2 = new CategoryAxis();
+            xAxis2.setLabel("Robot");
+            NumberAxis yAxis2 = new NumberAxis();
+            yAxis2.setLabel("Energy");
+            BarChart<String, Number> energyChart = new BarChart<>(xAxis2, yAxis2);
+            energyChart.setLegendVisible(false);
+            energyChart.setAnimated(false);
+            energyChart.getStyleClass().add("results-chart");
+
+            XYChart.Series<String, Number> energySeries = new XYChart.Series<>();
+            energySeries.setName("Energy");
+            for (Robot r : robots) {
+                String label = r.getName().length() > 8
+                        ? r.getName().substring(0, 7) + "\u2026" : r.getName();
+                energySeries.getData().add(new XYChart.Data<>(label, r.getTotalEnergyConsumed()));
+            }
+            energyChart.getData().add(energySeries);
+            chartContainer2.getChildren().add(energyChart);
+        }
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Summary statistics
+    // ------------------------------------------------------------------ //
+
+    private void populateSummary(SimulationEngine engine) {
+        Robot[] robots = engine.getRobots();
+        if (robots == null || robots.length == 0) return;
+
+        int totalTicks = engine.getTickCounter();
+        int robotCount = robots.length;
+
+        // Count tasks from dispatcher
+        int totalTasks = 0;
+        int completedTasks = 0;
+        int pendingTasks = 0;
+        if (engine.getDispatcher() != null) {
+            List<Task> allTasks = engine.getDispatcher().getAllTasks();
+            pendingTasks = allTasks.size();
+            totalTasks = engine.getDispatcher().getTotalTasksAdded();
+        }
+
+        // Accumulate per-robot stats
+        int sumTasks = 0, sumDist = 0, sumIdle = 0, sumStuck = 0, sumMoving = 0, sumCharging = 0;
+        float sumEnergy = 0, sumBattery = 0;
+        Robot bestRobot = robots[0], worstRobot = robots[0];
+        Robot mostDistRobot = robots[0], mostEnergyRobot = robots[0], mostIdleRobot = robots[0];
+
+        for (Robot r : robots) {
+            sumTasks += r.getTasksCompleted();
+            sumDist += r.getTotalDistanceMoved();
+            sumEnergy += r.getTotalEnergyConsumed();
+            sumIdle += r.getTotalIdleTicks();
+            sumStuck += r.getStuckTicks();
+            sumMoving += r.getTotalMovingTicks();
+            sumCharging += r.getTotalChargingTicks();
+            sumBattery += r.getBattery();
+
+            if (r.getTasksCompleted() > bestRobot.getTasksCompleted()) bestRobot = r;
+            if (r.getTasksCompleted() < worstRobot.getTasksCompleted()) worstRobot = r;
+            if (r.getTotalDistanceMoved() > mostDistRobot.getTotalDistanceMoved()) mostDistRobot = r;
+            if (r.getTotalEnergyConsumed() > mostEnergyRobot.getTotalEnergyConsumed()) mostEnergyRobot = r;
+            if (r.getTotalIdleTicks() > mostIdleRobot.getTotalIdleTicks()) mostIdleRobot = r;
+        }
+        completedTasks = sumTasks;
+        totalTasks = Math.max(totalTasks, completedTasks + pendingTasks);
+
+        // Top bar
+        if (simTicksLabel != null) simTicksLabel.setText("Ticks: " + totalTicks);
+        if (simStatusLabel != null) {
+            simStatusLabel.setText(engine.getIsRunning() ? "Status: Running" : "Status: Stopped");
+        }
+        if (runNameLabel != null) {
+            runNameLabel.setText(AppState.getConfigPath() != null
+                    ? AppState.getConfigPath() : "");
+        }
+
+        // Simulation summary column
+        setText(statTotalTicks, "Total Ticks: " + totalTicks);
+        setText(statTotalTasks, "Total Tasks: " + totalTasks);
+        setText(statCompletedTasks, "Completed: " + completedTasks);
+        setText(statPendingTasks, "Pending: " + pendingTasks);
+        if (totalTicks > 0) {
+            setText(statThroughput, String.format("Throughput: %.3f tasks/tick", (double) completedTasks / totalTicks));
+        } else {
+            setText(statThroughput, "Throughput: –");
+        }
+        if (totalTasks > 0) {
+            setText(statCompletionRate, String.format("Completion: %.1f%%", 100.0 * completedTasks / totalTasks));
+        } else {
+            setText(statCompletionRate, "Completion: –");
+        }
+
+        // Robot averages column
+        setText(statAvgTasks, String.format("Avg Tasks/Robot: %.1f", (double) sumTasks / robotCount));
+        setText(statAvgDistance, String.format("Avg Distance: %.1f tiles", (double) sumDist / robotCount));
+        setText(statAvgEnergy, String.format("Avg Energy Used: %.1f", sumEnergy / robotCount));
+        if (totalTicks > 0) {
+            setText(statAvgIdlePct, String.format("Avg Idle: %.1f%%", 100.0 * sumIdle / (totalTicks * robotCount)));
+            setText(statAvgStuckPct, String.format("Avg Stuck: %.1f%%", 100.0 * sumStuck / (totalTicks * robotCount)));
+        }
+        setText(statAvgBattery, String.format("Avg Battery: %.0f%%", sumBattery / robotCount));
+
+        // Highlights column
+        setText(statBestRobot, "Most Tasks: " + bestRobot.getName() + " (" + bestRobot.getTasksCompleted() + ")");
+        setText(statWorstRobot, "Fewest Tasks: " + worstRobot.getName() + " (" + worstRobot.getTasksCompleted() + ")");
+        setText(statMostDistance, "Most Distance: " + mostDistRobot.getName()
+                + " (" + mostDistRobot.getTotalDistanceMoved() + ")");
+        setText(statMostEnergy, String.format("Most Energy: %s (%.1f)",
+                mostEnergyRobot.getName(), mostEnergyRobot.getTotalEnergyConsumed()));
+        setText(statMostIdle, "Most Idle: " + mostIdleRobot.getName()
+                + " (" + mostIdleRobot.getTotalIdleTicks() + " tks)");
+        setText(statTotalDistance, "Total Distance: " + sumDist + " tiles");
+    }
+
+    private void setText(Label label, String text) {
+        if (label != null) label.setText(text);
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Heatmap canvas
+    // ------------------------------------------------------------------ //
 
     private void drawMaskCanvas() {
         if (heatmapCanvas == null) return;
@@ -98,7 +320,31 @@ public class ResultsController {
         double h = heatmapCanvas.getHeight();
         gc.setFill(javafx.scene.paint.Color.web("#CDCBC3"));
         gc.fillRect(0, 0, w, h);
-        // TODO Sprint 6: render heatmap mask
+
+        // Draw grid lines
+        SimulationEngine engine = AppState.getEngine();
+        if (engine == null || engine.getMap() == null) return;
+
+        int mapW = engine.getMap().getWidth();
+        int mapH = engine.getMap().getHeight();
+        double tileSize = Math.min(w / mapW, h / mapH);
+        double offsetX = (w - mapW * tileSize) / 2;
+        double offsetY = (h - mapH * tileSize) / 2;
+
+        // Grid
+        gc.setStroke(javafx.scene.paint.Color.web("#B0ADA5"));
+        gc.setLineWidth(0.5);
+        for (int x = 0; x <= mapW; x++) {
+            gc.strokeLine(offsetX + x * tileSize, offsetY, offsetX + x * tileSize, offsetY + mapH * tileSize);
+        }
+        for (int y = 0; y <= mapH; y++) {
+            gc.strokeLine(offsetX, offsetY + y * tileSize, offsetX + mapW * tileSize, offsetY + y * tileSize);
+        }
+
+        // Map boundary
+        gc.setStroke(javafx.scene.paint.Color.web("#5D5B54"));
+        gc.setLineWidth(1.5);
+        gc.strokeRect(offsetX, offsetY, mapW * tileSize, mapH * tileSize);
     }
 
     // ------------------------------------------------------------------ //
@@ -109,105 +355,15 @@ public class ResultsController {
     @FXML private void onTabResults() { /* already here */ }
 
     // ------------------------------------------------------------------ //
-    //  Chart 1 pagination
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void onPrevChart() {
-        if (currentChartPage > 0) { currentChartPage--; updateChartPage(); }
-    }
-
-    @FXML
-    private void onNextChart() {
-        if (currentChartPage < totalChartPages - 1) { currentChartPage++; updateChartPage(); }
-    }
-
-    private void updateChartPage() {
-        if (chartPageLabel != null)
-            chartPageLabel.setText((currentChartPage + 1) + "/" + totalChartPages);
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Chart 2 pagination
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void onPrevChart2() {
-        if (currentChartPage2 > 0) { currentChartPage2--; updateChartPage2(); }
-    }
-
-    @FXML
-    private void onNextChart2() {
-        if (currentChartPage2 < totalChartPages - 1) { currentChartPage2++; updateChartPage2(); }
-    }
-
-    private void updateChartPage2() {
-        if (chartPage2Label != null)
-            chartPage2Label.setText((currentChartPage2 + 1) + "/" + totalChartPages);
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Table pagination
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void onPrevTable() {
-        if (currentTablePage > 0) { currentTablePage--; updateTablePage(); }
-    }
-
-    @FXML
-    private void onNextTable() {
-        if (currentTablePage < totalTablePages - 1) {
-            currentTablePage++;
-            updateTablePage();
-        }
-    }
-
-    private void updateTablePage() {
-        if (tablePageLabel != null)
-            tablePageLabel.setText((currentTablePage + 1) + "/" + totalTablePages);
-    }
-
-    // ------------------------------------------------------------------ //
     //  Mask viewport
     // ------------------------------------------------------------------ //
 
-    @FXML private void onMaskZoomIn()  { /* TODO Sprint 6: zoom mask canvas */ }
-    @FXML private void onMaskZoomOut() { /* TODO Sprint 6: zoom mask canvas */ }
-
-    @FXML
-    private void onPrevMask() {
-        // TODO Sprint 6: implement mask pagination
-    }
-
-    @FXML
-    private void onNextMask() {
-        // TODO Sprint 6: implement mask pagination
-    }
-
-    @FXML
-    private void onResetShowAllRobots() {
-        if (showAllRobotsCheck != null) showAllRobotsCheck.setSelected(true);
-    }
-
-    @FXML
-    private void onResetShowEnergy() {
-        if (showEnergyCheck != null) showEnergyCheck.setSelected(true);
-    }
-
-    @FXML
-    private void onResetShowCollisions() {
-        if (showCollisionsCheck != null) showCollisionsCheck.setSelected(true);
-    }
-
-    @FXML
-    private void onResetShowDeadlocks() {
-        if (showDeadlocksCheck != null) showDeadlocksCheck.setSelected(true);
-    }
+    @FXML private void onMaskZoomIn()  { }
+    @FXML private void onMaskZoomOut() { }
 
     @FXML
     private void onToggleViewObjects() {
-        // TODO Sprint 6: show/hide objects on mask viewport
+        drawMaskCanvas();
     }
 
     // ------------------------------------------------------------------ //
@@ -218,9 +374,7 @@ public class ResultsController {
     private void onNewExperiment() { ScreenNavigator.goToSetup(); }
 
     @FXML
-    private void onViewHistory() {
-        // TODO Sprint 6: open history dialog
-    }
+    private void onViewHistory() { ScreenNavigator.goToSimulation(); }
 
     @FXML
     private void onExport() {

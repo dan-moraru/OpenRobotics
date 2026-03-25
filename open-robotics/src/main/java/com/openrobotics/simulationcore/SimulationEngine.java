@@ -55,6 +55,22 @@ public class SimulationEngine {
      * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
+        this(map, robots, dispatcher, coordinationPolicy, "default_run", 100, 5000, 42L);
+    }
+
+    /**
+     * Constructs a new simulation engine instance with full configuration
+     * @param map the map representing the warehouse environment
+     * @param robots the robots
+     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
+     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
+     * @param runName the name of the simulation run
+     * @param tickMs milliseconds per tick
+     * @param maxTicks maximum number of ticks before simulation stops
+     * @param seed random seed for navigation strategies
+     */
+    public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
+                          String runName, int tickMs, int maxTicks, long seed) {
         this.tickCounter = 0;
         this.running = false;
         this.map = map;
@@ -62,6 +78,10 @@ public class SimulationEngine {
         this.collisionManager = new CollisionManager();
         this.dispatcher = dispatcher;
         this.coordinationPolicy = coordinationPolicy;
+        this.runName = runName;
+        this.tickMs = tickMs;
+        this.maxTicks = maxTicks;
+        this.seed = seed;
         this.initialized = map != null && robots != null && dispatcher != null && coordinationPolicy != null;
     }
 
@@ -439,20 +459,26 @@ public class SimulationEngine {
     }
 
     /**
-     * Indicates if the warehouse workload has been completed. Returns true if no robot is working
-     * on a task and there are no more pending tasks available
+     * Indicates if the warehouse workload has been completed. Returns true only when
+     * tasks were configured, all have been dispatched, and every robot has finished.
+     * Returns false when no tasks were ever added (sandbox / drag-drop mode) so the
+     * simulation keeps running and robots remain idle until tasks are supplied.
      * @return true if the warehouse workload is complete
      */
     private boolean workloadComplete() {
+        // If no tasks were ever added, there is no workload to complete
+        if (dispatcher.getTotalTasksAdded() == 0) {
+            return false;
+        }
+
         // Checking if any robot is still working on a task
         for (Robot robot : robots) {
-            // There is a robot still working on a task
             if (!robot.isAvailable()) {
                 return false;
             }
         }
 
-        return !dispatcher.hasPendingTasks(); // Checking if there are any pending tasks
+        return !dispatcher.hasPendingTasks();
     }
 
     /**
@@ -519,5 +545,51 @@ public class SimulationEngine {
      */
     public String getInitError() {
         return initError;
+    }
+
+    /**
+     * Adds an entity to the simulation map at runtime.
+     * @param entity the entity to add
+     */
+    public void addEntity(MapEntity entity) {
+        if (map != null && entity != null) {
+            map.addEntity(entity);
+            if (entity instanceof Robot) {
+                refreshRobotsArray();
+            }
+        }
+    }
+
+    /**
+     * Removes an entity from the simulation map at runtime.
+     * @param entity the entity to remove
+     * @return true if the entity was removed
+     */
+    public boolean removeEntity(MapEntity entity) {
+        if (map != null && entity != null) {
+            boolean removed = map.removeEntity(entity);
+            if (removed && entity instanceof Robot) {
+                refreshRobotsArray();
+            }
+            return removed;
+        }
+        return false;
+    }
+
+    private void refreshRobotsArray() {
+        if (map != null) {
+            this.robots = map.getEntities().stream()
+                    .filter(e -> e instanceof Robot)
+                    .map(e -> (Robot) e)
+                    .toArray(Robot[]::new);
+        }
+    }
+
+    /**
+     * Returns the dispatcher for task management.
+     * @return the dispatcher
+     */
+    public Dispatcher getDispatcher() {
+        return dispatcher;
     }
 }

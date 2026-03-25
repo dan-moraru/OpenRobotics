@@ -33,6 +33,14 @@ public class Robot extends MapEntity {
     private int unloadingTicksRemaining; // dropoff dwell timer
     private Sensor lastScan; // keeps track of the last scan record of the robot
 
+    // lifetime stats — accumulated during update(), read by results screen
+    private int totalDistanceMoved;
+    private int tasksCompleted;
+    private int totalIdleTicks;
+    private int totalMovingTicks;
+    private int totalChargingTicks;
+    private float totalEnergyConsumed;
+
     // provisional constants. future config task may override
     private static final float ENERGY_PER_MOVE = 1.0f;
     private static final float LOW_BATTERY_THRESHOLD = 20.0f;
@@ -64,6 +72,12 @@ public class Robot extends MapEntity {
         this.chargerTarget = null;
         this.loadingTicksRemaining = 0;
         this.unloadingTicksRemaining = 0;
+        this.totalDistanceMoved = 0;
+        this.tasksCompleted = 0;
+        this.totalIdleTicks = 0;
+        this.totalMovingTicks = 0;
+        this.totalChargingTicks = 0;
+        this.totalEnergyConsumed = 0;
     }
 
     // getters for all fields
@@ -79,6 +93,14 @@ public class Robot extends MapEntity {
     public void setHasPickedUp(boolean hasPickedUp) { this.hasPickedUp = hasPickedUp; }
     public int getLoadingTicksRemaining() { return loadingTicksRemaining; }
     public int getUnloadingTicksRemaining() { return unloadingTicksRemaining; }
+
+    // lifetime stats getters
+    public int getTotalDistanceMoved() { return totalDistanceMoved; }
+    public int getTasksCompleted() { return tasksCompleted; }
+    public int getTotalIdleTicks() { return totalIdleTicks; }
+    public int getTotalMovingTicks() { return totalMovingTicks; }
+    public int getTotalChargingTicks() { return totalChargingTicks; }
+    public float getTotalEnergyConsumed() { return totalEnergyConsumed; }
 
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
@@ -186,6 +208,7 @@ public class Robot extends MapEntity {
     public void update() {
         switch (state) {
             case CHARGING:
+                totalChargingTicks++;
                 battery = Math.min(100.0f, battery + CHARGE_PER_TICK); // cap at 100
                 if (battery >= 100.0f) {
                     // fully charged — resume task or go idle
@@ -207,6 +230,7 @@ public class Robot extends MapEntity {
                     // delivery done — mark task completed and reset
                     if (currentTask != null) {
                         currentTask.setStatus(TaskStatus.COMPLETED);
+                        tasksCompleted++;
                     }
                     currentTask = null;
                     hasPickedUp = false;
@@ -215,9 +239,12 @@ public class Robot extends MapEntity {
                 break;
 
             case MOVING:
+                totalMovingTicks++;
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
                     consumeEnergy(ENERGY_PER_MOVE);
+                    totalEnergyConsumed += ENERGY_PER_MOVE;
+                    totalDistanceMoved++;
                     stuckTicks = 0;
                 } else {
                     stuckTicks++;
@@ -236,6 +263,10 @@ public class Robot extends MapEntity {
                     state = RobotState.UNLOADING;
                     unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
                 }
+                break;
+
+            case IDLE:
+                totalIdleTicks++;
                 break;
 
             default:
