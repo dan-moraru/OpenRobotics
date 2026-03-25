@@ -268,7 +268,7 @@ public class SimulationController {
                 entityOffsetTileY = (canvasHeightTiles - entitySpanY) / 2;
             }
             if (canvasSizeLabel != null)
-                canvasSizeLabel.setText("canvas size: " + canvasWidthTiles + "×" + canvasHeightTiles + " tiles");
+                canvasSizeLabel.setText("Canvas Size: " + canvasWidthTiles + "×" + canvasHeightTiles + " Tiles");
 
             populateOutliner();
             if (viewportStatusLabel != null) {
