@@ -1781,3 +1781,15 @@
 .top-bar-sim .menu-bar-top > .container > .menu-button:showing {
     -fx-background-color: #5D5B54;
 }
+
+
+
+
+/* TEMPORARY OVERRIDES FOR INTERIM DEMO 1, NEED TO BE FIXED!! */
+.menu-bar-top .menu-button .label {
+    -fx-text-fill: #3D3C39 !important;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #C2BEAE !important;
+}

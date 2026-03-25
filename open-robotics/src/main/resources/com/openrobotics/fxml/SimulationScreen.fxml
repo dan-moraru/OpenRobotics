@@ -12,6 +12,7 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
@@ -59,20 +60,26 @@
                          </children>
                       </VBox>
                       <!-- .menu-bar CSS sets background transparent and padding 0 -->
-                      <MenuBar useSystemMenuBar="false" style="-fx-text-base-color: #C2BEAE;" styleClass="menu-bar-top">
+                      <MenuBar useSystemMenuBar="false" style="-fx-text-base-color: red;" styleClass="menu-bar-top">
                          <menus>
-                             <Menu style="-fx-text-fill: #C2BEAE;" text="File">
+                             <Menu style="-fx-text-fill: #4D4B45;" text="File">
                                 <items>
                                     <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
                                     <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results" />
                                     <MenuItem onAction="#onExit" text="Exit" />
                                 </items>
                              </Menu>
-                             <Menu style="-fx-text-fill: #C2BEAE;" text="Help">
+                             <Menu style="-fx-text-fill: #4D4B45;" text="Help">
                                 <items>
                                     <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
                                 </items>
                              </Menu>
+                             <Menu style="-fx-text-fill: #4D4B45;" text="View">
+                                <items>
+                                    <CheckMenuItem fx:id="toggleSidebarItem" text="Sidebar" selected="true" onAction="#onToggleSidebar" />
+                                    <CheckMenuItem fx:id="toggleConsoleItem" text="Console" selected="true" onAction="#onToggleConsole" />
+                                </items>
+                            </Menu>
                          </menus>
                       </MenuBar>
                       <Region HBox.hgrow="ALWAYS" />
@@ -101,7 +108,7 @@
            <items>
    
                <!-- ── LEFT SIDEBAR #8D8A7F ── -->
-               <VBox maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
+               <VBox fx:id="sidebarPanel" maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
       <children>
       
                       <!-- Add Object | Outliner tabs -->
@@ -293,7 +300,7 @@
                              </VBox>
          
                              <!-- Console: header #C2BEAE, body #32312D -->
-                             <VBox minHeight="80" prefHeight="120" spacing="0" styleClass="console-shell">
+                             <VBox fx:id="consoleShell" minHeight="80" prefHeight="120" spacing="0" styleClass="console-shell">
             <children>
                                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                        <children>
