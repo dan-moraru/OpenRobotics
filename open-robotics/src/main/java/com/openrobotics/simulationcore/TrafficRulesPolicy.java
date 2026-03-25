@@ -74,8 +74,18 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
     }
 
     private MoveIntention[] sortByRobotId(MoveIntention[] intentions) {
-        Arrays.sort(intentions, (a, b) -> a.getRobot().getId().compareTo(b.getRobot().getId()));
+        if (intentions == null || intentions.length == 0) {
+            return new MoveIntention[0];
+        }
+        Arrays.sort(intentions, java.util.Comparator.comparing(
+                (MoveIntention i) -> i == null || i.getRobot() == null ? null : i.getRobot().getId(),
+                java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())
+        ));
         return intentions;
+    }
+
+    public Set<Tile> getIntersectionTiles() {
+        return new HashSet<>(intersections);
     }
 
     private boolean hasTiles(MoveIntention intention) {

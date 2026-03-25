@@ -12,12 +12,14 @@ import java.util.*;
  */
 public class Dispatcher {
     private final PriorityQueue<Task> taskQueue;
+    private int totalTasksAdded;
 
     /**
      * Creates a priority queue for tasks
      */
     public Dispatcher() {
         this.taskQueue = new PriorityQueue<>();
+        this.totalTasksAdded = 0;
     }
 
     /**
@@ -28,12 +30,13 @@ public class Dispatcher {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
         } else if (taskQueue.contains(task)) {
-            throw new Error("Task is already in the task queue");
+            throw new IllegalStateException("Task is already in the task queue");
         }
 
         // Set task status as pending and add to queue
         task.setStatus(TaskStatus.PENDING);
         taskQueue.add(task);
+        totalTasksAdded++;
     }
 
     /**
@@ -47,8 +50,9 @@ public class Dispatcher {
 
         // Adding tasks to task queue
         for (Task task : tasks) {
-            task.setStatus(TaskStatus.PENDING);
-            addTask(task);
+            if (task != null) {
+                addTask(task);
+            }
         }
     }
 
@@ -60,9 +64,7 @@ public class Dispatcher {
     public int assignTasks(Robot[] robots) {
         if (robots == null) {
             throw new IllegalArgumentException("Robots array cannot be null");
-        } else if (robots.length == 0) {
-            throw new IllegalArgumentException("Robots array cannot be empty");
-        } else if (taskQueue.isEmpty()) {
+        } else if (robots.length == 0 || taskQueue.isEmpty()) {
             return 0; // there are no available tasks, 0 task assignments made
         }
 
@@ -72,6 +74,10 @@ public class Dispatcher {
         for (Robot robot : robots) {
             if (taskQueue.isEmpty()) { // There are no more tasks left to assign
                 break;
+            }
+
+            if (robot == null) {
+                continue;
             }
 
             if (robot.isAvailable()) { // robot is available for task assignment
@@ -119,6 +125,17 @@ public class Dispatcher {
      * @return a list containing all the tasks in the task queue
      */
     public List<Task> getAllTasks() {
-        return new ArrayList<>(taskQueue);
+        List<Task> tasks = new ArrayList<>(taskQueue);
+        tasks.sort(Task::compareTo);
+        return tasks;
+    }
+
+    /**
+     * Returns the total number of tasks ever added to this dispatcher.
+     * Used to distinguish "no tasks were configured" from "all tasks completed".
+     * @return the total number of tasks added since construction
+     */
+    public int getTotalTasksAdded() {
+        return totalTasksAdded;
     }
 }

@@ -8,7 +8,7 @@ public interface CoordinationPolicy {
     // Policy can force robots to wait by returning a WAIT intention
     MoveIntention[] apply(MoveIntention[] intentions);
 
-    // Default policy: do not change intentions
+    // Default policy: return a copy with null intentions removed
     static CoordinationPolicy noOp() {
         return intentions -> copyNonNull(intentions);
     }

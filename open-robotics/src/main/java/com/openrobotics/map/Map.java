@@ -1,6 +1,7 @@
 package com.openrobotics.map;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.openrobotics.common.Direction;
@@ -15,6 +16,9 @@ public class Map {
     private final List<MapEntity> entities; // all objects placed on the map
 
     public Map(int width, int height) {
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("width and height must be positive");
+        }
         this.width = width;
         this.height = height;
         // height rows, each with width columns
@@ -53,6 +57,11 @@ public class Map {
         entities.add(entity);
     }
 
+    // remove a map entity from the entity list
+    public boolean removeEntity(MapEntity entity) {
+        return entities.remove(entity);
+    }
+
     // get all entities at a given position
     public List<MapEntity> getEntitiesAt(Vector2D pos) {
         List<MapEntity> result = new ArrayList<>();
@@ -65,7 +74,7 @@ public class Map {
     }
 
     public List<MapEntity> getEntities() {
-        return entities;
+        return Collections.unmodifiableList(entities);
     }
 
     // checks bounds and obstacle entities only, not tile.isOccupied()

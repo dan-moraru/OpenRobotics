@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+    Save Config Dialog  (§4.2 – Specialty Screen 4)
+    ─────────────────────────────────────────────────
+    • Down-arrow shows cached directories + "Browse…" option
+    • White ↺ = revert to default save directory
+    • File name field
+    • Save / Cancel at the bottom
+-->
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.SaveConfigController"
+      styleClass="dialog-root"
+      prefWidth="380" spacing="0"
+      stylesheets="@../css/theme.css">
+
+    <HBox styleClass="dialog-title-bar save-dialog-title" alignment="CENTER_LEFT" spacing="12">
+        <Label text="SAVE CONFIGURATION" styleClass="dialog-title-label-dark" />
+    </HBox>
+
+    <VBox styleClass="dialog-body" spacing="12">
+        <Label text="Select save directory:"
+               styleClass="dialog-body-label" />
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button accessibleText="Reset directory to default" text="↺" styleClass="button-reset"
+                    prefWidth="36" onAction="#onResetDirectory">
+                <tooltip>
+                    <Tooltip text="Reset directory to default" />
+                </tooltip>
+            </Button>
+            <ComboBox fx:id="directoryCombo" promptText="Select directory..."
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        </HBox>
+        <Label fx:id="selectedDirLabel" text="Directory status"
+               styleClass="dialog-dim-label" />
+        <Button text="Browse…"
+                styleClass="dialog-browse-btn"
+                onAction="#onBrowse" />
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="File name:" styleClass="dialog-body-label"
+                   style="-fx-min-width: 80px;" />
+            <TextField fx:id="fileNameField" text="config"
+                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        </HBox>
+    </VBox>
+
+    <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER">
+        <Button text="SAVE" styleClass="btn-primary" prefWidth="150" onAction="#onSave" />
+        <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
+    </HBox>
+</VBox>

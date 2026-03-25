@@ -1,0 +1,1795 @@
+/* ============================================================
+   OpenRobotics – Global Theme
+   Colours derived by pixel-sampling the wireframe images:
+   ─────────────────────────────────────────────────────────
+   OUTER_BG      #C2BEAE  app window background (warm beige)
+   TOPBAR        #3D3C39  top title bar (very dark warm grey)
+   TOPBAR_SIM    #4D4B45  slightly lighter on sim/results screens
+   TAB_STRIP     #8D8A7F  tab strip / medium sidebar
+   SIDEBAR_SETUP #C2BEAE  setup sidebar (same as outer bg)
+   SIDEBAR_SIM   #8D8A7F  sim sidebar
+   OBJ_TILE      #5D5B54  object tiles / dark panels
+   VIEWPORT      #CDCBC3  grid canvas background
+   BOTTOM_BAR    #C2BEAE  setup bottom bar / light panels
+   START_BTN     #383632  dark action button (Start Simulation)
+   CONSOLE_BG    #32312D  console / very dark panels
+   DIALOG_BG     #5D5B54  specialty dialog background
+   DIALOG_TITLE  #706E65  dialog title bars
+   CONFIRM_GREEN #599068  ADD/CONFIRM green buttons
+   RETURN_BTN    #32312D  RETURN/neutral dark button
+   MEDIUM_TEXT   #8D8A7F  secondary labels / hints
+   LIGHT_TEXT    #C2BEAE  primary text on dark surfaces
+   ============================================================ */
+
+/* ---------- Root ------------------------------------------------ */
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 12px;
+    -fx-background: #C2BEAE;
+    -fx-base: #8D8A7F;
+    -fx-control-inner-background: #C2BEAE;
+    -fx-text-base-color: #1a1a18;
+}
+
+/* ---------- Default label --------------------------------------- */
+.label {
+    -fx-text-fill: #1a1a18;
+}
+
+.label-light {
+    -fx-text-fill: #C2BEAE;
+}
+
+.label-hint {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+.top-bar {
+    -fx-background-color: #3D3C39;
+    -fx-padding: 8px 12px;
+    -fx-spacing: 8px;
+    -fx-alignment: center-left;
+}
+
+/* Dialog styles */
+.dialog-root {
+    -fx-background-color: #5D5B54;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.dialog-title-bar {
+    -fx-background-color: #706E65;
+    -fx-padding: 8px 12px;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #5D5B54;
+    -fx-background-radius: 8 8 0 0;
+    -fx-border-radius: 8 8 0 0;
+}
+
+.dialog-body {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12px;
+}
+
+.dialog-footer {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12px;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: #706E65;
+    -fx-background-radius: 0 0 8 8;
+    -fx-border-radius: 0 0 8 8;
+}
+
+/* Menu bar */
+.menu-bar {
+    -fx-padding: 0;
+    -fx-background-color: #3D3C39;
+}
+
+.menu {
+    -fx-padding: 0;
+}
+
+.menu-item {
+    -fx-padding: 6px 12px;
+}
+
+/* Bottom bar / Status bar */
+.bottom-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8px 12px;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: #8D8A7F;
+    -fx-spacing: 8px;
+    -fx-alignment: center-right;
+}
+
+.top-bar {
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar-sim {
+    -fx-background-color: #C2BEAE;
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar .label, .top-bar-sim .label {
+    -fx-text-fill: #3D3C39;
+}
+
+.app-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2A2926;
+}
+
+.version-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+/* ---------- Tab strip ------------------------------------------- */
+.tab-strip {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-padding: 0 0 0 6;
+}
+
+.sim-tab-strip {
+    -fx-padding: 0;
+}
+
+/* Active tab – lighter than strip */
+.tab-btn-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
+}
+
+/* Inactive tab */
+.tab-btn {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.tab-btn:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ---------- MenuBar in top bar ---------------------------------- */
+.menu-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.menu-bar-top {
+    -fx-padding: 0 0 0 10;
+    -fx-background-insets: 0;
+    -fx-background-color: #C2BEAE;
+}
+
+.menu-bar-top > .container {
+    -fx-spacing: 14px;
+}
+
+.menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 2;
+}
+
+.menu-bar-top > .container > .menu-button > .label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.menu-bar-top > .container > .menu-button:hover,
+.menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #B8B4A6;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+}
+
+.menu-bar-top .menu .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
+}
+
+.menu-bar-top .menu-button > .label,
+.menu-bar-top .menu > .label,
+.menu-bar-top .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
+}
+
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #5D5B54;
+}
+
+.context-menu {
+    -fx-background-color: #3D3C39;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1px;
+}
+
+.menu-item > .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.context-menu .menu-item > .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.menu-item:hover {
+    -fx-background-color: #5D5B54;
+}
+
+/* ---------- Outer app background -------------------------------- */
+.outer-bg {
+    -fx-background-color: #C2BEAE;
+}
+
+/* ---------- Setup sidebar (light beige same as outer bg) -------- */
+.sidebar-setup {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ---------- Simulation sidebar (medium grey) -------------------- */
+.sidebar-sim {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ---------- Object tiles in Add Object panel -------------------- */
+.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #4D4B45;
+    -fx-border-width: 2px;
+    -fx-pref-width: 100px;
+    -fx-pref-height: 100px;
+    -fx-min-width: 100px;
+    -fx-min-height: 100px;
+    -fx-max-width: 100px;
+    -fx-max-height: 100px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+    -fx-text-fill: #2A2926;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* ---------- Sidebar tab pane polish ---------------------------- */
+.sidebar-tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 28px;
+    -fx-tab-max-height: 28px;
+    -fx-control-inner-background: #8D8A7F;
+    -fx-base: #8D8A7F;
+    -fx-body-color: #8D8A7F;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.sidebar-tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #706E65;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area > .tab-content {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane .tab-header-area {
+    -fx-background-color: #706E65;
+    -fx-padding: 2 4 0 4;
+}
+
+.sidebar-tab-pane .headers-region {
+    -fx-spacing: 4px;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #6F6D65;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 4 12 4 12;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1A1A18;
+}
+
+.sidebar-filter-field {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-text-fill: #2A2926;
+}
+
+.sidebar-filter-field:focused {
+    -fx-border-color: #3D3C39;
+}
+
+/* ---------- Property rows (alternating) ------------------------- */
+/* Row A – same as sidebar */
+.prop-row-a {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+/* Row B – slightly darker */
+.prop-row-b {
+    -fx-background-color: #7a7870;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+/* Setup prop rows – on light beige background */
+.setup-prop-row-a {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.setup-prop-row-b {
+    -fx-background-color: #b0ad9e;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.prop-label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-pref-width: 160px;
+    -fx-min-width: 120px;
+}
+
+/* ---------- Reset button (circular ↺) -------------------------- */
+.button-reset {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+    -fx-background-radius: 13px;
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 13px;
+    -fx-border-width: 1px;
+}
+
+.button-reset:hover {
+    -fx-background-color: #706E65;
+}
+
+/* ---------- Input fields ---------------------------------------- */
+.text-field {
+    -fx-background-color: #d4d1c4;
+    -fx-text-fill: #1a1a18;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 3 6 3 6;
+    -fx-font-size: 11px;
+}
+
+.text-field:focused {
+    -fx-border-color: #3D3C39;
+}
+
+.combo-box-base {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .list-cell {
+    -fx-text-fill: #1a1a18;
+    -fx-background-color: transparent;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+.combo-box-base .arrow {
+    -fx-background-color: #C2BEAE;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+.spinner .text-field {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+/* ---------- CheckBox -------------------------------------------- */
+.check-box .box {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #5D5B54;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #3D3C39;
+}
+
+.check-box .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Buttons --------------------------------------------- */
+
+/* Primary / default – dark (like "START SIMULATION") */
+.button {
+    -fx-background-color: #383632;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* Ensure the EDITOR tab keeps its custom shape/colors instead of inheriting generic button styles. */
+.button.tab-btn-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
+}
+
+.button.tab-btn-active:hover {
+    -fx-background-color: #C2BEAE;
+}
+
+/* Keep sidebar object tiles light with dark edge despite global .button defaults. */
+.button.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.button.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.button.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* Neutral – medium grey (like LOAD / SAVE / RETURN) */
+.button-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* Confirm / ADD green */
+.button-confirm {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-confirm:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+/* Danger – dark red (QUIT) */
+.button-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+/* Playback / icon button – transparent */
+.playback-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 3px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-cursor: hand;
+}
+
+.playback-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Speed buttons (×1 ×2 ×3) */
+.speed-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4;
+}
+
+.speed-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* ---------- Viewport -------------------------------------------- */
+.viewport-pane {
+    -fx-background-color: #CDCBC3;
+}
+
+.viewport-header {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 4 10 4 10;
+    -fx-min-height: 26px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 0 1 0;
+}
+
+.viewport-header > .center {
+    -fx-alignment: center;
+}
+
+.viewport-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Console --------------------------------------------- */
+.console-bg {
+    -fx-background-color: #32312D;
+}
+
+.console-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 22px;
+}
+
+.console-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.text-area {
+    -fx-background-color: #32312D;
+    -fx-text-fill: #C2BEAE;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+
+.text-area .content {
+    -fx-background-color: #32312D;
+}
+
+/* ---------- Bottom bar ------------------------------------------ */
+.bottom-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 40px;
+    -fx-min-height: 40px;
+    -fx-padding: 0 12 0 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ---------- ScrollPane ------------------------------------------ */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: #C2BEAE;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #8D8A7F;
+    -fx-background-radius: 0;
+}
+
+/* ---------- ListView -------------------------------------------- */
+.list-view {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.list-cell:selected {
+    -fx-background-color: #5D5B54;
+    -fx-text-fill: #C2BEAE;
+}
+
+.list-cell:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ---------- TableView ------------------------------------------- */
+.table-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #C2BEAE;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-border-color: transparent;
+    -fx-cell-size: 24px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #8D8A7F;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #5D5B54;
+}
+
+.table-row-cell:selected .label {
+    -fx-text-fill: #C2BEAE;
+}
+
+/* ---------- TabPane --------------------------------------------- */
+.tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 26px;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1a1a18;
+}
+
+/* ---------- SplitPane ------------------------------------------- */
+.split-pane {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
+}
+
+.split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-pref-width: 2px;
+    -fx-pref-height: 2px;
+    -fx-padding: 0;
+}
+
+/* ---------- Separator ------------------------------------------- */
+.separator .line {
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* ---------- ProgressBar ----------------------------------------- */
+.progress-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 10px;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #5D5B54;
+    -fx-background-radius: 0;
+}
+
+.progress-bar .track {
+    -fx-background-color: #C2BEAE;
+    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* ---------- DIALOGS --------------------------------------------- */
+.dialog-root {
+    -fx-background-color: #5D5B54;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1px;
+}
+
+.dialog-title-bar {
+    -fx-background-color: #706E65;
+    -fx-padding: 7 10 7 8;
+    -fx-min-height: 34px;
+}
+
+.dialog-title-bar .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.dialog-body {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12 14 12 14;
+}
+
+.dialog-body .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+.dialog-footer {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12px;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: #706E65;
+    -fx-background-radius: 0 0 8 8;
+    -fx-border-radius: 0 0 8 8;
+}
+
+
+.dialog-footer {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 12;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Error/warning/info colored header strips */
+.dialog-header-error {
+    -fx-background-color: #7a1f1b;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-error .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-warning {
+    -fx-background-color: #7a6200;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-warning .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.dialog-header-info {
+    -fx-background-color: #1a743f;
+    -fx-padding: 5 10 5 10;
+}
+
+.dialog-header-info .label {
+    -fx-text-fill: #e8e4d8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Welcome screen -------------------------------------- */
+
+.welcome-root {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
+}
+
+/* Shell fills the full window — no card float */
+.welcome-shell {
+    -fx-pref-width: infinity;
+    -fx-pref-height: infinity;
+}
+
+/* ── Top bar already handled by global .top-bar ── */
+
+/* ── Hero panel (left) ────────────────────────────────────────── */
+.welcome-hero-panel {
+    -fx-background-color: #C2BEAE;
+}
+
+/* Logo + wordmark zone — dark, tall, centered */
+.welcome-hero-logo-zone {
+    -fx-background-color: #2A2926;
+    -fx-min-height: 220px;
+    -fx-pref-height: 260px;
+    -fx-padding: 40 48 40 48;
+    -fx-alignment: CENTER;
+}
+
+.welcome-hero-wordmark {
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Thin separator */
+.welcome-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.35;
+}
+
+/* Copy zone */
+.welcome-hero-copy-zone {
+    -fx-padding: 36 48 28 48;
+    -fx-background-color: #C2BEAE;
+}
+
+.welcome-eyebrow {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+.welcome-hero-title {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.welcome-hero-copy {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+.welcome-features-list {
+    -fx-padding: 8 0 0 0;
+}
+
+.welcome-feature-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+/* CTA row */
+.welcome-cta-row {
+    -fx-background-color: #BAB7A8;
+    -fx-padding: 22 48 26 48;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-cta-row .button {
+    -fx-font-size: 12px;
+    -fx-padding: 11 28 11 28;
+    -fx-background-radius: 6;
+    -fx-background-color: #2A2926;
+    -fx-text-fill: #C2BEAE;
+    -fx-cursor: hand;
+}
+
+.welcome-cta-row .button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* ── Panel divider ────────────────────────────────────────────── */
+.welcome-panel-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.5;
+}
+
+/* ── Changelog panel (right) ──────────────────────────────────── */
+.welcome-updates-panel {
+    -fx-background-color: #ADA99A;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-header {
+    -fx-background-color: #2A2926;
+    -fx-padding: 16 18 16 18;
+    -fx-min-height: 52px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+}
+
+.welcome-section-title {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.welcome-updates-count {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 10;
+}
+
+.welcome-updates-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.welcome-updates-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-scroll .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-content {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Individual entry */
+.welcome-update-entry {
+    -fx-padding: 20 20 18 20;
+    -fx-background-color: transparent;
+    -fx-spacing: 8;
+}
+
+.welcome-update-entry:hover {
+    -fx-background-color: rgba(42, 41, 38, 0.10);
+}
+
+.welcome-update-entry-header {
+    -fx-padding: 0 0 6 0;
+    -fx-spacing: 10;
+}
+
+.welcome-update-version {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 6;
+}
+
+.welcome-update-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.welcome-update-copy {
+    -fx-font-size: 11px;
+    -fx-text-fill: #4D4B45;
+    -fx-line-spacing: 2;
+}
+
+.welcome-update-separator {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.45;
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.welcome-footer {
+    -fx-background-color: #2A2926;
+    -fx-padding: 13 18 13 18;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-footer-tip {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 11px;
+}
+
+.welcome-footer-hint {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4D4B45;
+}
+
+/* ---------- Info / status bar below viewport ------------------- */
+.info-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 2 10 2 10;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 22px;
+}
+
+.info-bar .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* ---------- Simulation screen helpers --------------------------- */
+.sim-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.sim-main-split {
+    -fx-background-color: #C2BEAE;
+    -fx-box-border: transparent;
+    -fx-padding: 0;
+}
+
+.sim-main-split > .split-pane-divider,
+.sim-vsplit > .split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.object-grid {
+    -fx-padding: 6;
+    -fx-background-color: #8D8A7F;
+}
+
+.sim-help-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-wrap-text: true;
+}
+
+.properties-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+.properties-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.properties-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+}
+
+.properties-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.prop-desc-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 6 8;
+    -fx-wrap-text: true;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 0 0 0;
+}
+
+.sim-stat-label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.sim-stat-spacer {
+    -fx-min-width: 12px;
+}
+
+.viewport-icon-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 13px;
+}
+
+.viewport-subtle-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
+.viewport-title-label,
+.viewport-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-overlay {
+    -fx-background-color: rgba(194, 190, 174, 0.92);
+    -fx-padding: 2 8 2 8;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.sim-tip-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.console-shell {
+    -fx-min-height: 80px;
+    -fx-pref-height: 120px;
+}
+
+.console-clear-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-size: 13px;
+    -fx-padding: 2 6 2 6;
+}
+
+.console-clear-btn:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ca332d;
+}
+
+.console-clear-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7a1f1b;
+    -fx-cursor: default;
+}
+
+/* Green action buttons (#1a743f) */
+.button-green {
+    -fx-background-color: #1a743f;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-green:hover {
+    -fx-background-color: #1e8a4a;
+}
+
+/* ---------- Results screen -------------------------------------- */
+.chart-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* Thin header bar above each chart / table section */
+.chart-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 28px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.chart-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+}
+
+/* Dark bottom panel: display settings + optimisation summary */
+.results-bottom-panel {
+    -fx-background-color: #32312D;
+    -fx-padding: 10 14 10 14;
+    -fx-min-height: 120px;
+}
+
+/* Labels inside the dark panel default to light text */
+.results-bottom-panel .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.mask-legend-tile-red    { -fx-background-color: #7a1f1b; -fx-min-height: 30px; -fx-background-radius: 4;}
+.mask-legend-tile-yellow { -fx-background-color: #7a6200; -fx-min-height: 30px; -fx-background-radius: 4;}
+.mask-legend-tile-grey   { -fx-background-color: #8D8A7F; -fx-min-height: 30px; -fx-background-radius: 4;}
+
+/* ---------- Simulation top menu visibility override ------------ */
+.top-bar-sim .menu-bar-top > .container > .menu-button {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-padding: 2 10 2 10;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button > .label,
+.top-bar-sim .menu-bar-top .menu > .label,
+.top-bar-sim .menu-bar-top .label {
+    -fx-text-fill: #1A1A18;
+    -fx-font-weight: bold;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #A9A494;
+}
+
+/* ================================================================
+   SEMANTIC BUTTON ALIASES
+   These map short names used in FXML to the canonical button styles.
+   ================================================================ */
+
+/* btn-primary / btn-success → confirm green (ADD, LOAD, SAVE) */
+.btn-primary,
+.btn-success {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+/* btn-danger → danger red (QUIT) */
+.btn-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+/* btn-neutral → medium grey (RETURN, CANCEL) */
+.btn-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.btn-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* ================================================================
+   PER-DIALOG COLOR OVERRIDES
+   Each dialog has its own colour theme; these classes override the
+   background of the base dialog-root/title-bar/body/footer classes.
+   ================================================================ */
+
+/* Load Config – lighter beige theme */
+.load-dialog-root   { -fx-background-color: #8F8C80; }
+.load-dialog-title  { -fx-background-color: #B7B4A5; }
+.load-dialog-body   { -fx-background-color: #8F8C80; }
+.load-dialog-footer { -fx-background-color: #8F8C80; }
+
+/* Save Config – custom title bar tint */
+.save-dialog-title  { -fx-background-color: #9E9B8E; }
+
+/* Object Desc – light (outer-bg) theme */
+.object-desc-dialog-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.object-desc-dialog-title {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.object-desc-dialog-body {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 12;
+}
+
+.object-desc-dialog-footer {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ================================================================
+   DIALOG LABEL & BUTTON UTILITY CLASSES
+   Replace common inline style patterns in dialog FXML.
+   ================================================================ */
+
+/* Bold title label on dark dialog bg */
+.dialog-title-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Bold title label on light dialog bg */
+.dialog-title-label-dark {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Section / field label on dark bg */
+.dialog-body-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Section / field label on light bg */
+.dialog-body-label-dark {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Regular body text on light bg */
+.dialog-body-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+/* Small hint text – dark on light bg */
+.dialog-hint-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #1a1a18;
+    -fx-wrap-text: true;
+}
+
+/* Small hint text – light on dark bg */
+.dialog-dim-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #C2BEAE;
+    -fx-wrap-text: true;
+}
+
+/* Warning text (unsaved data, etc.) */
+.dialog-warning-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #E0B200;
+    -fx-wrap-text: true;
+}
+
+/* Large icon placeholder in object desc dialog */
+.dialog-icon-label {
+    -fx-font-size: 48px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Transparent close / dismiss button */
+.dialog-close-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 0 4 0 4;
+}
+
+/* Inline "Browse Files…" link-style button – light text */
+.dialog-browse-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}
+
+/* Inline "Browse Files…" link-style button – dark text */
+.dialog-browse-btn-dark {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}
+
+/* ================================================================
+   RESULTS SCREEN UTILITY CLASSES
+   Replace inline styles on the results / mask-viewport panels.
+   ================================================================ */
+
+/* Overlay label centred on a canvas ("MASKS ON VIEWPORT") */
+.viewport-overlay-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Mask legend panel (viewport-tinted bg + top border) */
+.mask-legend-panel {
+    -fx-background-color: #CDCBC3;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Mask settings panel (beige bg + top border) */
+.mask-settings-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Tiny legend labels under colour tiles */
+.mask-legend-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-pref-width: 66px;
+    -fx-wrap-text: true;
+}
+
+/* Bold title inside mask legend / settings panels */
+.mask-panel-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Subtitle / info text inside mask panels */
+.mask-panel-subtitle {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+/* Section heading inside results-bottom-panel (dark bg, muted) */
+.results-section-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Info rows inside results-bottom-panel */
+.results-info-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Small dark colour-swatch next to each display-settings row */
+.results-setting-swatch {
+    -fx-background-color: #4D4B45;
+    -fx-min-width: 44px;
+    -fx-max-width: 44px;
+    -fx-min-height: 16px;
+    -fx-max-height: 16px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+}
+
+/* Bottom action bars (NEW SIMULATION / VIEW HISTORY / EXPORT) */
+.results-actions-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 40px;
+}
+
+/* Mask legend colour tiles */
+.mask-legend-tile-red    { -fx-background-color: #AA3333; }
+.mask-legend-tile-yellow { -fx-background-color: #D4A017; }
+.mask-legend-tile-grey   { -fx-background-color: #8D8A7F; }
+
+/* Line-chart styling for the results charts */
+.results-chart {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 2;
+}
+
+.results-chart .chart-content {
+    -fx-padding: 4;
+}
+
+.results-chart .chart-plot-background {
+    -fx-background-color: #CDCBC3;
+}
+
+.results-chart .chart-vertical-grid-lines {
+    -fx-stroke: #8D8A7F;
+    -fx-stroke-width: 0.5;
+}
+
+.results-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #8D8A7F;
+    -fx-stroke-width: 0.5;
+}
+
+.results-chart .axis {
+    -fx-tick-label-fill: #5D5B54;
+    -fx-font-size: 10px;
+}
+
+.results-chart .axis-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 10px;
+}
+
+.results-chart .chart-series-line {
+    -fx-stroke-width: 2;
+}
+
+/* Bar chart styling (tasks / energy charts on results screen) */
+.results-chart .chart-bar {
+    -fx-bar-fill: #5D5B54;
+}
+
+.results-chart .default-color0.chart-bar {
+    -fx-bar-fill: #599068;
+}
+
+/* Stat label inside the dark bottom panel */
+.results-opt-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-family: "Monospace";
+}
+
+
+
+/* Screen navigation buttons — used in both Simulation and Results screens.
+   Active  = green  (you are currently on this screen)
+   Inactive = dark gray (navigate away to this screen) */
+.screen-tab-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 12 3 12;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.screen-tab-active:hover {
+    -fx-background-color: #C2BEAE;
+}
+
+.screen-tab-inactive {
+    -fx-background-color: #383632;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 12 3 12;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.screen-tab-inactive:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* ── ALTERNATE THEMES for screen-tab buttons ─────────────────────
+   To switch theme, copy one of the blocks below and replace the
+   active .screen-tab-active / .screen-tab-inactive rules above.
+   ──────────────────────────────────────────────────────────────── */
+
+/* == GRN (Green Version) ========================================
+.screen-tab-active          { -fx-background-color: #4a6855; -fx-text-fill: #e8e4d8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 12 3 12; -fx-background-radius: 4; -fx-border-color: transparent; -fx-cursor: hand; }
+.screen-tab-active:hover    { -fx-background-color: #385243; }
+.screen-tab-inactive        { -fx-background-color: #383632; -fx-text-fill: #C2BEAE; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 12 3 12; -fx-background-radius: 4; -fx-border-color: transparent; -fx-cursor: hand; }
+.screen-tab-inactive:hover  { -fx-background-color: #3a5c42; }
+   ================================================================ */
+
+/* == YLW (Yellow Version) =======================================
+.screen-tab-active          { -fx-background-color: #7a6200; -fx-text-fill: #e8e4d8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 12 3 12; -fx-background-radius: 4; -fx-border-color: transparent; -fx-cursor: hand; }
+.screen-tab-active:hover    { -fx-background-color: #5c4900; }
+.screen-tab-inactive        { -fx-background-color: #383632; -fx-text-fill: #C2BEAE; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3 12 3 12; -fx-background-radius: 4; -fx-border-color: transparent; -fx-cursor: hand; }
+.screen-tab-inactive:hover  { -fx-background-color: #4a3e18; }
+   ================================================================ */
+
+/* ---------- Simulation top menu visibility override ------------ */
+.top-bar-sim .menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 2 10 2 10;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button > .label,
+.top-bar-sim .menu-bar-top .menu > .label,
+.top-bar-sim .menu-bar-top .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-weight: bold;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #5D5B54;
+}
+
+
+
+
+/* TEMPORARY OVERRIDES FOR INTERIM DEMO 1, NEED TO BE FIXED!! */
+.menu-bar-top .menu-button .label {
+    -fx-text-fill: #3D3C39 !important;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #C2BEAE !important;
+}

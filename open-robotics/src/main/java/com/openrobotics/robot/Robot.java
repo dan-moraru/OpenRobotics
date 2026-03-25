@@ -13,6 +13,8 @@ import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
 
+import com.openrobotics.simulationcore.MoveIntention;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -30,6 +32,14 @@ public class Robot extends MapEntity {
     private int loadingTicksRemaining; // pickup dwell timer
     private int unloadingTicksRemaining; // dropoff dwell timer
     private Sensor lastScan; // keeps track of the last scan record of the robot
+
+    // lifetime stats — accumulated during update(), read by results screen
+    private int totalDistanceMoved;
+    private int tasksCompleted;
+    private int totalIdleTicks;
+    private int totalMovingTicks;
+    private int totalChargingTicks;
+    private float totalEnergyConsumed;
 
     // provisional constants. future config task may override
     private static final float ENERGY_PER_MOVE = 1.0f;
@@ -62,6 +72,12 @@ public class Robot extends MapEntity {
         this.chargerTarget = null;
         this.loadingTicksRemaining = 0;
         this.unloadingTicksRemaining = 0;
+        this.totalDistanceMoved = 0;
+        this.tasksCompleted = 0;
+        this.totalIdleTicks = 0;
+        this.totalMovingTicks = 0;
+        this.totalChargingTicks = 0;
+        this.totalEnergyConsumed = 0;
     }
 
     // getters for all fields
@@ -77,6 +93,14 @@ public class Robot extends MapEntity {
     public void setHasPickedUp(boolean hasPickedUp) { this.hasPickedUp = hasPickedUp; }
     public int getLoadingTicksRemaining() { return loadingTicksRemaining; }
     public int getUnloadingTicksRemaining() { return unloadingTicksRemaining; }
+
+    // lifetime stats getters
+    public int getTotalDistanceMoved() { return totalDistanceMoved; }
+    public int getTasksCompleted() { return tasksCompleted; }
+    public int getTotalIdleTicks() { return totalIdleTicks; }
+    public int getTotalMovingTicks() { return totalMovingTicks; }
+    public int getTotalChargingTicks() { return totalChargingTicks; }
+    public float getTotalEnergyConsumed() { return totalEnergyConsumed; }
 
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
@@ -104,6 +128,10 @@ public class Robot extends MapEntity {
 
         previousPosition = getPosition(); // save for stuck detection in update()
         Tile fromTile = map.getTile(getPosition().getX(), getPosition().getY());
+        if (fromTile == null) {
+            throw new IllegalStateException("Robot is on an invalid tile at "
+                    + getPosition().getX() + "," + getPosition().getY());
+        }
 
         // safety net: idle robot with a task should start moving
         if (state == RobotState.IDLE && currentTask != null) {
@@ -132,7 +160,15 @@ public class Robot extends MapEntity {
             }
             // find nearest charger and override nav target
             if (chargerTarget == null) {
-                chargerTarget = map.findNearestChargingStation(getPosition());
+                Vector2D nearest = map.findNearestChargingStation(getPosition());
+                if (nearest != null) {
+                    chargerTarget = nearest;
+                } else {
+                    System.err.println("[Robot] No charging station found for robot " + getName()
+                            + " at " + getPosition() + " with battery=" + battery);
+                    state = RobotState.IDLE;
+                    return new MoveIntention(fromTile, fromTile, this);
+                }
             }
         } else {
             chargerTarget = null; // battery ok, clear charger override
@@ -172,6 +208,7 @@ public class Robot extends MapEntity {
     public void update() {
         switch (state) {
             case CHARGING:
+                totalChargingTicks++;
                 battery = Math.min(100.0f, battery + CHARGE_PER_TICK); // cap at 100
                 if (battery >= 100.0f) {
                     // fully charged — resume task or go idle
@@ -193,6 +230,7 @@ public class Robot extends MapEntity {
                     // delivery done — mark task completed and reset
                     if (currentTask != null) {
                         currentTask.setStatus(TaskStatus.COMPLETED);
+                        tasksCompleted++;
                     }
                     currentTask = null;
                     hasPickedUp = false;
@@ -201,9 +239,12 @@ public class Robot extends MapEntity {
                 break;
 
             case MOVING:
+                totalMovingTicks++;
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
                     consumeEnergy(ENERGY_PER_MOVE);
+                    totalEnergyConsumed += ENERGY_PER_MOVE;
+                    totalDistanceMoved++;
                     stuckTicks = 0;
                 } else {
                     stuckTicks++;
@@ -222,6 +263,10 @@ public class Robot extends MapEntity {
                     state = RobotState.UNLOADING;
                     unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
                 }
+                break;
+
+            case IDLE:
+                totalIdleTicks++;
                 break;
 
             default:

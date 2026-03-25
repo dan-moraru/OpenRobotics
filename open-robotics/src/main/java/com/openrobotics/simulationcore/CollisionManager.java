@@ -9,12 +9,13 @@ public class CollisionManager {
 
     // legal checks:
     // - no null intention/from/to
-    // - no negative robot id
+    // - robot id must be present
     // - one tile per tick max by Manhattan distance
     //   and distance 0 means wait/non move, which is fine
     public boolean isLegalIntention(MoveIntention intention) {
         if (intention == null ||
                 intention.getRobot() == null ||
+                intention.getRobot().getId() == null ||
                 intention.getFromTile() == null ||
                 intention.getToTile() == null) {
             return false;
