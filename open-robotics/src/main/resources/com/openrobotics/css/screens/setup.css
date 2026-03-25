@@ -70,3 +70,21 @@
     -fx-text-fill: #1a1a18;
     -fx-font-size: 11px;
 }
+
+.viewport-disabled-label {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+.viewport-preview {
+    -fx-background-color: #CECCC4;
+}
+
+.config-panel {
+    -fx-padding: 0 0 20 0;
+}
+
+.canvas-size-separator {
+    -fx-font-size: 11px;
+    -fx-padding: 0 2 0 2;
+}
