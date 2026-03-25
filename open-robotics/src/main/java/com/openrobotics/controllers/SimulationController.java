@@ -1149,13 +1149,12 @@ public class SimulationController {
     }
 
     @FXML
-    private void onReturnToOrigin() {
-        viewOffsetX = 0;
-        viewOffsetY = 0;
-        zoom = 1.0;
-        drawViewport();
-        log("Viewport reset to origin.");
-    }
+private void onReturnToOrigin() {
+    zoom = 1.0;
+    centerViewportOnCanvas();
+    drawViewport();
+    log("Viewport reset to origin.");
+}
 
     @FXML
     private void onToggleSidebar() {
