@@ -66,7 +66,7 @@ public class SetupController {
 
     private static final int    DEFAULT_ROBOT_COUNT  = 4;
     private static final String DEFAULT_NAV_ALGO     = "GREEDY";
-    private static final String DEFAULT_POLICY       = "TRAFFIC_RULES";
+    private static final String DEFAULT_POLICY       = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final String DEFAULT_WORKLOAD_MODE = "SPAWN_RATE";
     private static final String DEFAULT_SPAWN_RATE   = "10";
@@ -100,7 +100,7 @@ public class SetupController {
 
         // Coordination policy
         policyCombo.setItems(FXCollections.observableArrayList(
-                "TRAFFIC_RULES", "RESERVATION_K"));
+                "NONE", "TRAFFIC_RULES", "RESERVATION_K"));
         policyCombo.getSelectionModel().select(DEFAULT_POLICY);
 
         // Workload mode
@@ -401,4 +401,3 @@ public class SetupController {
         }
     }
 }
-
