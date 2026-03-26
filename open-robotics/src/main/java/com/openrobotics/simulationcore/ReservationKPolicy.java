@@ -4,17 +4,8 @@ import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-// Reservation-k policy based on the design document:
 // a robot must hold locks for the next k tiles on its path before it can move.
 // As the robot progresses, tiles it already reached are released.
 public class ReservationKPolicy implements CoordinationPolicy {
@@ -257,10 +248,6 @@ public class ReservationKPolicy implements CoordinationPolicy {
 
     private String tileKey(Tile tile) {
         return tileKey(tile.getX(), tile.getY());
-    }
-
-    private String tileKey(Vector2D position) {
-        return tileKey(position.getX(), position.getY());
     }
 
     private String tileKey(int x, int y) {
