@@ -3,6 +3,7 @@ package com.openrobotics.simulationcore;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.robot.Robot;
 
 import java.util.*;
 
@@ -69,6 +70,14 @@ public class ReservationKPolicy implements CoordinationPolicy {
         }
 
         return result.toArray(new MoveIntention[0]);
+    }
+
+    @Override
+    public void onRobotRecovered(Robot robot) {
+        // Recovery should immediately drop any path locks owned by the recovered robot.
+        if (robot != null) {
+            releaseAllReservations(robot.getId());
+        }
     }
 
     // Builds the next k tiles the robot wants to occupy.

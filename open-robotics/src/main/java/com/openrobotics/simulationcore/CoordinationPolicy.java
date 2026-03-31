@@ -1,6 +1,7 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Map;
+import com.openrobotics.robot.Robot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,9 @@ public interface CoordinationPolicy {
     // Applies policy rules to this tick's intentions
     // Policy can force robots to wait by returning a WAIT intention
     MoveIntention[] apply(Map map, MoveIntention[] intentions);
+
+    // Recovery hook so policies can discard any per-robot coordination state.
+    default void onRobotRecovered(Robot robot) {}
 
     // Default policy: return a copy with null intentions removed
     static CoordinationPolicy noOp() {
