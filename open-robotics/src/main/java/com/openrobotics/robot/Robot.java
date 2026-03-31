@@ -110,6 +110,21 @@ public class Robot extends MapEntity {
     public void setCurrentTask(Task currentTask) { this.currentTask = currentTask; }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
 
+    public void recoverFromDeadlock() {
+        // Recovery returns the robot to a clean idle state for the next assignment attempt.
+        if (nav != null) {
+            nav.reset(this);
+        }
+        currentTask = null;
+        hasPickedUp = false;
+        chargerTarget = null;
+        loadingTicksRemaining = 0;
+        unloadingTicksRemaining = 0;
+        previousPosition = null;
+        stuckTicks = 0;
+        state = RobotState.IDLE;
+    }
+
     // returns the current navigation target based on priority:
     // charger (if set) > pickup (if not picked up) > dropoff
     public Vector2D getTarget() {
