@@ -320,6 +320,14 @@ public class BugNavigationStrategy implements NavigationStrategy {
     }
 
     @Override
+    public void reset(Robot robot) {
+        // Deadlock recovery starts a fresh search for this robot's next assignment.
+        if (robot != null) {
+            navStates.remove(robot.getId());
+        }
+    }
+
+    @Override
     public String toString() {
         return "BUG";
     }
