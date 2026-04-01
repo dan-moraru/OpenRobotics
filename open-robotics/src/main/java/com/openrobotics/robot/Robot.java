@@ -1,5 +1,10 @@
 package com.openrobotics.robot;
 
+import com.openrobotics.AppState;
+import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.TaskEvent;
+import com.openrobotics.logging.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
@@ -231,6 +236,12 @@ public class Robot extends MapEntity {
                     if (currentTask != null) {
                         currentTask.setStatus(TaskStatus.COMPLETED);
                         tasksCompleted++;
+
+                        // Logging task completion event
+                        int currentTick = AppState.getEngine().getTickCounter();
+                        WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(currentTask);
+                        WorkloadTaskRecord record = recordBuilder.buildTaskCompletionRecord(currentTick);
+                        Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }
                     currentTask = null;
                     hasPickedUp = false;
