@@ -9,7 +9,7 @@ import java.util.Objects;
  * Represents tasks that will be assigned to robots during the simulation of a warehouses workload
  */
 public class Task implements Comparable<Task> {
-    private final int id; // unique id
+    private final long id; // unique id
     private final Vector2D pickupLocation;
     private final Vector2D dropoffLocation;
     private int priority; // higher = more urgent
@@ -24,7 +24,7 @@ public class Task implements Comparable<Task> {
     }
 
     // Getters
-    public int getId() { return id; }
+    public long getId() { return id; }
     public Vector2D getPickupLocation() { return pickupLocation; }
     public Vector2D getDropoffLocation() { return dropoffLocation; }
     public int getPriority() { return priority; }

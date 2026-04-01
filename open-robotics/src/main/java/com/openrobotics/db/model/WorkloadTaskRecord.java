@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class WorkloadTaskRecord {
 
-    private Integer id;
+    private Long id;
     private UUID runId;
     private String taskType;
     private Integer priority;
@@ -27,7 +27,7 @@ public class WorkloadTaskRecord {
      * Gets the ID of the workload task record.
      * @return ID of the workload task record
      */
-    public Integer getId() {
+    public Long getId() {
         return id; 
     }
 
@@ -35,7 +35,7 @@ public class WorkloadTaskRecord {
      * Sets the ID of the workload task record.
      * @param id ID of the workload task record
      */
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id; 
     }
 

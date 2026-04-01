@@ -19,7 +19,7 @@ public final class WorkloadTaskDao {
      * @return ID of the inserted workload task
      * @throws SQLException if a database error occurs
      */
-    public static int insert(WorkloadTaskRecord r) throws SQLException {
+    public static long insert(WorkloadTaskRecord r) throws SQLException {
         String sql = """
             INSERT INTO run_workload_tasks
               (run_id, task_type, priority, created_tick, assigned_tick, completed_tick,
@@ -44,7 +44,7 @@ public final class WorkloadTaskDao {
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 keys.next();
-                return keys.getInt(1);
+                return keys.getLong(1);
             }
         }
     }
@@ -77,7 +77,7 @@ public final class WorkloadTaskDao {
      * @param completedTick Tick when the task was completed
      * @throws SQLException if a database error occurs
      */
-    public static void markCompleted(int id, String status, Integer completedTick) throws SQLException {
+    public static void markCompleted(long id, String status, Integer completedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET status = ?, completed_tick = ? WHERE id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -95,7 +95,7 @@ public final class WorkloadTaskDao {
      * @param assignedTick Tick when the task was assigned to the robot
      * @throws SQLException if a database error occurs
      */
-    public static void assignToRobot(int id, int robotId, int assignedTick) throws SQLException {
+    public static void assignToRobot(long id, int robotId, int assignedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET assigned_robot_id = ?, assigned_tick = ?, status = 'IN_PROGRESS' WHERE id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -129,7 +129,7 @@ public final class WorkloadTaskDao {
      */
     private static WorkloadTaskRecord map(ResultSet rs) throws SQLException {
         WorkloadTaskRecord r = new WorkloadTaskRecord();
-        r.setId(rs.getInt("id"));
+        r.setId(rs.getLong("id"));
         r.setRunId(rs.getObject("run_id", UUID.class));
         r.setTaskType(rs.getString("task_type"));
         r.setPriority((Integer) rs.getObject("priority"));

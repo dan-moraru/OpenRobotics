@@ -820,7 +820,7 @@ public class DaoIntegrationTest {
         t.setStatus("IN_PROGRESS");
 
         // Insert the workload task record
-        int taskId = WorkloadTaskDao.insert(t);
+        long taskId = WorkloadTaskDao.insert(t);
 
         // Update the status of the workload task record
         WorkloadTaskDao.markCompleted(taskId, "COMPLETED", 123);
