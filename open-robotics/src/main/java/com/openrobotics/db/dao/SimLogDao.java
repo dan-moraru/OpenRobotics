@@ -28,7 +28,7 @@ public final class SimLogDao {
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setObject(1, r.getRunId());
             ps.setObject(2, r.getTick(), Types.INTEGER);
-            ps.setObject(3, r.getRobotId(), Types.INTEGER);
+            ps.setObject(3, r.getRobotId());
             ps.setString(4, r.getEventType());
             ps.setObject(5, r.getX(), Types.INTEGER);
             ps.setObject(6, r.getY(), Types.INTEGER);
@@ -57,7 +57,7 @@ public final class SimLogDao {
             for (SimLogRecord r : records) {
                 ps.setObject(1, r.getRunId());
                 ps.setObject(2, r.getTick(), Types.INTEGER);
-                ps.setObject(3, r.getRobotId(), Types.INTEGER);
+                ps.setObject(3, r.getRobotId());
                 ps.setString(4, r.getEventType());
                 ps.setObject(5, r.getX(), Types.INTEGER);
                 ps.setObject(6, r.getY(), Types.INTEGER);
@@ -149,7 +149,7 @@ public final class SimLogDao {
         r.setId(rs.getLong("id"));
         r.setRunId(rs.getObject("run_id", UUID.class));
         r.setTick((Integer) rs.getObject("tick"));
-        r.setRobotId((Integer) rs.getObject("robot_id"));
+        r.setRobotId(rs.getObject("robot_id", UUID.class));
         r.setEventType(rs.getString("event_type"));
         r.setX((Integer) rs.getObject("x"));
         r.setY((Integer) rs.getObject("y"));
