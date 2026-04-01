@@ -95,7 +95,7 @@ public class Dispatcher {
                 // Logging task assignment event
                 WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(task);
                 WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
-                Logger.getLogger().logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
+                Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
             }
         }
     }
