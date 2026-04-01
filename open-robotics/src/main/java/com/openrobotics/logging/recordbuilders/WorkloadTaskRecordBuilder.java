@@ -4,6 +4,8 @@ import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.task.Task;
 
+import java.util.UUID;
+
 public class WorkloadTaskRecordBuilder {
     private WorkloadTaskRecord record;
 
@@ -42,7 +44,7 @@ public class WorkloadTaskRecordBuilder {
      * @param assignedRobotId the ID of the robot that the task was assigned to
      * @return a WorkloadTaskRecord for a task assignment event
      */
-    public WorkloadTaskRecord buildTaskAssignmentRecord(int assignedTick, int assignedRobotId) {
+    public WorkloadTaskRecord buildTaskAssignmentRecord(int assignedTick, UUID assignedRobotId) {
         record.setAssignedTick(assignedTick);
         record.setAssignedRobotId(assignedRobotId);
         return record;

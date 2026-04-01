@@ -93,10 +93,9 @@ public class Dispatcher {
                 task.setStatus(TaskStatus.IN_PROGRESS);
 
                 // Logging task assignment event
-                // TODO: change robot_id type to UUID instead of int in database.
-                /*WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(task);
+                WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(task);
                 WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
-                Logger.getLogger().logTaskEvent(TaskEvent.TASK_ASSIGNED, record);*/
+                Logger.getLogger().logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
             }
         }
     }
