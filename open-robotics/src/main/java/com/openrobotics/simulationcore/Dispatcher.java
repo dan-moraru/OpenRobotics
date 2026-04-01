@@ -1,5 +1,9 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.TaskEvent;
+import com.openrobotics.logging.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 import com.openrobotics.task.Task;
@@ -58,26 +62,25 @@ public class Dispatcher {
 
     /**
      * Assigns at most one task per available robot
+     * Logs task assignment events
      * @param robots a list of all the robots in the warehouse
-     * @return the number of successful assignments performed
      */
-    public int assignTasks(Robot[] robots) {
+    public void assignTasks(Robot[] robots, int currentTick) {
         if (robots == null) {
             throw new IllegalArgumentException("Robots array cannot be null");
         } else if (robots.length == 0 || taskQueue.isEmpty()) {
-            return 0; // there are no available tasks, 0 task assignments made
+            return; // there are no tasks available, no assignments are made
         }
-
-        int assignmentCount = 0;
 
         // Assigning tasks to available robots
         for (Robot robot : robots) {
-            if (taskQueue.isEmpty()) { // There are no more tasks left to assign
-                break;
+            if (robot == null) {
+                throw new IllegalArgumentException("Encountered a null robot while assigning tasks during tick " + currentTick);
             }
 
-            if (robot == null) {
-                continue;
+            // Checking if there are no more tasks left to assign
+            if (taskQueue.isEmpty()) {
+                break;
             }
 
             if (robot.isAvailable()) { // robot is available for task assignment
@@ -89,11 +92,13 @@ public class Dispatcher {
                 robot.setState(RobotState.MOVING);
                 task.setStatus(TaskStatus.IN_PROGRESS);
 
-                assignmentCount++;
+                // Logging task assignment event
+                // TODO: change robot_id type to UUID instead of int in database.
+                /*WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(task);
+                WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
+                Logger.getLogger().logTaskEvent(TaskEvent.TASK_ASSIGNED, record);*/
             }
         }
-
-        return assignmentCount;
     }
 
     /**

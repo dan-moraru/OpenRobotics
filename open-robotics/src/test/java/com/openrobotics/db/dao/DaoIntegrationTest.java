@@ -820,10 +820,10 @@ public class DaoIntegrationTest {
         t.setStatus("IN_PROGRESS");
 
         // Insert the workload task record
-        long taskId = WorkloadTaskDao.insert(t);
+        int taskId = WorkloadTaskDao.insert(t);
 
         // Update the status of the workload task record
-        WorkloadTaskDao.updateStatus(taskId, "COMPLETED", 123);
+        WorkloadTaskDao.markCompleted(taskId, "COMPLETED", 123);
 
         // Find the workload task record
         List<WorkloadTaskRecord> tasks = WorkloadTaskDao.findByRunId(runId);
@@ -850,9 +850,9 @@ public class DaoIntegrationTest {
         long taskId = WorkloadTaskDao.insert(t);
 
         // Update the status of a non-existent workload task record
-        WorkloadTaskDao.updateStatus(999999L, "COMPLETED", 1);
+        WorkloadTaskDao.markCompleted(99999, "COMPLETED", 1);
         // Assign a workload task record to a non-existent robot
-        WorkloadTaskDao.assignToRobot(999999L, 7, 2);
+        WorkloadTaskDao.assignToRobot(99999, 7, 2);
 
         // Find the workload task record
         List<WorkloadTaskRecord> tasks = WorkloadTaskDao.findByRunId(runId);

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * The SimulationEngine is the core component responsible for advancing the
@@ -29,6 +30,7 @@ import java.util.Set;
  * of simulation steps that have been executed.
  */
 public class SimulationEngine {
+    private UUID runId; // unique identifier for the simulation run, useful for logging and tracking
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
     private Map map;
@@ -71,6 +73,7 @@ public class SimulationEngine {
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
+        this.runId = UUID.randomUUID();
         this.tickCounter = 0;
         this.running = false;
         this.map = map;
@@ -441,7 +444,7 @@ public class SimulationEngine {
         }
 
         // Assigning tasks to available robots
-        dispatcher.assignTasks(robots);
+        dispatcher.assignTasks(robots, tickCounter);
 
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
@@ -532,6 +535,10 @@ public class SimulationEngine {
     }
 
     // Getters
+    public UUID getRunId() {
+        return runId;
+    }
+
     public int getTickCounter() {
         return tickCounter;
     }

@@ -1,10 +1,12 @@
 package com.openrobotics.db.model;
 
+import com.openrobotics.task.Task;
+
 import java.util.UUID;
 
 public class WorkloadTaskRecord {
 
-    private Long id;
+    private Integer id;
     private UUID runId;
     private String taskType;
     private Integer priority;
@@ -25,7 +27,7 @@ public class WorkloadTaskRecord {
      * Gets the ID of the workload task record.
      * @return ID of the workload task record
      */
-    public Long getId() {
+    public Integer getId() {
         return id; 
     }
 
@@ -33,7 +35,7 @@ public class WorkloadTaskRecord {
      * Sets the ID of the workload task record.
      * @param id ID of the workload task record
      */
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id; 
     }
 
