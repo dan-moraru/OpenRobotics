@@ -461,6 +461,9 @@ public class SimulationEngine {
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
 
+        // Track robot visits on tiles for heatmap
+        trackVisits();
+
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
 
@@ -538,6 +541,20 @@ public class SimulationEngine {
      */
     private void incrementTickCounter() {
         tickCounter++;
+    }
+
+    /**
+     * Tracks robot visits on tiles for heatmap visualization.
+     * Each robot's current position increments the visit count of that tile.
+     */
+    private void trackVisits() {
+        if (robots == null || map == null) return;
+        for (Robot robot : robots) {
+            Tile tile = map.getTile(robot.getPosition().getX(), robot.getPosition().getY());
+            if (tile != null) {
+                tile.incrementVisitCount();
+            }
+        }
     }
 
     private CoordinationPolicy normalizeCoordinationPolicy(CoordinationPolicy coordinationPolicy) {

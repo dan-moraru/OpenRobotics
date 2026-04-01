@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
@@ -107,6 +108,7 @@ public class ResultsController {
             populateCharts(engine);
             populateSummary(engine);
             if (heatmapPlaceholder != null) heatmapPlaceholder.setText("");
+            drawMaskCanvas();
         }
     }
 
@@ -318,10 +320,11 @@ public class ResultsController {
         var gc = heatmapCanvas.getGraphicsContext2D();
         double w = heatmapCanvas.getWidth();
         double h = heatmapCanvas.getHeight();
+
+        // Background
         gc.setFill(javafx.scene.paint.Color.web("#CDCBC3"));
         gc.fillRect(0, 0, w, h);
 
-        // Draw grid lines
         SimulationEngine engine = AppState.getEngine();
         if (engine == null || engine.getMap() == null) return;
 
@@ -331,20 +334,140 @@ public class ResultsController {
         double offsetX = (w - mapW * tileSize) / 2;
         double offsetY = (h - mapH * tileSize) / 2;
 
-        // Grid
-        gc.setStroke(javafx.scene.paint.Color.web("#B0ADA5"));
-        gc.setLineWidth(0.5);
-        for (int x = 0; x <= mapW; x++) {
-            gc.strokeLine(offsetX + x * tileSize, offsetY, offsetX + x * tileSize, offsetY + mapH * tileSize);
+        // Compute max visit count for normalization
+        int maxVisits = 0;
+        int totalVisits = 0;
+        int visitedTileCount = 0;
+        for (int y = 0; y < mapH; y++) {
+            for (int x = 0; x < mapW; x++) {
+                com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
+                if (tile != null) {
+                    int visits = tile.getVisitCount();
+                    totalVisits += visits;
+                    if (visits > 0) visitedTileCount++;
+                    if (visits > maxVisits) maxVisits = visits;
+                }
+            }
         }
-        for (int y = 0; y <= mapH; y++) {
-            gc.strokeLine(offsetX, offsetY + y * tileSize, offsetX + mapW * tileSize, offsetY + y * tileSize);
+
+        // Threshold: "high traffic" = top 33%, "medium" = 1..top 33%, "low/never visited" = 0
+        int highThreshold = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.33)) : 0;
+        int mediumThreshold = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.66)) : 0;
+
+        // Helper to get heatmap color
+        java.util.function.IntUnaryOperator getHeatColor = (visits) -> {
+            if (visits == 0) {
+                return 0x8D8A7F; // grey - never visited
+            } else if (visits >= mediumThreshold) {
+                return 0xAA3333; // red - high traffic
+            } else if (visits >= highThreshold) {
+                return 0xD4A017; // yellow/amber - medium traffic
+            } else {
+                return 0x8D8A7F; // grey - low traffic
+            }
+        };
+
+        // Draw heatmap tiles
+        for (int y = 0; y < mapH; y++) {
+            for (int x = 0; x < mapW; x++) {
+                com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
+                if (tile != null) {
+                    int visits = tile.getVisitCount();
+                    long color = getHeatColor.applyAsInt(visits);
+                    double r = ((color >> 16) & 0xFF) / 255.0;
+                    double g = ((color >> 8) & 0xFF) / 255.0;
+                    double b = (color & 0xFF) / 255.0;
+                    gc.setFill(new javafx.scene.paint.Color(r, g, b, 0.85));
+                    gc.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize - 1, tileSize - 1);
+                }
+            }
+        }
+
+        // Draw entities overlay if enabled
+        if (viewObjectsCheck != null && viewObjectsCheck.isSelected()) {
+            drawEntitiesOverlay(gc, engine, tileSize, offsetX, offsetY);
+        }
+
+        // Draw grid lines if enabled
+        if (maskOpt1Check != null && maskOpt1Check.isSelected()) {
+            gc.setStroke(javafx.scene.paint.Color.web("#B0ADA5"));
+            gc.setLineWidth(0.5);
+            for (int x = 0; x <= mapW; x++) {
+                gc.strokeLine(offsetX + x * tileSize, offsetY, offsetX + x * tileSize, offsetY + mapH * tileSize);
+            }
+            for (int y = 0; y <= mapH; y++) {
+                gc.strokeLine(offsetX, offsetY + y * tileSize, offsetX + mapW * tileSize, offsetY + y * tileSize);
+            }
         }
 
         // Map boundary
         gc.setStroke(javafx.scene.paint.Color.web("#5D5B54"));
         gc.setLineWidth(1.5);
         gc.strokeRect(offsetX, offsetY, mapW * tileSize, mapH * tileSize);
+    }
+
+    private void drawEntitiesOverlay(GraphicsContext gc, SimulationEngine engine,
+                                     double tileSize, double offsetX, double offsetY) {
+        if (engine.getMap() == null) return;
+
+        // Draw obstacles (dark filled rectangles)
+        gc.setFill(javafx.scene.paint.Color.web("#2A2926"));
+        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof com.openrobotics.map.entities.environment.Obstacle) {
+                double px = offsetX + entity.getPosition().getX() * tileSize + 1;
+                double py = offsetY + entity.getPosition().getY() * tileSize + 1;
+                gc.fillRect(px, py, tileSize - 2, tileSize - 2);
+            }
+        }
+
+        // Draw charging stations (yellow/amber rectangles)
+        gc.setFill(javafx.scene.paint.Color.web("#8C7B38"));
+        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof com.openrobotics.map.entities.station.ChargingStation) {
+                double px = offsetX + entity.getPosition().getX() * tileSize + 1;
+                double py = offsetY + entity.getPosition().getY() * tileSize + 1;
+                gc.fillRect(px, py, tileSize - 2, tileSize - 2);
+            }
+        }
+
+        // Draw delivery stations (blue-ish rectangles)
+        gc.setFill(javafx.scene.paint.Color.web("#3A5A8C"));
+        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof com.openrobotics.map.entities.station.DeliveryStation) {
+                double px = offsetX + entity.getPosition().getX() * tileSize + 1;
+                double py = offsetY + entity.getPosition().getY() * tileSize + 1;
+                gc.fillRect(px, py, tileSize - 2, tileSize - 2);
+            }
+        }
+
+        // Draw racks (medium grey rectangles)
+        gc.setFill(javafx.scene.paint.Color.web("#6E6B65"));
+        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof com.openrobotics.map.entities.environment.Rack) {
+                double px = offsetX + entity.getPosition().getX() * tileSize + 1;
+                double py = offsetY + entity.getPosition().getY() * tileSize + 1;
+                gc.fillRect(px, py, tileSize - 2, tileSize - 2);
+            }
+        }
+
+        // Draw robots as small colored dots at their final positions
+        Robot[] robots = engine.getRobots();
+        if (robots != null) {
+            for (Robot robot : robots) {
+                double px = offsetX + robot.getPosition().getX() * tileSize + tileSize / 2;
+                double py = offsetY + robot.getPosition().getY() * tileSize + tileSize / 2;
+                double radius = Math.max(3, tileSize / 4);
+
+                // Color by robot state
+                switch (robot.getState()) {
+                    case MOVING -> gc.setFill(javafx.scene.paint.Color.web("#599068"));
+                    case CHARGING -> gc.setFill(javafx.scene.paint.Color.web("#8C7B38"));
+                    case LOADING, UNLOADING -> gc.setFill(javafx.scene.paint.Color.web("#706E65"));
+                    default -> gc.setFill(javafx.scene.paint.Color.web("#8D8A7F"));
+                }
+                gc.fillOval(px - radius, py - radius, radius * 2, radius * 2);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ //
