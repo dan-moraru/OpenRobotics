@@ -3,6 +3,7 @@ package com.openrobotics.robot.sensors;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.robot.Robot;
 
 import java.util.ArrayList;
@@ -44,12 +45,17 @@ public class RangeSensor implements SensorStrategy {
                 }
 
                 List<MapEntity> hits = map.getEntitiesAt(new Vector2D(gridX, gridY));
+
+                // rays pass through racks, stations, and robots; only an obstacle stops the ray.
+                // this means the sensor can detect obstacles that are behind a rack or station.
+                boolean obstacleHit = false;
                 for (MapEntity entity : hits) {
                     if (entity != null && entity != robot) {
                         detected.add(entity);
-                        break;
+                        if (entity instanceof Obstacle) obstacleHit = true;
                     }
                 }
+                if (obstacleHit) break; // stop ray at first cell containing an obstacle
             }
         }
 

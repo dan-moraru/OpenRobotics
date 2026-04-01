@@ -80,12 +80,12 @@ public class SimulationEngine {
         this.robots = robots;
         this.collisionManager = new CollisionManager();
         this.dispatcher = dispatcher;
-        this.coordinationPolicy = coordinationPolicy;
+        this.coordinationPolicy = normalizeCoordinationPolicy(coordinationPolicy);
         this.runName = runName;
         this.tickMs = tickMs;
         this.maxTicks = maxTicks;
         this.seed = seed;
-        this.initialized = map != null && robots != null && dispatcher != null && coordinationPolicy != null;
+        this.initialized = map != null && robots != null && dispatcher != null;
     }
 
     /**
@@ -112,6 +112,7 @@ public class SimulationEngine {
         try {
             this.initError = null;
             this.initialized = false;
+            this.coordinationPolicy = CoordinationPolicy.noOp();
 
             // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
@@ -191,12 +192,16 @@ public class SimulationEngine {
             // Setup Coordination Policy
             if (dto.coordination != null) {
                 if ("RESERVATION_K".equals(dto.coordination.type)) {
-                    this.coordinationPolicy = new ReservationKPolicy(dto.coordination.k);
+                    if (dto.coordination.k != null) {
+                        this.coordinationPolicy = new ReservationKPolicy(dto.coordination.k);
+                    }
 
                 } else if ("TRAFFIC_RULES".equals(dto.coordination.type)) {
                     Set<Tile> intersectionTiles = new HashSet<>();
-                    for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
-                        intersectionTiles.add(this.map.getTile(v.x, v.y));
+                    if (dto.coordination.intersections != null) {
+                        for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
+                            intersectionTiles.add(this.map.getTile(v.x, v.y));
+                        }
                     }
                     this.coordinationPolicy = new TrafficRulesPolicy(intersectionTiles);
                 }
@@ -214,7 +219,7 @@ public class SimulationEngine {
             // CollisionManager is always needed for tick()
             this.collisionManager = new CollisionManager();
                 this.initialized = this.map != null && this.robots != null && this.dispatcher != null
-                    && this.coordinationPolicy != null && this.collisionManager != null;
+                    && this.collisionManager != null;
 
             // Test print, TODO: remove
             System.out.println("Simulation '" + dto.config.runName + "' loaded with "
@@ -359,11 +364,12 @@ public class SimulationEngine {
         dto.simulation.speedMultiplier = 1.0; // For now but needs to be in its own field
 
         // Coordination Policy
-        dto.coordination = new SimulationConfigDTO.CoordinationSection();
         if (coordinationPolicy instanceof ReservationKPolicy) {
+            dto.coordination = new SimulationConfigDTO.CoordinationSection();
             dto.coordination.type = "RESERVATION_K";
             dto.coordination.k = ((ReservationKPolicy) coordinationPolicy).getK();
         } else if (coordinationPolicy instanceof TrafficRulesPolicy) {
+            dto.coordination = new SimulationConfigDTO.CoordinationSection();
             dto.coordination.type = "TRAFFIC_RULES";
             dto.coordination.intersections = new ArrayList<>();
             for (Tile tile : ((TrafficRulesPolicy) coordinationPolicy).getIntersectionTiles()) {
@@ -449,8 +455,11 @@ public class SimulationEngine {
         // Collecting initial move intentions from all robots
         MoveIntention[] intentions = collectIntentions();
 
+        // Apply the selected coordination policy before collision resolution.
+        MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(map, intentions);
+
         // Resolving conflicts/collisions and finalizing move intentions for all robots
-        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(intentions);
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
 
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
@@ -532,6 +541,10 @@ public class SimulationEngine {
      */
     private void incrementTickCounter() {
         tickCounter++;
+    }
+
+    private CoordinationPolicy normalizeCoordinationPolicy(CoordinationPolicy coordinationPolicy) {
+        return coordinationPolicy != null ? coordinationPolicy : CoordinationPolicy.noOp();
     }
 
     // Getters

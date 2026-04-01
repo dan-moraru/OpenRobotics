@@ -1,18 +1,21 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
+import com.openrobotics.map.Vector2D;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-// Basic CS5 reservation-k policy:
-// reserves destination tiles per tick and forces conflicts to wait
-// This first version works as k=1 (basically reserve the next tile only)
+// a robot must hold locks for the next k tiles on its path before it can move.
+// As the robot progresses, tiles it already reached are released.
 public class ReservationKPolicy implements CoordinationPolicy {
     private final int k;
+
+    // Tracks which robot currently owns each reserved tile.
+    private final java.util.Map<String, UUID> tileOwners = new HashMap<>();
+
+    // Tracks the ordered reservation window for each robot.
+    private final java.util.Map<UUID, Deque<String>> robotReservations = new HashMap<>();
 
     public ReservationKPolicy(int k) {
         if (k < 1) {
@@ -22,46 +25,181 @@ public class ReservationKPolicy implements CoordinationPolicy {
     }
 
     @Override
-    public MoveIntention[] apply(MoveIntention[] intentions) {
-        Set<Tile> reservedTiles = new HashSet<>();
-        Set<String> approvedEdges = new HashSet<>();
-
+    public MoveIntention[] apply(Map map, MoveIntention[] intentions) {
         MoveIntention[] ordered = sortByRobotId(copyNonNull(intentions));
         List<MoveIntention> result = new ArrayList<>(ordered.length);
+        Set<String> approvedEdges = new HashSet<>();
 
         for (MoveIntention intention : ordered) {
+            if (intention == null || intention.getRobot() == null) {
+                continue;
+            }
+
+            UUID robotId = intention.getRobot().getId();
+
             if (!hasTiles(intention) || !isActualMove(intention)) {
+                // If the robot is not moving this tick, it should not keep path locks.
+                releaseAllReservations(robotId);
                 result.add(intention);
                 continue;
             }
 
-            // check whether the robot’s destination tile is a reserved tile
-            Tile destination = intention.getToTile();
-            if (containsTileByCoordinates(reservedTiles, destination)) {
-                // if so, force wait
+            Tile from = intention.getFromTile();
+            Tile to = intention.getToTile();
+
+            // Once the robot has physically reached a reserved tile, release it.
+            syncReservationsWithCurrentPosition(robotId, from);
+
+            String edge = edgeKey(from, to);
+            String reverseEdge = edgeKey(to, from);
+            if (approvedEdges.contains(reverseEdge)) {
                 result.add(forceWait(intention));
                 continue;
             }
 
-            // prevent opposite-direction swaps (A->B while B->A)
-            String edge = edgeKey(intention.getFromTile(), intention.getToTile());
-            String reverse = edgeKey(intention.getToTile(), intention.getFromTile());
-            if (approvedEdges.contains(reverse)) {
+            List<String> reservationWindow = buildReservationWindow(map, intention);
+            if (!canAcquireWindow(robotId, reservationWindow)) {
                 result.add(forceWait(intention));
                 continue;
             }
 
-            // reserve only one tile for now (k=1).
-            // other robots targeting the same tile in the same tick will be forced to wait
-            if (k >= 1) {
-                addTileByCoordinates(reservedTiles, destination);
-            }
+            applyReservationWindow(robotId, reservationWindow);
             approvedEdges.add(edge);
-            // and keep the move intention as approved
             result.add(intention);
         }
 
         return result.toArray(new MoveIntention[0]);
+    }
+
+    // Builds the next k tiles the robot wants to occupy.
+    // The current move is always the first tile in the window.
+    private List<String> buildReservationWindow(Map map, MoveIntention intention) {
+        List<String> window = new ArrayList<>();
+        Tile nextTile = intention.getToTile();
+        window.add(tileKey(nextTile));
+
+        Vector2D target = intention.getRobot().getTarget();
+        if (map == null || target == null) {
+            return window;
+        }
+
+        Vector2D start = nextTile.getPosition();
+        if (start.equals(target)) {
+            return window;
+        }
+
+        List<Vector2D> remainderPath = findShortestPath(map, start, target);
+        for (Vector2D step : remainderPath) {
+            if (window.size() >= k) {
+                break;
+            }
+            String key = tileKey(step.getX(), step.getY());
+            if (!window.contains(key)) {
+                window.add(key);
+            }
+        }
+
+        return window;
+    }
+
+    // Simple BFS path preview used only for reservation lookahead.
+    // It keeps the implementation predictable and independent from collision state.
+    private List<Vector2D> findShortestPath(Map map, Vector2D start, Vector2D target) {
+        Deque<Vector2D> queue = new ArrayDeque<>();
+        java.util.Map<Vector2D, Vector2D> previous = new HashMap<>();
+        Set<Vector2D> visited = new HashSet<>();
+
+        queue.add(start);
+        visited.add(start);
+
+        while (!queue.isEmpty()) {
+            Vector2D current = queue.removeFirst();
+            if (current.equals(target)) {
+                break;
+            }
+
+            for (Vector2D neighbor : map.getNeighbors(current)) {
+                if (visited.contains(neighbor)) {
+                    continue;
+                }
+                visited.add(neighbor);
+                previous.put(neighbor, current);
+                queue.addLast(neighbor);
+            }
+        }
+
+        if (!visited.contains(target)) {
+            return List.of();
+        }
+
+        List<Vector2D> path = new ArrayList<>();
+        Vector2D current = target;
+        while (!current.equals(start)) {
+            path.add(0, current);
+            current = previous.get(current);
+            if (current == null) {
+                return List.of();
+            }
+        }
+        return path;
+    }
+
+    // A window is acquirable if every tile is either free or already owned by this robot.
+    private boolean canAcquireWindow(UUID robotId, List<String> reservationWindow) {
+        for (String tileKey : reservationWindow) {
+            UUID owner = tileOwners.get(tileKey);
+            if (owner != null && !owner.equals(robotId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Replace the robot's old window with the new one.
+    // This keeps reservations aligned with the robot's latest planned path.
+    private void applyReservationWindow(UUID robotId, List<String> reservationWindow) {
+        releaseAllReservations(robotId);
+
+        Deque<String> newWindow = new ArrayDeque<>();
+        for (String tileKey : reservationWindow) {
+            tileOwners.put(tileKey, robotId);
+            newWindow.addLast(tileKey);
+        }
+        robotReservations.put(robotId, newWindow);
+    }
+
+    // Releases any reserved tiles the robot has already reached.
+    private void syncReservationsWithCurrentPosition(UUID robotId, Tile currentTile) {
+        Deque<String> reservations = robotReservations.get(robotId);
+        if (reservations == null || currentTile == null) {
+            return;
+        }
+
+        String currentKey = tileKey(currentTile);
+        while (!reservations.isEmpty() && reservations.peekFirst().equals(currentKey)) {
+            String released = reservations.removeFirst();
+            if (robotId.equals(tileOwners.get(released))) {
+                tileOwners.remove(released);
+            }
+        }
+
+        if (reservations.isEmpty()) {
+            robotReservations.remove(robotId);
+        }
+    }
+
+    private void releaseAllReservations(UUID robotId) {
+        Deque<String> reservations = robotReservations.remove(robotId);
+        if (reservations == null) {
+            return;
+        }
+
+        while (!reservations.isEmpty()) {
+            String reservedTile = reservations.removeFirst();
+            if (robotId.equals(tileOwners.get(reservedTile))) {
+                tileOwners.remove(reservedTile);
+            }
+        }
     }
 
     private MoveIntention[] copyNonNull(MoveIntention[] intentions) {
@@ -82,15 +220,12 @@ public class ReservationKPolicy implements CoordinationPolicy {
         if (intentions == null || intentions.length == 0) {
             return new MoveIntention[0];
         }
+
         Arrays.sort(intentions, java.util.Comparator.comparing(
                 (MoveIntention i) -> i == null || i.getRobot() == null ? null : i.getRobot().getId(),
                 java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())
         ));
         return intentions;
-    }
-
-    private String edgeKey(Tile from, Tile to) {
-        return from.getX() + "," + from.getY() + "->" + to.getX() + "," + to.getY();
     }
 
     private boolean hasTiles(MoveIntention intention) {
@@ -111,21 +246,16 @@ public class ReservationKPolicy implements CoordinationPolicy {
         );
     }
 
-    // Coordinate-based checks
-    // until Tile.equals is implemented
-    private boolean containsTileByCoordinates(Set<Tile> tiles, Tile target) {
-        for (Tile tile : tiles) {
-            if (tile.getX() == target.getX() && tile.getY() == target.getY()) {
-                return true;
-            }
-        }
-        return false;
+    private String tileKey(Tile tile) {
+        return tileKey(tile.getX(), tile.getY());
     }
 
-    private void addTileByCoordinates(Set<Tile> tiles, Tile tileToAdd) {
-        if (!containsTileByCoordinates(tiles, tileToAdd)) {
-            tiles.add(tileToAdd);
-        }
+    private String tileKey(int x, int y) {
+        return x + "," + y;
+    }
+
+    private String edgeKey(Tile from, Tile to) {
+        return tileKey(from) + "->" + tileKey(to);
     }
 
     public int getK() {

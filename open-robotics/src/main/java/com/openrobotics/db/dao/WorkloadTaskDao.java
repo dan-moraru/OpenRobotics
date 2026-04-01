@@ -39,7 +39,7 @@ public final class WorkloadTaskDao {
             ps.setObject(9, r.getDropoffX(), Types.INTEGER);
             ps.setObject(10, r.getDropoffY(), Types.INTEGER);
             ps.setString(11, r.getStatus());
-            ps.setObject(12, r.getAssignedRobotId(), Types.INTEGER);
+            ps.setObject(12, r.getAssignedRobotId());
             ps.setObject(13, jsonb(r.getDetails()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -95,11 +95,11 @@ public final class WorkloadTaskDao {
      * @param assignedTick Tick when the task was assigned to the robot
      * @throws SQLException if a database error occurs
      */
-    public static void assignToRobot(long id, int robotId, int assignedTick) throws SQLException {
+    public static void assignToRobot(long id, UUID robotId, int assignedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET assigned_robot_id = ?, assigned_tick = ?, status = 'IN_PROGRESS' WHERE id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, robotId);
+            ps.setObject(1, robotId);
             ps.setInt(2, assignedTick);
             ps.setLong(3, id);
             ps.executeUpdate();
@@ -141,7 +141,7 @@ public final class WorkloadTaskDao {
         r.setDropoffX((Integer) rs.getObject("dropoff_x"));
         r.setDropoffY((Integer) rs.getObject("dropoff_y"));
         r.setStatus(rs.getString("status"));
-        r.setAssignedRobotId((Integer) rs.getObject("assigned_robot_id"));
+        r.setAssignedRobotId(rs.getObject("assigned_robot_id", UUID.class));
         r.setDetails(rs.getString("details"));
         return r;
     }

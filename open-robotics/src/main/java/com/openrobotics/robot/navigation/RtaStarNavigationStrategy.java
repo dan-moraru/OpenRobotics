@@ -69,16 +69,25 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
             return stayIntention(fromTile, robot);
         }
 
-        // score each candidate: f(n) = 1 (step cost) + h(n) (learned or manhattan distance)
+        // two arrays because the sensor penalty shouldnt be saved into hTable.
+        // fRaw is the clean score (1 + h) used only for learning - no sensor data.
+        // fValues adds a sensor penalty on top and is used only to pick a move this tick.
+        // if we used fValues for learning, a one-time sensor reading would permanently
+        // inflate the heuristic for that tile and make the robot avoid it forever.
+        Sensor scan = robot.getLastScan();
         int[] fValues = new int[candidates.size()];
+        int[] fRaw    = new int[candidates.size()];
         int minF = Integer.MAX_VALUE;
         for (int i = 0; i < candidates.size(); i++) {
             Vector2D n = candidates.get(i);
-            // use learned heuristic if we've visited this tile before, otherwise manhattan
+            // h is the learned cost for this tile if visited before, otherwise plain manhattan distance
             int h = state.hTable.getOrDefault(n, n.manhattanDistance(target));
-            // total cost = 1 step to get there + estimated remaining distance
-            fValues[i] = 1 + h;
-            // track the best score so we can find ties later
+            // sensor penalty: +1 to any candidate where an obstacle is detected within 2 steps ahead,
+            // making it less preferred since RTA* picks the lowest score. proximity always gives 0 penalty
+            int clearance = (scan != null) ? scan.knownClearanceToward(current, n, 5) : 5;
+            int sensorPenalty = (clearance < 3) ? 1 : 0;
+            fRaw[i]    = 1 + h;
+            fValues[i] = 1 + h + sensorPenalty;
             if (fValues[i] < minF) minF = fValues[i];
         }
 
@@ -91,17 +100,18 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
         int chosenIdx = tieIndices.get(state.rng.nextInt(tieIndices.size()));
         Vector2D chosen = candidates.get(chosenIdx);
 
-        // learn: update current cell's h so future visits make better decisions
+        // learn: update current cell's h so future visits make better decisions.
+        // uses fRaw (not fValues) so sensor penalties do not accumulate in the heuristic table
         int learnedValue;
         if (candidates.size() == 1) {
             // only one option, learn its cost
-            learnedValue = fValues[0];
+            learnedValue = fRaw[0];
         } else {
-            // find second-smallest f-value in single pass (no sorting needed)
+            // find second-smallest fRaw in single pass (no sorting needed)
             // second-best because best is where we just moved to
             int smallest = Integer.MAX_VALUE;
             int secondSmallest = Integer.MAX_VALUE;
-            for (int f : fValues) {
+            for (int f : fRaw) {
                 if (f <= smallest) {
                     secondSmallest = smallest;
                     smallest = f;
