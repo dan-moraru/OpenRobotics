@@ -15,7 +15,7 @@ public class Task implements Comparable<Task> {
     private int priority; // higher = more urgent
     private TaskStatus status; // PENDING, IN_PROGRESS, COMPLETED, FAILED
 
-    public Task(int id, Vector2D pickupLocation, Vector2D dropoffLocation, int priority) {
+    public Task(long id, Vector2D pickupLocation, Vector2D dropoffLocation, int priority) {
         this.id = id;
         this.pickupLocation = pickupLocation;
         this.dropoffLocation = dropoffLocation;
