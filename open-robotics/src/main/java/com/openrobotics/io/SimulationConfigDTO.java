@@ -101,7 +101,7 @@ public class SimulationConfigDTO {
     }
 
     public static class TaskDTO {
-        public int id;
+        public long id;
         public Vector2DDTO pickupLocation;
         public Vector2DDTO dropoffLocation;
         public int priority;

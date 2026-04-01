@@ -1,5 +1,6 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.TaskEvent;
@@ -65,12 +66,14 @@ public class Dispatcher {
      * Logs task assignment events
      * @param robots a list of all the robots in the warehouse
      */
-    public void assignTasks(Robot[] robots, int currentTick) {
+    public void assignTasks(Robot[] robots) {
         if (robots == null) {
             throw new IllegalArgumentException("Robots array cannot be null");
         } else if (robots.length == 0 || taskQueue.isEmpty()) {
             return; // there are no tasks available, no assignments are made
         }
+
+        int currentTick = AppState.getEngine().getTickCounter(); // getting the current simulation tick from global app state
 
         // Assigning tasks to available robots
         for (Robot robot : robots) {
