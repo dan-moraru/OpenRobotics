@@ -7,7 +7,7 @@ public class SimLogRecord {
     private Long id;
     private UUID runId;
     private Integer tick;
-    private Integer robotId;
+    private UUID robotId;
     private String eventType;
     private Integer x;
     private Integer y;
@@ -67,7 +67,7 @@ public class SimLogRecord {
      * Gets the ID of the robot of the simulation log record.
      * @return ID of the robot of the simulation log record
      */
-    public Integer getRobotId() {
+    public UUID getRobotId() {
         return robotId;
     }
 
@@ -75,7 +75,7 @@ public class SimLogRecord {
      * Sets the ID of the robot of the simulation log record.
      * @param robotId ID of the robot of the simulation log record
      */
-    public void setRobotId(Integer robotId) {
+    public void setRobotId(UUID robotId) {
         this.robotId = robotId; 
     }
 

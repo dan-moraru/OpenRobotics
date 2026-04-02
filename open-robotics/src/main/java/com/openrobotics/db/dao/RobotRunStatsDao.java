@@ -40,7 +40,7 @@ public final class RobotRunStatsDao {
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setObject(1, r.getRunId());
-            ps.setInt(2, r.getRobotId());
+            ps.setObject(2, r.getRobotId());
             ps.setString(3, r.getNavAlgorithm());
             ps.setObject(4, r.getTasksCompleted(), Types.INTEGER);
             ps.setBigDecimal(5, r.getDistanceTraveled());
@@ -85,12 +85,12 @@ public final class RobotRunStatsDao {
      * @return Optional containing the robot run stats record if found, otherwise empty
      * @throws SQLException if a database error occurs
      */
-    public static Optional<RobotRunStatsRecord> findByRunIdAndRobotId(UUID runId, int robotId) throws SQLException {
+    public static Optional<RobotRunStatsRecord> findByRunIdAndRobotId(UUID runId, UUID robotId) throws SQLException {
         String sql = "SELECT * FROM robot_run_stats WHERE run_id = ? AND robot_id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setObject(1, runId);
-            ps.setInt(2, robotId);
+            ps.setObject(2, robotId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(map(rs)) : Optional.empty();
             }
@@ -122,7 +122,7 @@ public final class RobotRunStatsDao {
         RobotRunStatsRecord r = new RobotRunStatsRecord();
         r.setId(rs.getLong("id"));
         r.setRunId(rs.getObject("run_id", UUID.class));
-        r.setRobotId(rs.getInt("robot_id"));
+        r.setRobotId(rs.getObject("robot_id", UUID.class));
         r.setNavAlgorithm(rs.getString("nav_algorithm"));
         r.setTasksCompleted((Integer) rs.getObject("tasks_completed"));
         r.setDistanceTraveled(rs.getBigDecimal("distance_traveled"));
