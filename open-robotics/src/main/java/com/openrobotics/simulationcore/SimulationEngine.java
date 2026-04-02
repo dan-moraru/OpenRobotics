@@ -215,13 +215,7 @@ public class SimulationEngine {
 
             // CollisionManager is always needed for tick()
             this.collisionManager = new CollisionManager();
-                this.initialized = this.map != null && this.robots != null && this.dispatcher != null
-                    && this.collisionManager != null;
-
-            // Test print, TODO: remove
-            System.out.println("Simulation '" + dto.config.runName + "' loaded with "
-                    + dto.entities.robots.size() + " robots and "
-                    + (dto.tasks != null ? dto.tasks.size() : 0) + " tasks.");
+            this.initialized = this.map != null && this.robots != null && this.dispatcher != null && this.collisionManager != null;
 
         } catch (Exception e) {
             this.initError = "Could not initialize simulation (" + e.getClass().getName() + "): " + e.getMessage();
@@ -251,6 +245,10 @@ public class SimulationEngine {
             if (isCharging) {
                 this.map.addEntity(new ChargingStation(eDto.id, eDto.name, pos));
             } else if (isDelivery) {
+                Tile tile = this.map.getTile(pos.getX(), pos.getY());
+                if (tile != null) {
+                    tile.setDeliveryStation(true);
+                }
                 this.map.addEntity(new DeliveryStation(eDto.id, eDto.name, pos));
             } else {
                 this.map.addEntity(new MapEntity(eDto.id, eDto.name, pos)); // unknown type
@@ -471,31 +469,25 @@ public class SimulationEngine {
     }
 
     /**
-     * Indicates if the warehouse workload has been completed. Returns true only when
-     * tasks were configured, all have been dispatched, and every robot has finished.
-     * Returns false when no tasks were ever added (sandbox / drag-drop mode) so the
-     * simulation keeps running and robots remain idle until tasks are supplied.
-     * @return true if the warehouse workload is complete
+     * Indicates if the warehouse workload has been completed.
+     * @return true if there are no pending tasks AND all robots are idle.
      */
     private boolean workloadComplete() {
-        // If there are pending tasks, the workload is not complete
+        // If the dispatcher still has tasks waiting to be assigned, not done.
         if (dispatcher.hasPendingTasks()) {
             return false;
         }
 
-        // If no tasks were ever added, there is no workload to complete
-        if (dispatcher.getTotalTasksAdded() == 0) {
-            return false;
-        }
-
-        // Checking if any robot is still working on a task
+        // Check if all robots are currently executing a task
         for (Robot robot : robots) {
-            if (!robot.isAvailable()) {
+            // If a robot has a currentTask or is not IDLE, there is work
+            if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
                 return false;
             }
         }
 
-        return !dispatcher.hasPendingTasks();
+        // No pending tasks, and no robot is working on a task = workload is complete.
+        return true;
     }
 
     /**
