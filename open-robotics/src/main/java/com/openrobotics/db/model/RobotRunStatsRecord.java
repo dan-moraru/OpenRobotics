@@ -7,7 +7,7 @@ public class RobotRunStatsRecord {
 
     private Long id;
     private UUID runId;
-    private int robotId;
+    private UUID robotId;
     private String navAlgorithm;
     private Integer tasksCompleted;
     private BigDecimal distanceTraveled;
@@ -58,7 +58,7 @@ public class RobotRunStatsRecord {
      * Gets the ID of the robot of the robot run stats record.
      * @return ID of the robot of the robot run stats record
      */
-    public int getRobotId() {
+    public UUID getRobotId() {
         return robotId;
     }
 
@@ -66,7 +66,7 @@ public class RobotRunStatsRecord {
      * Sets the ID of the robot of the robot run stats record.
      * @param robotId ID of the robot of the robot run stats record
      */
-    public void setRobotId(int robotId) {
+    public void setRobotId(UUID robotId) {
         this.robotId = robotId;
     }
 

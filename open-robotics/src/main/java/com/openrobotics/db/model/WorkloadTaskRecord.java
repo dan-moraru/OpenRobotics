@@ -16,7 +16,7 @@ public class WorkloadTaskRecord {
     private Integer dropoffX;
     private Integer dropoffY;
     private String status;
-    private Integer assignedRobotId;
+    private UUID assignedRobotId;
     private String details;
 
     public WorkloadTaskRecord() {}
@@ -217,7 +217,7 @@ public class WorkloadTaskRecord {
      * Gets the ID of the assigned robot of the workload task record.
      * @return ID of the assigned robot of the workload task record
      */
-    public Integer getAssignedRobotId() {
+    public UUID getAssignedRobotId() {
         return assignedRobotId; 
     }
 
@@ -225,7 +225,7 @@ public class WorkloadTaskRecord {
      * Sets the ID of the assigned robot of the workload task record.
      * @param assignedRobotId ID of the assigned robot of the workload task record
      */
-    public void setAssignedRobotId(Integer assignedRobotId) {
+    public void setAssignedRobotId(UUID assignedRobotId) {
         this.assignedRobotId = assignedRobotId; 
     }
 
