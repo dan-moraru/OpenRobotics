@@ -41,39 +41,30 @@ public class CollisionManager {
         return tile.getX() + "," + tile.getY();
     }
 
-    // Used by the engine to keep only conflict-free intentions.
+    /**
+     * Helper to determine if a tile allows multiple robots (e.g., a Drop-off point).
+     */
+    private boolean allowsOverlap(Tile tile) {
+        return tile.isDeliveryStation();
+    }
+
     public MoveIntention[] resolveConflicts(MoveIntention[] intentions) {
         if (intentions == null || intentions.length == 0) {
             return new MoveIntention[0];
         }
 
         // ===== Step 1: keep one legal intention per robot =====
-
         Map<UUID, MoveIntention> uniqueByRobot = new HashMap<>();
-
         for (MoveIntention intention : intentions) {
-            if (!isLegalIntention(intention)) {
-                continue;
-            }
-
-            Robot robot = intention.getRobot();
-            UUID robotId = robot.getId();
-
-            uniqueByRobot.putIfAbsent(robotId, intention);
+            if (!isLegalIntention(intention)) continue;
+            uniqueByRobot.putIfAbsent(intention.getRobot().getId(), intention);
         }
 
-        MoveIntention[] candidates =
-                uniqueByRobot.values().toArray(new MoveIntention[0]);
-
-        // deterministic ordering by UUID
-        Arrays.sort(candidates, Comparator.comparing(
-                i -> i.getRobot().getId().toString()
-        ));
+        MoveIntention[] candidates = uniqueByRobot.values().toArray(new MoveIntention[0]);
+        Arrays.sort(candidates, Comparator.comparing(i -> i.getRobot().getId().toString()));
 
         // ===== Step 2: same-target conflicts =====
-
         Set<UUID> blockedRobots = new HashSet<>();
-
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
 
         for (MoveIntention intention : candidates) {
@@ -82,18 +73,25 @@ public class CollisionManager {
                     .add(intention);
         }
 
-        for (List<MoveIntention> group : byDestination.values()) {
+        for (Map.Entry<String, List<MoveIntention>> entry : byDestination.entrySet()) {
+            List<MoveIntention> group = entry.getValue();
 
-            if (group.size() <= 1) {
+            if (group.size() <= 1) continue;
+
+            // NEW LOGIC: Check if the destination tile is a delivery point
+            Tile targetTile = group.get(0).getToTile();
+            if (allowsOverlap(targetTile)) {
+                // If it's a delivery point, everyone in this group is allowed to stay/enter.
+                // We do NOT add anyone to blockedRobots.
                 continue;
             }
 
+            // Standard conflict logic for normal tiles: pick one winner
             MoveIntention winner = group.stream()
                     .min(Comparator.comparing(i -> i.getRobot().getId().toString()))
                     .get();
 
             UUID winnerId = winner.getRobot().getId();
-
             for (MoveIntention intention : group) {
                 UUID id = intention.getRobot().getId();
                 if (!id.equals(winnerId)) {
@@ -103,42 +101,33 @@ public class CollisionManager {
         }
 
         // ===== Step 3: swap conflicts =====
-
+        // We keep this mostly the same, but we could also allow swaps
+        // if the tiles involved allow overlap.
         for (int i = 0; i < candidates.length; i++) {
             MoveIntention a = candidates[i];
             UUID aId = a.getRobot().getId();
-
-            if (blockedRobots.contains(aId) || !isActualMove(a)) {
-                continue;
-            }
+            if (blockedRobots.contains(aId) || !isActualMove(a)) continue;
 
             for (int j = i + 1; j < candidates.length; j++) {
                 MoveIntention b = candidates[j];
                 UUID bId = b.getRobot().getId();
+                if (blockedRobots.contains(bId) || !isActualMove(b)) continue;
 
-                if (blockedRobots.contains(bId) || !isActualMove(b)) {
-                    continue;
-                }
-
-                boolean isSwap =
-                        sameTile(a.getToTile(), b.getFromTile()) &&
-                                sameTile(b.getToTile(), a.getFromTile());
+                boolean isSwap = sameTile(a.getToTile(), b.getFromTile()) &&
+                        sameTile(b.getToTile(), a.getFromTile());
 
                 if (isSwap) {
-
-                    UUID loser = aId.toString().compareTo(bId.toString()) > 0
-                            ? aId
-                            : bId;
-
-                    blockedRobots.add(loser);
+                    // Only block if NEITHER tile involved allows overlap
+                    if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
+                        UUID loser = aId.toString().compareTo(bId.toString()) > 0 ? aId : bId;
+                        blockedRobots.add(loser);
+                    }
                 }
             }
         }
 
         // ===== Step 4: return approved intentions =====
-
         List<MoveIntention> approved = new ArrayList<>();
-
         for (MoveIntention intention : candidates) {
             if (!blockedRobots.contains(intention.getRobot().getId())) {
                 approved.add(intention);

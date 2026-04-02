@@ -344,8 +344,12 @@ public class ResultsController {
                 if (tile != null) {
                     int visits = tile.getVisitCount();
                     totalVisits += visits;
-                    if (visits > 0) visitedTileCount++;
-                    if (visits > maxVisits) maxVisits = visits;
+                    if (visits > 0) {
+                        visitedTileCount++;
+                    }
+                    if (visits > maxVisits) {
+                        maxVisits = visits;
+                    }
                 }
             }
         }
