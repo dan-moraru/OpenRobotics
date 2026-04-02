@@ -1,16 +1,20 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.map.Map;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public interface CoordinationPolicy {
+    CoordinationPolicy NO_OP = (map, intentions) -> copyNonNull(intentions);
+
     // Applies policy rules to this tick's intentions
     // Policy can force robots to wait by returning a WAIT intention
-    MoveIntention[] apply(MoveIntention[] intentions);
+    MoveIntention[] apply(Map map, MoveIntention[] intentions);
 
     // Default policy: return a copy with null intentions removed
     static CoordinationPolicy noOp() {
-        return intentions -> copyNonNull(intentions);
+        return NO_OP;
     }
 
     // helper for no-op policy

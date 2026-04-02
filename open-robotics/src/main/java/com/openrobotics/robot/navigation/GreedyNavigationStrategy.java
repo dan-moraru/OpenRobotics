@@ -104,15 +104,18 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
 
         Vector2D next = null;
 
+        // get last scan once for use in clearance tie-breaking below
+        Sensor scan = robot.getLastScan();
+
         // priority: closer > sideways > farther > backtrack
         if (!closer.isEmpty()) {
-            next = pickBest(closer, target, state.rng);
+            next = pickBest(closer, current, target, state.rng, scan);
             state.backtracking = false;
         } else if (!sideways.isEmpty() && !state.backtracking) {
-            next = pickBest(sideways, target, state.rng);
+            next = pickBest(sideways, current, target, state.rng, scan);
         } else if (!farther.isEmpty() && !state.backtracking) {
             // farther lets robot detour around obstacles instead of backtracking early
-            next = pickBest(farther, target, state.rng);
+            next = pickBest(farther, current, target, state.rng, scan);
         } else {
             // no unvisited neighbors — retrace via path stack
             state.backtracking = true;
@@ -132,8 +135,12 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
         return new MoveIntention(fromTile, toTile, robot);
     }
 
-    // seeded random tie-break among candidates (spec cs7: deterministic)
-    private Vector2D pickBest(List<Vector2D> candidates, Vector2D target, Random rng) {
+    // seeded random tie-break among candidates (deterministic) 
+    // tie-breaking order: min manhattan distance -> max sensor clearance -> seeded rng.
+    // for proximity sensors, clearance is always maxDist (unknown = neutral), so behavior
+    // is unchanged. for range sensors, open directions are preferred over blocked ones.
+    private Vector2D pickBest(List<Vector2D> candidates, Vector2D current,
+            Vector2D target, Random rng, Sensor scan) {
         if (candidates.isEmpty()) return null;
         if (candidates.size() == 1) return candidates.get(0);
 
@@ -147,10 +154,23 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
         // collect all candidates at minimum distance
         List<Vector2D> best = new ArrayList<>();
         for (Vector2D c : candidates) {
-            if (c.manhattanDistance(target) == minDist) {
-                best.add(c);
-            }
+            if (c.manhattanDistance(target) == minDist) best.add(c);
         }
+
+        // sensor clearance tie-break: prefer directions with more known open space ahead
+        if (scan != null && best.size() > 1) {
+            int maxClearance = -1;
+            for (Vector2D c : best) {
+                int cl = scan.knownClearanceToward(current, c, 5);
+                if (cl > maxClearance) maxClearance = cl;
+            }
+            List<Vector2D> clearest = new ArrayList<>();
+            for (Vector2D c : best) {
+                if (scan.knownClearanceToward(current, c, 5) == maxClearance) clearest.add(c);
+            }
+            best = clearest;
+        }
+
         return best.get(rng.nextInt(best.size()));
     }
 

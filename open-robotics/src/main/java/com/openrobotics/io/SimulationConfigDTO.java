@@ -1,5 +1,6 @@
 package com.openrobotics.io;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.openrobotics.task.TaskStatus;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class SimulationConfigDTO {
     public EntitiesSection entities;
     public List<TaskDTO> tasks;
     public SimStateSection simulation;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public CoordinationSection coordination;
 
     public static class ConfigSection {

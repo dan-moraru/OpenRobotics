@@ -122,7 +122,18 @@ public class BugNavigationStrategy implements NavigationStrategy {
         }
 
         if (!closer.isEmpty()) {
-            Vector2D next = pickBest(closer, target, state.rng);
+            // prefer candidates that have at least 2 clear steps ahead (range sensor only).
+            // if none qualify, use the full closer list; this is a soft preference, not a hard filter.
+            // proximity robots always return maxDist from knownClearanceToward, so all candidates qualify and nothing changes.
+            Sensor scan = robot.getLastScan();
+            List<Vector2D> preferred = new ArrayList<>();
+            if (scan != null) {
+                for (Vector2D c : closer) {
+                    if (scan.knownClearanceToward(current, c, 5) >= 2) preferred.add(c);
+                }
+            }
+            List<Vector2D> pool = preferred.isEmpty() ? closer : preferred;
+            Vector2D next = pickBest(pool, current, target, state.rng, scan);
             // save snapshot so rollback restores greedy-time state, not stale boundary state
             state.prevHeading = state.heading;
             state.prevFollowingBoundary = state.followingBoundary;
@@ -264,8 +275,11 @@ public class BugNavigationStrategy implements NavigationStrategy {
         };
     }
 
-    // seeded random tie-break among candidates closest to target
-    private Vector2D pickBest(List<Vector2D> candidates, Vector2D target, Random rng) {
+    // seeded random tie-break among candidates closest to target.
+    // tie-breaking order: min manhattan distance -> max sensor clearance -> seeded rng.
+    // proximity sensors return maxDist (unknown = neutral), so behavior is unchanged for them
+    private Vector2D pickBest(List<Vector2D> candidates, Vector2D current,
+            Vector2D target, Random rng, Sensor scan) {
         if (candidates.size() == 1) return candidates.get(0);
         // find the shortest manhattan distance among all candidates
         int minDist = Integer.MAX_VALUE;
@@ -277,6 +291,19 @@ public class BugNavigationStrategy implements NavigationStrategy {
         List<Vector2D> best = new ArrayList<>();
         for (Vector2D c : candidates) {
             if (c.manhattanDistance(target) == minDist) best.add(c);
+        }
+        // sensor clearance tie-break: prefer directions with more known open space ahead
+        if (scan != null && best.size() > 1) {
+            int maxClearance = -1;
+            for (Vector2D c : best) {
+                int cl = scan.knownClearanceToward(current, c, 5);
+                if (cl > maxClearance) maxClearance = cl;
+            }
+            List<Vector2D> clearest = new ArrayList<>();
+            for (Vector2D c : best) {
+                if (scan.knownClearanceToward(current, c, 5) == maxClearance) clearest.add(c);
+            }
+            best = clearest;
         }
         // pick randomly among ties (seeded rng for determinism)
         return best.get(rng.nextInt(best.size()));
