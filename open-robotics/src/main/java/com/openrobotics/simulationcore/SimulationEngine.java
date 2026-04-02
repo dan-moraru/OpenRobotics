@@ -434,14 +434,19 @@ public class SimulationEngine {
      * </ul>
      * </p>
      */
-    public void tick() {
+    /**
+     * Executes one simulation tick.
+     * @return true if the simulation is still running after this tick; false if the
+     *         simulation has stopped (workload complete or was already stopped).
+     */
+    public boolean tick() {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
         // Checking if the warehouse workload has been completed
         if (workloadComplete()) {
             this.running = false;
-            return;
+            return false;
         }
 
         // Assigning tasks to available robots
@@ -466,6 +471,7 @@ public class SimulationEngine {
         updateAllRobots();
 
         incrementTickCounter();
+        return true;
     }
 
     /**
