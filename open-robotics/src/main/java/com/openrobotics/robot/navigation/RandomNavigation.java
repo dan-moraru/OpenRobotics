@@ -52,9 +52,4 @@ public class RandomNavigation implements NavigationStrategy {
     public String toString() {
         return "RANDOM";
     }
-
-    @Override
-    public String toString() {
-        return "RANDOM";
-    }
 }
