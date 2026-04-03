@@ -1,7 +1,7 @@
 package com.openrobotics.logging.eventtypes;
 
 public enum RobotEvent {
-    MOVE_INTENT,
+    MOVE_INTENT, // NOTE: Is this needed? Can't think of a use case for knowing these events
     MOVE_EXECUTED,
     COLLISION,
     NEAR_MISS,

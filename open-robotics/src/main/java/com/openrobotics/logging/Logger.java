@@ -1,9 +1,13 @@
 package com.openrobotics.logging;
 
+import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.dao.SimulationRunDao;
 import com.openrobotics.db.dao.WorkloadTaskDao;
+import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
+import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.logging.eventtypes.TaskEvent;
 
@@ -75,5 +79,19 @@ public class Logger {
         }
     }
 
-
+    /**
+     * Logs robot events into the sim_log table in the database.
+     * A robot event can be for robot movements, collisions, near misses, battery changes, and deadlock detections.
+     * @param eventType the robot event type
+     * @param record the simulation log record containing the relevant information for the robot event being logged
+     */
+    public static void logRobotEvent(RobotEvent eventType, SimLogRecord record) {
+        try {
+            // Insert a new record for the robot event
+            SimLogDao.insert(record);
+        } catch (Exception e) {
+            System.err.println("Failed to log robot event of type: " + eventType);
+            System.err.println("Exception message: " + e.getMessage());
+        }
+    }
 }
