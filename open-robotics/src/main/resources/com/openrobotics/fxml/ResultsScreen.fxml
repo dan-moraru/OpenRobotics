@@ -187,8 +187,6 @@
                 <HBox alignment="CENTER_LEFT" spacing="5" styleClass="viewport-header">
                     <Label styleClass="chart-section-title" text="2D Heatmap" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button onAction="#onMaskZoomIn" styleClass="playback-btn" text="+" />
-                    <Button onAction="#onMaskZoomOut" styleClass="playback-btn" text="&#x2212;" />
                 </HBox>
 
                 <!-- Heatmap canvas -->
@@ -221,10 +219,6 @@
                     <HBox alignment="CENTER_LEFT" spacing="8">
                         <Label styleClass="overlay-setting-label" text="Show entities" />
                         <CheckBox fx:id="viewObjectsCheck" onAction="#onToggleViewObjects" selected="true" />
-                    </HBox>
-                    <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Label styleClass="overlay-setting-label" text="Show grid" />
-                        <CheckBox fx:id="maskOpt1Check" selected="true" />
                     </HBox>
                 </VBox>
 

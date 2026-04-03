@@ -18,6 +18,7 @@ import com.openrobotics.util.ViewportTips;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -28,9 +29,9 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
@@ -82,6 +83,7 @@ public class SimulationController {
     @FXML private Label     tipLabel;
     @FXML private CheckMenuItem toggleSidebarItem;
     @FXML private CheckMenuItem toggleConsoleItem;
+    @FXML private SplitPane     mainSplitPane;
     @FXML private VBox sidebarPanel;
     @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
@@ -291,6 +293,15 @@ public class SimulationController {
         if (editModeLabel    != null) editModeLabel.setText("Edit mode");
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
+
+        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling
+        if (mainSplitPane != null) {
+            Platform.runLater(() -> {
+                if (mainSplitPane.getWidth() > 0) {
+                    mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+                }
+            });
+        }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
     }
@@ -1083,7 +1094,10 @@ public class SimulationController {
             }
         }
 
-        engine.tick();
+        if (!engine.tick()) {
+            handleSimulationComplete();
+            return;
+        }
         localTick++;
 
         populateOutliner();
@@ -1096,6 +1110,20 @@ public class SimulationController {
 
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
         if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
+    }
+
+    private void handleSimulationComplete() {
+        stopLoop();
+        running = false;
+        paused = false;
+        if (simStatusLabel != null) {
+            simStatusLabel.setText("COMPLETE");
+            simStatusLabel.setStyle("-fx-text-fill: #599068; -fx-font-weight: bold;");
+        }
+        if (viewportStatusLabel != null) {
+            viewportStatusLabel.setText("Workload complete");
+        }
+        log("Simulation complete at TICK " + localTick + ".");
     }
 
     private void startAnimation() {
