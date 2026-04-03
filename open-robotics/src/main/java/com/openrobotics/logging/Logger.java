@@ -9,6 +9,7 @@ import com.openrobotics.logging.eventtypes.TaskEvent;
 
 /**
  * Central logging access: allows logging from anywhere in the application.
+ * There are 3 main event categories to create logs for: task events, simulation run events, and robot events.
  */
 // TODO: Add unit tests for logging methods
 public class Logger {
