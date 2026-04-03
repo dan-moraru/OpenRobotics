@@ -16,7 +16,7 @@
   Right panel #CDCBC3   2D heatmap viewport
 -->
 
-<BorderPane prefHeight="900" prefWidth="1440" style="-fx-background-color: #C2BEAE;"
+<BorderPane prefHeight="900" prefWidth="1440" styleClass="outer-bg"
             stylesheets="@../css/theme.css"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -72,62 +72,53 @@
                 <left>
                     <HBox alignment="CENTER_LEFT" spacing="6">
                         <Label styleClass="viewport-icon-label" text="&#x229e;" />
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="Simulation Results" />
+                        <Label styleClass="chart-section-title" text="Simulation Results" />
                     </HBox>
                 </left>
                 <right>
                     <HBox alignment="CENTER_RIGHT" spacing="8">
-                        <Label fx:id="runNameLabel" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="" />
+                        <Label fx:id="runNameLabel" styleClass="run-name-label" text="" />
                     </HBox>
                 </right>
             </BorderPane>
 
-        <SplitPane dividerPositions="0.6"
-                   style="-fx-background-color: #C2BEAE; -fx-padding: 0; -fx-box-border: transparent;"
-                   VBox.vgrow="ALWAYS">
+        <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS">
 
             <!-- LEFT COLUMN: charts + table + summary -->
-            <VBox spacing="0" style="-fx-background-color: #C2BEAE;">
+            <VBox spacing="0" styleClass="outer-bg">
 
                 <!-- Two charts side-by-side -->
-                <HBox spacing="0" style="-fx-pref-height: 280px; -fx-min-height: 200px;
-                                         -fx-border-color: #8D8A7F; -fx-border-width: 0 0 1 0;"
-                      VBox.vgrow="SOMETIMES">
+                <HBox spacing="0" styleClass="charts-row" VBox.vgrow="SOMETIMES">
 
                     <!-- Chart 1: Tasks Completed per Robot -->
-                    <VBox spacing="0" style="-fx-border-color: #8D8A7F; -fx-border-width: 0 1 0 0;"
-                          HBox.hgrow="ALWAYS">
+                    <VBox spacing="0" styleClass="chart-col" HBox.hgrow="ALWAYS">
                         <HBox alignment="CENTER_LEFT" spacing="6" styleClass="chart-header">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="Tasks Completed" />
+                            <Label styleClass="chart-section-title" text="Tasks Completed" />
                             <Region HBox.hgrow="ALWAYS" />
                         </HBox>
-                        <StackPane fx:id="chartContainer1" style="-fx-background-color: #C2BEAE;"
-                                   VBox.vgrow="ALWAYS" />
+                        <StackPane fx:id="chartContainer1" styleClass="chart-container" VBox.vgrow="ALWAYS" />
                     </VBox>
 
                     <!-- Chart 2: Energy Consumed per Robot -->
-                    <VBox spacing="0" HBox.hgrow="ALWAYS">
+                    <VBox spacing="0" styleClass="chart-col" HBox.hgrow="ALWAYS">
                         <HBox alignment="CENTER_LEFT" spacing="6" styleClass="chart-header">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="Energy Consumed" />
+                            <Label styleClass="chart-section-title" text="Energy Consumed" />
                             <Region HBox.hgrow="ALWAYS" />
                         </HBox>
-                        <StackPane fx:id="chartContainer2" style="-fx-background-color: #C2BEAE;"
-                                   VBox.vgrow="ALWAYS" />
+                        <StackPane fx:id="chartContainer2" styleClass="chart-container" VBox.vgrow="ALWAYS" />
                     </VBox>
                 </HBox>
 
                 <!-- Table header -->
                 <HBox alignment="CENTER_LEFT" spacing="10" styleClass="chart-header">
-                    <Label fx:id="tableTitle" style="-fx-font-weight: bold; -fx-font-size: 11px;"
+                    <Label fx:id="tableTitle" styleClass="chart-section-title"
                            text="ROBOT PERFORMANCE" />
-                    <Label fx:id="tableInfoLabel" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"
-                           text="" />
+                    <Label fx:id="tableInfoLabel" styleClass="table-info-label" text="" />
                     <Region HBox.hgrow="ALWAYS" />
                 </HBox>
 
                 <!-- Robot stats table -->
-                <TableView fx:id="robotStatsTable" style="-fx-border-color: transparent;"
-                           VBox.vgrow="ALWAYS">
+                <TableView fx:id="robotStatsTable" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colRobotId" prefWidth="110" text="Robot" />
                         <TableColumn fx:id="colNavAlgo" prefWidth="85" text="Algorithm" />
@@ -190,17 +181,16 @@
             </VBox>
 
             <!-- RIGHT COLUMN: Heatmap viewport -->
-            <VBox spacing="0" style="-fx-background-color: #C2BEAE; -fx-min-width: 280px;">
+            <VBox spacing="0" styleClass="outer-bg" minWidth="280">
 
                 <!-- Viewport header -->
                 <HBox alignment="CENTER_LEFT" spacing="5" styleClass="viewport-header">
-                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold;" text="2D Heatmap" />
+                    <Label styleClass="chart-section-title" text="2D Heatmap" />
                     <Region HBox.hgrow="ALWAYS" />
                 </HBox>
 
                 <!-- Heatmap canvas -->
-                <StackPane fx:id="heatmapContainer" style="-fx-background-color: #CDCBC3;"
-                           VBox.vgrow="ALWAYS">
+                <StackPane fx:id="heatmapContainer" styleClass="heatmap-container" VBox.vgrow="ALWAYS">
                     <Canvas fx:id="heatmapCanvas" />
                     <Label fx:id="heatmapPlaceholder" styleClass="viewport-overlay-label"
                            text="Run simulation to generate heatmap" />
@@ -227,7 +217,7 @@
                 <VBox spacing="5" styleClass="mask-settings-panel">
                     <Label styleClass="mask-panel-title" text="Overlay Settings" />
                     <HBox alignment="CENTER_LEFT" spacing="8">
-                        <Label style="-fx-pref-width: 100px; -fx-font-size: 11px;" text="Show entities" />
+                        <Label styleClass="overlay-setting-label" text="Show entities" />
                         <CheckBox fx:id="viewObjectsCheck" onAction="#onToggleViewObjects" selected="true" />
                     </HBox>
                 </VBox>

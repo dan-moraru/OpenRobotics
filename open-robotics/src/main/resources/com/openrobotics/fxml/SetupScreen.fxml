@@ -51,10 +51,8 @@
         <SplitPane dividerPositions="0.22">
 
             <!-- ── ZONE 1 – Config sidebar (same beige as outer bg) ── -->
-            <ScrollPane fitToWidth="true" styleClass="sidebar-setup"
-                        style="-fx-min-width: 190px; -fx-pref-width: 240px;">
-                <VBox fx:id="configPanel" spacing="0"
-                      styleClass="outer-bg" style="-fx-padding: 0 0 20 0;">
+            <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
+                <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
 
                     <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
                     <!-- map -->
@@ -155,25 +153,23 @@
                         <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
                         <Label text="canvas (tiles)" styleClass="prop-label" />
                         <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
-                        <Label text="×" style="-fx-font-size: 11px; -fx-padding: 0 2 0 2;" />
+                        <Label text="×" styleClass="canvas-size-separator" />
                         <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
                     </HBox>
                 </VBox>
             </ScrollPane>
 
             <!-- ── ZONE 2 – Disabled 2-D Viewport ── -->
-            <BorderPane style="-fx-background-color: #CECCC4;">
+            <BorderPane styleClass="viewport-preview">
                 <top>
                     <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
                         <Label text="2D Viewport" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label text="Disabled"
-                               style="-fx-text-fill: #8D8A7F; -fx-font-size: 11px;" />
+                        <Label text="Disabled" styleClass="viewport-disabled-label" />
                     </HBox>
                 </top>
                 <center>
-                    <StackPane fx:id="viewportPreviewStack"
-                               style="-fx-background-color: #CECCC4;" />
+                    <StackPane fx:id="viewportPreviewStack" styleClass="viewport-preview" />
                 </center>
             </BorderPane>
         </SplitPane>

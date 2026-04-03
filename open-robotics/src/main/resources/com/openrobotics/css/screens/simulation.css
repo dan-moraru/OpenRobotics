@@ -1,0 +1,278 @@
+/* ============================================================
+   OpenRobotics – Simulation Screen
+   Viewport, sidebar, console, object tiles, properties panel,
+   playback controls, and top bar overrides for the sim screen.
+   ============================================================ */
+
+/* Root and main split */
+.sim-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.sim-main-split {
+    -fx-background-color: #C2BEAE;
+    -fx-box-border: transparent;
+    -fx-padding: 0;
+}
+
+.sim-main-split > .split-pane-divider,
+.sim-vsplit > .split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+/* Sidebar */
+.sidebar-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.object-grid {
+    -fx-padding: 6;
+    -fx-background-color: #8D8A7F;
+}
+
+.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #4D4B45;
+    -fx-border-width: 2px;
+    -fx-pref-width: 100px;
+    -fx-pref-height: 100px;
+    -fx-min-width: 100px;
+    -fx-min-height: 100px;
+    -fx-max-width: 100px;
+    -fx-max-height: 100px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+    -fx-text-fill: #2A2926;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* Sidebar tab pane */
+.sidebar-tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 28px;
+    -fx-tab-max-height: 28px;
+    -fx-control-inner-background: #8D8A7F;
+    -fx-base: #8D8A7F;
+    -fx-body-color: #8D8A7F;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.sidebar-tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #706E65;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area > .tab-content {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane .tab-header-area {
+    -fx-background-color: #706E65;
+    -fx-padding: 2 4 0 4;
+}
+
+.sidebar-tab-pane .headers-region {
+    -fx-spacing: 4px;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #6F6D65;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 4 12 4 12;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1A1A18;
+}
+
+/* Help labels */
+.sim-help-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-wrap-text: true;
+}
+
+/* Properties panel */
+.properties-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+.properties-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.properties-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+}
+
+.properties-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.prop-desc-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 6 8;
+    -fx-wrap-text: true;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Top bar stat labels */
+.sim-stat-label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.sim-stat-spacer {
+    -fx-min-width: 12px;
+}
+
+/* Viewport labels */
+.viewport-icon-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 13px;
+}
+
+.viewport-subtle-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
+.viewport-title-label,
+.viewport-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Tick overlay */
+.tick-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-overlay {
+    -fx-background-color: rgba(194, 190, 174, 0.92);
+    -fx-padding: 2 8 2 8;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* Tip label */
+.sim-tip-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+/* Console */
+.console-shell {
+    -fx-min-height: 80px;
+    -fx-pref-height: 120px;
+}
+
+.console-bg {
+    -fx-background-color: #32312D;
+}
+
+.console-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 22px;
+}
+
+.console-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.text-area {
+    -fx-background-color: #32312D;
+    -fx-text-fill: #C2BEAE;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+
+.text-area .content {
+    -fx-background-color: #32312D;
+}
+
+/* Menu bar overrides for dark top bar on sim screen */
+.top-bar-sim .menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 2 10 2 10;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button > .label,
+.top-bar-sim .menu-bar-top .menu > .label,
+.top-bar-sim .menu-bar-top .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-weight: bold;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #5D5B54;
+}
+
+/* Temporary high-specificity override for menu bar text visibility */
+.menu-bar-top .menu-button .label {
+    -fx-text-fill: #3D3C39 !important;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #C2BEAE !important;
+}

@@ -60,21 +60,21 @@
                          </children>
                       </VBox>
                       <!-- .menu-bar CSS sets background transparent and padding 0 -->
-                      <MenuBar useSystemMenuBar="false" style="-fx-text-base-color: red;" styleClass="menu-bar-top">
+                      <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                          <menus>
-                             <Menu style="-fx-text-fill: #4D4B45;" text="File">
+                             <Menu text="File">
                                 <items>
                                     <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
                                     <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results" />
                                     <MenuItem onAction="#onExit" text="Exit" />
                                 </items>
                              </Menu>
-                             <Menu style="-fx-text-fill: #4D4B45;" text="Help">
+                             <Menu text="Help">
                                 <items>
                                     <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
                                 </items>
                              </Menu>
-                             <Menu style="-fx-text-fill: #4D4B45;" text="View">
+                             <Menu text="View">
                                 <items>
                                     <CheckMenuItem fx:id="toggleSidebarItem" text="Sidebar" selected="true" onAction="#onToggleSidebar" />
                                     <CheckMenuItem fx:id="toggleConsoleItem" text="Console" selected="true" onAction="#onToggleConsole" />
