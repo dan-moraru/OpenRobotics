@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.text.Font?>
+
+<!--
+  Setup Screen – outer #C2BEAE, topbar #C2BEAE (sim style), tab strip #8D8A7F,
+  sidebar same beige as outer bg, viewport #CECCC4, bottom bar #C2BEAE,
+  START SIMULATION button green
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.openrobotics.controllers.SetupController"
+            styleClass="outer-bg"
+            stylesheets="@../css/theme.css">
+
+    <top>
+        <VBox spacing="0">
+            <!-- Top bar — matches SimulationScreen style -->
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
+                <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
+                    <image>
+                        <Image url="@../img/logo_black.png" backgroundLoading="true"/>
+                    </image>
+                </ImageView>
+                <VBox spacing="1">
+                    <Label text="OpenRobotics" styleClass="app-title" />
+                    <Label text="v1.0.0" styleClass="version-label" />
+                </VBox>
+                <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
+                    <Menu text="File">
+                        <MenuItem text="Welcome Screen" onAction="#onMenuWelcome" />
+                        <MenuItem text="Exit"           onAction="#onExit" />
+                    </Menu>
+                    <Menu text="Help">
+                        <MenuItem text="GitHub Page" onAction="#onMenuGithub" />
+                    </Menu>
+                </MenuBar>
+            </HBox>
+            <!-- Tab strip #8D8A7F – EDITOR active -->
+            <HBox styleClass="tab-strip" alignment="CENTER_LEFT">
+                <Button text="EDITOR" styleClass="tab-btn-active" onAction="#onTabEditor" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.22">
+
+            <!-- ── ZONE 1 – Config sidebar ── -->
+            <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
+                <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
+
+                    <!-- map -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Map" styleClass="prop-label" />
+                        <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- robot count -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Robot Count" styleClass="prop-label" />
+                        <Spinner fx:id="robotCountSpinner"
+                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- nav algorithm -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Navigation Algorithm" styleClass="prop-label" />
+                        <ComboBox fx:id="navAlgoCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- coordination policy -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Coordination Policy" styleClass="prop-label" />
+                        <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- reservation k -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Reservation K" styleClass="prop-label" />
+                        <Spinner fx:id="reservationKSpinner"
+                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- workload mode -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Workload Mode" styleClass="prop-label" />
+                        <ComboBox fx:id="workloadModeCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- spawn rate -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Spawn Rate (t/min)" styleClass="prop-label" />
+                        <TextField fx:id="spawnRateField" text="10"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- max tasks -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Max Tasks" styleClass="prop-label" />
+                        <TextField fx:id="maxTasksField" text="200"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- workload seed -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Workload Seed" styleClass="prop-label" />
+                        <TextField fx:id="workloadSeedField" text="42"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- random map -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Random Map" styleClass="prop-label" />
+                        <CheckBox fx:id="randomMapCheck" />
+                    </HBox>
+                    <!-- map seed -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Map Seed" styleClass="prop-label" />
+                        <TextField fx:id="randomSeedField" promptText="auto"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- max ticks -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Max Ticks" styleClass="prop-label" />
+                        <TextField fx:id="maxTicksField" text="30000"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- tick ms -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Tick Ms" styleClass="prop-label" />
+                        <TextField fx:id="tickMsField" text="50"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- run name -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Run Name (s)" styleClass="prop-label" />
+                        <TextField fx:id="runNameField" text="experiment_1"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- canvas size W × H -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="W" styleClass="prop-label" />
+                        <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
+                        <Label text="× H" styleClass="canvas-size-separator" />
+                        <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
+                    </HBox>
+                    <!-- canvas warning -->
+                    <Label fx:id="canvasWarnLabel" styleClass="label-hint"
+                           wrapText="true" visible="false" managed="true"
+                           style="-fx-padding: 4 8 4 8; -fx-text-fill: #7a1f1b; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                </VBox>
+            </ScrollPane>
+
+            <!-- ── ZONE 2 – 2-D Preview Viewport ── -->
+            <BorderPane styleClass="viewport-preview">
+                <top>
+                    <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="2D Viewport" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label text="Preview" styleClass="viewport-subtle-label" />
+                    </HBox>
+                </top>
+                <center>
+                    <StackPane fx:id="viewportPreviewStack" styleClass="viewport-preview">
+                        <Canvas fx:id="previewCanvas" managed="false" />
+                    </StackPane>
+                </center>
+            </BorderPane>
+        </SplitPane>
+    </center>
+
+    <!-- ── ZONE 3 – Bottom bar ── -->
+    <bottom>
+        <HBox styleClass="bottom-bar" alignment="CENTER_RIGHT" spacing="8">
+            <Label fx:id="statusLabel" text="" styleClass="label-hint" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig" />
+            <Button text="SAVE" styleClass="button-neutral" onAction="#onSaveConfig" />
+            <Button text="START SIMULATION" styleClass="button-green" onAction="#onStartSimulation" />
+        </HBox>
+    </bottom>
+
+</BorderPane>
