@@ -104,7 +104,7 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.17" styleClass="sim-main-split">
+        <SplitPane fx:id="mainSplitPane" dividerPositions="0.17" styleClass="sim-main-split">
            <items>
    
                <!-- ── LEFT SIDEBAR #8D8A7F ── -->
