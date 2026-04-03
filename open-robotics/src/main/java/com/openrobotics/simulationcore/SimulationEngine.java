@@ -433,11 +433,7 @@ public class SimulationEngine {
      * <li>Commits the approved movements by updating the position state of each robot</li>
      * </ul>
      * </p>
-     */
-    /**
-     * Executes one simulation tick.
-     * @return true if the simulation is still running after this tick; false if the
-     *         simulation has stopped (workload complete or was already stopped).
+     * @return true if the simulation is still running after this tick, false if the simulation has stopped (workload complete or was already stopped).
      */
     public boolean tick() {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
