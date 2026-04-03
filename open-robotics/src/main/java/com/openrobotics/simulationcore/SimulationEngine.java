@@ -1,7 +1,11 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
 import com.openrobotics.io.ConfigLoader;
 import com.openrobotics.io.SimulationConfigDTO;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.map.*;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
@@ -522,6 +526,11 @@ public class SimulationEngine {
             Robot robot = intention.getRobot();
             Vector2D newPosition = intention.getToTile().getPosition();
             robot.setPosition(newPosition);
+
+            // Logging robot movement execution event
+            SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), newPosition.getX(), newPosition.getY());
+            SimLogRecord moveRecord = recordBuilder.buildMoveExecutionRecord();
+            Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, moveRecord);
         }
     }
 
