@@ -975,7 +975,7 @@ public class SimulationController {
             List<Task> existingTasks = engine.getDispatcher().getAllTasks();
 
             for (Task task : existingTasks) {
-                WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(task);
+                WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
                 WorkloadTaskRecord taskRecord = taskRecordBuilder.buildTaskCreationRecord(engine.getTickCounter());
                 Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
             }

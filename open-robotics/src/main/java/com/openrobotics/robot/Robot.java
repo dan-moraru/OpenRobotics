@@ -237,7 +237,7 @@ public class Robot extends MapEntity {
 
                         // Logging task completion event
                         int currentTick = AppState.getEngine().getTickCounter();
-                        WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(currentTask);
+                        WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), currentTask);
                         WorkloadTaskRecord record = recordBuilder.buildTaskCompletionRecord(currentTick);
                         Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }

@@ -1,6 +1,5 @@
 package com.openrobotics.db.recordbuilders;
 
-import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.task.Task;
 
@@ -14,15 +13,10 @@ public class WorkloadTaskRecordBuilder {
      * for general task information.
      * @param task Task to initialize the record with.
      */
-    public WorkloadTaskRecordBuilder(Task task) {
-        // Ensuring simulation engine is initialized
-        if (AppState.getEngine() == null) {
-            throw new IllegalStateException("Simulation engine must be initialized before creating a WorkloadTaskRecordBuilder");
-        }
-
+    public WorkloadTaskRecordBuilder(UUID simulationRunId, Task task) {
         this.record = new WorkloadTaskRecord();
         record.setId(task.getId());
-        record.setRunId(AppState.getEngine().getRunId()); // assumes engine is already initialized
+        record.setRunId(simulationRunId);
         record.setTaskType(task.getClass().getSimpleName());
         record.setPriority(task.getPriority());
         record.setPickupX(task.getPickupLocation().getX());
