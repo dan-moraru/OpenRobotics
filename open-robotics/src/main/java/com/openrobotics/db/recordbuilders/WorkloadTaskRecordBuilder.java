@@ -1,4 +1,4 @@
-package com.openrobotics.logging.recordbuilders;
+package com.openrobotics.db.recordbuilders;
 
 import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;

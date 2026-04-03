@@ -3,6 +3,7 @@ package com.openrobotics.map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
@@ -10,6 +11,7 @@ import com.openrobotics.map.entities.station.ChargingStation;
 
 // warehouse grid (uml 3.3.3)
 public class Map {
+    private UUID id; // unique identifier for database storage
     private final int width;  // number of columns (x-axis)
     private final int height; // number of rows (y-axis)
     private final Tile[][] grid; // grid[height][width] -> grid[row][col] -> grid[y][x]
@@ -34,6 +36,7 @@ public class Map {
         }
     }
 
+    public UUID getId() { return id; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 

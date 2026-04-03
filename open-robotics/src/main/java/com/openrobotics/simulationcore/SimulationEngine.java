@@ -424,10 +424,6 @@ public class SimulationEngine {
         return eDto;
     }
 
-    public Map getMap() {
-        return map;
-    }
-
     /**
      * Runs a tick of the simulation
      *
@@ -552,6 +548,10 @@ public class SimulationEngine {
         return runId;
     }
 
+    public Map getMap() {
+        return map;
+    }
+
     public int getTickCounter() {
         return tickCounter;
     }
@@ -562,6 +562,22 @@ public class SimulationEngine {
 
     public Robot[] getRobots() {
         return robots;
+    }
+
+    /**
+     * Gets the name of the coordination policy class being used in this simulation.
+     * @return the name of the coordination policy class, or null if no policy is set
+     */
+    public String getCoordinationPolicy() {
+        return coordinationPolicy != null ? coordinationPolicy.getClass().getName() : null;
+    }
+
+    /**
+     * Returns the dispatcher for task management.
+     * @return the dispatcher
+     */
+    public Dispatcher getDispatcher() {
+        return dispatcher;
     }
 
     /**
@@ -608,13 +624,5 @@ public class SimulationEngine {
                     .map(e -> (Robot) e)
                     .toArray(Robot[]::new);
         }
-    }
-
-    /**
-     * Returns the dispatcher for task management.
-     * @return the dispatcher
-     */
-    public Dispatcher getDispatcher() {
-        return dispatcher;
     }
 }

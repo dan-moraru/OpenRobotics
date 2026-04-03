@@ -4,7 +4,7 @@ import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.TaskEvent;
-import com.openrobotics.logging.recordbuilders.WorkloadTaskRecordBuilder;
+import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
@@ -17,8 +17,6 @@ import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
-
-import com.openrobotics.simulationcore.MoveIntention;
 
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook

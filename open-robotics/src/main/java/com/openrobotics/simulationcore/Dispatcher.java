@@ -4,7 +4,7 @@ import com.openrobotics.AppState;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.TaskEvent;
-import com.openrobotics.logging.recordbuilders.WorkloadTaskRecordBuilder;
+import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 import com.openrobotics.task.Task;
