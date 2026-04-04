@@ -455,7 +455,7 @@ public class SimulationEngine {
         if (workloadComplete()) {
             this.running = false;
 
-            // Logging simulation completion event
+            // Logging simulation run completion event
             SimulationRunRecordBuilder recordBuilder = new SimulationRunRecordBuilder(this);
             SimulationRunRecord record = recordBuilder.buildSimulationCompleteRecord();
             Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, record);
