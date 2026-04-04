@@ -67,4 +67,28 @@ public class SimLogRecordBuilder {
         record.setEventType(RobotEvent.BATTERY_DEATH.toString());
         return record;
     }
+
+    /**
+     * Sets the event type of the simulation log record to CHARGE_START.
+     * @param details the details of the charge start event to be included in the simulation log record.
+     *                Structure: {'batteryLevel': int}
+     * @return the built SimLogRecord for a charge start event
+     */
+    public SimLogRecord buildChargeStartRecord(String details) {
+        record.setDetails(details);
+        record.setEventType(RobotEvent.CHARGE_START.toString());
+        return record;
+    }
+
+    /**
+     * Sets the event type of the simulation log record to CHARGE_END.
+     * @param details the details of the charge end event to be included in the simulation log record.
+     *                Structure: {'batteryLevel': int}
+     * @return the built SimLogRecord for a charge end event
+     */
+    public SimLogRecord buildChargeEndRecord(String details) {
+        record.setDetails(details);
+        record.setEventType(RobotEvent.CHARGE_END.toString());
+        return record;
+    }
 }

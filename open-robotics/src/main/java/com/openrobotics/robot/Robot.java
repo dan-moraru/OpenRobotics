@@ -1,8 +1,11 @@
 package com.openrobotics.robot;
 
 import com.openrobotics.AppState;
+import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
 import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.TaskEvent;
 import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.map.Map;
@@ -159,6 +162,12 @@ public class Robot extends MapEntity {
             if (onCharger) {
                 state = RobotState.CHARGING;
                 chargerTarget = null; // clear override
+
+                // Logging charging start event
+                SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                SimLogRecord record = recordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
+
                 return new MoveIntention(fromTile, fromTile, this);
             }
             // find nearest charger and override nav target
@@ -216,6 +225,11 @@ public class Robot extends MapEntity {
                 if (battery >= 100.0f) {
                     // fully charged — resume task or go idle
                     state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
+
+                    // Logging charging end event
+                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = recordBuilder.buildChargeEndRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                    Logger.logRobotEvent(RobotEvent.CHARGE_END, record);
                 }
                 break;
 
