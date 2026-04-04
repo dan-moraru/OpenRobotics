@@ -1,0 +1,99 @@
+/* ============================================================
+   OpenRobotics – Inputs
+   TextField, ComboBox, Spinner, CheckBox, and related controls.
+   ============================================================ */
+
+/* Text field */
+.text-field {
+    -fx-background-color: #d4d1c4;
+    -fx-text-fill: #1a1a18;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 3 6 3 6;
+    -fx-font-size: 11px;
+}
+
+.text-field:focused {
+    -fx-border-color: #3D3C39;
+}
+
+/* ComboBox */
+.combo-box-base {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .list-cell {
+    -fx-text-fill: #1a1a18;
+    -fx-background-color: transparent;
+    -fx-font-size: 11px;
+}
+
+.combo-box-base .arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+.combo-box-base .arrow {
+    -fx-background-color: #C2BEAE;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Spinner */
+.spinner .text-field {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #8D8A7F;
+}
+
+/* CheckBox */
+.check-box .box {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #5D5B54;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #3D3C39;
+}
+
+.check-box .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* Sidebar filter field */
+.sidebar-filter-field {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-text-fill: #2A2926;
+}
+
+.sidebar-filter-field:focused {
+    -fx-border-color: #3D3C39;
+}

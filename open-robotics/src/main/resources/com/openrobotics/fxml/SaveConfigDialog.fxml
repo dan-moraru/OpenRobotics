@@ -41,8 +41,7 @@
                 styleClass="dialog-browse-btn"
                 onAction="#onBrowse" />
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Label text="File name:" styleClass="dialog-body-label"
-                   style="-fx-min-width: 80px;" />
+            <Label text="File name:" styleClass="dialog-field-label" />
             <TextField fx:id="fileNameField" text="config"
                        HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
