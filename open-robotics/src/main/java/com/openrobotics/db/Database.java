@@ -27,7 +27,7 @@ public final class Database {
      * @throws IOException if there is an error reading the config file
      * @throws SQLException if there is an error connecting to the database or running migrations
      */
-    public static synchronized void init() throws IOException, SQLException {
+    public static synchronized void init() throws IOException {
         if (shutdown) {
             throw new IllegalStateException("Database has been shut down and cannot be re-initialized in this process.");
         }
