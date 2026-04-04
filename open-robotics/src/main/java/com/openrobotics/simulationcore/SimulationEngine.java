@@ -1,11 +1,14 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
+import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
 import com.openrobotics.io.ConfigLoader;
 import com.openrobotics.io.SimulationConfigDTO;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.map.*;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
@@ -442,9 +445,21 @@ public class SimulationEngine {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
+
+        // Early exit if simulation is already stopped
+        if (!running) {
+            return false;
+        }
+
         // Checking if the warehouse workload has been completed
         if (workloadComplete()) {
             this.running = false;
+
+            // Logging simulation completion event
+            SimulationRunRecordBuilder recordBuilder = new SimulationRunRecordBuilder(this);
+            SimulationRunRecord record = recordBuilder.buildSimulationCompleteRecord();
+            Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, record);
+
             return false;
         }
 
