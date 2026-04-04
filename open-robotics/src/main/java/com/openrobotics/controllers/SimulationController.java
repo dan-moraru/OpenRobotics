@@ -1,8 +1,11 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
+import com.openrobotics.db.dao.MapDao;
+import com.openrobotics.db.model.MapRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.db.recordbuilders.MapRecordBuilder;
 import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
 import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.logging.Logger;
@@ -42,6 +45,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -255,6 +259,15 @@ public class SimulationController {
 
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
+
+            // Saving map to database.
+            try {
+                MapRecordBuilder recordBuilder = new MapRecordBuilder(loadedMap);
+                MapRecord record = recordBuilder.build();
+                MapDao.insert(record);
+            } catch (SQLException e) {
+                System.out.println("Error saving map to database: " + e.getMessage());
+            }
 
             // Compute canvas to tightly fit the loaded entities, then centre them inside.
             // The user's configured size (from SetupScreen) sets a minimum — the canvas
