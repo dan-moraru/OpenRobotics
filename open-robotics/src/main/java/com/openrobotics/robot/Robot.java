@@ -263,6 +263,19 @@ public class Robot extends MapEntity {
 
             case MOVING:
                 totalMovingTicks++;
+
+                // check if robots battery has died
+                if (battery <= 0) {
+                    state = RobotState.IDLE;
+
+                    // Logging battery death event
+                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = recordBuilder.buildBatteryDeathRecord();
+                    Logger.logRobotEvent(RobotEvent.BATTERY_DEATH, record);
+
+                    break;
+                }
+
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
                     consumeEnergy(ENERGY_PER_MOVE);
