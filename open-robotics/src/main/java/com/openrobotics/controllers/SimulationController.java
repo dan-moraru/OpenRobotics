@@ -18,7 +18,6 @@ import com.openrobotics.util.ViewportTips;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -56,7 +55,7 @@ import java.util.Map;
  *   <li>Viewport navigation (right-click pan, scroll zoom)</li>
  * </ul>
  */
-public class SimulationController {
+public class SimulationController implements ScreenNavigator.Cleanable {
 
     // ── TOPBAR LIVE STATS ────────────────────────────────────────────────
     @FXML private Label objsLabel;
@@ -162,6 +161,7 @@ public class SimulationController {
     // Animation state
     private boolean animating = false;
     private double animationProgress = 0.0;
+    private Timeline animTimeline = null;
     private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
     private static final int ANIMATION_FRAMES = 5;
 
@@ -302,11 +302,9 @@ public class SimulationController {
                     mainSplitPane.setDividerPosition(0, 230.0 / newW.doubleValue());
                 }
             });
-            Platform.runLater(() -> {
-                if (mainSplitPane.getWidth() > 0) {
-                    mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
-                }
-            });
+            if (mainSplitPane.getWidth() > 0) {
+                mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+            }
         }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
@@ -908,7 +906,8 @@ public class SimulationController {
         }
     }
 
-    private void filterOutliner(String query) {
+    private void filterOutliner(@SuppressWarnings("unused") String query) {
+        // query is consumed by populateOutliner() via outlinerSearchField.getText()
         populateOutliner();
     }
 
@@ -1023,6 +1022,11 @@ public class SimulationController {
 
     @FXML
     private void onRestart() {
+        if (animTimeline != null) { animTimeline.stop(); animTimeline = null; }
+        animating = false;
+        animationProgress = 0.0;
+        prevRobotPositions.clear();
+        selectedEntity = null;
         onStop();
         localTick = 0;
         if (AppState.getConfigPath() != null) {
@@ -1096,6 +1100,17 @@ public class SimulationController {
         }
     }
 
+    /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
+    @Override
+    public void cleanup() {
+        stopLoop();
+        if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
+        if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
+        warehouseCanvas.widthProperty().unbind();
+        warehouseCanvas.heightProperty().unbind();
+        animating = false;
+    }
+
     private void doTick() {
         if (engine == null) return;
         if (animating) return;
@@ -1141,9 +1156,10 @@ public class SimulationController {
     }
 
     private void startAnimation() {
+        if (animTimeline != null) animTimeline.stop();
         animating = true;
         animationProgress = 0.0;
-        Timeline animTimeline = new Timeline();
+        animTimeline = new Timeline();
         final int totalFrames = ANIMATION_FRAMES;
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
@@ -1191,12 +1207,12 @@ public class SimulationController {
     }
 
     @FXML
-private void onReturnToOrigin() {
-    zoom = 1.0;
-    centerViewportOnCanvas();
-    drawViewport();
-    log("Viewport reset to origin.");
-}
+    private void onReturnToOrigin() {
+        zoom = 1.0;
+        centerViewportOnCanvas();
+        drawViewport();
+        log("Viewport reset to origin.");
+    }
 
     @FXML
     private void onToggleSidebar() {
