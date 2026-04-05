@@ -1,5 +1,11 @@
 package com.openrobotics.simulationcore;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openrobotics.AppState;
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.map.Tile;
 import com.openrobotics.robot.Robot;
 
@@ -97,6 +103,24 @@ public class CollisionManager {
                 if (!id.equals(winnerId)) {
                     blockedRobots.add(id);
                 }
+            }
+
+            // Logging robot collision events
+            SimulationEngine engine = AppState.getEngine(); // getting the simulation engine from global state
+            SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(engine.getRunId(), engine.getTickCounter(), winnerId, targetTile.getX(), targetTile.getY());
+
+            try {
+                // Serialize the list of all colliding robot IDs to JSON for logging
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, UUID[]> data = new HashMap<>();
+                data.put("allCollidingRobots", group.stream().map(i -> i.getRobot().getId()).toArray(UUID[]::new));
+                String json = mapper.writeValueAsString(data);
+
+                // Build and log the collision record with the JSON data
+                SimLogRecord record = recordBuilder.buildCollisionRecord(json);
+                Logger.logRobotEvent(RobotEvent.COLLISION, record);
+            } catch (Exception e) {
+                System.err.println("Error serializing collision data while logging collision event: " + e.getMessage());
             }
         }
 
