@@ -59,6 +59,9 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
             }
         }
         blockedBySensors.remove(target);
+        if (robot.getRerouteAvoidTile() != null && !robot.getRerouteAvoidTile().equals(target)) {
+            blockedBySensors.add(robot.getRerouteAvoidTile());
+        }
 
         RobotNavState state = getOrCreateState(robot);
 

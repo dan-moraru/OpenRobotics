@@ -144,6 +144,9 @@ public class RtaStarNavigationStrategy implements NavigationStrategy {
         }
         // never block the target tile (so robots can reach their destination)
         blocked.remove(target);
+        if (robot.getRerouteAvoidTile() != null && !robot.getRerouteAvoidTile().equals(target)) {
+            blocked.add(robot.getRerouteAvoidTile());
+        }
         return blocked;
     }
 

@@ -205,6 +205,9 @@ public class BugNavigationStrategy implements NavigationStrategy {
             }
         }
         blocked.remove(target);
+        if (robot.getRerouteAvoidTile() != null && !robot.getRerouteAvoidTile().equals(target)) {
+            blocked.add(robot.getRerouteAvoidTile());
+        }
         return blocked;
     }
 
