@@ -267,7 +267,7 @@ public class SimulationController {
                 MapRecordBuilder recordBuilder = new MapRecordBuilder(loadedMap);
                 MapRecord record = recordBuilder.build();
                 MapDao.insert(record);
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 System.out.println("Error saving map to database: " + e.getMessage());
             }
 
