@@ -199,8 +199,8 @@ public class SetupController {
     @FXML private void onResetTickMs()       { tickMsField.setText(DEFAULT_TICK_MS); }
     @FXML private void onResetRunName()      { runNameField.setText(DEFAULT_RUN_NAME); }
     @FXML private void onResetCanvasTiles()  {
-        canvasWidthSpinner.getValueFactory().setValue(DEFAULT_CANVAS_TILES);
-        canvasHeightSpinner.getValueFactory().setValue(DEFAULT_CANVAS_TILES);
+        canvasWidthSpinner.getValueFactory().setValue(16);
+        canvasHeightSpinner.getValueFactory().setValue(10);
     }
     @FXML private void onResetReservationK() {
         reservationKSpinner.getValueFactory().setValue(DEFAULT_RESERVATION_K);
@@ -353,7 +353,7 @@ public class SetupController {
     }
 
     private com.openrobotics.map.Map buildBaselineSmall() {
-        com.openrobotics.map.Map m = new com.openrobotics.map.Map(14, 10);
+        com.openrobotics.map.Map m = new com.openrobotics.map.Map(16, 15);
         int[] rackCols = {1,2,5,6,9,10};
         int[] rackRows = {1,2,6,7,8};
         for (int col : rackCols)

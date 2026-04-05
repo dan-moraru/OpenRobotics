@@ -54,87 +54,103 @@
             <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
                 <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
 
+                    <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
                     <!-- map -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMap" />
                         <Label text="Map" styleClass="prop-label" />
                         <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- robot count -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRobotCount" />
                         <Label text="Robot Count" styleClass="prop-label" />
                         <Spinner fx:id="robotCountSpinner"
                                  editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- nav algorithm -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetNavAlgo" />
                         <Label text="Navigation Algorithm" styleClass="prop-label" />
                         <ComboBox fx:id="navAlgoCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- coordination policy -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
                         <Label text="Coordination Policy" styleClass="prop-label" />
                         <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- reservation k -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK" />
                         <Label text="Reservation K" styleClass="prop-label" />
                         <Spinner fx:id="reservationKSpinner"
                                  editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- workload mode -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadMode" />
                         <Label text="Workload Mode" styleClass="prop-label" />
                         <ComboBox fx:id="workloadModeCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- spawn rate -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetSpawnRate" />
                         <Label text="Spawn Rate (t/min)" styleClass="prop-label" />
                         <TextField fx:id="spawnRateField" text="10"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- max tasks -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />
                         <Label text="Max Tasks" styleClass="prop-label" />
                         <TextField fx:id="maxTasksField" text="200"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- workload seed -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed" />
                         <Label text="Workload Seed" styleClass="prop-label" />
                         <TextField fx:id="workloadSeedField" text="42"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- random map -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRandomMap" />
                         <Label text="Random Map" styleClass="prop-label" />
                         <CheckBox fx:id="randomMapCheck" />
                     </HBox>
                     <!-- map seed -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed" />
                         <Label text="Map Seed" styleClass="prop-label" />
                         <TextField fx:id="randomSeedField" promptText="auto"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- max ticks -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks" />
                         <Label text="Max Ticks" styleClass="prop-label" />
                         <TextField fx:id="maxTicksField" text="30000"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- tick ms -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetTickMs" />
                         <Label text="Tick Ms" styleClass="prop-label" />
                         <TextField fx:id="tickMsField" text="50"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- run name -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="8">
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRunName" />
                         <Label text="Run Name (s)" styleClass="prop-label" />
                         <TextField fx:id="runNameField" text="experiment_1"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
-                    <!-- canvas size W × H -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="8">
+                    <!-- canvas size (width × height) -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
                         <Label text="W" styleClass="prop-label" />
                         <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
                         <Label text="× H" styleClass="canvas-size-separator" />
