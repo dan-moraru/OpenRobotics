@@ -256,7 +256,7 @@
                                              <Button onAction="#onZoomIn" styleClass="playback-btn" text="zoom+" />
                                              <Button onAction="#onZoomOut" styleClass="playback-btn" text="zoom-" />
                                              <!-- Restart + speeds + play/pause/step -->
-                                             <Button onAction="#onRestart" styleClass="playback-btn" text="◀◀" />
+                                             <Button onAction="#onRestart" styleClass="playback-btn" text="↺" />
                                              <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
                                              <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
                                              <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />

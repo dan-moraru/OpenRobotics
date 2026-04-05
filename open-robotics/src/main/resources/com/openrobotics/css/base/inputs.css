@@ -69,6 +69,11 @@
     -fx-background-color: #8D8A7F;
 }
 
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #C2BEAE;
+}
+
 /* CheckBox */
 .check-box .box {
     -fx-background-color: #C2BEAE;
