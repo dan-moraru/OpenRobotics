@@ -545,12 +545,21 @@ public class SimulationEngine {
             }
 
             Task task = robot.getCurrentTask();
+            // Stage 1: try one local reroute before dropping the task.
+            if (!robot.hasRerouteAttemptedForCurrentTask() && robot.canStartDeadlockRerouteAttempt()) {
+                coordinationPolicy.clearRobotCoordinationState(robot);
+                if (robot.startDeadlockRerouteAttempt()) {
+                    continue;
+                }
+            }
+
+            // Stage 2: if rerouting is exhausted or impossible, fall back to reset-and-requeue.
             if (task != null) {
                 dispatcher.requeueTask(task);
             }
 
-            // Policies could hold per robot coordination state that should be released on recovery
-            coordinationPolicy.onRobotRecovered(robot);
+            // Policies could hold per-robot coordination state that should be released on fallback recovery.
+            coordinationPolicy.clearRobotCoordinationState(robot);
             robot.recoverFromDeadlock();
         }
     }
