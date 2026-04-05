@@ -25,6 +25,8 @@ public class RandomNavigation implements NavigationStrategy {
     public MoveIntention getNextMove(Robot robot, Map map) {
         Vector2D position = robot.getPosition();
         var fromTile = map.getTile(position.getX(), position.getY());
+        Vector2D target = robot.getTarget();
+        Vector2D rerouteAvoidTile = robot.getRerouteAvoidTile();
 
         // Try each direction at most once in random order, then fall back to WAIT.
         Direction[] directions = Direction.values();
@@ -39,6 +41,11 @@ public class RandomNavigation implements NavigationStrategy {
         for (Direction randomDirection : directions) {
             int newX = position.getX() + randomDirection.dx;
             int newY = position.getY() + randomDirection.dy;
+            Vector2D next = new Vector2D(newX, newY);
+
+            if (rerouteAvoidTile != null && !rerouteAvoidTile.equals(target) && rerouteAvoidTile.equals(next)) {
+                continue;
+            }
 
             if (map.isValidMove(newX, newY)) {
                 return new MoveIntention(fromTile, map.getTile(newX, newY), robot);

@@ -27,6 +27,10 @@ public class Dispatcher {
      * @param task the task being added to the task queue
      */
     public void addTask(Task task) {
+        enqueueTask(task, true);
+    }
+
+    private void enqueueTask(Task task, boolean countTowardsTotal) {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
         } else if (taskQueue.contains(task)) {
@@ -36,7 +40,9 @@ public class Dispatcher {
         // Set task status as pending and add to queue
         task.setStatus(TaskStatus.PENDING);
         taskQueue.add(task);
-        totalTasksAdded++;
+        if (countTowardsTotal) {
+            totalTasksAdded++;
+        }
     }
 
     /**
@@ -101,7 +107,8 @@ public class Dispatcher {
      * @param task the task to be requeued
      */
     public void requeueTask(Task task) {
-        addTask(task);
+        // Recovery should not change how many tasks the run was originally given.
+        enqueueTask(task, false);
     }
 
     /**

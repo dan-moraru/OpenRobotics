@@ -59,6 +59,9 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
             }
         }
         blockedBySensors.remove(target);
+        if (robot.getRerouteAvoidTile() != null && !robot.getRerouteAvoidTile().equals(target)) {
+            blockedBySensors.add(robot.getRerouteAvoidTile());
+        }
 
         RobotNavState state = getOrCreateState(robot);
 
@@ -181,6 +184,14 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
 
     private MoveIntention stayIntention(Tile tile, Robot robot) {
         return new MoveIntention(tile, tile, robot);
+    }
+
+    @Override
+    public void reset(Robot robot) {
+        // Deadlock recovery starts a fresh search for this robot's next assignment.
+        if (robot != null) {
+            navStates.remove(robot.getId());
+        }
     }
 
     @Override
