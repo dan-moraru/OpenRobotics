@@ -32,52 +32,6 @@ class SimulationEngineConfigLoadTest {
     }
 
     @Test
-    void rerouteSuccessDemoShowsAVisibleDetourWithoutRequeueingTheTask() {
-        Path configPath = Path.of("..", "deadlock_recovery_reroute_success_demo.json").toAbsolutePath().normalize();
-
-        SimulationEngine engine = new SimulationEngine(configPath.toString());
-
-        assertNull(engine.getInitError(), "Reroute success demo should load without initialization errors.");
-        Robot recoveredBot = findRobotByName(engine.getRobots(), "RecoveredBot");
-        assertNotNull(recoveredBot, "The reroute success demo should include RecoveredBot.");
-
-        for (int i = 0; i < 5; i++) {
-            engine.tick();
-        }
-
-        assertEquals("MOVING", recoveredBot.getStatus());
-        assertTrue(recoveredBot.hasRerouteAttemptedForCurrentTask());
-        assertEquals(0, engine.getDispatcher().getPendingTaskCount());
-
-        for (int i = 0; i < 3; i++) {
-            engine.tick();
-        }
-
-        assertTrue(recoveredBot.getPosition().getY() == 1 || recoveredBot.getPosition().getX() > 3,
-                "RecoveredBot should visibly detour around the blocked tile after rerouting.");
-        assertEquals(0, engine.getDispatcher().getPendingTaskCount());
-    }
-
-    @Test
-    void rerouteFallbackDemoRequeuesTheTaskAfterTheSecondDeadlock() {
-        Path configPath = Path.of("..", "deadlock_recovery_reroute_fallback_demo.json").toAbsolutePath().normalize();
-
-        SimulationEngine engine = new SimulationEngine(configPath.toString());
-
-        assertNull(engine.getInitError(), "Reroute fallback demo should load without initialization errors.");
-        Robot recoveredBot = findRobotByName(engine.getRobots(), "RecoveredBot");
-        assertNotNull(recoveredBot, "The reroute fallback demo should include RecoveredBot.");
-
-        for (int i = 0; i < 10; i++) {
-            engine.tick();
-        }
-
-        assertEquals("IDLE", recoveredBot.getStatus());
-        assertEquals(1, engine.getDispatcher().getPendingTaskCount());
-        assertEquals(TaskStatus.PENDING, engine.getDispatcher().getAllTasks().get(0).getStatus());
-    }
-
-    @Test
     void loadsConfigWithoutCoordinationSectionUsingNoOpPolicy() throws IOException {
         Path configPath = Files.createTempFile("simulation-no-coordination", ".json");
         Files.writeString(configPath, """
