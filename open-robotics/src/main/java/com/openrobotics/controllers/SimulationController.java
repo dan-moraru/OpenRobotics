@@ -1026,6 +1026,8 @@ public class SimulationController {
             }
             engine = reloaded;
             AppState.setEngine(engine);
+        } else {
+            // TODO: make sure template map resets here
         }
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
@@ -1222,6 +1224,15 @@ private void onReturnToOrigin() {
         if (editorTabBtn  != null) { editorTabBtn.getStyleClass().setAll("tab-btn-active");  }
         if (resultsTabBtn != null) { resultsTabBtn.getStyleClass().setAll("tab-btn"); }
         /* already on editor tab – no navigation needed */
+    }
+
+    @FXML
+    private void onBackToSetup() {
+        stopLoop();
+        running = false;
+        paused = false;
+        AppState.clear();
+        ScreenNavigator.goToSetup();
     }
 
     @FXML

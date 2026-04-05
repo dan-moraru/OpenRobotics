@@ -97,14 +97,14 @@
                     <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetSpawnRate" />
                         <Label text="Spawn Rate (t/min)" styleClass="prop-label" />
-                        <TextField fx:id="spawnRateField" text="10"
+                        <TextField fx:id="spawnRateField" text="1"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- max tasks -->
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />
                         <Label text="Max Tasks" styleClass="prop-label" />
-                        <TextField fx:id="maxTasksField" text="200"
+                        <TextField fx:id="maxTasksField" text="10"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- workload seed -->
@@ -132,13 +132,6 @@
                         <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks" />
                         <Label text="Max Ticks" styleClass="prop-label" />
                         <TextField fx:id="maxTicksField" text="30000"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- tick ms -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetTickMs" />
-                        <Label text="Tick Ms" styleClass="prop-label" />
-                        <TextField fx:id="tickMsField" text="50"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- run name -->
