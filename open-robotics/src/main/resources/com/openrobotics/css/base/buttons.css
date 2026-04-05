@@ -1,0 +1,292 @@
+/* ============================================================
+   OpenRobotics – Buttons
+   All button variants used across the application.
+   ============================================================ */
+
+/* Default dark button (START SIMULATION, etc.) */
+.button {
+    -fx-background-color: #383632;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* EDITOR tab button */
+.button.tab-btn-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
+}
+
+.button.tab-btn-active:hover {
+    -fx-background-color: #C2BEAE;
+}
+
+/* Object tiles */
+.button.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 2px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.button.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.button.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* Neutral (LOAD / SAVE / RETURN) */
+.button-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* Confirm green */
+.button-confirm {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-confirm:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+/* Danger red (QUIT) */
+.button-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+/* Green action */
+.button-green {
+    -fx-background-color: #1a743f;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.button-green:hover {
+    -fx-background-color: #1e8a4a;
+}
+
+/* Reset button (circular ↺) */
+.button-reset {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+    -fx-background-radius: 13px;
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 13px;
+    -fx-border-width: 1px;
+}
+
+.button-reset:hover {
+    -fx-background-color: #706E65;
+}
+
+/* Playback buttons */
+.playback-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 3px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-cursor: hand;
+}
+
+.playback-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Speed buttons */
+.speed-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4;
+}
+
+.speed-btn:hover {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Screen navigation tabs */
+.screen-tab-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 12 3 12;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.screen-tab-active:hover {
+    -fx-background-color: #C2BEAE;
+}
+
+.screen-tab-inactive {
+    -fx-background-color: #383632;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 12 3 12;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.screen-tab-inactive:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* Semantic aliases */
+.btn-primary,
+.btn-success {
+    -fx-background-color: #599068;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    -fx-background-color: #6aaa7a;
+}
+
+.btn-danger {
+    -fx-background-color: #7a1f1b;
+    -fx-text-fill: #e8e4d8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #8e2520;
+}
+
+.btn-neutral {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.btn-neutral:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* Console clear button */
+.console-clear-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-size: 13px;
+    -fx-padding: 2 6 2 6;
+}
+
+.console-clear-btn:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ca332d;
+}
+
+/* Dialog utility buttons */
+.dialog-close-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 0 4 0 4;
+}
+
+.dialog-browse-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}
+
+.dialog-browse-btn-dark {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-padding: 2 0 2 0;
+    -fx-underline: true;
+}

@@ -1,0 +1,219 @@
+/* ============================================================
+   OpenRobotics – Welcome Screen
+   All styles scoped to the welcome screen layout.
+   ============================================================ */
+
+.welcome-root {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
+}
+
+.welcome-shell {
+    -fx-pref-width: infinity;
+    -fx-pref-height: infinity;
+}
+
+/* Hero panel */
+.welcome-hero-panel {
+    -fx-background-color: #C2BEAE;
+}
+
+.welcome-hero-logo-zone {
+    -fx-background-color: #2A2926;
+    -fx-min-height: 220px;
+    -fx-pref-height: 260px;
+    -fx-padding: 40 48 40 48;
+    -fx-alignment: CENTER;
+}
+
+.welcome-hero-wordmark {
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.welcome-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.35;
+}
+
+/* Copy zone */
+.welcome-hero-copy-zone {
+    -fx-padding: 36 48 28 48;
+    -fx-background-color: #C2BEAE;
+}
+
+.welcome-eyebrow {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+.welcome-hero-title {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.welcome-hero-copy {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+.welcome-features-list {
+    -fx-padding: 8 0 0 0;
+}
+
+.welcome-feature-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4D4B45;
+}
+
+/* CTA row */
+.welcome-cta-row {
+    -fx-background-color: #BAB7A8;
+    -fx-padding: 22 48 26 48;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-cta-row .button {
+    -fx-font-size: 12px;
+    -fx-padding: 11 28 11 28;
+    -fx-background-radius: 6;
+    -fx-background-color: #2A2926;
+    -fx-text-fill: #C2BEAE;
+    -fx-cursor: hand;
+}
+
+.welcome-cta-row .button:hover {
+    -fx-background-color: #4D4B45;
+}
+
+/* Panel divider */
+.welcome-panel-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.5;
+}
+
+/* Changelog panel */
+.welcome-updates-panel {
+    -fx-background-color: #ADA99A;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-header {
+    -fx-background-color: #2A2926;
+    -fx-padding: 16 18 16 18;
+    -fx-min-height: 52px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+}
+
+.welcome-section-title {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.welcome-updates-count {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 10;
+}
+
+.welcome-updates-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.welcome-updates-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.welcome-updates-scroll .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.welcome-updates-content {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.welcome-update-entry {
+    -fx-padding: 20 20 18 20;
+    -fx-background-color: transparent;
+    -fx-spacing: 8;
+}
+
+.welcome-update-entry:hover {
+    -fx-background-color: rgba(42, 41, 38, 0.10);
+}
+
+.welcome-update-entry-header {
+    -fx-padding: 0 0 6 0;
+    -fx-spacing: 10;
+}
+
+.welcome-update-version {
+    -fx-background-color: #3D3C39;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 6;
+}
+
+.welcome-update-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.welcome-update-copy {
+    -fx-font-size: 11px;
+    -fx-text-fill: #4D4B45;
+    -fx-line-spacing: 2;
+}
+
+.welcome-update-separator {
+    -fx-background-color: #8D8A7F;
+    -fx-opacity: 0.45;
+}
+
+/* Footer */
+.welcome-footer {
+    -fx-background-color: #2A2926;
+    -fx-padding: 13 18 13 18;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1 0 0 0;
+}
+
+.welcome-footer-tip {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 11px;
+}
+
+.welcome-footer-hint {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4D4B45;
+}
