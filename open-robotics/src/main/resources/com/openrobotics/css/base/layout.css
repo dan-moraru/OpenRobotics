@@ -102,7 +102,7 @@
 
 .menu-bar-top > .container > .menu-button:hover,
 .menu-bar-top > .container > .menu-button:showing {
-    -fx-background-color: #B8B4A6;
+    -fx-background-color: #5D5B54;
 }
 
 .menu-bar .menu .label {
