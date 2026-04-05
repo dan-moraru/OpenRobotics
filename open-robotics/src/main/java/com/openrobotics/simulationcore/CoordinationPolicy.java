@@ -13,8 +13,8 @@ public interface CoordinationPolicy {
     // Policy can force robots to wait by returning a WAIT intention
     MoveIntention[] apply(Map map, MoveIntention[] intentions);
 
-    // Recovery hook so policies can discard any per-robot coordination state.
-    default void onRobotRecovered(Robot robot) {}
+    // Coordination-state cleanup hook used by both reroute attempts and full fallback recovery.
+    default void clearRobotCoordinationState(Robot robot) {}
 
     // Default policy: return a copy with null intentions removed
     static CoordinationPolicy noOp() {

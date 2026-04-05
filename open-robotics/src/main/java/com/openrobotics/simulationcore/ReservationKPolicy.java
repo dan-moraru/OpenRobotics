@@ -73,8 +73,8 @@ public class ReservationKPolicy implements CoordinationPolicy {
     }
 
     @Override
-    public void onRobotRecovered(Robot robot) {
-        // Recovery should immediately drop any path locks owned by the recovered robot.
+    public void clearRobotCoordinationState(Robot robot) {
+        // Deadlock handling should immediately drop any path locks owned by this robot.
         if (robot != null) {
             releaseAllReservations(robot.getId());
         }
