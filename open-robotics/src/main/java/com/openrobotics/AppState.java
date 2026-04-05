@@ -11,8 +11,8 @@ public final class AppState {
 
     private static SimulationEngine engine;
     private static String configPath;
-    private static int canvasWidthTiles  = 30;
-    private static int canvasHeightTiles = 30;
+    private static int canvasWidthTiles  = 15;
+    private static int canvasHeightTiles = 15;
 
     private AppState() {}
 

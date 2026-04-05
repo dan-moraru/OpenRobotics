@@ -205,6 +205,9 @@ public class BugNavigationStrategy implements NavigationStrategy {
             }
         }
         blocked.remove(target);
+        if (robot.getRerouteAvoidTile() != null && !robot.getRerouteAvoidTile().equals(target)) {
+            blocked.add(robot.getRerouteAvoidTile());
+        }
         return blocked;
     }
 
@@ -317,6 +320,14 @@ public class BugNavigationStrategy implements NavigationStrategy {
     // stay-in-place intention (fromTile == toTile)
     private MoveIntention stayIntention(Tile tile, Robot robot) {
         return new MoveIntention(tile, tile, robot);
+    }
+
+    @Override
+    public void reset(Robot robot) {
+        // Deadlock recovery starts a fresh search for this robot's next assignment.
+        if (robot != null) {
+            navStates.remove(robot.getId());
+        }
     }
 
     @Override
