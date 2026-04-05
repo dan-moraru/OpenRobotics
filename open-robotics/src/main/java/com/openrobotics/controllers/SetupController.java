@@ -690,7 +690,7 @@ public class SetupController {
     @FXML
     private void onMenuGithub() {
         try {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com"));
+            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/dan-moraru/OpenRobotics"));
         } catch (Exception ex) {
             statusLabel.setText("Could not open browser.");
         }
