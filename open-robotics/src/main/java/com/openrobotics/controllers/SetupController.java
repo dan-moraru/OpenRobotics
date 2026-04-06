@@ -36,10 +36,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Controller for {@code SetupScreen.fxml}.
@@ -110,7 +107,7 @@ public class SetupController {
     private void initialize() {
         // Map dropdown
         mapCombo.setItems(FXCollections.observableArrayList(
-                "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
+                "empty", "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
         mapSeedRow.setVisible(false);
         mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
@@ -253,31 +250,15 @@ public class SetupController {
             int tileOffX = (cw - contentW) / 2 - minX;
             int tileOffY = (ch - contentH) / 2 - minY;
 
-            int robotCount;
-            if (AppState.hasEngine()) {
-                robotCount = AppState.getEngine().getRobots().length;
-            } else {
-                robotCount = 4; // TODO: replace with per-robot editor config
-            }
-
-            Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
-            drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
-            drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
+            drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY);
         }
     }
 
     private void drawPreviewEntities(GraphicsContext gc, com.openrobotics.map.Map map,
                                      double ox, double oy, double tileSize,
-                                     int tileOffX, int tileOffY, Set<String> robotTiles) {
+                                     int tileOffX, int tileOffY) {
         double pad = Math.max(1.0, tileSize * 0.06);
         for (MapEntity entity : map.getEntities()) {
-            String key = entity.getPosition().getX() + "," + entity.getPosition().getY();
-
-            // FIX #4: Always draw stations (charger/delivery) even when a robot occupies
-            // the same tile — the robot icon will be drawn on top in drawPreviewRobots().
-            boolean isStation = (entity instanceof ChargingStation) || (entity instanceof DeliveryStation);
-            if (!isStation && robotTiles.contains(key)) continue;
-
             double sx = ox + (tileOffX + entity.getPosition().getX()) * tileSize;
             double sy = oy + (tileOffY + entity.getPosition().getY()) * tileSize;
             Image icon = resolvePreviewIcon(entity);
@@ -308,79 +289,13 @@ public class SetupController {
         return null;
     }
 
-    /** Pre-compute which tiles robots occupy (charger tile first, then adjacent empty tiles). */
-    private Set<String> computeRobotPositions(com.openrobotics.map.Map map, int count) {
-        int spawnX = 0, spawnY = map.getHeight() / 2;
-        for (MapEntity e : map.getEntities()) {
-            if (e instanceof ChargingStation) {
-                spawnX = e.getPosition().getX();
-                spawnY = e.getPosition().getY();
-                break;
-            }
-        }
-        // Only non-charger entities block robot placement
-        Set<String> blocked = new HashSet<>();
-        for (MapEntity e : map.getEntities()) {
-            if (!(e instanceof ChargingStation)) {
-                blocked.add(e.getPosition().getX() + "," + e.getPosition().getY());
-            }
-        }
-        Set<String> positions = new LinkedHashSet<>();
-        // Expand outward in rings in all 4 directions
-        for (int delta = 0; positions.size() < count && delta < Math.max(map.getWidth(), map.getHeight()); delta++) {
-            for (int dx = -delta; dx <= delta; dx++) {
-                for (int dy = -delta; dy <= delta; dy++) {
-                    if (Math.abs(dx) != delta && Math.abs(dy) != delta) continue;
-                    int tx = spawnX + dx;
-                    int ty = spawnY + dy;
-                    if (tx < 0 || tx >= map.getWidth() || ty < 0 || ty >= map.getHeight()) continue;
-                    String key = tx + "," + ty;
-                    if (blocked.contains(key)) continue;
-                    blocked.add(key);
-                    positions.add(key);
-                    if (positions.size() >= count) break;
-                }
-                if (positions.size() >= count) break;
-            }
-        }
-        return positions;
-    }
-
-    /**
-     * Draw robot icons at the pre-computed tile positions (all identical robot icon).
-     */
-    private void drawPreviewRobots(GraphicsContext gc, com.openrobotics.map.Map map,
-                                   double ox, double oy, double tileSize,
-                                   int tileOffX, int tileOffY, Set<String> robotTiles) {
-        Image robotIcon = IconLoader.getIcon("ROBOT");
-        double pad = Math.max(1.0, tileSize * 0.06);
-
-        // extra padding specifically for the robot icon so it shrinks
-        double robotPad = pad + (tileSize * 0.10);
-
-        for (String pos : robotTiles) {
-            String[] parts = pos.split(",");
-            int tx = Integer.parseInt(parts[0]);
-            int ty = Integer.parseInt(parts[1]);
-            double sx = ox + (tileOffX + tx) * tileSize;
-            double sy = oy + (tileOffY + ty) * tileSize;
-
-            if (robotIcon != null && !robotIcon.isError()) {
-                // Draw the image smaller using robotPad
-                gc.drawImage(robotIcon, sx + robotPad, sy + robotPad, tileSize - 2*robotPad, tileSize - 2*robotPad);
-            } else {
-                gc.setFill(Color.web("#C2BEAE"));
-                gc.fillOval(sx + robotPad, sy + robotPad, tileSize - 2*robotPad, tileSize - 2*robotPad);
-            }
-        }
-    }
-
     // ------------------------------------------------------------------ //
     //  Built-in Map Builders
     // ------------------------------------------------------------------ //
 
     private com.openrobotics.map.Map buildBuiltinMap(String name) {
         return switch (name) {
+            case "empty"              -> null;
             case "baseline_small"     -> buildBaselineSmall();
             case "narrow_aisles"      -> buildNarrowAisles();
             case "many_intersections" -> buildManyIntersections();
@@ -561,6 +476,10 @@ public class SetupController {
     }
 
     private void autoSetCanvasForMap(String mapName) {
+        if ("empty".equals(mapName)) {
+            // empty map — keep current canvas size
+            return;
+        }
         if (isRandomMap(mapName)) {
             // random map — set canvas to default size and allow free editing
             enforceSpinnerMin(16, 10);
