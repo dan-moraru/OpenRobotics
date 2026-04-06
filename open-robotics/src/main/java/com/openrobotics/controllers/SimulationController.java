@@ -1209,6 +1209,11 @@ private void onReturnToOrigin() {
         if (consoleArea != null) consoleArea.clear();
     }
 
+    @FXML
+    private void onSaveConfig() {
+        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration");
+    }
+
     private void log(String message) {
         System.out.println("[SimulationController] " + message);
         if (consoleArea != null) consoleArea.appendText(message + "\n");
