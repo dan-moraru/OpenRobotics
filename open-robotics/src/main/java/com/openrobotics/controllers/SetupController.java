@@ -29,6 +29,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -58,7 +59,7 @@ public class SetupController {
 
     // ── MAP ─────────────────────────────────────────────────────────────
     @FXML private ComboBox<String> mapCombo;
-    @FXML private CheckBox         randomMapCheck;
+    @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
 
     // ── ROBOTS ──────────────────────────────────────────────────────────
@@ -99,13 +100,13 @@ public class SetupController {
     private static final String DEFAULT_NAV_ALGO      = "GREEDY";
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
-    private static final String DEFAULT_WORKLOAD_MODE = "SPAWN_RATE";
+    private static final String DEFAULT_WORKLOAD_MODE = "FIXED_LIST";
     private static final int    DEFAULT_SPAWN_RATE    = 1;
     private static final int    DEFAULT_MAX_TASKS     = 10;
     private static final long   DEFAULT_WORKLOAD_SEED = 42;
     private static final int    DEFAULT_MAX_TICKS     = 30000;
     private static final String DEFAULT_RUN_NAME      = "experiment_1";
-    private static final int    DEFAULT_CANVAS_TILES  = 15;
+    // private static final int    DEFAULT_CANVAS_TILES  = 15;
 
     // ------------------------------------------------------------------ //
     //  Initialisation
@@ -115,8 +116,17 @@ public class SetupController {
     private void initialize() {
         // Map dropdown
         mapCombo.setItems(FXCollections.observableArrayList(
-                "baseline_small", "narrow_aisles", "many_intersections"));
+                "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
+        mapSeedRow.setVisible(false);
+        mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
+        mapCombo.valueProperty().addListener((obs, o, n) -> {
+            boolean isRandom = "random_map".equals(n);
+            mapSeedRow.setVisible(isRandom);
+            if (n != null) autoSetCanvasForMap(n);
+            refreshPreview();
+            checkCanvasConstraint();
+        });
 
         robotCountSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, DEFAULT_ROBOT_COUNT));
@@ -176,11 +186,6 @@ public class SetupController {
             refreshPreview();
         });
 
-        mapCombo.valueProperty().addListener((obs, o, n) -> {
-            if (n != null) autoSetCanvasForMap(n);
-            refreshPreview();
-            checkCanvasConstraint();
-        });
         robotCountSpinner.valueProperty().addListener((obs, o, n) -> refreshPreview());
 
         // Apply canvas sizing for the initial map selection (listener fires only on changes)
@@ -197,7 +202,6 @@ public class SetupController {
         refreshPreview();
         checkCanvasConstraint();
     }
-    @FXML private void onResetRandomMap()    { randomMapCheck.setSelected(false); refreshPreview(); }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
     @FXML private void onResetRobotCount()   { robotCountSpinner.getValueFactory().setValue(DEFAULT_ROBOT_COUNT); }
     @FXML private void onResetNavAlgo()      { navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO); }
@@ -529,6 +533,10 @@ public class SetupController {
         return "baseline_small".equals(name) || "narrow_aisles".equals(name) || "many_intersections".equals(name);
     }
 
+    private boolean isRandomMap(String name) {
+        return "random_map".equals(name);
+    }
+
     private int[] computeEntityBounds(com.openrobotics.map.Map map) {
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
@@ -544,6 +552,11 @@ public class SetupController {
     }
 
     private void autoSetCanvasForMap(String mapName) {
+        if (isRandomMap(mapName)) {
+            // random map — set canvas to default size and allow free editing
+            enforceSpinnerMin(16, 10);
+            return;
+        }
         com.openrobotics.map.Map m = buildBuiltinMap(mapName);
         if (m == null || m.getEntities().isEmpty()) return;
         int[] bounds = computeEntityBounds(m);
@@ -810,11 +823,15 @@ public class SetupController {
         } catch (NumberFormatException ignored) { }
 
         com.openrobotics.map.Map map;
-        if (randomMapCheck.isSelected()) {
+        if ("random_map".equals(mapCombo.getValue())) {
             long mapSeed = seed;
             try {
                 String mapSeedStr = randomSeedField.getText().trim();
-                if (!mapSeedStr.isEmpty()) mapSeed = Long.parseLong(mapSeedStr);
+                if (!mapSeedStr.isEmpty()) {
+                    mapSeed = Long.parseLong(mapSeedStr);
+                } else {
+                    mapSeed = new java.util.Random().nextLong();
+                }
             } catch (NumberFormatException ignored) { }
             map = buildRandomMap(canvasW, canvasH, mapSeed);
         } else {
@@ -1088,7 +1105,7 @@ public class SetupController {
 
     /** Basic validation – returns {@code true} if all required fields are filled. */
     private boolean validate() {
-        if (mapCombo.getValue() == null && !randomMapCheck.isSelected()) {
+        if (mapCombo.getValue() == null) {
             statusLabel.setText("\u26a0 Please select a map or enable Random Map.");
             return false;
         }
