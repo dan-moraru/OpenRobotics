@@ -18,8 +18,8 @@
       prefWidth="380" spacing="0"
       stylesheets="@../css/theme.css">
 
-    <HBox styleClass="dialog-title-bar save-dialog-title" alignment="CENTER_LEFT" spacing="12">
-        <Label text="SAVE CONFIGURATION" styleClass="dialog-title-label-dark" />
+    <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12">
+        <Label text="SAVE CONFIGURATION" styleClass="dialog-title-label" />
     </HBox>
 
     <VBox styleClass="dialog-body" spacing="12">

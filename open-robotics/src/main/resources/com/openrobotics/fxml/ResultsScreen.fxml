@@ -34,8 +34,7 @@
                     <Label styleClass="app-title" text="OpenRobotics" />
                     <Label styleClass="version-label" text="v1.0.0" />
                 </VBox>
-                <Region minWidth="24" />
-                <MenuBar styleClass="menu-bar menu-bar-top">
+                <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                     <Menu text="File">
                         <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
                         <MenuItem onAction="#onExport" text="Export Results" />

@@ -29,6 +29,7 @@ import java.util.Set;
  * of simulation steps that have been executed.
  */
 public class SimulationEngine {
+    private static final int DEADLOCK_RECOVERY_THRESHOLD = 5;
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
     private Map map;
@@ -466,6 +467,9 @@ public class SimulationEngine {
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
 
+        // Recovery runs after state updates
+        recoverDeadlockedRobots();
+
         incrementTickCounter();
         return true;
     }
@@ -527,6 +531,36 @@ public class SimulationEngine {
     private void updateAllRobots() {
         for (Robot robot : robots) {
             robot.update();
+        }
+    }
+
+    private void recoverDeadlockedRobots() {
+        for (Robot robot : robots) {
+            // Only recover robots that are still actively working on a task and have exceeded the threshold.
+            if (robot == null || robot.getState() != RobotState.MOVING || robot.getCurrentTask() == null) {
+                continue;
+            }
+            if (robot.getStuckTicks() < DEADLOCK_RECOVERY_THRESHOLD) {
+                continue;
+            }
+
+            Task task = robot.getCurrentTask();
+            // Stage 1: try one local reroute before dropping the task.
+            if (!robot.hasRerouteAttemptedForCurrentTask() && robot.canStartDeadlockRerouteAttempt()) {
+                coordinationPolicy.clearRobotCoordinationState(robot);
+                if (robot.startDeadlockRerouteAttempt()) {
+                    continue;
+                }
+            }
+
+            // Stage 2: if rerouting is exhausted or impossible, fall back to reset-and-requeue.
+            if (task != null) {
+                dispatcher.requeueTask(task);
+            }
+
+            // Policies could hold per-robot coordination state that should be released on fallback recovery.
+            coordinationPolicy.clearRobotCoordinationState(robot);
+            robot.recoverFromDeadlock();
         }
     }
 
