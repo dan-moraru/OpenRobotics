@@ -230,8 +230,23 @@ public class SetupController {
         if (vw <= 0 || vh <= 0) return;
 
         GraphicsContext gc = previewCanvas.getGraphicsContext2D();
+
+        com.openrobotics.map.Map previewMap = null;
+
+        // If a config file has been loaded, render that map instead of the combo selection
+        if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
+            previewMap = AppState.getEngine().getMap();
+        } else {
+            String mapName = mapCombo.getValue();
+            if (mapName != null) previewMap = buildBuiltinMap(mapName);
+        }
+
         int cw = canvasWidthSpinner.getValue() != null ? canvasWidthSpinner.getValue() : AppState.getCanvasWidthTiles();
         int ch = canvasHeightSpinner.getValue() != null ? canvasHeightSpinner.getValue() : AppState.getCanvasHeightTiles();
+        if (previewMap != null) {
+            cw = previewMap.getWidth();
+            ch = previewMap.getHeight();
+        }
 
         double padding = 16;
         double tileSize = Math.min((vw - 2 * padding) / cw, (vh - 2 * padding) / ch);
@@ -248,20 +263,23 @@ public class SetupController {
         gc.setStroke(Color.web("#5D5B54")); gc.setLineWidth(2.0);
         gc.strokeRect(bx, by, bw, bh);
 
-        String mapName = mapCombo.getValue();
-        if (mapName != null) {
-            com.openrobotics.map.Map previewMap = buildBuiltinMap(mapName);
-            if (previewMap != null && !previewMap.getEntities().isEmpty()) {
-                int[] bounds = computeEntityBounds(previewMap);
-                int minX = bounds[0], minY = bounds[1], maxX = bounds[2], maxY = bounds[3];
-                int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
-                int tileOffX = (cw - contentW) / 2 - minX;
-                int tileOffY = (ch - contentH) / 2 - minY;
-                int robotCount = robotCountSpinner.getValue() != null ? robotCountSpinner.getValue() : 1;
-                Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
-                drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
-                drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
+        if (previewMap != null && !previewMap.getEntities().isEmpty()) {
+            int[] bounds = computeEntityBounds(previewMap);
+            int minX = bounds[0], minY = bounds[1], maxX = bounds[2], maxY = bounds[3];
+            int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
+            int tileOffX = (cw - contentW) / 2 - minX;
+            int tileOffY = (ch - contentH) / 2 - minY;
+
+            int robotCount;
+            if (AppState.hasEngine()) {
+                robotCount = AppState.getEngine().getRobots().length;
+            } else {
+                robotCount = robotCountSpinner.getValue() != null ? robotCountSpinner.getValue() : 1;
             }
+
+            Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
+            drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
+            drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
         }
     }
 
@@ -325,13 +343,21 @@ public class SetupController {
             }
         }
         Set<String> positions = new LinkedHashSet<>();
-        for (int delta = 0; positions.size() < count && delta < map.getHeight(); delta++) {
-            int[] ys = (delta == 0) ? new int[]{spawnY} : new int[]{spawnY + delta, spawnY - delta};
-            for (int cy : ys) {
+        // Expand outward in rings in all 4 directions
+        for (int delta = 0; positions.size() < count && delta < Math.max(map.getWidth(), map.getHeight()); delta++) {
+            for (int dx = -delta; dx <= delta; dx++) {
+                for (int dy = -delta; dy <= delta; dy++) {
+                    if (Math.abs(dx) != delta && Math.abs(dy) != delta) continue;
+                    int tx = spawnX + dx;
+                    int ty = spawnY + dy;
+                    if (tx < 0 || tx >= map.getWidth() || ty < 0 || ty >= map.getHeight()) continue;
+                    String key = tx + "," + ty;
+                    if (blocked.contains(key)) continue;
+                    blocked.add(key);
+                    positions.add(key);
+                    if (positions.size() >= count) break;
+                }
                 if (positions.size() >= count) break;
-                if (cy < 0 || cy >= map.getHeight()) continue;
-                if (blocked.contains(spawnX + "," + cy)) continue;
-                positions.add(spawnX + "," + cy);
             }
         }
         return positions;
@@ -576,6 +602,15 @@ public class SetupController {
     }
 
     private void checkCanvasConstraint() {
+        // If a config file has been loaded, use the engine's map dimensions
+        if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
+            com.openrobotics.map.Map map = AppState.getEngine().getMap();
+            enforceSpinnerMin(1, 1);
+            canvasWarnLabel.setVisible(false);
+            AppState.setCanvasDimensions(map.getWidth(), map.getHeight());
+            return;
+        }
+
         String mapName = mapCombo.getValue();
         if (mapName == null || !isBuiltinMap(mapName)) {
             enforceSpinnerMin(1, 1);
@@ -721,7 +756,8 @@ public class SetupController {
     @FXML
     private void onLoadConfig() {
         if (promptAndLoadConfig()) {
-            goToSimulationScreen();
+            refreshPreview();
+            checkCanvasConstraint();
         }
     }
 
