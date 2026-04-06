@@ -1,19 +1,19 @@
-package com.openrobotics;
+package com.openrobotics.task;
 
 import com.openrobotics.map.Map;
 import com.openrobotics.map.entities.environment.Obstacle;
-import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.Vector2D;
-import com.openrobotics.task.Task;
-import com.openrobotics.task.TaskGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TaskGeneratorTest {
+/**
+ * Unit tests for {@link TaskGenerator}.
+ */
+public class TaskGeneratorTest {
 
     @Test
     void generatesCorrectNumberOfTasks() {

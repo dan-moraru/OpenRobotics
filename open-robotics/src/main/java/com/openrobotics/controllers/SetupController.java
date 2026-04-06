@@ -29,6 +29,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -58,7 +59,7 @@ public class SetupController {
 
     // ── MAP ─────────────────────────────────────────────────────────────
     @FXML private ComboBox<String> mapCombo;
-    @FXML private CheckBox         randomMapCheck;
+    @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
 
     // ── COORDINATION POLICY ─────────────────────────────────────────────
@@ -93,13 +94,13 @@ public class SetupController {
 
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
-    private static final String DEFAULT_WORKLOAD_MODE = "SPAWN_RATE";
+    private static final String DEFAULT_WORKLOAD_MODE = "FIXED_LIST";
     private static final int    DEFAULT_SPAWN_RATE    = 1;
     private static final int    DEFAULT_MAX_TASKS     = 10;
     private static final long   DEFAULT_WORKLOAD_SEED = 42;
     private static final int    DEFAULT_MAX_TICKS     = 30000;
     private static final String DEFAULT_RUN_NAME      = "experiment_1";
-    private static final int    DEFAULT_CANVAS_TILES  = 15;
+    // private static final int    DEFAULT_CANVAS_TILES  = 15;
 
     // ------------------------------------------------------------------ //
     //  Initialisation
@@ -109,8 +110,17 @@ public class SetupController {
     private void initialize() {
         // Map dropdown
         mapCombo.setItems(FXCollections.observableArrayList(
-                "baseline_small", "narrow_aisles", "many_intersections"));
+                "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
+        mapSeedRow.setVisible(false);
+        mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
+        mapCombo.valueProperty().addListener((obs, o, n) -> {
+            boolean isRandom = "random_map".equals(n);
+            mapSeedRow.setVisible(isRandom);
+            if (n != null) autoSetCanvasForMap(n);
+            refreshPreview();
+            checkCanvasConstraint();
+        });
 
         reservationKSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, DEFAULT_RESERVATION_K));
@@ -163,12 +173,6 @@ public class SetupController {
             refreshPreview();
         });
 
-        mapCombo.valueProperty().addListener((obs, o, n) -> {
-            if (n != null) autoSetCanvasForMap(n);
-            refreshPreview();
-            checkCanvasConstraint();
-        });
-
         // Apply canvas sizing for the initial map selection (listener fires only on changes)
         String initialMap = mapCombo.getValue();
         if (initialMap != null) autoSetCanvasForMap(initialMap);
@@ -183,7 +187,6 @@ public class SetupController {
         refreshPreview();
         checkCanvasConstraint();
     }
-    @FXML private void onResetRandomMap()    { randomMapCheck.setSelected(false); refreshPreview(); }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
     @FXML private void onResetWorkloadMode() { workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE); }
@@ -210,8 +213,23 @@ public class SetupController {
         if (vw <= 0 || vh <= 0) return;
 
         GraphicsContext gc = previewCanvas.getGraphicsContext2D();
+
+        com.openrobotics.map.Map previewMap = null;
+
+        // If a config file has been loaded, render that map instead of the combo selection
+        if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
+            previewMap = AppState.getEngine().getMap();
+        } else {
+            String mapName = mapCombo.getValue();
+            if (mapName != null) previewMap = buildBuiltinMap(mapName);
+        }
+
         int cw = canvasWidthSpinner.getValue() != null ? canvasWidthSpinner.getValue() : AppState.getCanvasWidthTiles();
         int ch = canvasHeightSpinner.getValue() != null ? canvasHeightSpinner.getValue() : AppState.getCanvasHeightTiles();
+        if (previewMap != null) {
+            cw = previewMap.getWidth();
+            ch = previewMap.getHeight();
+        }
 
         double padding = 16;
         double tileSize = Math.min((vw - 2 * padding) / cw, (vh - 2 * padding) / ch);
@@ -228,20 +246,23 @@ public class SetupController {
         gc.setStroke(Color.web("#5D5B54")); gc.setLineWidth(2.0);
         gc.strokeRect(bx, by, bw, bh);
 
-        String mapName = mapCombo.getValue();
-        if (mapName != null) {
-            com.openrobotics.map.Map previewMap = buildBuiltinMap(mapName);
-            if (previewMap != null && !previewMap.getEntities().isEmpty()) {
-                int[] bounds = computeEntityBounds(previewMap);
-                int minX = bounds[0], minY = bounds[1], maxX = bounds[2], maxY = bounds[3];
-                int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
-                int tileOffX = (cw - contentW) / 2 - minX;
-                int tileOffY = (ch - contentH) / 2 - minY;
-                int robotCount = 4; // TODO: replace with per-robot editor config
-                Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
-                drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
-                drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
+        if (previewMap != null && !previewMap.getEntities().isEmpty()) {
+            int[] bounds = computeEntityBounds(previewMap);
+            int minX = bounds[0], minY = bounds[1], maxX = bounds[2], maxY = bounds[3];
+            int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
+            int tileOffX = (cw - contentW) / 2 - minX;
+            int tileOffY = (ch - contentH) / 2 - minY;
+
+            int robotCount;
+            if (AppState.hasEngine()) {
+                robotCount = AppState.getEngine().getRobots().length;
+            } else {
+                robotCount = 4; // TODO: replace with per-robot editor config
             }
+
+            Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
+            drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
+            drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
         }
     }
 
@@ -305,13 +326,21 @@ public class SetupController {
             }
         }
         Set<String> positions = new LinkedHashSet<>();
-        for (int delta = 0; positions.size() < count && delta < map.getHeight(); delta++) {
-            int[] ys = (delta == 0) ? new int[]{spawnY} : new int[]{spawnY + delta, spawnY - delta};
-            for (int cy : ys) {
+        // Expand outward in rings in all 4 directions
+        for (int delta = 0; positions.size() < count && delta < Math.max(map.getWidth(), map.getHeight()); delta++) {
+            for (int dx = -delta; dx <= delta; dx++) {
+                for (int dy = -delta; dy <= delta; dy++) {
+                    if (Math.abs(dx) != delta && Math.abs(dy) != delta) continue;
+                    int tx = spawnX + dx;
+                    int ty = spawnY + dy;
+                    if (tx < 0 || tx >= map.getWidth() || ty < 0 || ty >= map.getHeight()) continue;
+                    String key = tx + "," + ty;
+                    if (blocked.contains(key)) continue;
+                    blocked.add(key);
+                    positions.add(key);
+                    if (positions.size() >= count) break;
+                }
                 if (positions.size() >= count) break;
-                if (cy < 0 || cy >= map.getHeight()) continue;
-                if (blocked.contains(spawnX + "," + cy)) continue;
-                positions.add(spawnX + "," + cy);
             }
         }
         return positions;
@@ -513,6 +542,10 @@ public class SetupController {
         return "baseline_small".equals(name) || "narrow_aisles".equals(name) || "many_intersections".equals(name);
     }
 
+    private boolean isRandomMap(String name) {
+        return "random_map".equals(name);
+    }
+
     private int[] computeEntityBounds(com.openrobotics.map.Map map) {
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
@@ -528,6 +561,11 @@ public class SetupController {
     }
 
     private void autoSetCanvasForMap(String mapName) {
+        if (isRandomMap(mapName)) {
+            // random map — set canvas to default size and allow free editing
+            enforceSpinnerMin(16, 10);
+            return;
+        }
         com.openrobotics.map.Map m = buildBuiltinMap(mapName);
         if (m == null || m.getEntities().isEmpty()) return;
         int[] bounds = computeEntityBounds(m);
@@ -547,6 +585,15 @@ public class SetupController {
     }
 
     private void checkCanvasConstraint() {
+        // If a config file has been loaded, use the engine's map dimensions
+        if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
+            com.openrobotics.map.Map map = AppState.getEngine().getMap();
+            enforceSpinnerMin(1, 1);
+            canvasWarnLabel.setVisible(false);
+            AppState.setCanvasDimensions(map.getWidth(), map.getHeight());
+            return;
+        }
+
         String mapName = mapCombo.getValue();
         if (mapName == null || !isBuiltinMap(mapName)) {
             enforceSpinnerMin(1, 1);
@@ -692,7 +739,8 @@ public class SetupController {
     @FXML
     private void onLoadConfig() {
         if (promptAndLoadConfig()) {
-            goToSimulationScreen();
+            refreshPreview();
+            checkCanvasConstraint();
         }
     }
 
@@ -794,11 +842,15 @@ public class SetupController {
         } catch (NumberFormatException ignored) { }
 
         com.openrobotics.map.Map map;
-        if (randomMapCheck.isSelected()) {
+        if ("random_map".equals(mapCombo.getValue())) {
             long mapSeed = seed;
             try {
                 String mapSeedStr = randomSeedField.getText().trim();
-                if (!mapSeedStr.isEmpty()) mapSeed = Long.parseLong(mapSeedStr);
+                if (!mapSeedStr.isEmpty()) {
+                    mapSeed = Long.parseLong(mapSeedStr);
+                } else {
+                    mapSeed = new java.util.Random().nextLong();
+                }
             } catch (NumberFormatException ignored) { }
             map = buildRandomMap(canvasW, canvasH, mapSeed);
         } else {
@@ -1071,7 +1123,7 @@ public class SetupController {
 
     /** Basic validation – returns {@code true} if all required fields are filled. */
     private boolean validate() {
-        if (mapCombo.getValue() == null && !randomMapCheck.isSelected()) {
+        if (mapCombo.getValue() == null) {
             statusLabel.setText("\u26a0 Please select a map or enable Random Map.");
             return false;
         }

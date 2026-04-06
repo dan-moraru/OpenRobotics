@@ -93,14 +93,20 @@
                </HBox>
                <!-- Tab strip -->
                <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
-                  <children>
-                      <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK" />
-                      <Region minWidth="8" />
-                      <Region minWidth="232.0" />
-                      <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
-                      <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
-                  </children>
-               </HBox>
+                    <children>
+                        <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK" />
+                        <Region minWidth="8" />
+                        <Region minWidth="232.0" />
+                        <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
+                        <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#onSaveConfig" styleClass="button-neutral" text="SAVE">
+                            <HBox.margin>
+                                <Insets right="8.0" bottom="4.0" />
+                            </HBox.margin>
+                        </Button>
+                    </children>
+                </HBox>
            </children>
         </VBox>
     </top>
