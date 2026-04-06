@@ -33,7 +33,7 @@ public class SimulationControllerTest extends ApplicationTest {
     /** Reset to a clean slate before every test: restart simulation, then clear the console. */
     @BeforeEach
     void resetState() {
-        clickOn("◀◀"); // restart button → resets running/paused flags
+        clickOn("↺"); // restart button → resets running/paused flags
         clickOn("✕");  // clear console
     }
 
@@ -57,7 +57,7 @@ public class SimulationControllerTest extends ApplicationTest {
     @Test
     void restart_logs_reset_message() {
         clickOn("▶");  // start first so restart has something to stop
-        clickOn("◀◀");
+        clickOn("↺");
         WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertTrue(console.getText().contains("Simulation reset."));
