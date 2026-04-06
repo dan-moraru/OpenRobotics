@@ -117,8 +117,17 @@ public class ExportResultsController implements ScreenNavigator.DialogController
 
         try {
             ResultsExportDTO dto = buildDTO(engine);
-            String fullName = fileName.endsWith(".json") ? fileName : fileName + ".json";
+            String baseName = fileName.endsWith(".json") ? fileName.replace(".json", "") : fileName;
+            String fullName = baseName + ".json";
             File outputFile = new File(selectedDirectory, fullName);
+
+            if (outputFile.exists()) {
+                int counter = 1;
+                while (outputFile.exists()) {
+                    outputFile = new File(selectedDirectory, baseName + "_" + counter + ".json");
+                    counter++;
+                }
+            }
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
