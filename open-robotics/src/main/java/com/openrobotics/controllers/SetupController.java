@@ -237,7 +237,7 @@ public class SetupController {
                 int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
                 int tileOffX = (cw - contentW) / 2 - minX;
                 int tileOffY = (ch - contentH) / 2 - minY;
-                int robotCount = 1;
+                int robotCount = 4; // TODO: replace with per-robot editor config
                 Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
                 drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
                 drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
