@@ -1,0 +1,15 @@
+/* ============================================================
+   OpenRobotics – Design Tokens
+   Central source of truth for all colors and base typography.
+   ============================================================ */
+
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 12px;
+    -fx-background: #C2BEAE;
+    -fx-base: #8D8A7F;
+    -fx-control-inner-background: #C2BEAE;
+    -fx-text-base-color: #1a1a18;
+    -fx-focus-color: rgba(141, 138, 127, 0.6);
+    -fx-faint-focus-color: rgba(141, 138, 127, 0.08);
+}

@@ -23,12 +23,9 @@
     </HBox>
 
     <!-- Object image placeholder -->
-    <StackPane styleClass="object-desc-dialog-body"
-               style="-fx-min-height: 140; -fx-padding: 16;"
-               VBox.vgrow="SOMETIMES">
-        <StackPane fx:id="objectImagePane"
-                   style="-fx-background-color: #C2BEAE; -fx-border-color: #8D8A7F; -fx-border-width: 1;"
-                   maxWidth="100" maxHeight="100">
+    <StackPane styleClass="object-desc-dialog-body object-image-zone"
+           VBox.vgrow="SOMETIMES">
+        <StackPane fx:id="objectImagePane" styleClass="object-image-pane" maxWidth="100" maxHeight="100">
             <Label fx:id="objectIconLabel" text="?" accessibleText="Placeholder icon for object type"
                    styleClass="dialog-icon-label" />
         </StackPane>

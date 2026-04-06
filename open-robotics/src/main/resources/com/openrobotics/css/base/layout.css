@@ -1,0 +1,313 @@
+/* ============================================================
+   OpenRobotics – Layout
+   SplitPane, ScrollPane, TabPane, ListView, TableView,
+   Separator, ProgressBar, and structural containers.
+   ============================================================ */
+
+/* Top bars */
+.top-bar {
+    -fx-background-color: #3D3C39;
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar-sim {
+    -fx-background-color: #C2BEAE;
+    -fx-min-height: 42px;
+    -fx-pref-height: 42px;
+    -fx-padding: 0 16 0 10;
+}
+
+.top-bar .label, .top-bar-sim .label {
+    -fx-text-fill: #3D3C39;
+}
+
+/* Tab strip */
+.tab-strip {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 28px;
+    -fx-min-height: 28px;
+    -fx-padding: 0 0 0 6;
+}
+
+.sim-tab-strip {
+    -fx-padding: 0;
+}
+
+.tab-btn-active {
+    -fx-background-color: #B8B4A6;
+    -fx-text-fill: #2A2926;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 5 16;
+    -fx-background-radius: 4 4 0 0;
+    -fx-cursor: hand;
+    -fx-border-color: #2A2926;
+    -fx-border-width: 1;
+    -fx-border-radius: 4 4 0 0;
+}
+
+.tab-btn {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.tab-btn:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* Bottom bar */
+.bottom-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 40px;
+    -fx-min-height: 40px;
+    -fx-padding: 0 12 0 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* MenuBar */
+.menu-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.menu-bar-top {
+    -fx-padding: 0 0 0 10;
+    -fx-background-insets: 0;
+    -fx-background-color: #C2BEAE;
+}
+
+.menu-bar-top > .container {
+    -fx-spacing: 14px;
+}
+
+.menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 2;
+}
+
+.menu-bar-top > .container > .menu-button > .label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+}
+
+.menu-bar-top > .container > .menu-button:hover,
+.menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #5D5B54;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 12px;
+}
+
+.menu-bar-top .menu .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
+}
+
+.menu-bar-top .menu-button > .label,
+.menu-bar-top .menu > .label,
+.menu-bar-top .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-weight: bold;
+}
+
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #5D5B54;
+}
+
+.context-menu {
+    -fx-background-color: #3D3C39;
+    -fx-border-color: #1a1a18;
+    -fx-border-width: 1px;
+}
+
+.menu-item > .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.context-menu .menu-item > .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+.menu-item:hover {
+    -fx-background-color: #5D5B54;
+}
+
+/* ScrollPane */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: #C2BEAE;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #8D8A7F;
+    -fx-background-radius: 0;
+}
+
+/* ListView */
+.list-view {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.list-cell:selected {
+    -fx-background-color: #5D5B54;
+    -fx-text-fill: #C2BEAE;
+}
+
+.list-cell:hover {
+    -fx-background-color: #9e9b8e;
+}
+
+/* TableView */
+.table-view {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #C2BEAE;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-border-color: transparent;
+    -fx-cell-size: 24px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #8D8A7F;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #5D5B54;
+}
+
+.table-row-cell:selected .label {
+    -fx-text-fill: #C2BEAE;
+}
+
+/* TabPane */
+.tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 26px;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1a1a18;
+}
+
+/* SplitPane */
+.split-pane {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 0;
+}
+
+.split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-pref-width: 2px;
+    -fx-pref-height: 2px;
+    -fx-padding: 0;
+}
+
+/* Separator */
+.separator .line {
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* ProgressBar */
+.progress-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-pref-height: 10px;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #5D5B54;
+    -fx-background-radius: 0;
+}
+
+.progress-bar .track {
+    -fx-background-color: #C2BEAE;
+    -fx-background-radius: 0;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* Info bar */
+.info-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 2 10 2 10;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 22px;
+}
+
+.info-bar .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* Outer background */
+.outer-bg {
+    -fx-background-color: #C2BEAE;
+}

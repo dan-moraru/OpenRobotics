@@ -3,12 +3,13 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.text.Font?>
 
 <!--
-  Setup Screen – outer #C2BEAE, topbar #3D3C39, tab strip #8D8A7F,
-  sidebar same beige as outer, viewport #CECCC4, bottom bar #C2BEAE,
-  START SIMULATION button dark #383632
+  Setup Screen – outer #C2BEAE, topbar #C2BEAE (sim style), tab strip #8D8A7F,
+  sidebar same beige as outer bg, viewport #CECCC4, bottom bar #C2BEAE,
+  START SIMULATION button green
 -->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -18,19 +19,18 @@
 
     <top>
         <VBox spacing="0">
-            <!-- Top bar #3D3C39 -->
-            <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+            <!-- Top bar — matches SimulationScreen style -->
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
                 <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
                     <image>
-                        <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                        <Image url="@../img/logo_black.png" backgroundLoading="true"/>
                     </image>
                 </ImageView>
                 <VBox spacing="1">
                     <Label text="OpenRobotics" styleClass="app-title" />
                     <Label text="v1.0.0" styleClass="version-label" />
                 </VBox>
-                <Region HBox.hgrow="ALWAYS" />
-                <MenuBar styleClass="menu-bar">
+                <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                     <Menu text="File">
                         <MenuItem text="Welcome Screen" onAction="#onMenuWelcome" />
                         <MenuItem text="Exit"           onAction="#onExit" />
@@ -50,11 +50,9 @@
     <center>
         <SplitPane dividerPositions="0.22">
 
-            <!-- ── ZONE 1 – Config sidebar (same beige as outer bg) ── -->
-            <ScrollPane fitToWidth="true" styleClass="sidebar-setup"
-                        style="-fx-min-width: 190px; -fx-pref-width: 240px;">
-                <VBox fx:id="configPanel" spacing="0"
-                      styleClass="outer-bg" style="-fx-padding: 0 0 20 0;">
+            <!-- ── ZONE 1 – Config sidebar ── -->
+            <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
+                <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
 
                     <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
                     <!-- map -->
@@ -153,27 +151,31 @@
                     <!-- canvas size (width × height) -->
                     <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
-                        <Label text="canvas (tiles)" styleClass="prop-label" />
+                        <Label text="W" styleClass="prop-label" />
                         <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
-                        <Label text="×" style="-fx-font-size: 11px; -fx-padding: 0 2 0 2;" />
+                        <Label text="× H" styleClass="canvas-size-separator" />
                         <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
                     </HBox>
+                    <!-- canvas warning -->
+                    <Label fx:id="canvasWarnLabel" styleClass="label-hint"
+                           wrapText="true" visible="false" managed="true"
+                           style="-fx-padding: 4 8 4 8; -fx-text-fill: #7a1f1b; -fx-font-weight: bold; -fx-font-size: 12px;" />
                 </VBox>
             </ScrollPane>
 
-            <!-- ── ZONE 2 – Disabled 2-D Viewport ── -->
-            <BorderPane style="-fx-background-color: #CECCC4;">
+            <!-- ── ZONE 2 – 2-D Preview Viewport ── -->
+            <BorderPane styleClass="viewport-preview">
                 <top>
                     <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
                         <Label text="2D Viewport" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label text="Disabled"
-                               style="-fx-text-fill: #8D8A7F; -fx-font-size: 11px;" />
+                        <Label text="Preview" styleClass="viewport-subtle-label" />
                     </HBox>
                 </top>
                 <center>
-                    <StackPane fx:id="viewportPreviewStack"
-                               style="-fx-background-color: #CECCC4;" />
+                    <StackPane fx:id="viewportPreviewStack" styleClass="viewport-preview">
+                        <Canvas fx:id="previewCanvas" managed="false" />
+                    </StackPane>
                 </center>
             </BorderPane>
         </SplitPane>
@@ -191,4 +193,3 @@
     </bottom>
 
 </BorderPane>
-
