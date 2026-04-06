@@ -167,10 +167,12 @@
     -fx-border-width: 1 0 0 0;
 }
 
-/* Top bar stat labels */
+/* Top bar stat labels – fixed width prevents layout wiggle when text changes */
 .sim-stat-label {
     -fx-text-fill: #3D3C39;
     -fx-font-size: 11px;
+    -fx-min-width: 120px;
+    -fx-alignment: CENTER_LEFT;
 }
 
 .sim-stat-spacer {

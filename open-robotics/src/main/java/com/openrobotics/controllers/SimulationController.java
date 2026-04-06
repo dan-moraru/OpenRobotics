@@ -18,7 +18,6 @@ import com.openrobotics.util.ViewportTips;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -56,7 +55,7 @@ import java.util.Map;
  *   <li>Viewport navigation (right-click pan, scroll zoom)</li>
  * </ul>
  */
-public class SimulationController {
+public class SimulationController implements ScreenNavigator.Cleanable {
 
     // ── TOPBAR LIVE STATS ────────────────────────────────────────────────
     @FXML private Label objsLabel;
@@ -162,6 +161,7 @@ public class SimulationController {
     // Animation state
     private boolean animating = false;
     private double animationProgress = 0.0;
+    private Timeline animTimeline = null;
     private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
     private static final int ANIMATION_FRAMES = 5;
 
@@ -294,13 +294,17 @@ public class SimulationController {
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
-        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling
+        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling.
+        // Re-lock on every width change so layout passes from label/outliner updates cannot drift it.
         if (mainSplitPane != null) {
-            Platform.runLater(() -> {
-                if (mainSplitPane.getWidth() > 0) {
-                    mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+            mainSplitPane.widthProperty().addListener((obs, oldW, newW) -> {
+                if (newW.doubleValue() > 0) {
+                    mainSplitPane.setDividerPosition(0, 230.0 / newW.doubleValue());
                 }
             });
+            if (mainSplitPane.getWidth() > 0) {
+                mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+            }
         }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
@@ -902,18 +906,19 @@ public class SimulationController {
         }
     }
 
-    private void filterOutliner(String query) {
+    private void filterOutliner(@SuppressWarnings("unused") String query) {
+        // query is consumed by populateOutliner() via outlinerSearchField.getText()
         populateOutliner();
     }
 
-    /** Rebuilds the outliner list from the current engine map. */
+    /** Rebuilds the outliner list from the current engine map.
+     *  Compares new entries against current list to avoid unnecessary layout invalidation. */
     private void populateOutliner() {
         if (outlinerListView == null || engine == null || engine.getMap() == null || engine.getMap().getEntities() == null) return;
         String filter = (outlinerSearchField != null && outlinerSearchField.getText() != null)
                 ? outlinerSearchField.getText().toLowerCase() : "";
-        outlinerListView.getItems().clear();
-        outlinerBacking.clear();
-        int count = 0;
+        List<String> newItems = new ArrayList<>();
+        List<Object> newBacking = new ArrayList<>();
         for (MapEntity e : engine.getMap().getEntities()) {
             String icon  = (e instanceof Robot) ? "\ud83e\udd16 "
                          : (e instanceof Rack)  ? "\ud83d\udce6 "
@@ -921,26 +926,34 @@ public class SimulationController {
                          : (e instanceof Obstacle) ? "\ud83e\uddf1 " : "\u25ab ";
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
-                outlinerListView.getItems().add(entry);
-                outlinerBacking.add(e);
-                count++;
+                newItems.add(entry);
+                newBacking.add(e);
             }
         }
 
         if (engine.getDispatcher() != null) {
             for (Task task : engine.getDispatcher().getAllTasks()) {
                 String icon = "\u2b07 ";
-                String entry = icon + "Task #" + task.getId() + " " + task.getStatus() 
+                String entry = icon + "Task #" + task.getId() + " " + task.getStatus()
                     + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
                 if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
-                    outlinerListView.getItems().add(entry);
-                    outlinerBacking.add(task);
-                    count++;
+                    newItems.add(entry);
+                    newBacking.add(task);
                 }
             }
         }
 
-        if (objsLabel != null) objsLabel.setText("Objects: " + count);
+        // Only update the ListView if content actually changed to avoid layout thrashing
+        if (!newItems.equals(outlinerListView.getItems())) {
+            outlinerListView.getItems().setAll(newItems);
+            outlinerBacking.clear();
+            outlinerBacking.addAll(newBacking);
+        }
+
+        String newText = "Objects: " + newItems.size();
+        if (objsLabel != null && !newText.equals(objsLabel.getText())) {
+            objsLabel.setText(newText);
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -1009,6 +1022,11 @@ public class SimulationController {
 
     @FXML
     private void onRestart() {
+        if (animTimeline != null) { animTimeline.stop(); animTimeline = null; }
+        animating = false;
+        animationProgress = 0.0;
+        prevRobotPositions.clear();
+        selectedEntity = null;
         onStop();
         localTick = 0;
         if (AppState.getConfigPath() != null) {
@@ -1084,6 +1102,17 @@ public class SimulationController {
         }
     }
 
+    /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
+    @Override
+    public void cleanup() {
+        stopLoop();
+        if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
+        if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
+        warehouseCanvas.widthProperty().unbind();
+        warehouseCanvas.heightProperty().unbind();
+        animating = false;
+    }
+
     private void doTick() {
         if (engine == null) return;
         if (animating) return;
@@ -1129,9 +1158,10 @@ public class SimulationController {
     }
 
     private void startAnimation() {
+        if (animTimeline != null) animTimeline.stop();
         animating = true;
         animationProgress = 0.0;
-        Timeline animTimeline = new Timeline();
+        animTimeline = new Timeline();
         final int totalFrames = ANIMATION_FRAMES;
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
@@ -1179,12 +1209,12 @@ public class SimulationController {
     }
 
     @FXML
-private void onReturnToOrigin() {
-    zoom = 1.0;
-    centerViewportOnCanvas();
-    drawViewport();
-    log("Viewport reset to origin.");
-}
+    private void onReturnToOrigin() {
+        zoom = 1.0;
+        centerViewportOnCanvas();
+        drawViewport();
+        log("Viewport reset to origin.");
+    }
 
     @FXML
     private void onToggleSidebar() {
