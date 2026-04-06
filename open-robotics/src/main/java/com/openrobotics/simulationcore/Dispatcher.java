@@ -107,8 +107,7 @@ public class Dispatcher {
      * @param task the task to be requeued
      */
     public void requeueTask(Task task) {
-        // Recovery should not change how many tasks the run was originally given.
-        enqueueTask(task, false);
+        enqueueTask(task, true);
     }
 
     /**

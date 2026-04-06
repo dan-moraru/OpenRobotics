@@ -440,8 +440,9 @@ public class SimulationEngine {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
-        // Checking if the warehouse workload has been completed
-        if (workloadComplete()) {
+        // Checking if the warehouse workload has been completed.
+        // "No configured tasks" is treated as sandbox mode: ticks still run.
+        if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
             this.running = false;
             return false;
         }
