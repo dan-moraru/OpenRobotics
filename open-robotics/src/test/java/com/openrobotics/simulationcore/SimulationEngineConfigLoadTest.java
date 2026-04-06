@@ -1,4 +1,4 @@
-package com.openrobotics;
+package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
