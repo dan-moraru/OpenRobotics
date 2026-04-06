@@ -505,7 +505,7 @@ public class ResultsController {
 
     @FXML
     private void onExport() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Export Results");
+        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_EXPORT_RESULTS, "Export Results");
     }
 
     // ------------------------------------------------------------------ //

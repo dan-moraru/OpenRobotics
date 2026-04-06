@@ -30,6 +30,7 @@ public final class ScreenNavigator {
     public static final String DIALOG_SAVE_CONFIG   = "/com/openrobotics/fxml/SaveConfigDialog.fxml";
     public static final String DIALOG_OBJECT_DESC   = "/com/openrobotics/fxml/ObjectDescDialog.fxml";
     public static final String DIALOG_EXIT_CONFIRM  = "/com/openrobotics/fxml/ExitConfirmDialog.fxml";
+    public static final String DIALOG_EXPORT_RESULTS = "/com/openrobotics/fxml/ExportResultsDialog.fxml";
 
     /** The application's primary stage – set once in {@link com.openrobotics.MainApp}. */
     private static Stage primaryStage;
