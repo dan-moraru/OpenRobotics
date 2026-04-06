@@ -702,11 +702,16 @@ public class SimulationEngine {
 
     /**
      * Tracks robot visits on tiles for heatmap visualization.
-     * Each robot's current position increments the visit count of that tile.
+     * Only robots that are actively moving contribute to visit counts —
+     * idle, charging, loading, or unloading robots are excluded so they
+     * do not inflate the count on a single tile.
      */
     private void trackVisits() {
         if (robots == null || map == null) return;
         for (Robot robot : robots) {
+            // Only count visits when the robot is actively navigating;
+            // idle/charging/loading/unloading states would inflate a single tile.
+            if (robot.getState() != RobotState.MOVING) continue;
             Tile tile = map.getTile(robot.getPosition().getX(), robot.getPosition().getY());
             if (tile != null) {
                 tile.incrementVisitCount();

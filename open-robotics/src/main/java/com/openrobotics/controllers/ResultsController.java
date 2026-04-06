@@ -321,8 +321,8 @@ public class ResultsController {
         double w = heatmapCanvas.getWidth();
         double h = heatmapCanvas.getHeight();
 
-        // Background
-        gc.setFill(javafx.scene.paint.Color.web("#CDCBC3"));
+        // Background — slightly lighter than the viewport bg so unvisited tiles stand out
+        gc.setFill(javafx.scene.paint.Color.web("#E8E4DB"));
         gc.fillRect(0, 0, w, h);
 
         SimulationEngine engine = AppState.getEngine();
@@ -336,17 +336,11 @@ public class ResultsController {
 
         // Compute max visit count for normalization
         int maxVisits = 0;
-        int totalVisits = 0;
-        int visitedTileCount = 0;
         for (int y = 0; y < mapH; y++) {
             for (int x = 0; x < mapW; x++) {
                 com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
                 if (tile != null) {
                     int visits = tile.getVisitCount();
-                    totalVisits += visits;
-                    if (visits > 0) {
-                        visitedTileCount++;
-                    }
                     if (visits > maxVisits) {
                         maxVisits = visits;
                     }
@@ -354,22 +348,10 @@ public class ResultsController {
             }
         }
 
-        // Threshold: "high traffic" = top 33%, "medium" = 1..top 33%, "low/never visited" = 0
-        int highThreshold = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.33)) : 0;
+        // Three-band heatmap: low (top 33%), medium (66%), high (100%)
+        // Visits that equal maxVisits get the "high" color regardless of threshold rounding.
+        int lowThreshold  = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.33)) : 0;
         int mediumThreshold = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.66)) : 0;
-
-        // Helper to get heatmap color
-        java.util.function.IntUnaryOperator getHeatColor = (visits) -> {
-            if (visits == 0) {
-                return 0x8D8A7F; // grey - never visited
-            } else if (visits >= mediumThreshold) {
-                return 0xAA3333; // red - high traffic
-            } else if (visits >= highThreshold) {
-                return 0xD4A017; // yellow/amber - medium traffic
-            } else {
-                return 0x8D8A7F; // grey - low traffic
-            }
-        };
 
         // Draw heatmap tiles
         for (int y = 0; y < mapH; y++) {
@@ -377,11 +359,21 @@ public class ResultsController {
                 com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
                 if (tile != null) {
                     int visits = tile.getVisitCount();
-                    long color = getHeatColor.applyAsInt(visits);
-                    double r = ((color >> 16) & 0xFF) / 255.0;
-                    double g = ((color >> 8) & 0xFF) / 255.0;
-                    double b = (color & 0xFF) / 255.0;
-                    gc.setFill(new javafx.scene.paint.Color(r, g, b, 0.85));
+                    javafx.scene.paint.Color color;
+                    if (visits == 0) {
+                        // Unvisited, very light warm sand so it is clearly different from the canvas bg
+                        color = javafx.scene.paint.Color.web("#F4F1EA");
+                    } else if (visits >= mediumThreshold) {
+                        // High traffic, red
+                        color = javafx.scene.paint.Color.web("#C0392B");
+                    } else if (visits >= lowThreshold) {
+                        // Medium traffic, amber
+                        color = javafx.scene.paint.Color.web("#D4860A");
+                    } else {
+                        // Low traffic, cool blue-grey to differentiate from unvisited
+                        color = javafx.scene.paint.Color.web("#6E9BAA");
+                    }
+                    gc.setFill(color);
                     gc.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize - 1, tileSize - 1);
                 }
             }

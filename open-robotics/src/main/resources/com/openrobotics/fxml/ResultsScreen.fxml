@@ -199,16 +199,32 @@
                 <VBox spacing="5" styleClass="mask-legend-panel">
                     <Label fx:id="maskTitleLabel" styleClass="mask-panel-title" text="Visit Frequency" />
                     <Label fx:id="maskSubtitleLabel" styleClass="mask-panel-subtitle"
-                           text="Tiles colored by robot visit count" />
+                           text="Only MOVING robots counted (idle/charging excluded)" />
                     <HBox spacing="3">
-                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-red" />
-                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-yellow" />
-                        <Pane prefHeight="14" prefWidth="70" styleClass="mask-legend-tile-grey" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-red" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-yellow" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-cyan" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-sand" />
                     </HBox>
                     <HBox spacing="3">
-                        <Label styleClass="mask-legend-label" text="High traffic" />
-                        <Label styleClass="mask-legend-label" text="Medium traffic" />
-                        <Label styleClass="mask-legend-label" text="Low traffic" />
+                        <Label styleClass="mask-legend-label" text="High" />
+                        <Label styleClass="mask-legend-label" text="Medium" />
+                        <Label styleClass="mask-legend-label" text="Low" />
+                        <Label styleClass="mask-legend-label" text="Unvisited" />
+                    </HBox>
+                    <Separator styleClass="mask-legend-separator" />
+                    <Label styleClass="mask-panel-subtitle" text="Entity overlay (when enabled)" />
+                    <HBox spacing="3">
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-brown" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-black" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-grey" />
+                        <Pane prefHeight="14" prefWidth="60" styleClass="mask-legend-tile-blue" />
+                    </HBox>
+                    <HBox spacing="3">
+                        <Label styleClass="mask-legend-label" text="Charging" />
+                        <Label styleClass="mask-legend-label" text="Wall" />
+                        <Label styleClass="mask-legend-label" text="Rack" />
+                        <Label styleClass="mask-legend-label" text="Dropoff" />
                     </HBox>
                 </VBox>
 
