@@ -46,12 +46,11 @@ import java.util.Set;
  * <p>Manages all simulation configuration inputs (§4.1.2):
  * <ul>
  *   <li>Map selection / random map generation</li>
- *   <li>Robot count + navigation algorithm</li>
  *   <li>Coordination policy + reservation k</li>
  *   <li>Workload parameters</li>
  *   <li>Simulation tick settings</li>
  *   <li>Load / Save configuration file</li>
- *   <li>Start Simulation</li>
+ *   <li>Edit Warehouse</li>
  * </ul>
  */
 public class SetupController {
@@ -846,6 +845,7 @@ public class SetupController {
     private com.openrobotics.map.Map buildBuiltinMapInCanvas(String mapName, int canvasW, int canvasH) {
         com.openrobotics.map.Map src = buildBuiltinMap(mapName);
         com.openrobotics.map.Map map = new com.openrobotics.map.Map(canvasW, canvasH);
+        if (src == null) return map;   // empty map — blank canvas
 
         int[] bounds = computeEntityBounds(src);
         int offsetX = 1 - bounds[0];
