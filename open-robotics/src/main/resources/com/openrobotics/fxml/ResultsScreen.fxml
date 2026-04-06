@@ -174,7 +174,7 @@
                     <Button onAction="#onNewExperiment" text="NEW SIMULATION" />
                     <Button onAction="#onViewHistory" styleClass="button-neutral" text="RETURN TO EDITOR" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button onAction="#onExport" styleClass="button-confirm" text="EXPORT CONFIG" />
+                    <Button onAction="#onExport" styleClass="button-confirm" text="EXPORT RESULTS" />
                 </HBox>
 
             </VBox>
@@ -223,7 +223,7 @@
 
                 <!-- Export bar -->
                 <HBox alignment="CENTER_RIGHT" styleClass="results-actions-bar">
-                    <Button onAction="#onExport" styleClass="button-confirm" text="EXPORT CONFIG" />
+                    <Button onAction="#onExport" styleClass="button-confirm" text="EXPORT RESULTS" />
                 </HBox>
 
             </VBox>
