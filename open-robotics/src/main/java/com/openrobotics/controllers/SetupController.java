@@ -36,7 +36,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Controller for {@code SetupScreen.fxml}.
