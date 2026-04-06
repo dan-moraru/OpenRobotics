@@ -61,10 +61,6 @@ public class SetupController {
     @FXML private CheckBox         randomMapCheck;
     @FXML private TextField        randomSeedField;
 
-    // ── ROBOTS ──────────────────────────────────────────────────────────
-    @FXML private Spinner<Integer> robotCountSpinner;
-    @FXML private ComboBox<String> navAlgoCombo;
-
     // ── COORDINATION POLICY ─────────────────────────────────────────────
     @FXML private ComboBox<String> policyCombo;
     @FXML private Spinner<Integer> reservationKSpinner;
@@ -95,8 +91,6 @@ public class SetupController {
     //  Default values (spec §5.1.3.4)
     // ------------------------------------------------------------------ //
 
-    private static final int    DEFAULT_ROBOT_COUNT   = 4;
-    private static final String DEFAULT_NAV_ALGO      = "GREEDY";
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final String DEFAULT_WORKLOAD_MODE = "SPAWN_RATE";
@@ -118,15 +112,8 @@ public class SetupController {
                 "baseline_small", "narrow_aisles", "many_intersections"));
         mapCombo.getSelectionModel().selectFirst();
 
-        robotCountSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, DEFAULT_ROBOT_COUNT));
         reservationKSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, DEFAULT_RESERVATION_K));
-
-        // Navigation algorithm
-        navAlgoCombo.setItems(FXCollections.observableArrayList(
-                "GREEDY", "BUG", "RTA_STAR"));
-        navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO);
 
         // Coordination policy
         policyCombo.setItems(FXCollections.observableArrayList(
@@ -181,7 +168,6 @@ public class SetupController {
             refreshPreview();
             checkCanvasConstraint();
         });
-        robotCountSpinner.valueProperty().addListener((obs, o, n) -> refreshPreview());
 
         // Apply canvas sizing for the initial map selection (listener fires only on changes)
         String initialMap = mapCombo.getValue();
@@ -199,8 +185,6 @@ public class SetupController {
     }
     @FXML private void onResetRandomMap()    { randomMapCheck.setSelected(false); refreshPreview(); }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
-    @FXML private void onResetRobotCount()   { robotCountSpinner.getValueFactory().setValue(DEFAULT_ROBOT_COUNT); }
-    @FXML private void onResetNavAlgo()      { navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO); }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
     @FXML private void onResetWorkloadMode() { workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE); }
     @FXML private void onResetSpawnRate()    { spawnRateField.setText(String.valueOf(DEFAULT_SPAWN_RATE)); }
@@ -253,7 +237,7 @@ public class SetupController {
                 int contentW = maxX - minX + 1, contentH = maxY - minY + 1;
                 int tileOffX = (cw - contentW) / 2 - minX;
                 int tileOffY = (ch - contentH) / 2 - minY;
-                int robotCount = robotCountSpinner.getValue() != null ? robotCountSpinner.getValue() : 1;
+                int robotCount = 1;
                 Set<String> robotTiles = computeRobotPositions(previewMap, robotCount);
                 drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
                 drawPreviewRobots(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY, robotTiles);
@@ -837,9 +821,8 @@ public class SetupController {
 
         CoordinationPolicy policy = buildCoordinationPolicy();
 
-        int robotCount = robotCountSpinner.getValue() != null ? robotCountSpinner.getValue() : DEFAULT_ROBOT_COUNT;
-        String navAlgo = navAlgoCombo.getValue();
-        if (navAlgo == null) navAlgo = DEFAULT_NAV_ALGO;
+        int robotCount = 4;
+        String navAlgo = "GREEDY";
 
         List<Vector2D> spawnCandidates = new ArrayList<>();
         for (MapEntity e : map.getEntities()) {

@@ -61,19 +61,6 @@
                         <Label text="Map" styleClass="prop-label" />
                         <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
-                    <!-- robot count -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetRobotCount" />
-                        <Label text="Robot Count" styleClass="prop-label" />
-                        <Spinner fx:id="robotCountSpinner"
-                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- nav algorithm -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetNavAlgo" />
-                        <Label text="Navigation Algorithm" styleClass="prop-label" />
-                        <ComboBox fx:id="navAlgoCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
                     <!-- coordination policy -->
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
