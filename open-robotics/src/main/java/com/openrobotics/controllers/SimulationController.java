@@ -250,6 +250,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             AppState.setEngine(engine);
         }
 
+        // Update RAM display
+        updateRamLabel();
+
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
 
@@ -659,6 +662,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             // Right click: pan mode
             draggingOnCanvas = null;
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseDragged(MouseEvent e) {
@@ -685,6 +691,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         lastMouseX = e.getX();
         lastMouseY = e.getY();
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseReleased(MouseEvent e) {
@@ -695,6 +704,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     // ------------------------------------------------------------------ //
@@ -992,6 +1004,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
                 startLoop();
                 log("Simulation resumed.");
+                // Update RAM display
+                updateRamLabel();
             }
         } else {
             running = true;
@@ -1004,6 +1018,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
             startLoop();
             log("Simulation started.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1019,6 +1035,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             playBtn.setStyle("-fx-background-color: #90EE90;");
             pauseBtn.setStyle("-fx-background-color: #C23B42;");
             log("Simulation paused.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1034,6 +1052,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation stopped.");
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML
@@ -1070,6 +1090,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
         }
         log("Simulation reset.");
+        // Update RAM display
+        updateRamLabel();
         populateOutliner();
         drawViewport();
     }
@@ -1086,6 +1108,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
         doTick();
         log("Step \u2192 TICK " + localTick);
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -1311,6 +1335,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onExit() {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
+    }
+
+    private void updateRamLabel() {
+        if (ramLabel != null) {
+            long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
+            ramLabel.setText("RAM: " + usedKb + " KB");
+        }
     }
 }
 
