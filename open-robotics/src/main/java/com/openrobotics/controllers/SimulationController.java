@@ -651,7 +651,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
             if (entityHit != null) {
                 selectEntity(entityHit);
-                draggingOnCanvas = null;
+                draggingOnCanvas = entityHit;  // fixed: enables left-drag to move
             } else {
                 selectEntity(null);
                 draggingOnCanvas = null;
