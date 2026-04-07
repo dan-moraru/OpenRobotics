@@ -108,12 +108,6 @@
                         <TextField fx:id="workloadSeedField" text="42"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
-                    <!-- tick speed -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetTickMs" />
-                        <Label text="Tick Speed (ms)" styleClass="prop-label" />
-                        <TextField fx:id="tickMsField" text="100" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
                     <!-- battery capacity -->
                     <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetBatteryCapacity" />
@@ -137,18 +131,6 @@
                         <Button text="↺" styleClass="button-reset" onAction="#onResetEnergyPerMove" />
                         <Label text="Energy/Move" styleClass="prop-label" />
                         <TextField fx:id="energyPerMoveField" text="1" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- loading ticks -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetLoadingTicks" />
-                        <Label text="Loading Ticks" styleClass="prop-label" />
-                        <Spinner fx:id="loadingTicksSpinner" editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- unloading ticks -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetUnloadingTicks" />
-                        <Label text="Unloading Ticks" styleClass="prop-label" />
-                        <Spinner fx:id="unloadingTicksSpinner" editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- max ticks -->
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
