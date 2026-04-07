@@ -477,6 +477,8 @@ public class SimulationEngine {
         return map;
     }
 
+    public long getSeed() { return seed; }
+
     /**
      * Runs a tick of the simulation
      *

@@ -90,7 +90,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
     @FXML private VBox propertiesPanel;
     @FXML private Label propDescLabel;
-    @FXML private TextField strPropField;
 
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
@@ -842,14 +841,109 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         propertiesPanel.getChildren().add(posBox);
 
         if (entity instanceof Robot robot) {
-            Label robotProps = new Label("Battery: " + robot.getBattery() + " | State: " + robot.getState());
-            propertiesPanel.getChildren().add(robotProps);
+            // Battery (read-only display)
+            HBox batteryBox = new HBox(8);
+            batteryBox.getChildren().addAll(
+                new Label("Battery:"),
+                new Label(String.format("%.1f%%", robot.getBattery()))
+            );
+            propertiesPanel.getChildren().add(batteryBox);
+
+            // Navigation Algorithm
+            HBox navBox = new HBox(8);
+            ComboBox<String> navCombo = new ComboBox<>();
+            navCombo.getItems().addAll("GREEDY", "BUG", "RTA_STAR");
+            String currentNav = "GREEDY";
+            if (robot.getNav() != null) {
+                String navClass = robot.getNav().getClass().getSimpleName().toUpperCase();
+                if (navClass.contains("BUG")) currentNav = "BUG";
+                else if (navClass.contains("RTA") || navClass.contains("STAR")) currentNav = "RTA_STAR";
+                else currentNav = "GREEDY";
+            }
+            navCombo.setValue(currentNav);
+            navCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null) return;
+                long seed = engine != null ? engine.getSeed() : 42L;
+                switch (newVal) {
+                    case "GREEDY"   -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
+                    case "BUG"      -> robot.setNav(new com.openrobotics.robot.navigation.BugNavigationStrategy(seed));
+                    case "RTA_STAR" -> robot.setNav(new com.openrobotics.robot.navigation.RtaStarNavigationStrategy(seed));
+                }
+            });
+            navBox.getChildren().addAll(new Label("Nav Algorithm:"), navCombo);
+            propertiesPanel.getChildren().add(navBox);
+
+            // Sensor Algorithm
+            HBox sensorBox = new HBox(8);
+            ComboBox<String> sensorCombo = new ComboBox<>();
+            sensorCombo.getItems().addAll("PROXIMITY", "RANGE");
+            String currentSensor = "PROXIMITY";
+            if (robot.getSensor() != null) {
+                String sensorClass = robot.getSensor().getClass().getSimpleName().toUpperCase();
+                if (sensorClass.contains("RANGE")) currentSensor = "RANGE";
+            }
+            sensorCombo.setValue(currentSensor);
+            sensorCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null) return;
+                switch (newVal) {
+                    case "PROXIMITY" -> robot.setSensor(new com.openrobotics.robot.sensors.ProximitySensor());
+                    case "RANGE"     -> robot.setSensor(new com.openrobotics.robot.sensors.RangeSensor());
+                }
+            });
+            sensorBox.getChildren().addAll(new Label("Sensor:"), sensorCombo);
+            propertiesPanel.getChildren().add(sensorBox);
         } else if (entity instanceof Station) {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
-        } else if (entity instanceof Rack) {
-            Label rackProps = new Label("Rack configuration");
-            propertiesPanel.getChildren().add(rackProps);
+        } else if (entity instanceof Rack rack) {
+            // Box Count
+            HBox boxCountBox = new HBox(8);
+            Spinner<Integer> boxCountSpinner = new Spinner<>(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, rack.getBoxCount()));
+            boxCountSpinner.setEditable(true);
+            boxCountSpinner.setPrefWidth(70);
+            boxCountSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) rack.setBoxCount(newVal);
+            });
+            boxCountBox.getChildren().addAll(new Label("Box Count:"), boxCountSpinner);
+            propertiesPanel.getChildren().add(boxCountBox);
+
+            // Valid Dropoff Points
+            Label dropoffLabel = new Label("Valid Dropoffs:");
+            propertiesPanel.getChildren().add(dropoffLabel);
+
+            ListView<String> dropoffList = new ListView<>();
+            dropoffList.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
+            dropoffList.setPrefHeight(80);
+
+            List<com.openrobotics.map.entities.station.DeliveryStation> stations = new ArrayList<>();
+            if (engine != null && engine.getMap() != null) {
+                for (com.openrobotics.map.MapEntity me : engine.getMap().getEntities()) {
+                    if (me instanceof com.openrobotics.map.entities.station.DeliveryStation ds) {
+                        stations.add(ds);
+                        dropoffList.getItems().add(ds.getName());
+                        if (rack.getValidDropoffIds().contains(ds.getId())) {
+                            int idx = dropoffList.getItems().size() - 1;
+                            dropoffList.getSelectionModel().select(idx);
+                        }
+                    }
+                }
+            }
+            Label dropoffHint = new Label("(empty = all valid)");
+            dropoffHint.setStyle("-fx-font-size: 10; -fx-text-fill: #888;");
+
+            final List<com.openrobotics.map.entities.station.DeliveryStation> stationsFinal = stations;
+            dropoffList.getSelectionModel().getSelectedIndices().addListener(
+                (javafx.collections.ListChangeListener<Integer>) c -> {
+                    List<java.util.UUID> selected = new ArrayList<>();
+                    for (int idx : dropoffList.getSelectionModel().getSelectedIndices()) {
+                        if (idx >= 0 && idx < stationsFinal.size()) {
+                            selected.add(stationsFinal.get(idx).getId());
+                        }
+                    }
+                    rack.setValidDropoffIds(selected);
+                });
+            propertiesPanel.getChildren().addAll(dropoffList, dropoffHint);
         }
     }
 
@@ -966,11 +1060,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ------------------------------------------------------------------ //
     //  Properties panel reset
     // ------------------------------------------------------------------ //
-
-    @FXML
-    private void onResetStringProp() {
-        if (strPropField != null) strPropField.setText("Hello");
-    }
 
     // ------------------------------------------------------------------ //
     //  Playback Controls (§4.1.3 B, zone 5)
