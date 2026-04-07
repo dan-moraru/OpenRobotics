@@ -59,7 +59,7 @@ public class Robot extends MapEntity {
     }
 
     private void initMovementFields() {
-        this.battery = 100.0f;
+        this.battery = config.batteryCapacity;
         this.nav = null;
         this.sensor = null;
         this.state = RobotState.IDLE;
