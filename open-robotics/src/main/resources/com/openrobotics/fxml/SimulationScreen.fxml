@@ -40,7 +40,7 @@
   console bg #32312D, console header #C2BEAE
 -->
 
-<BorderPane prefHeight="1080.0" prefWidth="1920.0" styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
+<BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
 
     <top>
         <VBox spacing="0">
@@ -116,7 +116,7 @@
            <items>
    
                <!-- ── LEFT SIDEBAR #8D8A7F ── -->
-               <VBox fx:id="sidebarPanel" maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
+               <VBox fx:id="sidebarPanel" minWidth="200.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
       <children>
       
                       <!-- Add Object | Outliner tabs -->

@@ -300,19 +300,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
-        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling.
-        // Re-lock on every width change so layout passes from label/outliner updates cannot drift it.
-        if (mainSplitPane != null) {
-            mainSplitPane.widthProperty().addListener((obs, oldW, newW) -> {
-                if (newW.doubleValue() > 0) {
-                    mainSplitPane.setDividerPosition(0, 230.0 / newW.doubleValue());
-                }
-            });
-            if (mainSplitPane.getWidth() > 0) {
-                mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
-            }
-        }
-
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
     }
 
