@@ -103,6 +103,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
     @FXML private Button      speed3Btn;
+    @FXML private Button      playBtn;
+    @FXML private Button      pauseBtn;
     @FXML private ProgressBar simProgressBar;
 
     // ── Viewport navigation state ─────────────────────────────────────────
@@ -293,6 +295,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (editModeLabel    != null) editModeLabel.setText("Edit mode");
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
+
+        // Reset button colors to default CSS style (beige)
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
 
         // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling.
         // Re-lock on every width change so layout passes from label/outliner updates cannot drift it.
@@ -975,23 +981,29 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
-        if (!running) {
+        if (running) {
+            if (paused) {
+                paused = false;
+                if (simStatusLabel != null) {
+                    simStatusLabel.setText("RUNNING");
+                    simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+                }
+                playBtn.setStyle("-fx-background-color: #2E9E5B;");
+                pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+                startLoop();
+                log("Simulation resumed.");
+            }
+        } else {
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
                 simStatusLabel.setText("RUNNING");
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
+            playBtn.setStyle("-fx-background-color: #2E9E5B;");
+            pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
             startLoop();
             log("Simulation started.");
-        } else if (paused) {
-            paused = false;
-            if (simStatusLabel != null) {
-                simStatusLabel.setText("RUNNING");
-                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
-            }
-            startLoop();
-            log("Simulation resumed.");
         }
     }
 
@@ -1004,6 +1016,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setText("PAUSED");
                 simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
             }
+            playBtn.setStyle("-fx-background-color: #90EE90;");
+            pauseBtn.setStyle("-fx-background-color: #C23B42;");
             log("Simulation paused.");
         }
     }
@@ -1017,6 +1031,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             simStatusLabel.setText("STOPPED");
             simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
         }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation stopped.");
     }
 
@@ -1154,6 +1170,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation complete at TICK " + localTick + ".");
     }
 

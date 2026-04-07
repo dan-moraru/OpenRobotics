@@ -268,8 +268,8 @@
                                              <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
                                              <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
                                              <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />
-                                             <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
-                                             <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
+                                             <Button fx:id="playBtn" onAction="#onPlay" styleClass="playback-btn" text="▶" />
+                                             <Button fx:id="pauseBtn" onAction="#onPause" styleClass="playback-btn" text="⏸" />
                                              <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
                                          </children>
                                      </HBox>

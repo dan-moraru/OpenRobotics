@@ -174,7 +174,7 @@
             <Label fx:id="statusLabel" text="" styleClass="label-hint" />
             <Region HBox.hgrow="ALWAYS" />
             <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig" />
-            <Button text="START SIMULATION" styleClass="button-green" onAction="#onStartSimulation" />
+            <Button text="NEXT" styleClass="button-green" onAction="#onStartSimulation" />
         </HBox>
     </bottom>
 
