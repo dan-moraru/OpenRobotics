@@ -126,6 +126,41 @@
     -fx-background-color: #5D5B54;
 }
 
+/* Menu bar overrides for .top-bar-sim (shared across Setup, Simulation, Results screens) */
+.top-bar-sim .menu-bar-top > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 2 10 2 10;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button > .label,
+.top-bar-sim .menu-bar-top .menu > .label,
+.top-bar-sim .menu-bar-top .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-weight: bold;
+}
+
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing {
+    -fx-background-color: #5D5B54;
+}
+
+/* High-specificity override: keep menu-bar-top text dark by default outside top-bar-sim */
+.menu-bar-top .menu-button .label {
+    -fx-text-fill: #3D3C39 !important;
+}
+
+/* On hover/showing inside top-bar-sim, text turns light (beats the rule above) */
+.top-bar-sim .menu-bar-top > .container > .menu-button:hover > .label,
+.top-bar-sim .menu-bar-top > .container > .menu-button:showing > .label {
+    -fx-text-fill: #C2BEAE !important;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #C2BEAE !important;
+}
+
 .context-menu {
     -fx-background-color: #3D3C39;
     -fx-border-color: #1a1a18;
