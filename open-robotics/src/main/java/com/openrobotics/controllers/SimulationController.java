@@ -1053,7 +1053,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         } else {
             // TODO: make sure template map resets here
         }
-        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + (engine != null ? engine.getTickCounter() : 0));
         if (simProgressBar != null) simProgressBar.setProgress(0);
         if (simStatusLabel != null) {
             simStatusLabel.setText("READY");
