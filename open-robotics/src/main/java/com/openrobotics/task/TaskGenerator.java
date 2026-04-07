@@ -25,7 +25,7 @@ public class TaskGenerator {
         List<Task> tasks = new ArrayList<>();
 
         // Collect all delivery stations indexed by UUID
-        Map<UUID, DeliveryStation> stationById = new LinkedHashMap<>();
+        java.util.Map<UUID, DeliveryStation> stationById = new LinkedHashMap<>();
         List<DeliveryStation> allStations = new ArrayList<>();
         for (MapEntity e : map.getEntities()) {
             if (e instanceof DeliveryStation ds) {
@@ -52,14 +52,14 @@ public class TaskGenerator {
             // Resolve valid dropoff stations for this rack
             List<DeliveryStation> validStations;
             if (rack.getValidDropoffIds() == null || rack.getValidDropoffIds().isEmpty()) {
-                validStations = allStations;
+                validStations = new ArrayList<>(allStations);
             } else {
                 validStations = new ArrayList<>();
                 for (UUID id : rack.getValidDropoffIds()) {
                     DeliveryStation ds = stationById.get(id);
                     if (ds != null) validStations.add(ds);
                 }
-                if (validStations.isEmpty()) validStations = allStations;
+                if (validStations.isEmpty()) validStations = new ArrayList<>(allStations);
             }
 
             // Generate up to boxCount tasks from this rack
