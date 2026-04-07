@@ -42,22 +42,19 @@ public class Robot extends MapEntity {
     private int totalChargingTicks;
     private float totalEnergyConsumed;
 
-    // provisional constants. future config task may override
-    private static final float ENERGY_PER_MOVE = 1.0f;
-    private static final float LOW_BATTERY_THRESHOLD = 20.0f;
-    private static final float CHARGE_PER_TICK = 5.0f;
-    private static final int DEFAULT_LOADING_TICKS = 1;
-    private static final int DEFAULT_UNLOADING_TICKS = 1;
+    private RobotConfig config;
 
     // takes Vector2D position, delegates to MapEntity via super()
     public Robot(String name, Vector2D position) {
         super(name, position);
+        this.config = RobotConfig.defaults();
         initMovementFields();
     }
 
     // constructor for loading robots
     public Robot(UUID id, String name, Vector2D position) {
         super(id, name, position);
+        this.config = RobotConfig.defaults();
         initMovementFields();
     }
 
@@ -108,6 +105,11 @@ public class Robot extends MapEntity {
     public int getTotalMovingTicks() { return totalMovingTicks; }
     public int getTotalChargingTicks() { return totalChargingTicks; }
     public float getTotalEnergyConsumed() { return totalEnergyConsumed; }
+
+    public RobotConfig getConfig() { return config; }
+    public void setConfig(RobotConfig config) {
+        this.config = config != null ? config : RobotConfig.defaults();
+    }
 
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
@@ -187,7 +189,7 @@ public class Robot extends MapEntity {
         }
 
         // low battery; check if already on a charger or redirect to one
-        if (needsCharging(LOW_BATTERY_THRESHOLD)) {
+        if (needsCharging(config.lowBatteryThreshold)) {
             // check via instanceof so it works even if chargerTarget was never set
             boolean onCharger = false;
             for (MapEntity e : map.getEntitiesAt(getPosition())) {
@@ -252,8 +254,8 @@ public class Robot extends MapEntity {
         switch (state) {
             case CHARGING:
                 totalChargingTicks++;
-                battery = Math.min(100.0f, battery + CHARGE_PER_TICK); // cap at 100
-                if (battery >= 100.0f) {
+                battery = Math.min(config.batteryCapacity, battery + config.chargePerTick); // cap at capacity
+                if (battery >= config.batteryCapacity) {
                     // fully charged — resume task or go idle
                     state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
                 }
@@ -285,8 +287,8 @@ public class Robot extends MapEntity {
                 totalMovingTicks++;
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
-                    consumeEnergy(ENERGY_PER_MOVE);
-                    totalEnergyConsumed += ENERGY_PER_MOVE;
+                    consumeEnergy(config.energyPerMove);
+                    totalEnergyConsumed += config.energyPerMove;
                     totalDistanceMoved++;
                     stuckTicks = 0;
                     // The first successful move after rerouting means the temporary avoid hint is no longer needed.
@@ -299,14 +301,14 @@ public class Robot extends MapEntity {
                 if (currentTask != null && !hasPickedUp
                         && getPosition().equals(currentTask.getPickupLocation())) {
                     state = RobotState.LOADING;
-                    loadingTicksRemaining = DEFAULT_LOADING_TICKS;
+                    loadingTicksRemaining = config.loadingTicks;
                 }
 
                 // check arrival at dropoff location
                 if (currentTask != null && hasPickedUp
                         && getPosition().equals(currentTask.getDropoffLocation())) {
                     state = RobotState.UNLOADING;
-                    unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
+                    unloadingTicksRemaining = config.unloadingTicks;
                 }
                 break;
 
