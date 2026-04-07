@@ -126,6 +126,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
     private boolean paused  = false;
+    // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
+    // Restart always reloads from this, not from AppState.getConfigPath().
+    private String initialSnapshotPath = null;
 
     // ── Engine binding ────────────────────────────────────────────────────
     private SimulationEngine engine;
@@ -1071,6 +1074,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     log("Generated " + tasks.size() + " tasks from map entities.");
                 }
             }
+            // Snapshot the state right now (tick 0, tasks loaded) as the restart baseline.
+            if (initialSnapshotPath == null) {
+                try {
+                    File snap = File.createTempFile("openrobotics_initial_", ".json");
+                    snap.deleteOnExit();
+                    engine.configSaving(snap.getAbsolutePath());
+                    initialSnapshotPath = snap.getAbsolutePath();
+                } catch (Exception ex) {
+                    log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
+                }
+            }
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
@@ -1123,20 +1137,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         prevRobotPositions.clear();
         selectedEntity = null;
         onStop();
-        if (engine != null) {
-            // Save current map state (with all editor changes) to a fresh temp file,
-            // then reload from it so restart is always relative to the current layout.
-            try {
-                File tmp = File.createTempFile("openrobotics_restart_", ".json");
-                tmp.deleteOnExit();
-                engine.configSaving(tmp.getAbsolutePath());
-                AppState.setConfigPath(tmp.getAbsolutePath());
-            } catch (Exception ex) {
-                log("\u26a0 Could not snapshot state for restart: " + ex.getMessage());
-            }
-        }
-        if (AppState.getConfigPath() != null) {
-            SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
+        // Always reload from the initial snapshot taken when play was first pressed.
+        // This restores tick-0 state with all editor changes intact and tasks pre-loaded.
+        // If the sim was never played, fall back to AppState config path.
+        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        initialSnapshotPath = null; // clear so next play press re-snapshots fresh
+        if (reloadPath != null) {
+            SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
                 if (simStatusLabel != null) {
                     simStatusLabel.setText("ERROR");
