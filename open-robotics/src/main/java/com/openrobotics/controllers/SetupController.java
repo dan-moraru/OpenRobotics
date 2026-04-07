@@ -10,10 +10,6 @@ import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.map.entities.station.Station;
 import com.openrobotics.robot.Robot;
-import com.openrobotics.robot.sensors.ProximitySensor;
-import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
-import com.openrobotics.robot.navigation.BugNavigationStrategy;
-import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
 import com.openrobotics.simulationcore.CoordinationPolicy;
 import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.ReservationKPolicy;
@@ -827,37 +823,8 @@ public class SetupController {
 
         CoordinationPolicy policy = buildCoordinationPolicy();
 
-        int robotCount = 4;
-        String navAlgo = "GREEDY";
-
-        List<Vector2D> spawnCandidates = new ArrayList<>();
-        for (MapEntity e : map.getEntities()) {
-            if (e instanceof ChargingStation) spawnCandidates.add(e.getPosition());
-        }
-        if (spawnCandidates.isEmpty()) {
-            spawnCandidates.add(new Vector2D(0, canvasH / 2));
-        }
-
-        Set<String> occupiedTiles = new HashSet<>();
-        for (MapEntity e : map.getEntities()) {
-            occupiedTiles.add(e.getPosition().getX() + "," + e.getPosition().getY());
-        }
-
-        Robot[] robots = new Robot[robotCount];
-        for (int i = 0; i < robotCount; i++) {
-            Vector2D spawn = findSpawnTile(spawnCandidates.get(0), map, occupiedTiles);
-            Robot robot = new Robot("robot_" + i, spawn);
-            occupiedTiles.add(spawn.getX() + "," + spawn.getY());
-            switch (navAlgo) {
-                case "GREEDY"   -> robot.setNav(new GreedyNavigationStrategy(seed));
-                case "BUG"      -> robot.setNav(new BugNavigationStrategy(seed));
-                case "RTA_STAR" -> robot.setNav(new RtaStarNavigationStrategy(seed));
-                default         -> robot.setNav(new GreedyNavigationStrategy(seed));
-            }
-            robot.setSensor(new ProximitySensor());
-            map.addEntity(robot);
-            robots[i] = robot;
-        }
+        // Robots are not auto-spawned here — they must be placed in the editor
+        // or loaded from a JSON config file (handled via SimulationEngine(configPath)).
 
         Dispatcher dispatcher = new Dispatcher();
         if ("FIXED_LIST".equals(workloadMode)) {
@@ -872,7 +839,7 @@ public class SetupController {
 
         int tickMs = parseIntSafe(tickMsField.getText(), DEFAULT_TICK_MS);
 
-        SimulationEngine engine = new SimulationEngine(map, robots, dispatcher, policy, runName, tickMs, maxTicks, seed, workloadMode, spawnRate, maxTasks);
+        SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, tickMs, maxTicks, seed, workloadMode, spawnRate, maxTasks);
 
         com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
             parseFloatSafe(batteryCapacityField.getText(), DEFAULT_BATTERY_CAPACITY),
