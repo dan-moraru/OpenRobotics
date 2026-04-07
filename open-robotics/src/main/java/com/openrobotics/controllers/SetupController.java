@@ -70,6 +70,15 @@ public class SetupController {
     @FXML private TextField        maxTasksField;
     @FXML private TextField        workloadSeedField;
 
+    // ── ROBOT PHYSICS ────────────────────────────────────────────────────
+    @FXML private TextField        tickMsField;
+    @FXML private TextField        batteryCapacityField;
+    @FXML private TextField        lowBatteryField;
+    @FXML private TextField        chargePerTickField;
+    @FXML private TextField        energyPerMoveField;
+    @FXML private Spinner<Integer> loadingTicksSpinner;
+    @FXML private Spinner<Integer> unloadingTicksSpinner;
+
     // ── SIMULATION ──────────────────────────────────────────────────────
     @FXML private TextField maxTicksField;
 
@@ -98,6 +107,13 @@ public class SetupController {
     private static final long   DEFAULT_WORKLOAD_SEED = 42;
     private static final int    DEFAULT_MAX_TICKS     = 30000;
     private static final String DEFAULT_RUN_NAME      = "experiment_1";
+    private static final int    DEFAULT_TICK_MS          = 100;
+    private static final float  DEFAULT_BATTERY_CAPACITY = 100.0f;
+    private static final float  DEFAULT_LOW_BATTERY      = 20.0f;
+    private static final float  DEFAULT_CHARGE_PER_TICK  = 5.0f;
+    private static final float  DEFAULT_ENERGY_PER_MOVE  = 1.0f;
+    private static final int    DEFAULT_LOADING_TICKS    = 1;
+    private static final int    DEFAULT_UNLOADING_TICKS  = 1;
     // private static final int    DEFAULT_CANVAS_TILES  = 15;
 
     // ------------------------------------------------------------------ //
@@ -156,6 +172,17 @@ public class SetupController {
         maxTicksField.setText(String.valueOf(DEFAULT_MAX_TICKS));
         runNameField.setText(DEFAULT_RUN_NAME);
 
+        // Robot physics spinners and fields
+        loadingTicksSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_LOADING_TICKS));
+        unloadingTicksSpinner.setValueFactory(
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_UNLOADING_TICKS));
+        tickMsField.setText(String.valueOf(DEFAULT_TICK_MS));
+        batteryCapacityField.setText(String.valueOf((int) DEFAULT_BATTERY_CAPACITY));
+        lowBatteryField.setText(String.valueOf((int) DEFAULT_LOW_BATTERY));
+        chargePerTickField.setText(String.valueOf((int) DEFAULT_CHARGE_PER_TICK));
+        energyPerMoveField.setText(String.valueOf((int) DEFAULT_ENERGY_PER_MOVE));
+
         // Disable reservation k spinner unless policy is RESERVATION_K
         reservationKSpinner.setDisable(true);
         policyCombo.valueProperty().addListener((obs, oldVal, newVal) ->
@@ -200,6 +227,13 @@ public class SetupController {
     @FXML private void onResetReservationK() {
         reservationKSpinner.getValueFactory().setValue(DEFAULT_RESERVATION_K);
     }
+    @FXML private void onResetTickMs()              { tickMsField.setText(String.valueOf(DEFAULT_TICK_MS)); }
+    @FXML private void onResetBatteryCapacity()     { batteryCapacityField.setText(String.valueOf((int) DEFAULT_BATTERY_CAPACITY)); }
+    @FXML private void onResetLowBatteryThreshold() { lowBatteryField.setText(String.valueOf((int) DEFAULT_LOW_BATTERY)); }
+    @FXML private void onResetChargePerTick()       { chargePerTickField.setText(String.valueOf((int) DEFAULT_CHARGE_PER_TICK)); }
+    @FXML private void onResetEnergyPerMove()       { energyPerMoveField.setText(String.valueOf((int) DEFAULT_ENERGY_PER_MOVE)); }
+    @FXML private void onResetLoadingTicks()        { loadingTicksSpinner.getValueFactory().setValue(DEFAULT_LOADING_TICKS); }
+    @FXML private void onResetUnloadingTicks()      { unloadingTicksSpinner.getValueFactory().setValue(DEFAULT_UNLOADING_TICKS); }
 
     // ------------------------------------------------------------------ //
     //  Preview Canvas
@@ -836,7 +870,21 @@ public class SetupController {
         int maxTicks = DEFAULT_MAX_TICKS;
         try { maxTicks = Integer.parseInt(maxTicksField.getText().trim()); } catch (NumberFormatException ignored) { }
 
-        return new SimulationEngine(map, robots, dispatcher, policy, runName, 50, maxTicks, seed, workloadMode, spawnRate, maxTasks);
+        int tickMs = parseIntSafe(tickMsField.getText(), DEFAULT_TICK_MS);
+
+        SimulationEngine engine = new SimulationEngine(map, robots, dispatcher, policy, runName, tickMs, maxTicks, seed, workloadMode, spawnRate, maxTasks);
+
+        com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
+            parseFloatSafe(batteryCapacityField.getText(), DEFAULT_BATTERY_CAPACITY),
+            parseFloatSafe(lowBatteryField.getText(),      DEFAULT_LOW_BATTERY),
+            parseFloatSafe(chargePerTickField.getText(),   DEFAULT_CHARGE_PER_TICK),
+            parseFloatSafe(energyPerMoveField.getText(),   DEFAULT_ENERGY_PER_MOVE),
+            loadingTicksSpinner.getValue() != null  ? loadingTicksSpinner.getValue()  : DEFAULT_LOADING_TICKS,
+            unloadingTicksSpinner.getValue() != null ? unloadingTicksSpinner.getValue() : DEFAULT_UNLOADING_TICKS
+        );
+        engine.setRobotConfig(robotConfig);
+
+        return engine;
     }
 
     /**
@@ -1040,6 +1088,13 @@ public class SetupController {
             dispatcher.addTask(new Task(taskId++, pickup, dropoff, 1));
             placed++;
         }
+    }
+
+    private int parseIntSafe(String text, int fallback) {
+        try { return Integer.parseInt(text.trim()); } catch (NumberFormatException e) { return fallback; }
+    }
+    private float parseFloatSafe(String text, float fallback) {
+        try { return Float.parseFloat(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
 
     /** Basic validation – returns {@code true} if all required fields are filled. */

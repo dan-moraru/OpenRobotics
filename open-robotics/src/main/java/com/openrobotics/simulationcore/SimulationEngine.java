@@ -763,6 +763,14 @@ public class SimulationEngine {
 
     public RobotConfig getRobotConfig() { return robotConfig; }
 
+    /** Replaces the robot physics config and propagates it to all loaded robots. */
+    public void setRobotConfig(RobotConfig config) {
+        this.robotConfig = config;
+        if (robots != null) {
+            for (Robot r : robots) r.setConfig(config);
+        }
+    }
+
     // Getters
     public int getTickCounter() {
         return tickCounter;
