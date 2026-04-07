@@ -1,11 +1,13 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.util.ScreenNavigator;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.awt.Desktop;
 import java.util.logging.Logger;
 
 /**
@@ -39,5 +41,17 @@ public class WelcomeController {
     @FXML
     private void onStartSetup(ActionEvent event) {
         ScreenNavigator.goToSetup();
+    }
+
+    @FXML
+    private void onExit() {
+        Platform.exit();
+    }
+
+    @FXML
+    private void onMenuGithub() {
+        try {
+            Desktop.getDesktop().browse(new java.net.URI("https://github.com/dan-moraru/OpenRobotics"));
+        } catch (Exception ignored) {}
     }
 }

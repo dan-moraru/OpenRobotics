@@ -26,6 +26,21 @@
                 <Label text="OpenRobotics" styleClass="app-title"/>
                 <Label text="Warehouse Simulation Platform" styleClass="version-label"/>
             </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
+                <menus>
+                    <Menu text="File">
+                        <items>
+                            <MenuItem onAction="#onExit" text="Exit" />
+                        </items>
+                    </Menu>
+                    <Menu text="Help">
+                        <items>
+                            <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
+                        </items>
+                    </Menu>
+                </menus>
+            </MenuBar>
         </HBox>
 
         <!-- BODY -->
