@@ -68,6 +68,19 @@
                         <TextField fx:id="randomSeedField" promptText="auto"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
+                    <!-- robot count -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRobotCount" />
+                        <Label text="Robot Count" styleClass="prop-label" />
+                        <Spinner fx:id="robotCountSpinner"
+                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- nav algorithm -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetNavAlgo" />
+                        <Label text="Navigation Algorithm" styleClass="prop-label" />
+                        <ComboBox fx:id="navAlgoCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
                     <!-- coordination policy -->
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
@@ -107,30 +120,6 @@
                         <Label text="Workload Seed" styleClass="prop-label" />
                         <TextField fx:id="workloadSeedField" text="42"
                                    HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- battery capacity -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetBatteryCapacity" />
-                        <Label text="Battery Capacity" styleClass="prop-label" />
-                        <TextField fx:id="batteryCapacityField" text="100" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- low battery threshold -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetLowBatteryThreshold" />
-                        <Label text="Low Battery %" styleClass="prop-label" />
-                        <TextField fx:id="lowBatteryField" text="20" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- charge per tick -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetChargePerTick" />
-                        <Label text="Charge/Tick" styleClass="prop-label" />
-                        <TextField fx:id="chargePerTickField" text="5" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- energy per move -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetEnergyPerMove" />
-                        <Label text="Energy/Move" styleClass="prop-label" />
-                        <TextField fx:id="energyPerMoveField" text="1" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
                     <!-- max ticks -->
                     <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
@@ -185,7 +174,7 @@
             <Label fx:id="statusLabel" text="" styleClass="label-hint" />
             <Region HBox.hgrow="ALWAYS" />
             <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig" />
-            <Button text="EDIT WAREHOUSE" styleClass="button-green" onAction="#onStartSimulation" />
+            <Button text="NEXT" styleClass="button-green" onAction="#onStartSimulation" />
         </HBox>
     </bottom>
 

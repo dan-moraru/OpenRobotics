@@ -38,8 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.File;
-import com.openrobotics.task.TaskGenerator;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -92,6 +90,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
     @FXML private VBox propertiesPanel;
     @FXML private Label propDescLabel;
+    @FXML private TextField strPropField;
 
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
@@ -104,6 +103,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
     @FXML private Button      speed3Btn;
+    @FXML private Button      playBtn;
+    @FXML private Button      pauseBtn;
     @FXML private ProgressBar simProgressBar;
 
     // ── Viewport navigation state ─────────────────────────────────────────
@@ -126,15 +127,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
     private boolean paused  = false;
-    // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
-    // Restart always reloads from this, not from AppState.getConfigPath().
-    private String initialSnapshotPath = null;
 
     // ── Engine binding ────────────────────────────────────────────────────
     private SimulationEngine engine;
     private Timeline         simLoop;
     private double           speedFactor  = 1.0;
-    private double baseTickMs = 100.0;
+    private int              localTick    = 0;
+    private static final double BASE_TICK_MS = 100.0;
     private static final Color VIEWPORT_BG_COLOR = Color.web("#CDCBC3");
     private static final Color VIEWPORT_BG_OUTSIDE_COLOR = Color.web("#A8A598");
     private static final Color VIEWPORT_GRID_COLOR = Color.web("#B0ADA5");
@@ -251,6 +250,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             AppState.setEngine(engine);
         }
 
+        // Update RAM display
+        updateRamLabel();
+
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
 
@@ -288,14 +290,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("No configuration loaded. Go to Setup \u2192 Load Config first.");
         }
 
-        if (engine != null && tickDisplayLabel != null) {
-            tickDisplayLabel.setText("TICK " + engine.getTickCounter());
-        }
-        if (engine != null && simProgressBar != null) {
-            simProgressBar.setProgress(Math.min(1.0,
-                engine.getTickCounter() / (double) Math.max(1, engine.getMaxTicks())));
-        }
-
         // Pre-load icons and initialize tips
         IconLoader.preloadAllIcons();
         updateSelectionLabel();
@@ -304,6 +298,23 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (editModeLabel    != null) editModeLabel.setText("Edit mode");
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
+
+        // Reset button colors to default CSS style (beige)
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
+
+        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling.
+        // Re-lock on every width change so layout passes from label/outliner updates cannot drift it.
+        if (mainSplitPane != null) {
+            mainSplitPane.widthProperty().addListener((obs, oldW, newW) -> {
+                if (newW.doubleValue() > 0) {
+                    mainSplitPane.setDividerPosition(0, 230.0 / newW.doubleValue());
+                }
+            });
+            if (mainSplitPane.getWidth() > 0) {
+                mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+            }
+        }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
     }
@@ -642,7 +653,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
             if (entityHit != null) {
                 selectEntity(entityHit);
-                draggingOnCanvas = entityHit;  // fixed: enables left-drag to move
+                draggingOnCanvas = null;
             } else {
                 selectEntity(null);
                 draggingOnCanvas = null;
@@ -651,6 +662,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             // Right click: pan mode
             draggingOnCanvas = null;
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseDragged(MouseEvent e) {
@@ -677,6 +691,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         lastMouseX = e.getX();
         lastMouseY = e.getY();
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseReleased(MouseEvent e) {
@@ -687,6 +704,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     // ------------------------------------------------------------------ //
@@ -833,109 +853,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         propertiesPanel.getChildren().add(posBox);
 
         if (entity instanceof Robot robot) {
-            // Battery (read-only display)
-            HBox batteryBox = new HBox(8);
-            batteryBox.getChildren().addAll(
-                new Label("Battery:"),
-                new Label(String.format("%.1f%%", robot.getBattery()))
-            );
-            propertiesPanel.getChildren().add(batteryBox);
-
-            // Navigation Algorithm
-            HBox navBox = new HBox(8);
-            ComboBox<String> navCombo = new ComboBox<>();
-            navCombo.getItems().addAll("GREEDY", "BUG", "RTA_STAR");
-            String currentNav = "GREEDY";
-            if (robot.getNav() != null) {
-                String navClass = robot.getNav().getClass().getSimpleName().toUpperCase();
-                if (navClass.contains("BUG")) currentNav = "BUG";
-                else if (navClass.contains("RTA") || navClass.contains("STAR")) currentNav = "RTA_STAR";
-                else currentNav = "GREEDY";
-            }
-            navCombo.setValue(currentNav);
-            navCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal == null) return;
-                long seed = engine != null ? engine.getSeed() : 42L;
-                switch (newVal) {
-                    case "GREEDY"   -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
-                    case "BUG"      -> robot.setNav(new com.openrobotics.robot.navigation.BugNavigationStrategy(seed));
-                    case "RTA_STAR" -> robot.setNav(new com.openrobotics.robot.navigation.RtaStarNavigationStrategy(seed));
-                }
-            });
-            navBox.getChildren().addAll(new Label("Nav Algorithm:"), navCombo);
-            propertiesPanel.getChildren().add(navBox);
-
-            // Sensor Algorithm
-            HBox sensorBox = new HBox(8);
-            ComboBox<String> sensorCombo = new ComboBox<>();
-            sensorCombo.getItems().addAll("PROXIMITY", "RANGE");
-            String currentSensor = "PROXIMITY";
-            if (robot.getSensor() != null) {
-                String sensorClass = robot.getSensor().getClass().getSimpleName().toUpperCase();
-                if (sensorClass.contains("RANGE")) currentSensor = "RANGE";
-            }
-            sensorCombo.setValue(currentSensor);
-            sensorCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal == null) return;
-                switch (newVal) {
-                    case "PROXIMITY" -> robot.setSensor(new com.openrobotics.robot.sensors.ProximitySensor());
-                    case "RANGE"     -> robot.setSensor(new com.openrobotics.robot.sensors.RangeSensor());
-                }
-            });
-            sensorBox.getChildren().addAll(new Label("Sensor:"), sensorCombo);
-            propertiesPanel.getChildren().add(sensorBox);
+            Label robotProps = new Label("Battery: " + robot.getBattery() + " | State: " + robot.getState());
+            propertiesPanel.getChildren().add(robotProps);
         } else if (entity instanceof Station) {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
-        } else if (entity instanceof Rack rack) {
-            // Box Count
-            HBox boxCountBox = new HBox(8);
-            Spinner<Integer> boxCountSpinner = new Spinner<>(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, rack.getBoxCount()));
-            boxCountSpinner.setEditable(true);
-            boxCountSpinner.setPrefWidth(70);
-            boxCountSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) rack.setBoxCount(newVal);
-            });
-            boxCountBox.getChildren().addAll(new Label("Box Count:"), boxCountSpinner);
-            propertiesPanel.getChildren().add(boxCountBox);
-
-            // Valid Dropoff Points
-            Label dropoffLabel = new Label("Valid Dropoffs:");
-            propertiesPanel.getChildren().add(dropoffLabel);
-
-            ListView<String> dropoffList = new ListView<>();
-            dropoffList.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.MULTIPLE);
-            dropoffList.setPrefHeight(80);
-
-            List<com.openrobotics.map.entities.station.DeliveryStation> stations = new ArrayList<>();
-            if (engine != null && engine.getMap() != null) {
-                for (com.openrobotics.map.MapEntity me : engine.getMap().getEntities()) {
-                    if (me instanceof com.openrobotics.map.entities.station.DeliveryStation ds) {
-                        stations.add(ds);
-                        dropoffList.getItems().add(ds.getName());
-                        if (rack.getValidDropoffIds().contains(ds.getId())) {
-                            int idx = dropoffList.getItems().size() - 1;
-                            dropoffList.getSelectionModel().select(idx);
-                        }
-                    }
-                }
-            }
-            Label dropoffHint = new Label("(empty = all valid)");
-            dropoffHint.setStyle("-fx-font-size: 10; -fx-text-fill: #888;");
-
-            final List<com.openrobotics.map.entities.station.DeliveryStation> stationsFinal = stations;
-            dropoffList.getSelectionModel().getSelectedIndices().addListener(
-                (javafx.collections.ListChangeListener<Integer>) c -> {
-                    List<java.util.UUID> selected = new ArrayList<>();
-                    for (int idx : dropoffList.getSelectionModel().getSelectedIndices()) {
-                        if (idx >= 0 && idx < stationsFinal.size()) {
-                            selected.add(stationsFinal.get(idx).getId());
-                        }
-                    }
-                    rack.setValidDropoffIds(selected);
-                });
-            propertiesPanel.getChildren().addAll(dropoffList, dropoffHint);
+        } else if (entity instanceof Rack) {
+            Label rackProps = new Label("Rack configuration");
+            propertiesPanel.getChildren().add(rackProps);
         }
     }
 
@@ -1053,6 +978,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     //  Properties panel reset
     // ------------------------------------------------------------------ //
 
+    @FXML
+    private void onResetStringProp() {
+        if (strPropField != null) strPropField.setText("Hello");
+    }
+
     // ------------------------------------------------------------------ //
     //  Playback Controls (§4.1.3 B, zone 5)
     // ------------------------------------------------------------------ //
@@ -1063,44 +993,33 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
-        if (!running) {
-            // If no tasks have been added yet (editor-built map), generate them now
-            // from whatever racks and delivery stations are currently on the map.
-            if (engine.getDispatcher() != null && engine.getDispatcher().getTotalTasksAdded() == 0) {
-                TaskGenerator gen = new TaskGenerator(engine.getMap(), engine.getSeed());
-                List<Task> tasks = gen.generateTasks(Integer.MAX_VALUE);
-                for (Task t : tasks) engine.getDispatcher().addTask(t);
-                if (!tasks.isEmpty()) {
-                    log("Generated " + tasks.size() + " tasks from map entities.");
+        if (running) {
+            if (paused) {
+                paused = false;
+                if (simStatusLabel != null) {
+                    simStatusLabel.setText("RUNNING");
+                    simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
                 }
+                playBtn.setStyle("-fx-background-color: #2E9E5B;");
+                pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+                startLoop();
+                log("Simulation resumed.");
+                // Update RAM display
+                updateRamLabel();
             }
-            // Snapshot the state right now (tick 0, tasks loaded) as the restart baseline.
-            if (initialSnapshotPath == null) {
-                try {
-                    File snap = File.createTempFile("openrobotics_initial_", ".json");
-                    snap.deleteOnExit();
-                    engine.configSaving(snap.getAbsolutePath());
-                    initialSnapshotPath = snap.getAbsolutePath();
-                } catch (Exception ex) {
-                    log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
-                }
-            }
+        } else {
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
                 simStatusLabel.setText("RUNNING");
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
+            playBtn.setStyle("-fx-background-color: #2E9E5B;");
+            pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
             startLoop();
             log("Simulation started.");
-        } else if (paused) {
-            paused = false;
-            if (simStatusLabel != null) {
-                simStatusLabel.setText("RUNNING");
-                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
-            }
-            startLoop();
-            log("Simulation resumed.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1113,7 +1032,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setText("PAUSED");
                 simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
             }
+            playBtn.setStyle("-fx-background-color: #90EE90;");
+            pauseBtn.setStyle("-fx-background-color: #C23B42;");
             log("Simulation paused.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1126,7 +1049,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             simStatusLabel.setText("STOPPED");
             simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
         }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation stopped.");
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML
@@ -1137,13 +1064,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         prevRobotPositions.clear();
         selectedEntity = null;
         onStop();
-        // Always reload from the initial snapshot taken when play was first pressed.
-        // This restores tick-0 state with all editor changes intact and tasks pre-loaded.
-        // If the sim was never played, fall back to AppState config path.
-        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
-        initialSnapshotPath = null; // clear so next play press re-snapshots fresh
-        if (reloadPath != null) {
-            SimulationEngine reloaded = new SimulationEngine(reloadPath);
+        localTick = 0;
+        if (AppState.getConfigPath() != null) {
+            SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
                 if (simStatusLabel != null) {
                     simStatusLabel.setText("ERROR");
@@ -1157,14 +1080,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine = reloaded;
             AppState.setEngine(engine);
+        } else {
+            // TODO: make sure template map resets here
         }
-        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + (engine != null ? engine.getTickCounter() : 0));
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
         if (simStatusLabel != null) {
             simStatusLabel.setText("READY");
             simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
         }
         log("Simulation reset.");
+        // Update RAM display
+        updateRamLabel();
         populateOutliner();
         drawViewport();
     }
@@ -1180,7 +1107,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         }
         doTick();
-        log("Step \u2192 TICK " + engine.getTickCounter());
+        log("Step \u2192 TICK " + localTick);
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -1198,9 +1127,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void startLoop() {
         if (simLoop != null) simLoop.stop();
-        if (engine != null) baseTickMs = engine.getTickMs();
         simLoop = new Timeline(new KeyFrame(
-                Duration.millis(baseTickMs / speedFactor),
+                Duration.millis(BASE_TICK_MS / speedFactor),
                 e -> doTick()
         ));
         simLoop.setCycleCount(Animation.INDEFINITE);
@@ -1241,6 +1169,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             handleSimulationComplete();
             return;
         }
+        localTick++;
+
         populateOutliner();
 
         if (engine.getRobots() != null && engine.getRobots().length > 0) {
@@ -1249,9 +1179,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         }
 
-        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + engine.getTickCounter());
-        if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0,
-            engine.getTickCounter() / (double) Math.max(1, engine.getMaxTicks())));
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
+        if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
     }
 
     private void handleSimulationComplete() {
@@ -1265,7 +1194,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
-        log("Simulation complete at TICK " + engine.getTickCounter() + ".");
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
+        log("Simulation complete at TICK " + localTick + ".");
     }
 
     private void startAnimation() {
@@ -1277,7 +1208,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
             animTimeline.getKeyFrames().add(new KeyFrame(
-                Duration.millis((frame + 1) * baseTickMs / speedFactor / totalFrames),
+                Duration.millis((frame + 1) * BASE_TICK_MS / speedFactor / totalFrames),
                 e -> {
                     animationProgress = (double)(frame + 1) / totalFrames;
                     drawViewport();
@@ -1404,6 +1335,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onExit() {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
+    }
+
+    private void updateRamLabel() {
+        if (ramLabel != null) {
+            long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
+            ramLabel.setText("RAM: " + usedKb + " KB");
+        }
     }
 }
 

@@ -60,19 +60,57 @@
 
 /* Mask legend tiles */
 .mask-legend-tile-red {
-    -fx-background-color: #AA3333;
+    -fx-background-color: #C0392B;
     -fx-min-height: 30px;
     -fx-background-radius: 4;
 }
 
 .mask-legend-tile-yellow {
-    -fx-background-color: #D4A017;
+    -fx-background-color: #D4860A;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-cyan {
+    -fx-background-color: #6E9BAA;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-sand {
+    -fx-background-color: #F4F1EA;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+    -fx-border-color: #B8B4AA;
+    -fx-border-width: 1;
+}
+
+/* Entity overlay legend tiles */
+.mask-legend-separator {
+    -fx-background-color: #B8B4AA;
+    -fx-pref-height: 1px;
+}
+
+.mask-legend-tile-brown {
+    -fx-background-color: #8C7B38;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-black {
+    -fx-background-color: #2A2926;
     -fx-min-height: 30px;
     -fx-background-radius: 4;
 }
 
 .mask-legend-tile-grey {
-    -fx-background-color: #8D8A7F;
+    -fx-background-color: #6E6B65;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-blue {
+    -fx-background-color: #3A5A8C;
     -fx-min-height: 30px;
     -fx-background-radius: 4;
 }
@@ -206,6 +244,13 @@
 
 .heatmap-container {
     -fx-background-color: #CDCBC3;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+}
+
+.heatmap-container > Canvas {
+    -fx-min-width: 0;
+    -fx-min-height: 0;
 }
 
 .overlay-setting-label {
