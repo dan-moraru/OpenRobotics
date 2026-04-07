@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * The SimulationEngine is the core component responsible for advancing the
@@ -291,11 +292,20 @@ public class SimulationEngine {
     }
 
     // creates Rack entities to preserve type
-    private void addRacksToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
+    private void addRacksToMap(List<SimulationConfigDTO.RackDTO> entityDtos) {
         if (entityDtos == null) return;
-        for (SimulationConfigDTO.MapEntityDTO eDto : entityDtos) {
+        for (SimulationConfigDTO.RackDTO eDto : entityDtos) {
             Vector2D pos = new Vector2D(eDto.position.x, eDto.position.y);
-            this.map.addEntity(new Rack(eDto.id, eDto.name, pos));
+            Rack rack = new Rack(eDto.id, eDto.name, pos);
+            rack.setBoxCount(eDto.boxCount);
+            if (eDto.validDropoffIds != null) {
+                List<UUID> ids = new ArrayList<>();
+                for (String s : eDto.validDropoffIds) {
+                    try { ids.add(UUID.fromString(s)); } catch (IllegalArgumentException ignored) {}
+                }
+                rack.setValidDropoffIds(ids);
+            }
+            this.map.addEntity(rack);
         }
     }
 
@@ -363,8 +373,18 @@ public class SimulationEngine {
                 SimulationConfigDTO.MapEntityDTO eDto = mapToEntityDTO(entity);
                 eDto.type = "DELIVERY"; // persisted so loader recreates correct type
                 dto.entities.stations.add(eDto);
-            } else if (entity instanceof Rack) {
-                dto.entities.racks.add(mapToEntityDTO(entity));
+            } else if (entity instanceof Rack rack) {
+                SimulationConfigDTO.RackDTO rDto = new SimulationConfigDTO.RackDTO();
+                rDto.id = rack.getId();
+                rDto.name = rack.getName();
+                rDto.position = new SimulationConfigDTO.Vector2DDTO(
+                    (int)rack.getPosition().getX(), (int)rack.getPosition().getY());
+                rDto.boxCount = rack.getBoxCount();
+                if (!rack.getValidDropoffIds().isEmpty()) {
+                    rDto.validDropoffIds = rack.getValidDropoffIds().stream()
+                        .map(UUID::toString).collect(java.util.stream.Collectors.toList());
+                }
+                dto.entities.racks.add(rDto);
             } else if (entity instanceof Obstacle) {
                 dto.entities.obstacles.add(mapToEntityDTO(entity));
             } else {
