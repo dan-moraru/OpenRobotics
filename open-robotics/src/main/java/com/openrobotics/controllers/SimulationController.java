@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
+import com.openrobotics.task.TaskGenerator;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -1059,6 +1061,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return;
         }
         if (!running) {
+            // If no tasks have been added yet (editor-built map), generate them now
+            // from whatever racks and delivery stations are currently on the map.
+            if (engine.getDispatcher() != null && engine.getDispatcher().getTotalTasksAdded() == 0) {
+                TaskGenerator gen = new TaskGenerator(engine.getMap(), engine.getSeed());
+                List<Task> tasks = gen.generateTasks(Integer.MAX_VALUE);
+                for (Task t : tasks) engine.getDispatcher().addTask(t);
+                if (!tasks.isEmpty()) {
+                    log("Generated " + tasks.size() + " tasks from map entities.");
+                }
+            }
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
@@ -1111,6 +1123,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         prevRobotPositions.clear();
         selectedEntity = null;
         onStop();
+        if (engine != null) {
+            // Save current map state (with all editor changes) to a fresh temp file,
+            // then reload from it so restart is always relative to the current layout.
+            try {
+                File tmp = File.createTempFile("openrobotics_restart_", ".json");
+                tmp.deleteOnExit();
+                engine.configSaving(tmp.getAbsolutePath());
+                AppState.setConfigPath(tmp.getAbsolutePath());
+            } catch (Exception ex) {
+                log("\u26a0 Could not snapshot state for restart: " + ex.getMessage());
+            }
+        }
         if (AppState.getConfigPath() != null) {
             SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
@@ -1126,8 +1150,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine = reloaded;
             AppState.setEngine(engine);
-        } else {
-            // TODO: make sure template map resets here
         }
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + (engine != null ? engine.getTickCounter() : 0));
         if (simProgressBar != null) simProgressBar.setProgress(0);
