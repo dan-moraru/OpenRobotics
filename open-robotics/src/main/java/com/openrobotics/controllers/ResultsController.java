@@ -6,6 +6,7 @@ import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.util.ScreenNavigator;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -90,12 +91,13 @@ public class ResultsController {
 
     @FXML
     private void initialize() {
-        // Bind mask canvas size
+        // Bind mask canvas size and redraw on container resize
         if (heatmapCanvas != null && heatmapContainer != null) {
             heatmapCanvas.widthProperty().bind(heatmapContainer.widthProperty());
             heatmapCanvas.heightProperty().bind(heatmapContainer.heightProperty());
-            heatmapCanvas.widthProperty().addListener(e  -> drawMaskCanvas());
-            heatmapCanvas.heightProperty().addListener(e -> drawMaskCanvas());
+            InvalidationListener redrawListener = e -> drawMaskCanvas();
+            heatmapCanvas.widthProperty().addListener(redrawListener);
+            heatmapCanvas.heightProperty().addListener(redrawListener);
         }
 
         // Update RAM display

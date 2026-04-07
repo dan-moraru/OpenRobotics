@@ -108,66 +108,75 @@
                     </VBox>
                 </HBox>
 
-                <!-- Table header -->
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="chart-header">
-                    <Label fx:id="tableTitle" styleClass="chart-section-title"
-                           text="ROBOT PERFORMANCE" />
-                    <Label fx:id="tableInfoLabel" styleClass="table-info-label" text="" />
-                    <Region HBox.hgrow="ALWAYS" />
-                </HBox>
+                <!-- Table + Summary vertical SplitPane -->
+                <SplitPane dividerPositions="0.55" orientation="VERTICAL" VBox.vgrow="ALWAYS">
 
-                <!-- Robot stats table -->
-                <TableView fx:id="robotStatsTable" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="colRobotId" prefWidth="110" text="Robot" />
-                        <TableColumn fx:id="colNavAlgo" prefWidth="85" text="Algorithm" />
-                        <TableColumn fx:id="colTasksDone" prefWidth="60" text="Tasks" />
-                        <TableColumn fx:id="colDistance" prefWidth="72" text="Distance" />
-                        <TableColumn fx:id="colEnergy" prefWidth="80" text="Energy Used" />
-                        <TableColumn fx:id="colIdleTicks" prefWidth="68" text="Idle Tks" />
-                        <TableColumn fx:id="colWaitTicks" prefWidth="68" text="Stuck Tks" />
-                        <TableColumn fx:id="colBattery" prefWidth="65" text="Battery" />
-                        <TableColumn fx:id="colState" prefWidth="70" text="State" />
-                    </columns>
-                </TableView>
-
-                <!-- Summary panel (dark) -->
-                <HBox alignment="TOP_LEFT" spacing="24" styleClass="results-bottom-panel">
-
-                    <!-- Simulation summary -->
-                    <VBox minWidth="200" spacing="4">
-                        <Label styleClass="results-section-title" text="SIMULATION SUMMARY" />
-                        <Label fx:id="statTotalTicks" styleClass="results-opt-label" text="Total Ticks: –" />
-                        <Label fx:id="statTotalTasks" styleClass="results-opt-label" text="Total Tasks: –" />
-                        <Label fx:id="statCompletedTasks" styleClass="results-opt-label" text="Completed: –" />
-                        <Label fx:id="statPendingTasks" styleClass="results-opt-label" text="Pending: –" />
-                        <Label fx:id="statThroughput" styleClass="results-opt-label" text="Throughput: –" />
-                        <Label fx:id="statCompletionRate" styleClass="results-opt-label" text="Completion: –" />
+                    <!-- Top: Table section -->
+                    <VBox spacing="0" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="chart-header">
+                            <Label fx:id="tableTitle" styleClass="chart-section-title"
+                                   text="ROBOT PERFORMANCE" />
+                            <Label fx:id="tableInfoLabel" styleClass="table-info-label" text="" />
+                            <Region HBox.hgrow="ALWAYS" />
+                        </HBox>
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                            <TableView fx:id="robotStatsTable">
+                                <columns>
+                                    <TableColumn fx:id="colRobotId" prefWidth="110" text="Robot" />
+                                    <TableColumn fx:id="colNavAlgo" prefWidth="85" text="Algorithm" />
+                                    <TableColumn fx:id="colTasksDone" prefWidth="60" text="Tasks" />
+                                    <TableColumn fx:id="colDistance" prefWidth="72" text="Distance" />
+                                    <TableColumn fx:id="colEnergy" prefWidth="80" text="Energy Used" />
+                                    <TableColumn fx:id="colIdleTicks" prefWidth="68" text="Idle Tks" />
+                                    <TableColumn fx:id="colWaitTicks" prefWidth="68" text="Stuck Tks" />
+                                    <TableColumn fx:id="colBattery" prefWidth="65" text="Battery" />
+                                    <TableColumn fx:id="colState" prefWidth="70" text="State" />
+                                </columns>
+                            </TableView>
+                        </ScrollPane>
                     </VBox>
 
-                    <!-- Robot averages -->
-                    <VBox minWidth="200" spacing="4">
-                        <Label styleClass="results-section-title" text="ROBOT AVERAGES" />
-                        <Label fx:id="statAvgTasks" styleClass="results-opt-label" text="Avg Tasks/Robot: –" />
-                        <Label fx:id="statAvgDistance" styleClass="results-opt-label" text="Avg Distance: –" />
-                        <Label fx:id="statAvgEnergy" styleClass="results-opt-label" text="Avg Energy Used: –" />
-                        <Label fx:id="statAvgIdlePct" styleClass="results-opt-label" text="Avg Idle %: –" />
-                        <Label fx:id="statAvgStuckPct" styleClass="results-opt-label" text="Avg Stuck %: –" />
-                        <Label fx:id="statAvgBattery" styleClass="results-opt-label" text="Avg Battery: –" />
+                    <!-- Bottom: Summary panel -->
+                    <VBox minHeight="120" spacing="0" VBox.vgrow="ALWAYS">
+                        <HBox alignment="TOP_LEFT" spacing="24" styleClass="results-bottom-panel" VBox.vgrow="ALWAYS">
+
+                            <!-- Simulation summary -->
+                            <VBox minWidth="200" spacing="4">
+                                <Label styleClass="results-section-title" text="SIMULATION SUMMARY" />
+                                <Label fx:id="statTotalTicks" styleClass="results-opt-label" text="Total Ticks: –" />
+                                <Label fx:id="statTotalTasks" styleClass="results-opt-label" text="Total Tasks: –" />
+                                <Label fx:id="statCompletedTasks" styleClass="results-opt-label" text="Completed: –" />
+                                <Label fx:id="statPendingTasks" styleClass="results-opt-label" text="Pending: –" />
+                                <Label fx:id="statThroughput" styleClass="results-opt-label" text="Throughput: –" />
+                                <Label fx:id="statCompletionRate" styleClass="results-opt-label" text="Completion: –" />
+                            </VBox>
+
+                            <!-- Robot averages -->
+                            <VBox minWidth="200" spacing="4">
+                                <Label styleClass="results-section-title" text="ROBOT AVERAGES" />
+                                <Label fx:id="statAvgTasks" styleClass="results-opt-label" text="Avg Tasks/Robot: –" />
+                                <Label fx:id="statAvgDistance" styleClass="results-opt-label" text="Avg Distance: –" />
+                                <Label fx:id="statAvgEnergy" styleClass="results-opt-label" text="Avg Energy Used: –" />
+                                <Label fx:id="statAvgIdlePct" styleClass="results-opt-label" text="Avg Idle %: –" />
+                                <Label fx:id="statAvgStuckPct" styleClass="results-opt-label" text="Avg Stuck %: –" />
+                                <Label fx:id="statAvgBattery" styleClass="results-opt-label" text="Avg Battery: –" />
+                            </VBox>
+
+                            <!-- Extremes -->
+                            <VBox minWidth="200" spacing="4" HBox.hgrow="ALWAYS">
+                                <Label styleClass="results-section-title" text="HIGHLIGHTS" />
+                                <Label fx:id="statBestRobot" styleClass="results-opt-label" text="Most Tasks: –" />
+                                <Label fx:id="statWorstRobot" styleClass="results-opt-label" text="Fewest Tasks: –" />
+                                <Label fx:id="statMostDistance" styleClass="results-opt-label" text="Most Distance: –" />
+                                <Label fx:id="statMostEnergy" styleClass="results-opt-label" text="Most Energy: –" />
+                                <Label fx:id="statMostIdle" styleClass="results-opt-label" text="Most Idle: –" />
+                                <Label fx:id="statTotalDistance" styleClass="results-opt-label" text="Total Distance: –" />
+                            </VBox>
+
+                        </HBox>
                     </VBox>
 
-                    <!-- Extremes -->
-                    <VBox minWidth="200" spacing="4" HBox.hgrow="ALWAYS">
-                        <Label styleClass="results-section-title" text="HIGHLIGHTS" />
-                        <Label fx:id="statBestRobot" styleClass="results-opt-label" text="Most Tasks: –" />
-                        <Label fx:id="statWorstRobot" styleClass="results-opt-label" text="Fewest Tasks: –" />
-                        <Label fx:id="statMostDistance" styleClass="results-opt-label" text="Most Distance: –" />
-                        <Label fx:id="statMostEnergy" styleClass="results-opt-label" text="Most Energy: –" />
-                        <Label fx:id="statMostIdle" styleClass="results-opt-label" text="Most Idle: –" />
-                        <Label fx:id="statTotalDistance" styleClass="results-opt-label" text="Total Distance: –" />
-                    </VBox>
-
-                </HBox>
+                </SplitPane>
 
                 <!-- Bottom action bar -->
                 <HBox alignment="CENTER_LEFT" spacing="10" styleClass="results-actions-bar">
@@ -189,7 +198,7 @@
                 </HBox>
 
                 <!-- Heatmap canvas -->
-                <StackPane fx:id="heatmapContainer" styleClass="heatmap-container" VBox.vgrow="ALWAYS">
+                <StackPane fx:id="heatmapContainer" styleClass="heatmap-container" minWidth="0" minHeight="0" VBox.vgrow="ALWAYS">
                     <Canvas fx:id="heatmapCanvas" />
                     <Label fx:id="heatmapPlaceholder" styleClass="viewport-overlay-label"
                            text="Run simulation to generate heatmap" />

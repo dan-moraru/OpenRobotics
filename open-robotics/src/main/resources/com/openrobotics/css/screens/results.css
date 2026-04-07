@@ -244,6 +244,13 @@
 
 .heatmap-container {
     -fx-background-color: #CDCBC3;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+}
+
+.heatmap-container > Canvas {
+    -fx-min-width: 0;
+    -fx-min-height: 0;
 }
 
 .overlay-setting-label {
