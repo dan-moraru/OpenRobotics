@@ -130,7 +130,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private SimulationEngine engine;
     private Timeline         simLoop;
     private double           speedFactor  = 1.0;
-    private static final double BASE_TICK_MS = 100.0;
+    private double baseTickMs = 100.0;
     private static final Color VIEWPORT_BG_COLOR = Color.web("#CDCBC3");
     private static final Color VIEWPORT_BG_OUTSIDE_COLOR = Color.web("#A8A598");
     private static final Color VIEWPORT_GRID_COLOR = Color.web("#B0ADA5");
@@ -1093,8 +1093,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void startLoop() {
         if (simLoop != null) simLoop.stop();
+        if (engine != null) baseTickMs = engine.getTickMs();
         simLoop = new Timeline(new KeyFrame(
-                Duration.millis(BASE_TICK_MS / speedFactor),
+                Duration.millis(baseTickMs / speedFactor),
                 e -> doTick()
         ));
         simLoop.setCycleCount(Animation.INDEFINITE);
@@ -1171,7 +1172,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
             animTimeline.getKeyFrames().add(new KeyFrame(
-                Duration.millis((frame + 1) * BASE_TICK_MS / speedFactor / totalFrames),
+                Duration.millis((frame + 1) * baseTickMs / speedFactor / totalFrames),
                 e -> {
                     animationProgress = (double)(frame + 1) / totalFrames;
                     drawViewport();
