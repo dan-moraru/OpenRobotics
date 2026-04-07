@@ -37,9 +37,15 @@ public class SimulationConfigDTO {
 
     public static class ConfigSection {
         public String runName;
-        public int tickMs;
-        public int maxTicks;
-        public long seed;
+        public int    tickMs              = 100;
+        public int    maxTicks            = 30000;
+        public long   seed                = 42;
+        public float  batteryCapacity     = 100.0f;
+        public float  lowBatteryThreshold = 20.0f;
+        public float  chargePerTick       = 5.0f;
+        public float  energyPerMove       = 1.0f;
+        public int    loadingTicks        = 1;
+        public int    unloadingTicks      = 1;
     }
 
     public static class MapSection {

@@ -39,6 +39,8 @@ public class SimulationEngine {
     private Dispatcher dispatcher;
     private CoordinationPolicy coordinationPolicy;
 
+    private RobotConfig robotConfig = RobotConfig.defaults();
+
     // Added these for config file loading/saving
     private String runName;
     private int tickMs;
@@ -198,6 +200,19 @@ public class SimulationEngine {
             }  // closes for loop
         }  
 
+            // Build RobotConfig from loaded config section
+            this.robotConfig = new RobotConfig(
+                dto.config.batteryCapacity     > 0 ? dto.config.batteryCapacity     : 100.0f,
+                dto.config.lowBatteryThreshold > 0 ? dto.config.lowBatteryThreshold : 20.0f,
+                dto.config.chargePerTick       > 0 ? dto.config.chargePerTick       : 5.0f,
+                dto.config.energyPerMove       > 0 ? dto.config.energyPerMove       : 1.0f,
+                dto.config.loadingTicks        > 0 ? dto.config.loadingTicks        : 1,
+                dto.config.unloadingTicks      > 0 ? dto.config.unloadingTicks      : 1
+            );
+            for (MapEntity e : this.map.getEntities()) {
+                if (e instanceof Robot r) r.setConfig(this.robotConfig);
+            }
+
             // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
 
@@ -335,6 +350,12 @@ public class SimulationEngine {
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
         dto.config.seed = this.seed;
+        dto.config.batteryCapacity     = robotConfig.batteryCapacity;
+        dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
+        dto.config.chargePerTick       = robotConfig.chargePerTick;
+        dto.config.energyPerMove       = robotConfig.energyPerMove;
+        dto.config.loadingTicks        = robotConfig.loadingTicks;
+        dto.config.unloadingTicks      = robotConfig.unloadingTicks;
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
@@ -739,6 +760,8 @@ public class SimulationEngine {
     private CoordinationPolicy normalizeCoordinationPolicy(CoordinationPolicy coordinationPolicy) {
         return coordinationPolicy != null ? coordinationPolicy : CoordinationPolicy.noOp();
     }
+
+    public RobotConfig getRobotConfig() { return robotConfig; }
 
     // Getters
     public int getTickCounter() {
