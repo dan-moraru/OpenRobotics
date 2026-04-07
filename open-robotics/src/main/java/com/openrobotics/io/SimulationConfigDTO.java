@@ -51,7 +51,7 @@ public class SimulationConfigDTO {
     public static class EntitiesSection {
         public List<RobotDTO> robots;
         public List<MapEntityDTO> stations;
-        public List<MapEntityDTO> racks;
+        public List<RackDTO> racks;
         public List<MapEntityDTO> obstacles;
     }
 
@@ -90,6 +90,11 @@ public class SimulationConfigDTO {
         public String name;
         public Vector2DDTO position;
         public String type; // "CHARGING", "DELIVERY", or null for old configs
+    }
+
+    public static class RackDTO extends MapEntityDTO {
+        public int boxCount = 1;
+        public List<String> validDropoffIds; // UUID strings, null = all stations valid
     }
 
     public static class RobotDTO extends MapEntityDTO {
