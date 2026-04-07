@@ -67,6 +67,9 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         directoryCombo.getItems().addAll(loadRecentDirs());
         if (!directoryCombo.getItems().isEmpty()) {
             directoryCombo.getSelectionModel().selectFirst();
+            selectedDirLabel.setText(directoryCombo.getSelectionModel().getSelectedItem());
+        } else if (selectedDirLabel != null) {
+            selectedDirLabel.setText("");
         }
 
         fileNameField.setText("experiment_" +
@@ -130,8 +133,6 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             return;
         }
 
-        saveRecentDir(selectedDirectory.getAbsolutePath());
-
         String fullPath = new File(selectedDirectory, fileName).getAbsolutePath();
         SimulationEngine engine = AppState.getEngine();
         if (engine == null) {
@@ -140,6 +141,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         }
         try {
             engine.configSaving(fullPath);
+            saveRecentDir(selectedDirectory.getAbsolutePath());
             resultFilePath = fullPath;
             close();
         } catch (Exception ex) {
@@ -158,7 +160,10 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     // ------------------------------------------------------------------ //
 
     public File getSelectedDirectory() { return selectedDirectory; }
-    public String getFileName()        { return fileNameField.getText().trim(); }
+    public String getFileName() {
+        String value = fileNameField == null ? null : fileNameField.getText();
+        return value == null ? "" : value.trim();
+    }
 
     // ------------------------------------------------------------------ //
     //  Helpers
@@ -183,8 +188,12 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         List<String> current = loadRecentDirs();
         current.remove(dir);
         current.add(0, dir);
-        for (int i = 0; i < Math.min(current.size(), MAX_RECENT); i++) {
+        int writeCount = Math.min(current.size(), MAX_RECENT);
+        for (int i = 0; i < writeCount; i++) {
             prefs.put(PREFS_KEY + i, current.get(i));
+        }
+        for (int i = writeCount; i < MAX_RECENT; i++) {
+            prefs.remove(PREFS_KEY + i);
         }
     }
 }

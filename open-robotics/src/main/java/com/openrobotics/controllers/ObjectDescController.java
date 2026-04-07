@@ -145,6 +145,9 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
     }
 
     private void addPropRow(String key, String value) {
+        if (propsOverview == null || propsOverview.getChildren() == null) {
+            return;
+        }
         Label row = new Label(key + ":  " + value);
         row.setStyle("-fx-text-fill: #404040; -fx-font-size: 12px;");
         propsOverview.getChildren().add(row);

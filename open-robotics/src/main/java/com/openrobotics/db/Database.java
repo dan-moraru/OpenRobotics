@@ -26,6 +26,8 @@ public final class Database {
     private static volatile HikariDataSource dataSource;
     private static volatile boolean shutdown;
     private static volatile boolean uuidRobotSchemaReady;
+    private static final boolean ALLOW_SKIP_MIGRATION_DUE_TO_OWNERSHIP =
+        Boolean.parseBoolean(System.getProperty("openrobotics.db.allowSkipMigrationDueToOwnership", "false"));
 
     private Database() {}
 
@@ -71,7 +73,10 @@ public final class Database {
             if (!ownershipIssue) {
                 throw ex;
             }
-            System.err.println("[Database] Flyway migration skipped due to DB ownership permissions. "
+            if (!ALLOW_SKIP_MIGRATION_DUE_TO_OWNERSHIP) {
+                throw ex;
+            }
+            System.err.println("[Database] Flyway migration skipped due to DB ownership permissions (opt-in enabled). "
                 + "Using existing schema as-is. Details: " + msg);
         }
 
@@ -146,6 +151,9 @@ public final class Database {
     public static boolean isUuidRobotSchemaReady() {
         if (dataSource == null) {
             throw new IllegalStateException("Database not initialized. Call Database.init() at startup.");
+        }
+        if (shutdown) {
+            throw new IllegalStateException("Database has been shut down.");
         }
         return uuidRobotSchemaReady;
     }

@@ -51,7 +51,12 @@ public class DaoIntegrationTest {
         }
         for (UUID id : extraMapIds) {
             for (SimulationRunRecord r : SimulationRunDao.findByMapId(id)) {
-                SimulationRunDao.deleteById(r.getId());
+                UUID runId = r.getId();
+                RobotRunStatsDao.deleteByRunId(runId);
+                SimLogDao.deleteByRunId(runId);
+                WorkloadTaskDao.deleteByRunId(runId);
+                RunResultDao.deleteByRunId(runId);
+                SimulationRunDao.deleteById(runId);
             }
             MapDao.deleteById(id);
         }

@@ -151,6 +151,11 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
             return;
         }
 
+        if (owner.getPosition() == null) {
+            activeIntersectionRobotId = null;
+            return;
+        }
+
         String currentTileKey = tileKey(owner.getPosition().getX(), owner.getPosition().getY());
         if (!intersectionKeys.contains(currentTileKey)) {
             activeIntersectionRobotId = null;

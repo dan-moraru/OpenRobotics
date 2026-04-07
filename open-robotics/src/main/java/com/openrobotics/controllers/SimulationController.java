@@ -236,12 +236,22 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         // Outliner search filter
         if (outlinerSearchField != null)
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
+        if (outlinerListView != null) {
+            outlinerListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldIdx, newIdx) -> {
+                if (newIdx != null) {
+                    onOutlinerSelect();
+                }
+            });
+        }
         // Bind engine from shared AppState
         engine = AppState.getEngine();
         if (engine == null && AppState.hasConfigPath()) {
             engine = new SimulationEngine(AppState.getConfigPath());
             if (engine == null || engine.getMap() == null) {
-                log("\u26a0 Config reload failed: " + (engine.getInitError() != null ? engine.getInitError() : "unknown error"));
+                String initErrorMsg = engine != null && engine.getInitError() != null
+                        ? engine.getInitError()
+                        : "constructor returned null";
+                log("\u26a0 Config reload failed: " + initErrorMsg);
                 if (viewportStatusLabel != null) {
                     viewportStatusLabel.setText("Load failed");
                 }
@@ -541,6 +551,61 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private int clampTileX(int tx) { return Math.max(0, Math.min(tx, maxMapTileX())); }
     private int clampTileY(int ty) { return Math.max(0, Math.min(ty, maxMapTileY())); }
 
+    private boolean isRobotEntity(MapEntity entity) {
+        return entity instanceof Robot;
+    }
+
+    private boolean isStationOrDockEntity(MapEntity entity) {
+        return entity instanceof ChargingStation || entity instanceof DeliveryStation;
+    }
+
+    private boolean isValidTileOccupancy(List<MapEntity> occupants) {
+        int robotCount = 0;
+        int stationDockCount = 0;
+        int otherCount = 0;
+
+        for (MapEntity entity : occupants) {
+            if (isRobotEntity(entity)) {
+                robotCount++;
+            } else if (isStationOrDockEntity(entity)) {
+                stationDockCount++;
+            } else {
+                otherCount++;
+            }
+        }
+
+        if (robotCount > 1 || stationDockCount > 1) {
+            return false;
+        }
+
+        // Any non station/dock non-robot entity must be alone on its tile.
+        if (otherCount > 0) {
+            return occupants.size() == 1;
+        }
+
+        // Valid: single robot, single station/dock, or one of each.
+        return occupants.size() <= 2;
+    }
+
+    private boolean canPlaceEntityAt(MapEntity candidate, int x, int y, MapEntity ignoreEntity) {
+        if (engine == null || engine.getMap() == null || candidate == null) {
+            return false;
+        }
+
+        List<MapEntity> occupants = new ArrayList<>();
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity == ignoreEntity) {
+                continue;
+            }
+            if ((int) entity.getPosition().getX() == x && (int) entity.getPosition().getY() == y) {
+                occupants.add(entity);
+            }
+        }
+
+        occupants.add(candidate);
+        return isValidTileOccupancy(occupants);
+    }
+
     // ------------------------------------------------------------------ //
     //  Drag FROM sidebar tile → canvas  (JavaFX DnD API)
     // ------------------------------------------------------------------ //
@@ -592,6 +657,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
         Dragboard db = e.getDragboard();
+        boolean dropCompleted = false;
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
@@ -599,20 +665,27 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
 
             if (engine != null && engine.getMap() != null) {
-                MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId++);
+                MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId);
                 if (entity != null) {
-                    engine.addEntity(entity);
-                    selectEntity(entity);
+                    if (canPlaceEntityAt(entity, tx, ty, null)) {
+                        engine.addEntity(entity);
+                        nextObjId++;
+                        selectEntity(entity);
+                        populateOutliner();
+                        drawViewport();
+                        log("Added " + type + " at tile (" + tx + ", " + ty + ").");
+                        if (viewportStatusLabel != null) viewportStatusLabel.setText("");
+                        dropCompleted = true;
+                    } else {
+                        log("Placement blocked at tile (" + tx + ", " + ty + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+                        if (viewportStatusLabel != null) {
+                            viewportStatusLabel.setText("blocked at (" + tx + ", " + ty + ")");
+                        }
+                    }
                 }
             }
-
-            populateOutliner();
-            drawViewport();
-
-            log("Added " + type + " at tile (" + tx + ", " + ty + ").");
-            if (viewportStatusLabel != null) viewportStatusLabel.setText("");
-            e.setDropCompleted(true);
         }
+        e.setDropCompleted(dropCompleted);
         e.consume();
     }
 
@@ -676,11 +749,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             double tileSize = 32 * zoom;
             int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
             int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
-            draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
-            if (viewportStatusLabel != null)
-                viewportStatusLabel.setText(
-                        "dragging(" + draggingOnCanvas.getName()
-                        + ")  →  (" + newTX + ", " + newTY + ")");
+            if (canPlaceEntityAt(draggingOnCanvas, newTX, newTY, draggingOnCanvas)) {
+                draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
+                if (viewportStatusLabel != null)
+                    viewportStatusLabel.setText(
+                            "dragging(" + draggingOnCanvas.getName()
+                            + ")  →  (" + newTX + ", " + newTY + ")");
+            } else if (viewportStatusLabel != null) {
+                viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
+            }
             drawViewport();
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right-drag: pan the viewport
@@ -759,11 +836,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             clipboardEntity instanceof DeliveryStation ? "STATION" :
             clipboardEntity instanceof Rack ? "RACK" : "OBSTACLE",
             newX, newY, clipboardEntity.getName() + "_copy");
-        engine.addEntity(copy);
-        selectEntity(copy);
-        populateOutliner();
-        drawViewport();
-        log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
+        if (copy != null && canPlaceEntityAt(copy, newX, newY, null)) {
+            engine.addEntity(copy);
+            selectEntity(copy);
+            populateOutliner();
+            drawViewport();
+            log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
+        } else {
+            log("Paste blocked at tile (" + newX + ", " + newY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+        }
     }
 
     private MapEntity clipboardEntity = null;
@@ -838,12 +919,28 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            entity.setPosition(new com.openrobotics.map.Vector2D(newVal, (int)entity.getPosition().getY()));
-            drawViewport();
+            if (newVal == null || oldVal == null) return;
+            int targetX = newVal;
+            int targetY = (int) entity.getPosition().getY();
+            if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
+                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                drawViewport();
+            } else {
+                xSpinner.getValueFactory().setValue(oldVal);
+                log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+            }
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            entity.setPosition(new com.openrobotics.map.Vector2D((int)entity.getPosition().getX(), newVal));
-            drawViewport();
+            if (newVal == null || oldVal == null) return;
+            int targetX = (int) entity.getPosition().getX();
+            int targetY = newVal;
+            if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
+                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                drawViewport();
+            } else {
+                ySpinner.getValueFactory().setValue(oldVal);
+                log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+            }
         });
         posBox.getChildren().addAll(
                 new Label("Position:"),
@@ -914,6 +1011,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     /** Handles selection in the Outliner list. */
     @FXML
     private void onOutlinerSelect(MouseEvent e) {
+        onOutlinerSelect();
+    }
+
+    private void onOutlinerSelect() {
         if (outlinerListView == null) return;
         int idx = outlinerListView.getSelectionModel().getSelectedIndex();
         if (idx < 0 || idx >= outlinerBacking.size()) return;

@@ -247,7 +247,10 @@ public class SimulationEngine {
                     Set<Tile> intersectionTiles = new HashSet<>();
                     if (dto.coordination.intersections != null) {
                         for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
-                            intersectionTiles.add(this.map.getTile(v.x, v.y));
+                            Tile tile = this.map.getTile(v.x, v.y);
+                            if (tile != null) {
+                                intersectionTiles.add(tile);
+                            }
                         }
                     }
                     this.coordinationPolicy = new TrafficRulesPolicy(intersectionTiles);
@@ -627,6 +630,9 @@ public class SimulationEngine {
 
         java.util.Random rng = new java.util.Random(seed + tickCounter + tasksGenerated);
         Vector2D pickup = pickups.get(rng.nextInt(pickups.size()));
+        if (dropoffs.size() == 1 && dropoffs.get(0).equals(pickup)) {
+            return;
+        }
         Vector2D dropoff;
         do {
             dropoff = dropoffs.get(rng.nextInt(dropoffs.size()));

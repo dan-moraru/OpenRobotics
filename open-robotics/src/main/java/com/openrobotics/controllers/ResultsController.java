@@ -232,7 +232,9 @@ public class ResultsController {
         int pendingTasks = 0;
         if (engine.getDispatcher() != null) {
             List<Task> allTasks = engine.getDispatcher().getAllTasks();
-            pendingTasks = allTasks.size();
+            pendingTasks = (int) allTasks.stream()
+                    .filter(task -> task.getStatus() != TaskStatus.COMPLETED)
+                    .count();
             totalTasks = engine.getDispatcher().getTotalTasksAdded();
         }
 

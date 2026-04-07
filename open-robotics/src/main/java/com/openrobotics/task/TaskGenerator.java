@@ -10,6 +10,7 @@ import java.util.*;
 public class TaskGenerator {
     private final com.openrobotics.map.Map map;
     private final Random random;
+    private int nextTaskId = 1;
 
     public TaskGenerator(com.openrobotics.map.Map map, long seed) {
         this.map = map;
@@ -46,7 +47,6 @@ public class TaskGenerator {
         // Shuffle racks for variety
         Collections.shuffle(racks, random);
 
-        int taskId = 1;
         outer:
         for (Rack rack : racks) {
             // Resolve valid dropoff stations for this rack
@@ -67,7 +67,7 @@ public class TaskGenerator {
                 if (tasks.size() >= maxCount) break outer;
                 DeliveryStation station = validStations.get(random.nextInt(validStations.size()));
                 int priority = random.nextInt(3) + 1;
-                tasks.add(new Task(taskId++,
+                tasks.add(new Task(nextTaskId++,
                     new Vector2D(rack.getPosition().getX(), rack.getPosition().getY()),
                     new Vector2D(station.getPosition().getX(), station.getPosition().getY()),
                     priority));

@@ -64,6 +64,7 @@ All controller classes are fully implemented:
   - `build.ps1` - PowerShell build script (Windows)
   - `build.sh` - Bash build script (Linux/Mac)
 
+<a id="-ui-color-scheme-from-wireframe-analysis"></a>
 ## 📐 UI Color Scheme (from Wireframe Analysis)
 
 | Color | Hex Code | Usage |
@@ -112,8 +113,8 @@ cd path\to\OpenRobotics
 
 ### Quick Start (Mac/Linux)
 ```bash
-cd path/to/OpenRobotics/open-robotics
-mvn clean compile javafx:run
+cd path/to/OpenRobotics
+./build.sh
 ```
 
 ### In IntelliJ IDEA
@@ -182,7 +183,14 @@ SetupScreen
 ### Scene Builder Setup
 1. **Preferences → JavaFX**
    - Scene Builder Path: `C:\Program Files\SceneBuilder\SceneBuilder.exe`
+   - Scene Builder Path (macOS): `/Applications/SceneBuilder.app/Contents/MacOS/SceneBuilder`
+   - Scene Builder Path (Linux): `/usr/bin/scenebuilder` or `/opt/SceneBuilder/SceneBuilder`
    - CSS Stylesheet: `src/main/resources/com/openrobotics/css/theme.css`
+
+   Actual install paths can vary by installer/package:
+   - On macOS, search `Applications` for Scene Builder and inspect app contents.
+   - On Linux, use `which scenebuilder` or `whereis scenebuilder`.
+   - On Windows, use installer output/default path or search under `Program Files`.
 
 2. **Preferences → Gluon Scene Builder Maven Plugin**
    - Enable Maven for dependency resolution

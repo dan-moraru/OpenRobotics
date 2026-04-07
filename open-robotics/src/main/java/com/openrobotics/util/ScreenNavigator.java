@@ -165,6 +165,9 @@ public final class ScreenNavigator {
         if (controller instanceof ExitConfirmResultHolder holder) {
             return holder.isConfirmed();
         }
+        String controllerClass = controller == null ? "null" : controller.getClass().getName();
+        System.err.println("[ScreenNavigator] Exit dialog controller does not implement ExitConfirmResultHolder: "
+            + controllerClass);
         return false;
     }
 

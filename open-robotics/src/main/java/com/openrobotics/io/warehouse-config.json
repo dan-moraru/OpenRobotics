@@ -109,8 +109,8 @@
       "y" : 4
     },
     "dropoffLocation" : {
-      "x" : 0,
-      "y" : 11
+      "x" : 11,
+      "y" : 0
     },
     "priority" : 7,
     "status" : "PENDING"

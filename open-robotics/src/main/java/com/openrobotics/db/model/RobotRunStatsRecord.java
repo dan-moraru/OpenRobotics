@@ -196,9 +196,18 @@ public class RobotRunStatsRecord {
         this.nearMisses = nearMisses; 
     }
 
+    /**
+     * Gets the number of deadlocks by the robot.
+     * @return Number of deadlocks by the robot, may be null
+     */
     public Integer getDeadlocks() {
         return deadlocks; 
     }
+
+    /**
+     * Sets the number of deadlocks by the robot.
+     * @param deadlocks Number of deadlocks by the robot
+     */
     public void setDeadlocks(Integer deadlocks) {
         this.deadlocks = deadlocks; 
     }

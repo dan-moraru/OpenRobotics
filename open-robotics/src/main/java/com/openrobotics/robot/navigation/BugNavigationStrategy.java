@@ -232,7 +232,7 @@ public class BugNavigationStrategy implements NavigationStrategy {
             // step horizontally if error favors x
             if (e2 > -dy) { err -= dy; x0 += sx; }
             // step vertically if error favors y
-            if (e2 < dx) { err += dx; y0 += sy; }
+            else if (e2 < dx) { err += dx; y0 += sy; }
         }
         return line;
     }

@@ -121,6 +121,9 @@ public class SetupController {
         mapCombo.getSelectionModel().selectFirst();
         mapSeedRow.setVisible(false);
         mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
+        if (canvasWarnLabel != null) {
+            canvasWarnLabel.managedProperty().bind(canvasWarnLabel.visibleProperty());
+        }
         mapCombo.valueProperty().addListener((obs, o, n) -> {
             boolean isRandom = "random_map".equals(n);
             mapSeedRow.setVisible(isRandom);

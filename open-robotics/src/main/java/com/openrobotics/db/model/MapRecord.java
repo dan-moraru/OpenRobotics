@@ -62,6 +62,9 @@ public class MapRecord {
      * @param width Width of the map
      */
     public void setWidth(int width) { 
+        if (width <= 0) {
+            throw new IllegalArgumentException("width must be positive");
+        }
         this.width = width; 
     }
 
@@ -78,6 +81,9 @@ public class MapRecord {
      * @param height Height of the map
      */
     public void setHeight(int height) { 
+        if (height <= 0) {
+            throw new IllegalArgumentException("height must be positive");
+        }
         this.height = height; 
     }
 
@@ -134,7 +140,7 @@ public class MapRecord {
      * @return Created at timestamp of the map
      */
     public Timestamp getCreatedAt() { 
-        return createdAt; 
+        return createdAt == null ? null : new Timestamp(createdAt.getTime()); 
     }
 
     /**
@@ -142,6 +148,6 @@ public class MapRecord {
      * @param createdAt Created at timestamp of the map
      */
     public void setCreatedAt(Timestamp createdAt) { 
-        this.createdAt = createdAt; 
+        this.createdAt = createdAt == null ? null : new Timestamp(createdAt.getTime()); 
     }
 }

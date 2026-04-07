@@ -48,7 +48,7 @@
             <version>${javafx.version}</version>
         </dependency>
 
-    <dependency>
+        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
@@ -152,6 +152,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -302,16 +305,16 @@
                         </dependencies>
                         <configuration>
                             <targetClasses>
-                                <param>com.openrobotics.simulationcore*</param>
-                                <param>com.openrobotics.robot*</param>
-                                <param>com.openrobotics.map*</param>
-                                <param>com.openrobotics.task*</param>
+                                <param>com.openrobotics.simulationcore.*</param>
+                                <param>com.openrobotics.robot.*</param>
+                                <param>com.openrobotics.map.*</param>
+                                <param>com.openrobotics.task.*</param>
                             </targetClasses>
                             <targetTests>
-                                <param>com.openrobotics.simulationcore*Test</param>
-                                <param>com.openrobotics.robot*Test</param>
-                                <param>com.openrobotics.map*Test</param>
-                                <param>com.openrobotics.task*Test</param>
+                                <param>com.openrobotics.simulationcore.*Test</param>
+                                <param>com.openrobotics.robot.*Test</param>
+                                <param>com.openrobotics.map.*Test</param>
+                                <param>com.openrobotics.task.*Test</param>
                             </targetTests>
                             <threads>1</threads>
                             <timeoutConstant>45000</timeoutConstant>

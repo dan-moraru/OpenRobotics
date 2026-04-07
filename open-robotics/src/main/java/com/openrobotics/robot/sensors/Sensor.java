@@ -44,6 +44,9 @@ public class Sensor {
     // tiles the sensor never scanned are treated as unknown, not clear, so a PROXIMITY robot
     // (max range 1) always gets maxDist back, while a RANGE robot (max range 5) gets the real value
     public int knownClearanceToward(Vector2D from, Vector2D toward, int maxDist) {
+        if (from != null && from.equals(toward)) {
+            return 0;
+        }
         int dx = Integer.signum(toward.getX() - from.getX());
         int dy = Integer.signum(toward.getY() - from.getY());
         Set<Vector2D> obstacles = getObstaclePositions();

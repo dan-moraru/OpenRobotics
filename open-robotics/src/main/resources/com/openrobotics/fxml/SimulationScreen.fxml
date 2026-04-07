@@ -206,7 +206,7 @@
                                     <VBox spacing="4" styleClass="sidebar-panel">
                                        <children>
                                            <TextField fx:id="outlinerSearchField" promptText="Filter objects…" styleClass="sidebar-filter-field" />
-                                           <ListView fx:id="outlinerListView" onMouseClicked="#onOutlinerSelect" VBox.vgrow="ALWAYS" />
+                                           <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS" />
                                        </children>
                                     </VBox>
             </content>
