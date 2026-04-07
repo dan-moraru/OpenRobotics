@@ -723,6 +723,10 @@ public class SimulationEngine {
         return tickCounter;
     }
 
+    public int getMaxTicks() {
+        return maxTicks;
+    }
+
     public boolean getIsRunning() {
         return running;
     }

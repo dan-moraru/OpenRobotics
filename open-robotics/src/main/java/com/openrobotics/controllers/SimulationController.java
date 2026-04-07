@@ -130,7 +130,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private SimulationEngine engine;
     private Timeline         simLoop;
     private double           speedFactor  = 1.0;
-    private int              localTick    = 0;
     private static final double BASE_TICK_MS = 100.0;
     private static final Color VIEWPORT_BG_COLOR = Color.web("#CDCBC3");
     private static final Color VIEWPORT_BG_OUTSIDE_COLOR = Color.web("#A8A598");
@@ -283,6 +282,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 viewportStatusLabel.setText("No config loaded");
             }
             log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+        }
+
+        if (engine != null && tickDisplayLabel != null) {
+            tickDisplayLabel.setText("TICK " + engine.getTickCounter());
+        }
+        if (engine != null && simProgressBar != null) {
+            simProgressBar.setProgress(Math.min(1.0,
+                engine.getTickCounter() / (double) Math.max(1, engine.getMaxTicks())));
         }
 
         // Pre-load icons and initialize tips
@@ -1028,7 +1035,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         prevRobotPositions.clear();
         selectedEntity = null;
         onStop();
-        localTick = 0;
         if (AppState.getConfigPath() != null) {
             SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
@@ -1069,7 +1075,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         }
         doTick();
-        log("Step \u2192 TICK " + localTick);
+        log("Step \u2192 TICK " + engine.getTickCounter());
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -1129,8 +1135,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             handleSimulationComplete();
             return;
         }
-        localTick++;
-
         populateOutliner();
 
         if (engine.getRobots() != null && engine.getRobots().length > 0) {
@@ -1139,8 +1143,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         }
 
-        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
-        if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + engine.getTickCounter());
+        if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0,
+            engine.getTickCounter() / (double) Math.max(1, engine.getMaxTicks())));
     }
 
     private void handleSimulationComplete() {
@@ -1154,7 +1159,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
-        log("Simulation complete at TICK " + localTick + ".");
+        log("Simulation complete at TICK " + engine.getTickCounter() + ".");
     }
 
     private void startAnimation() {
