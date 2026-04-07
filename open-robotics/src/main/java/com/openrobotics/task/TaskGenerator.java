@@ -1,72 +1,82 @@
 package com.openrobotics.task;
 
-import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.entities.environment.Rack;
+import com.openrobotics.map.entities.station.DeliveryStation;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class TaskGenerator {
-    private final Map map;
+    private final com.openrobotics.map.Map map;
     private final Random random;
-    private final List<Vector2D> validLocations;
 
-    public TaskGenerator(Map map, long seed) {
+    public TaskGenerator(com.openrobotics.map.Map map, long seed) {
         this.map = map;
         this.random = new Random(seed);
-        this.validLocations = computeValidLocations();
     }
 
-    private List<Vector2D> computeValidLocations() {
-        List<Vector2D> locations = new ArrayList<>();
-        for (int y = 0; y < map.getHeight(); y++) {
-            for (int x = 0; x < map.getWidth(); x++) {
-                Vector2D pos = new Vector2D(x, y);
-                if (isValidTaskLocation(pos)) {
-                    locations.add(pos);
-                }
-            }
-        }
-        return locations;
-    }
-
-    private boolean isValidTaskLocation(Vector2D pos) {
-        if (!map.isTraversable(pos)) {
-            return false;
-        }
-        for (MapEntity entity : map.getEntities()) {
-            if (entity.getPosition().equals(pos)) {
-                if (entity instanceof com.openrobotics.map.entities.environment.Obstacle) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public List<Task> generateTasks(int count) {
+    /**
+     * Generates tasks by pairing rack positions (pickups) with valid delivery
+     * station positions (dropoffs). Respects per-rack boxCount and validDropoffIds.
+     * If a rack has no validDropoffIds set, all delivery stations are valid dropoffs.
+     */
+    public List<Task> generateTasks(int maxCount) {
         List<Task> tasks = new ArrayList<>();
-        if (validLocations.size() < 2) {
-            return tasks;
+
+        // Collect all delivery stations indexed by UUID
+        Map<UUID, DeliveryStation> stationById = new LinkedHashMap<>();
+        List<DeliveryStation> allStations = new ArrayList<>();
+        for (MapEntity e : map.getEntities()) {
+            if (e instanceof DeliveryStation ds) {
+                stationById.put(ds.getId(), ds);
+                allStations.add(ds);
+            }
         }
 
-        List<Vector2D> shuffled = new ArrayList<>(validLocations);
-        Collections.shuffle(shuffled, random);
+        if (allStations.isEmpty()) return tasks;
 
-        for (int i = 0; i < count && i * 2 + 1 < shuffled.size(); i++) {
-            Vector2D pickup = shuffled.get(i * 2);
-            Vector2D dropoff = shuffled.get(i * 2 + 1);
-            int priority = random.nextInt(3) + 1;
-            tasks.add(new Task(i + 1, pickup, dropoff, priority));
+        // Collect racks
+        List<Rack> racks = new ArrayList<>();
+        for (MapEntity e : map.getEntities()) {
+            if (e instanceof Rack r) racks.add(r);
+        }
+        if (racks.isEmpty()) return tasks;
+
+        // Shuffle racks for variety
+        Collections.shuffle(racks, random);
+
+        int taskId = 1;
+        outer:
+        for (Rack rack : racks) {
+            // Resolve valid dropoff stations for this rack
+            List<DeliveryStation> validStations;
+            if (rack.getValidDropoffIds() == null || rack.getValidDropoffIds().isEmpty()) {
+                validStations = allStations;
+            } else {
+                validStations = new ArrayList<>();
+                for (UUID id : rack.getValidDropoffIds()) {
+                    DeliveryStation ds = stationById.get(id);
+                    if (ds != null) validStations.add(ds);
+                }
+                if (validStations.isEmpty()) validStations = allStations;
+            }
+
+            // Generate up to boxCount tasks from this rack
+            for (int i = 0; i < rack.getBoxCount(); i++) {
+                if (tasks.size() >= maxCount) break outer;
+                DeliveryStation station = validStations.get(random.nextInt(validStations.size()));
+                int priority = random.nextInt(3) + 1;
+                tasks.add(new Task(taskId++,
+                    new Vector2D(rack.getPosition().getX(), rack.getPosition().getY()),
+                    new Vector2D(station.getPosition().getX(), station.getPosition().getY()),
+                    priority));
+            }
         }
         return tasks;
     }
 
-    public static List<Task> generateRandomTasks(Map map, int count, long seed) {
-        TaskGenerator generator = new TaskGenerator(map, seed);
-        return generator.generateTasks(count);
+    public static List<Task> generateRandomTasks(com.openrobotics.map.Map map, int count, long seed) {
+        return new TaskGenerator(map, seed).generateTasks(count);
     }
 }
