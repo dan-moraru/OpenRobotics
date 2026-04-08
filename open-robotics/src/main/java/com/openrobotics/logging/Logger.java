@@ -25,28 +25,29 @@ public class Logger {
      * A task event can be for task creation, task assignment, and task completion.
      * @param eventType the task event type
      * @param record the workload task record containing the relevant information for the event being logged
+     * @return the artifical ID of the logged task event (for task creation) or -1 for other event types
      */
-    public static void logTaskEvent(TaskEvent eventType, WorkloadTaskRecord record) {
+    public static long logTaskEvent(TaskEvent eventType, WorkloadTaskRecord record) {
         try {
             switch (eventType) {
                 case TASK_CREATED:
                     // Insert a new record for the created task
-                    WorkloadTaskDao.insert(record);
-                    break;
+                    return WorkloadTaskDao.insert(record);
                 case TASK_ASSIGNED:
                     // Update the existing record to set the assigned robot and tick
                     WorkloadTaskDao.assignToRobot(record.getId(), record.getAssignedRobotId(), record.getAssignedTick());
-                    break;
+                    return -1;
                 case TASK_COMPLETED:
                     // Update the existing record to set the completed tick and status
                     WorkloadTaskDao.markCompleted(record.getId(), record.getStatus(), record.getCompletedTick());
-                    break;
+                   return -1;
                 default:
                     throw new IllegalStateException("Unsupported event type: " + eventType);
             }
         } catch (Exception e) {
             System.err.println("Failed to log task event of type: " + eventType);
             System.err.println("Exception message: " + e.getMessage());
+            return -1;
         }
     }
 

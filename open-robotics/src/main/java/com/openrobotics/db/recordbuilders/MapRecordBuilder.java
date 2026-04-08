@@ -8,8 +8,8 @@ public class MapRecordBuilder {
 
     public MapRecordBuilder(Map map) {
         this.record = new MapRecord();
-        record.setId(map.getId());
-        record.setName("Map " + map.getId());
+        record.setId(map.getMapid());
+        record.setName("Map " + map.getMapid());
         record.setWidth(map.getWidth());
         record.setHeight(map.getHeight());
 

@@ -1001,7 +1001,8 @@ public class SimulationController {
             for (Task task : existingTasks) {
                 WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
                 WorkloadTaskRecord taskRecord = taskRecordBuilder.buildTaskCreationRecord(engine.getTickCounter());
-                Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
+                long artificialId = Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
+                task.setArtificialId(artificialId); // setting artificial ID for tracking in logs
             }
 
             startLoop();

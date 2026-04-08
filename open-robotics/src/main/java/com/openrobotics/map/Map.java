@@ -11,13 +11,14 @@ import com.openrobotics.map.entities.station.ChargingStation;
 
 // warehouse grid (uml 3.3.3)
 public class Map {
-    private UUID id; // unique identifier for database storage
+    private UUID mapid; // unique identifier for database storage
     private final int width;  // number of columns (x-axis)
     private final int height; // number of rows (y-axis)
     private final Tile[][] grid; // grid[height][width] -> grid[row][col] -> grid[y][x]
     private final List<MapEntity> entities; // all objects placed on the map
 
     public Map(int width, int height) {
+        this.mapid = UUID.randomUUID();
         if (width < 1 || height < 1) {
             throw new IllegalArgumentException("width and height must be positive");
         }
@@ -36,7 +37,7 @@ public class Map {
         }
     }
 
-    public UUID getId() { return id; }
+    public UUID getMapid() { return mapid; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 

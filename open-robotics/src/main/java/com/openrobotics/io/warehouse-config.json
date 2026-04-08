@@ -1,11 +1,13 @@
 {
   "config" : {
+    "runId" : "2f6f08dc-5962-4b36-ad11-af8718e8b9e5",
     "runName" : "Warehouse Beta",
     "tickMs" : 100,
     "maxTicks" : 5000,
     "seed" : 67890
   },
   "map" : {
+    "mapId": "46867af5-f112-4f06-b22b-610706264844",
     "width" : 12,
     "height" : 12,
     "tiles" : [ {

@@ -1164,12 +1164,14 @@ public class SimulationEngineTest {
     private SimulationConfigDTO baseConfigDto() {
         SimulationConfigDTO dto = new SimulationConfigDTO();
         dto.config = new SimulationConfigDTO.ConfigSection();
+        dto.config.runId = UUID.randomUUID();
         dto.config.runName = "base-run";
         dto.config.tickMs = 100;
         dto.config.maxTicks = 500;
         dto.config.seed = 42L;
 
         dto.map = new SimulationConfigDTO.MapSection();
+        dto.map.mapId = UUID.randomUUID();
         dto.map.width = 4;
         dto.map.height = 4;
         dto.map.tiles = List.of();

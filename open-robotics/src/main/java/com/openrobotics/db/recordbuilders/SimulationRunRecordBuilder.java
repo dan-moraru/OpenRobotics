@@ -17,16 +17,16 @@ public class SimulationRunRecordBuilder {
     public SimulationRunRecordBuilder(SimulationEngine engine) {
         this.record = new SimulationRunRecord();
         record.setId(engine.getRunId());
-        record.setMapId(engine.getMap().getId());
+        record.setMapId(engine.getMap().getMapid());
         record.setRobotCount(engine.getRobots().length);
         record.setCoordinationPolicy(engine.getCoordinationPolicy());
-        record.setRobotAlgorithms(engine.getRobots()[0].getNav().getClass().getName()); // Assuming all robots use the same navigation algorithm
     }
 
     /**
      * Builds a SimulationRunRecord for the start of a simulation run by setting the started at timestamp and status to 'RUNNING'.
      * @return a SimulationRunRecord for the start of a simulation run
      */
+    // TODO: Set all simulation run fields appropriately (probably do this in the constructor)
     public SimulationRunRecord buildSimulationStartRecord() {
         record.setStartedAt(Timestamp.from(Instant.now()));
         record.setStatus("RUNNING");

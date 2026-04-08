@@ -108,6 +108,7 @@ public class SimulationEngine {
             this.tickCounter = 0;
             this.running = false;
             this.initialized = false;
+            this.runId = UUID.randomUUID();
         }
     }
 
@@ -218,6 +219,7 @@ public class SimulationEngine {
             // Set simulation state
             this.tickCounter = dto.simulation.tick;
             this.running = dto.simulation.isRunning;
+            this.runId = dto.config.runId;
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
@@ -298,6 +300,7 @@ public class SimulationEngine {
 
         // Config Metadata
         dto.config = new SimulationConfigDTO.ConfigSection();
+        dto.config.runId = this.runId;
         dto.config.runName = this.runName;
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
@@ -305,6 +308,7 @@ public class SimulationEngine {
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
+        dto.map.mapId = map.getMapid();
         dto.map.width = map.getWidth();
         dto.map.height = map.getHeight();
         dto.map.tiles = new ArrayList<>();

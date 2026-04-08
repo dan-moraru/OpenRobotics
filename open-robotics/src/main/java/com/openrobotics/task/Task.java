@@ -1,6 +1,5 @@
 package com.openrobotics.task;
 
-import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 
 import java.util.Objects;
@@ -10,6 +9,7 @@ import java.util.Objects;
  */
 public class Task implements Comparable<Task> {
     private final long id; // unique id
+    private long artificialId; // temporary fix for disconnect between database and application task ids
     private final Vector2D pickupLocation;
     private final Vector2D dropoffLocation;
     private int priority; // higher = more urgent
@@ -25,6 +25,7 @@ public class Task implements Comparable<Task> {
 
     // Getters
     public long getId() { return id; }
+    public long getArtificialId() { return artificialId; }
     public Vector2D getPickupLocation() { return pickupLocation; }
     public Vector2D getDropoffLocation() { return dropoffLocation; }
     public int getPriority() { return priority; }
@@ -33,6 +34,7 @@ public class Task implements Comparable<Task> {
     // Setters
     public void setPriority(int priority) { this.priority = priority; }
     public void setStatus(TaskStatus status) { this.status = status; }
+    public void setArtificialId(long artificialId) { this.artificialId = artificialId; }
 
     @Override
     public String toString() {

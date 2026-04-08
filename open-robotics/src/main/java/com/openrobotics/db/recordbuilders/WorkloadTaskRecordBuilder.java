@@ -15,7 +15,7 @@ public class WorkloadTaskRecordBuilder {
      */
     public WorkloadTaskRecordBuilder(UUID simulationRunId, Task task) {
         this.record = new WorkloadTaskRecord();
-        record.setId(task.getId());
+        record.setId(task.getArtificialId());
         record.setRunId(simulationRunId);
         record.setTaskType(task.getClass().getSimpleName());
         record.setPriority(task.getPriority());
@@ -56,6 +56,7 @@ public class WorkloadTaskRecordBuilder {
      */
     public WorkloadTaskRecord buildTaskCompletionRecord(int completedTick) {
         record.setCompletedTick(completedTick);
+        record.setStatus("COMPLETED");
         return record;
     }
 }
