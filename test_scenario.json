@@ -1,11 +1,13 @@
 {
   "config": {
+    "runId": "c51d4947-1659-4712-a369-752957d97c7d",
     "runName": "test_warehouse",
     "tickMs": 100,
     "maxTicks": 5000,
     "seed": 42
   },
   "map": {
+    "mapId": "6a0de9ad-17ab-4d0f-8a1d-75fad999f7b6",
     "width": 14,
     "height": 10,
     "tiles": []
@@ -157,7 +159,7 @@
   ],
   "simulation": {
     "tick": 0,
-    "isRunning": false,
+    "isRunning": true,
     "speedMultiplier": 1.0
   },
   "coordination": {
