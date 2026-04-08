@@ -11,12 +11,42 @@ import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.logging.eventtypes.TaskEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * Central logging access: allows logging from anywhere in the application.
  * There are 3 main event categories to create logs for: task events, simulation run events, and robot events.
  */
 // TODO: Add unit tests for logging methods
 public class Logger {
+    private static final BlockingQueue<SimLogRecord> robotEventQueue = new LinkedBlockingQueue<>();
+
+    // Background worker to flush robot events in batches for better performance during simulation ticks
+    static {
+        Thread worker = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(5000); // flush every 5 seconds
+
+                    List<SimLogRecord> batch = new ArrayList<>();
+                    robotEventQueue.drainTo(batch, 100); // flush up to 100 events at a time
+
+                    if (!batch.isEmpty()) {
+                        SimLogDao.insertBatch(batch);
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Failed to flush robot event batch: " + e.getMessage());
+                }
+            }
+        });
+
+        worker.setDaemon(true); // doesn't block app shutdown
+        worker.start();
+    }
 
     private Logger() { }
 
@@ -81,18 +111,14 @@ public class Logger {
     }
 
     /**
-     * Logs robot events into the sim_log table in the database.
-     * A robot event can be for robot movements, collisions, near misses, battery changes, and deadlock detections.
+     * Logs robot events into the sim_logs table in the database.
+     * A robot event can be for robot movement, picking up an item, dropping off an item, etc.
+     * Robot events are logged asynchronously using a background worker thread that flushes events in
+     * batches for better performance during simulation ticks.
      * @param eventType the robot event type
      * @param record the simulation log record containing the relevant information for the robot event being logged
      */
     public static void logRobotEvent(RobotEvent eventType, SimLogRecord record) {
-        try {
-            // Insert a new record for the robot event
-            SimLogDao.insert(record);
-        } catch (Exception e) {
-            System.err.println("Failed to log robot event of type: " + eventType);
-            System.err.println("Exception message: " + e.getMessage());
-        }
+        robotEventQueue.offer(record);
     }
 }
