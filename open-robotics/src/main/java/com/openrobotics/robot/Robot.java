@@ -1,5 +1,7 @@
 package com.openrobotics.robot;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openrobotics.AppState;
 import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
@@ -19,6 +21,8 @@ import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
+
+import java.util.HashMap;
 import java.util.UUID;
 
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
@@ -327,8 +331,26 @@ public class Robot extends MapEntity {
                     totalEnergyConsumed += ENERGY_PER_MOVE;
                     totalDistanceMoved++;
                     stuckTicks = 0;
-                    // The first successful move after rerouting means the temporary avoid hint is no longer needed.
-                    rerouteAvoidTile = null;
+
+                    if (rerouteAvoidTile != null) {
+                        // The first successful move after rerouting means the temporary avoid hint is no longer needed.
+                        rerouteAvoidTile = null;
+
+                        // Logging robot deadlock resolution event via rerouting
+                        try {
+                            ObjectMapper mapper = new ObjectMapper();
+                            java.util.Map<String, String> details = new HashMap<>();
+                            details.put("resolutionMethod", "reroute");
+                            String json = mapper.writeValueAsString(details);
+
+                            SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                            SimLogRecord record = recordBuilder.buildDeadlockResolutionRecord(json);
+                            Logger.logRobotEvent(RobotEvent.DEADLOCK_RESOLVED, record);
+                        } catch (JsonProcessingException e) {
+                            System.out.println("Error serializing deadlock resolution details for logging: " + e.getMessage());
+                        }
+                    }
+
                 } else {
                     stuckTicks++;
                 }

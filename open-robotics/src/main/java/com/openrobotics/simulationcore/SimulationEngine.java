@@ -603,7 +603,7 @@ public class SimulationEngine {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     java.util.Map<String, String> data = new HashMap<>();
-                    data.put("recoveryMethod", "task_requeue");
+                    data.put("resolutionMethod", "task_requeue");
                     String json = mapper.writeValueAsString(data);
 
                     SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), robot.getPosition().getX(), robot.getPosition().getY());
