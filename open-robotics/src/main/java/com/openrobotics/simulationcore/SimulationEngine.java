@@ -598,6 +598,20 @@ public class SimulationEngine {
             // Stage 2: if rerouting is exhausted or impossible, fall back to reset-and-requeue.
             if (task != null) {
                 dispatcher.requeueTask(task);
+
+                // Logging robot deadlock recovery event via task requeue
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    java.util.Map<String, String> data = new HashMap<>();
+                    data.put("recoveryMethod", "task_requeue");
+                    String json = mapper.writeValueAsString(data);
+
+                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), robot.getPosition().getX(), robot.getPosition().getY());
+                    SimLogRecord recoveryRecord = recordBuilder.buildDeadlockResolutionRecord(json);
+                    Logger.logRobotEvent(RobotEvent.DEADLOCK_RESOLVED, recoveryRecord);
+                } catch (JsonProcessingException e) {
+                    System.err.println("Error serializing recovery data while logging deadlock recovery event: " + e.getMessage());
+                }
             }
 
             // Policies could hold per-robot coordination state that should be released on fallback recovery.
