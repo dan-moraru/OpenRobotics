@@ -30,6 +30,10 @@ public class DaoIntegrationTest {
     @BeforeAll
     static void initDatabase() throws IOException, SQLException {
         Database.init();
+        Assumptions.assumeTrue(
+            Database.isUuidRobotSchemaReady(),
+            "Skipping DaoIntegrationTest: shared DB schema is not migrated to UUID robot columns."
+        );
     }
 
     @AfterAll

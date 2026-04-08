@@ -38,6 +38,7 @@ import java.util.UUID;
  */
 public class SimulationEngine {
     private UUID runId; // unique identifier for the simulation run, useful for logging and tracking
+    private static final int DEADLOCK_RECOVERY_THRESHOLD = 5;
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
     private Map map;
@@ -451,8 +452,9 @@ public class SimulationEngine {
             return false;
         }
 
-        // Checking if the warehouse workload has been completed
-        if (workloadComplete()) {
+        // Checking if the warehouse workload has been completed.
+        // "No configured tasks" is treated as sandbox mode: ticks still run.
+        if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
             this.running = false;
 
             // Logging simulation run completion event
@@ -483,6 +485,9 @@ public class SimulationEngine {
 
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
+
+        // Recovery runs after state updates
+        recoverDeadlockedRobots();
 
         incrementTickCounter();
         return true;
@@ -550,6 +555,36 @@ public class SimulationEngine {
     private void updateAllRobots() {
         for (Robot robot : robots) {
             robot.update();
+        }
+    }
+
+    private void recoverDeadlockedRobots() {
+        for (Robot robot : robots) {
+            // Only recover robots that are still actively working on a task and have exceeded the threshold.
+            if (robot == null || robot.getState() != RobotState.MOVING || robot.getCurrentTask() == null) {
+                continue;
+            }
+            if (robot.getStuckTicks() < DEADLOCK_RECOVERY_THRESHOLD) {
+                continue;
+            }
+
+            Task task = robot.getCurrentTask();
+            // Stage 1: try one local reroute before dropping the task.
+            if (!robot.hasRerouteAttemptedForCurrentTask() && robot.canStartDeadlockRerouteAttempt()) {
+                coordinationPolicy.clearRobotCoordinationState(robot);
+                if (robot.startDeadlockRerouteAttempt()) {
+                    continue;
+                }
+            }
+
+            // Stage 2: if rerouting is exhausted or impossible, fall back to reset-and-requeue.
+            if (task != null) {
+                dispatcher.requeueTask(task);
+            }
+
+            // Policies could hold per-robot coordination state that should be released on fallback recovery.
+            coordinationPolicy.clearRobotCoordinationState(robot);
+            robot.recoverFromDeadlock();
         }
     }
 

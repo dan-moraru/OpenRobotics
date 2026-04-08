@@ -143,8 +143,8 @@ public class CollisionManager {
                 if (isSwap) {
                     // Only block if NEITHER tile involved allows overlap
                     if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
-                        UUID loser = aId.toString().compareTo(bId.toString()) > 0 ? aId : bId;
-                        blockedRobots.add(loser);
+                        blockedRobots.add(aId);
+                        blockedRobots.add(bId);
                     }
                 }
             }

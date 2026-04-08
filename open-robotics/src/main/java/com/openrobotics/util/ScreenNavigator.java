@@ -3,6 +3,7 @@ package com.openrobotics.util;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -29,6 +30,7 @@ public final class ScreenNavigator {
     public static final String DIALOG_SAVE_CONFIG   = "/com/openrobotics/fxml/SaveConfigDialog.fxml";
     public static final String DIALOG_OBJECT_DESC   = "/com/openrobotics/fxml/ObjectDescDialog.fxml";
     public static final String DIALOG_EXIT_CONFIRM  = "/com/openrobotics/fxml/ExitConfirmDialog.fxml";
+    public static final String DIALOG_EXPORT_RESULTS = "/com/openrobotics/fxml/ExportResultsDialog.fxml";
 
     /** The application's primary stage – set once in {@link com.openrobotics.MainApp}. */
     private static Stage primaryStage;
@@ -117,7 +119,7 @@ public final class ScreenNavigator {
             Stage dialogStage = new Stage();
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(primaryStage);
-            dialogStage.initStyle(StageStyle.UNDECORATED);
+            dialogStage.initStyle(StageStyle.TRANSPARENT);
             if (title != null && !title.isBlank()) dialogStage.setTitle(title);
 
             // Pass the stage to the controller so it can close itself
@@ -126,7 +128,7 @@ public final class ScreenNavigator {
                 dc.setDialogStage(dialogStage);
             }
 
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, Color.TRANSPARENT);
             dialogStage.setScene(scene);
             dialogStage.showAndWait();
 

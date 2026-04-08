@@ -505,7 +505,7 @@ public class ResultsController {
 
     @FXML
     private void onExport() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Export Results");
+        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_EXPORT_RESULTS, "Export Results");
     }
 
     // ------------------------------------------------------------------ //
@@ -517,7 +517,7 @@ public class ResultsController {
     @FXML
     private void onMenuGithub() {
         try {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com"));
+            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/dan-moraru/OpenRobotics"));
         } catch (Exception ex) { /* ignore */ }
     }
 

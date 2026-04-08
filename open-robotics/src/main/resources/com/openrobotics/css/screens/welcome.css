@@ -80,14 +80,6 @@
 .welcome-cta-row .button {
     -fx-font-size: 12px;
     -fx-padding: 11 28 11 28;
-    -fx-background-radius: 6;
-    -fx-background-color: #2A2926;
-    -fx-text-fill: #C2BEAE;
-    -fx-cursor: hand;
-}
-
-.welcome-cta-row .button:hover {
-    -fx-background-color: #4D4B45;
 }
 
 /* Panel divider */

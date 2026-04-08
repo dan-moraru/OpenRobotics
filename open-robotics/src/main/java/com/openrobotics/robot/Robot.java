@@ -38,6 +38,9 @@ public class Robot extends MapEntity {
     private int loadingTicksRemaining; // pickup dwell timer
     private int unloadingTicksRemaining; // dropoff dwell timer
     private Sensor lastScan; // keeps track of the last scan record of the robot
+    private boolean rerouteAttemptedForCurrentTask; // one reroute budget per task
+    private Vector2D rerouteAvoidTile; // temporary avoid hint used by the next planning attempt
+    private Vector2D lastRequestedNextTile; // raw pre-coordination next tile requested this tick
 
     // lifetime stats — accumulated during update(), read by results screen
     private int totalDistanceMoved;
@@ -78,6 +81,9 @@ public class Robot extends MapEntity {
         this.chargerTarget = null;
         this.loadingTicksRemaining = 0;
         this.unloadingTicksRemaining = 0;
+        this.rerouteAttemptedForCurrentTask = false;
+        this.rerouteAvoidTile = null;
+        this.lastRequestedNextTile = null;
         this.totalDistanceMoved = 0;
         this.tasksCompleted = 0;
         this.totalIdleTicks = 0;
@@ -99,6 +105,9 @@ public class Robot extends MapEntity {
     public void setHasPickedUp(boolean hasPickedUp) { this.hasPickedUp = hasPickedUp; }
     public int getLoadingTicksRemaining() { return loadingTicksRemaining; }
     public int getUnloadingTicksRemaining() { return unloadingTicksRemaining; }
+    public boolean hasRerouteAttemptedForCurrentTask() { return rerouteAttemptedForCurrentTask; }
+    public Vector2D getRerouteAvoidTile() { return rerouteAvoidTile; }
+    public Vector2D getLastRequestedNextTile() { return lastRequestedNextTile; }
 
     // lifetime stats getters
     public int getTotalDistanceMoved() { return totalDistanceMoved; }
@@ -113,8 +122,44 @@ public class Robot extends MapEntity {
     public void setNav(NavigationStrategy nav) { this.nav = nav; }
     public void setSensor(SensorStrategy sensor) { this.sensor = sensor; }
     public void setState(RobotState state) { this.state = state; }
-    public void setCurrentTask(Task currentTask) { this.currentTask = currentTask; }
+    public void setCurrentTask(Task currentTask) {
+        // Each task gets one reroute budget, so changing tasks resets the reroute state.
+        if (!sameTask(this.currentTask, currentTask)) {
+            clearDeadlockRerouteState();
+        }
+        this.currentTask = currentTask;
+    }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
+
+    public boolean startDeadlockRerouteAttempt() {
+        // A reroute only makes sense if the robot actually tried to enter a different tile.
+        if (!canStartDeadlockRerouteAttempt()) {
+            return false;
+        }
+
+        rerouteAttemptedForCurrentTask = true;
+        rerouteAvoidTile = lastRequestedNextTile;
+        stuckTicks = 0;
+        nav.reset(this);
+        state = RobotState.MOVING;
+        return true;
+    }
+
+    public void recoverFromDeadlock() {
+        // Recovery returns the robot to a clean idle state for the next assignment attempt.
+        if (nav != null) {
+            nav.reset(this);
+        }
+        setCurrentTask(null);
+        hasPickedUp = false;
+        chargerTarget = null;
+        loadingTicksRemaining = 0;
+        unloadingTicksRemaining = 0;
+        previousPosition = null;
+        stuckTicks = 0;
+        lastRequestedNextTile = null;
+        state = RobotState.IDLE;
+    }
 
     // returns the current navigation target based on priority:
     // charger (if set) > pickup (if not picked up) > dropoff
@@ -146,7 +191,7 @@ public class Robot extends MapEntity {
 
         // only moving robots produce real move intentions
         if (state != RobotState.MOVING) {
-            return new MoveIntention(fromTile, fromTile, this);
+            return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
         }
 
         // low battery; check if already on a charger or redirect to one
@@ -168,7 +213,7 @@ public class Robot extends MapEntity {
                 SimLogRecord record = recordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
                 Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
 
-                return new MoveIntention(fromTile, fromTile, this);
+                return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
             }
             // find nearest charger and override nav target
             if (chargerTarget == null) {
@@ -179,7 +224,7 @@ public class Robot extends MapEntity {
                     System.err.println("[Robot] No charging station found for robot " + getName()
                             + " at " + getPosition() + " with battery=" + battery);
                     state = RobotState.IDLE;
-                    return new MoveIntention(fromTile, fromTile, this);
+                    return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
                 }
             }
         } else {
@@ -188,11 +233,11 @@ public class Robot extends MapEntity {
 
         // delegate to nav strategy, null-safe if no strategy is set
         if (nav != null && getTarget() != null) {
-            return nav.getNextMove(this, map);
+            return rememberRequestedMove(nav.getNextMove(this, map));
         }
 
         // no nav or no target. stay in place
-        return new MoveIntention(fromTile, fromTile, this);
+        return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
     }
 
     // dispatcher checks this to find robots that can accept tasks
@@ -255,7 +300,7 @@ public class Robot extends MapEntity {
                         WorkloadTaskRecord record = recordBuilder.buildTaskCompletionRecord(currentTick);
                         Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }
-                    currentTask = null;
+                    setCurrentTask(null);
                     hasPickedUp = false;
                     state = RobotState.IDLE;
                 }
@@ -282,6 +327,8 @@ public class Robot extends MapEntity {
                     totalEnergyConsumed += ENERGY_PER_MOVE;
                     totalDistanceMoved++;
                     stuckTicks = 0;
+                    // The first successful move after rerouting means the temporary avoid hint is no longer needed.
+                    rerouteAvoidTile = null;
                 } else {
                     stuckTicks++;
                 }
@@ -315,5 +362,51 @@ public class Robot extends MapEntity {
     public String toString() {
         return "Robot{name=" + getName() + ", pos=" + getPosition()
                 + ", battery=" + battery + ", state=" + state + "}";
+    }
+
+    private MoveIntention rememberRequestedMove(MoveIntention intention) {
+        // Deadlock rerouting needs to know which tile the robot originally wanted before
+        // coordination or collision handling changed the outcome of the tick.
+        if (intention == null || intention.getFromTile() == null || intention.getToTile() == null) {
+            // Missing tile data means there is no meaningful move request to remember.
+            lastRequestedNextTile = null;
+            return intention;
+        }
+
+        if (intention.getFromTile().getX() == intention.getToTile().getX()
+                && intention.getFromTile().getY() == intention.getToTile().getY()) {
+            // Waiting in place does not create an alternate tile for reroute recovery to avoid.
+            lastRequestedNextTile = null;
+        } else {
+            // Store the raw requested destination so the first deadlock recovery can avoid it once.
+            lastRequestedNextTile = intention.getToTile().getPosition();
+        }
+        return intention;
+    }
+
+    private void clearDeadlockRerouteState() {
+        rerouteAttemptedForCurrentTask = false;
+        rerouteAvoidTile = null;
+        lastRequestedNextTile = null;
+    }
+
+    public boolean canStartDeadlockRerouteAttempt() {
+        if (currentTask == null || rerouteAttemptedForCurrentTask || nav == null || lastRequestedNextTile == null) {
+            return false;
+        }
+
+        // Avoiding the target would make the task impossible to finish, so fall back instead.
+        Vector2D target = getTarget();
+        return target != null && !lastRequestedNextTile.equals(target);
+    }
+
+    private boolean sameTask(Task a, Task b) {
+        if (a == b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        return a.equals(b);
     }
 }

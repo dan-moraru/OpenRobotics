@@ -1,9 +1,10 @@
-package com.openrobotics;
+package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.SimulationEngine;
+import com.openrobotics.task.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -12,9 +13,10 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimulationEngineConfigLoadTest {
 
@@ -82,5 +84,14 @@ class SimulationEngineConfigLoadTest {
         String savedJson = Files.readString(outputPath);
         assertFalse(savedJson.contains("\"coordination\""),
                 "Saved JSON should omit the coordination section when using the no-op policy.");
+    }
+
+    private Robot findRobotByName(Robot[] robots, String name) {
+        for (Robot robot : robots) {
+            if (robot != null && name.equals(robot.getName())) {
+                return robot;
+            }
+        }
+        return null;
     }
 }
