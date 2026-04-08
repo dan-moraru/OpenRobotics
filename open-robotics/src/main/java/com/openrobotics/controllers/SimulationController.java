@@ -1063,6 +1063,10 @@ public class SimulationController {
             engine = reloaded;
             AppState.setEngine(engine);
         }
+
+        // Updating run ID for the new simulation run after restart
+        engine.updateRunId();
+
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
         if (simStatusLabel != null) {

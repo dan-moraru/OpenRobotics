@@ -17,6 +17,11 @@ public class Map {
     private final Tile[][] grid; // grid[height][width] -> grid[row][col] -> grid[y][x]
     private final List<MapEntity> entities; // all objects placed on the map
 
+    public Map(UUID mapId, int width, int height) {
+        this(width, height);
+        this.mapid = mapId;
+    }
+
     public Map(int width, int height) {
         this.mapid = UUID.randomUUID();
         if (width < 1 || height < 1) {

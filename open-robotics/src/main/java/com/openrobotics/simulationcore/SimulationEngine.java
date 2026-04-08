@@ -130,7 +130,7 @@ public class SimulationEngine {
             this.collisionManager = new CollisionManager();
 
             // Initialize the Map
-            this.map = new Map(dto.map.width, dto.map.height);
+            this.map = new Map(dto.map.mapId, dto.map.width, dto.map.height);
 
             // Update tile occupancy from the JSON
             if (dto.map.tiles != null) {
@@ -660,6 +660,13 @@ public class SimulationEngine {
      */
     public String getInitError() {
         return initError;
+    }
+
+    /**
+     * Updates the runId with a new random UUID. This is used when restarting a simulation.
+     */
+    public void updateRunId() {
+        this.runId = UUID.randomUUID();
     }
 
     /**
