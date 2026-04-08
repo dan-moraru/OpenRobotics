@@ -91,4 +91,28 @@ public class SimLogRecordBuilder {
         record.setEventType(RobotEvent.CHARGE_END.toString());
         return record;
     }
+
+    /**
+     * Sets the event type of the simulation log record to DEADLOCK_DETECTED.
+     * @param details the details of the deadlock detection event to be included in the simulation log record.
+     *                Structure: {'stuckTicks': int}
+     * @return the built SimLogRecord for a deadlock detection event
+     */
+    public SimLogRecord buildDeadlockDetectionRecord(String details) {
+        record.setDetails(details);
+        record.setEventType(RobotEvent.DEADLOCK_DETECTED.toString());
+        return record;
+    }
+
+    /**
+     * Sets the event type of the simulation log record to DEADLOCK_RESOLVED.
+     * @param details the details of the deadlock resolution event to be included in the simulation log record.
+     *                Structure: {'resolutionMethod': String}
+     * @return the built SimLogRecord for a deadlock resolution event
+     */
+    public SimLogRecord buildDeadlockResolutionRecord(String details) {
+        record.setDetails(details);
+        record.setEventType(RobotEvent.DEADLOCK_RESOLVED.toString());
+        return record;
+    }
 }

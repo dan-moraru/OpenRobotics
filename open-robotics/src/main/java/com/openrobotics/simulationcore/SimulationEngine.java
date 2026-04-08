@@ -1,5 +1,7 @@
 package com.openrobotics.simulationcore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
@@ -10,6 +12,7 @@ import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.map.*;
+import com.openrobotics.map.Map;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
@@ -23,11 +26,7 @@ import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The SimulationEngine is the core component responsible for advancing the
@@ -570,6 +569,21 @@ public class SimulationEngine {
             }
             if (robot.getStuckTicks() < DEADLOCK_RECOVERY_THRESHOLD) {
                 continue;
+            }
+
+            // Logging robot deadlock detection event
+            try {
+                // Serialize the number of stuck ticks of the robot
+                ObjectMapper mapper = new ObjectMapper();
+                java.util.Map<String, Integer> data = new HashMap<>();
+                data.put("stuckTicks", robot.getStuckTicks());
+                String json = mapper.writeValueAsString(data);
+
+                SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), robot.getPosition().getX(), robot.getPosition().getY());
+                SimLogRecord deadlockRecord = recordBuilder.buildDeadlockDetectionRecord(json);
+                Logger.logRobotEvent(RobotEvent.DEADLOCK_DETECTED, deadlockRecord);
+            } catch (JsonProcessingException e) {
+                System.err.println("Error serializing deadlock data while logging deadlock detection event: " + e.getMessage());
             }
 
             Task task = robot.getCurrentTask();
