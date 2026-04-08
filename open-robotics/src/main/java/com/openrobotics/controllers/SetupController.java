@@ -55,6 +55,8 @@ public class SetupController {
     @FXML private ComboBox<String> mapCombo;
     @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
+    @FXML private Spinner<Integer> robotCountSpinner;
+    @FXML private ComboBox<String> navAlgoCombo;
 
     // ── COORDINATION POLICY ─────────────────────────────────────────────
     @FXML private ComboBox<String> policyCombo;
@@ -93,6 +95,8 @@ public class SetupController {
     // ------------------------------------------------------------------ //
 
     private static final String DEFAULT_POLICY        = "NONE";
+    private static final int    DEFAULT_ROBOT_COUNT   = 4;
+    private static final String DEFAULT_NAV_ALGO      = "GREEDY";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final String DEFAULT_WORKLOAD_MODE = "FIXED_LIST";
     private static final int    DEFAULT_SPAWN_RATE    = 1;
@@ -119,6 +123,17 @@ public class SetupController {
         mapCombo.setItems(FXCollections.observableArrayList(
                 "empty", "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
+
+        if (robotCountSpinner != null) {
+            robotCountSpinner.setValueFactory(
+                    new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 500, DEFAULT_ROBOT_COUNT));
+        }
+
+        if (navAlgoCombo != null) {
+            navAlgoCombo.setItems(FXCollections.observableArrayList("GREEDY", "A_STAR"));
+            navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO);
+        }
+
         mapSeedRow.setVisible(false);
         mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
         if (canvasWarnLabel != null) {
@@ -169,10 +184,10 @@ public class SetupController {
         runNameField.setText(DEFAULT_RUN_NAME);
 
         // Robot physics fields
-        batteryCapacityField.setText(String.valueOf((int) DEFAULT_BATTERY_CAPACITY));
-        lowBatteryField.setText(String.valueOf((int) DEFAULT_LOW_BATTERY));
-        chargePerTickField.setText(String.valueOf((int) DEFAULT_CHARGE_PER_TICK));
-        energyPerMoveField.setText(String.valueOf((int) DEFAULT_ENERGY_PER_MOVE));
+        setTextIfPresent(batteryCapacityField, String.valueOf((int) DEFAULT_BATTERY_CAPACITY));
+        setTextIfPresent(lowBatteryField, String.valueOf((int) DEFAULT_LOW_BATTERY));
+        setTextIfPresent(chargePerTickField, String.valueOf((int) DEFAULT_CHARGE_PER_TICK));
+        setTextIfPresent(energyPerMoveField, String.valueOf((int) DEFAULT_ENERGY_PER_MOVE));
 
         // Disable reservation k spinner unless policy is RESERVATION_K
         reservationKSpinner.setDisable(true);
@@ -204,6 +219,16 @@ public class SetupController {
         checkCanvasConstraint();
     }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
+    @FXML private void onResetRobotCount()   {
+        if (robotCountSpinner != null && robotCountSpinner.getValueFactory() != null) {
+            robotCountSpinner.getValueFactory().setValue(DEFAULT_ROBOT_COUNT);
+        }
+    }
+    @FXML private void onResetNavAlgo()      {
+        if (navAlgoCombo != null) {
+            navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO);
+        }
+    }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
     @FXML private void onResetWorkloadMode() { workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE); }
     @FXML private void onResetSpawnRate()    { spawnRateField.setText(String.valueOf(DEFAULT_SPAWN_RATE)); }
@@ -218,10 +243,10 @@ public class SetupController {
     @FXML private void onResetReservationK() {
         reservationKSpinner.getValueFactory().setValue(DEFAULT_RESERVATION_K);
     }
-    @FXML private void onResetBatteryCapacity()     { batteryCapacityField.setText(String.valueOf((int) DEFAULT_BATTERY_CAPACITY)); }
-    @FXML private void onResetLowBatteryThreshold() { lowBatteryField.setText(String.valueOf((int) DEFAULT_LOW_BATTERY)); }
-    @FXML private void onResetChargePerTick()       { chargePerTickField.setText(String.valueOf((int) DEFAULT_CHARGE_PER_TICK)); }
-    @FXML private void onResetEnergyPerMove()       { energyPerMoveField.setText(String.valueOf((int) DEFAULT_ENERGY_PER_MOVE)); }
+    @FXML private void onResetBatteryCapacity()     { setTextIfPresent(batteryCapacityField, String.valueOf((int) DEFAULT_BATTERY_CAPACITY)); }
+    @FXML private void onResetLowBatteryThreshold() { setTextIfPresent(lowBatteryField, String.valueOf((int) DEFAULT_LOW_BATTERY)); }
+    @FXML private void onResetChargePerTick()       { setTextIfPresent(chargePerTickField, String.valueOf((int) DEFAULT_CHARGE_PER_TICK)); }
+    @FXML private void onResetEnergyPerMove()       { setTextIfPresent(energyPerMoveField, String.valueOf((int) DEFAULT_ENERGY_PER_MOVE)); }
 
     // ------------------------------------------------------------------ //
     //  Preview Canvas
@@ -832,10 +857,10 @@ public class SetupController {
         SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, DEFAULT_TICK_MS, maxTicks, seed, workloadMode, spawnRate, maxTasks);
 
         com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
-            parseFloatSafe(batteryCapacityField.getText(), DEFAULT_BATTERY_CAPACITY),
-            parseFloatSafe(lowBatteryField.getText(),      DEFAULT_LOW_BATTERY),
-            parseFloatSafe(chargePerTickField.getText(),   DEFAULT_CHARGE_PER_TICK),
-            parseFloatSafe(energyPerMoveField.getText(),   DEFAULT_ENERGY_PER_MOVE),
+            parseOptionalFloatField(batteryCapacityField, DEFAULT_BATTERY_CAPACITY),
+            parseOptionalFloatField(lowBatteryField,      DEFAULT_LOW_BATTERY),
+            parseOptionalFloatField(chargePerTickField,   DEFAULT_CHARGE_PER_TICK),
+            parseOptionalFloatField(energyPerMoveField,   DEFAULT_ENERGY_PER_MOVE),
             DEFAULT_LOADING_TICKS,
             DEFAULT_UNLOADING_TICKS
         );
@@ -1050,6 +1075,15 @@ public class SetupController {
     private int parseIntSafe(String text, int fallback) {
         try { return Integer.parseInt(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
+
+    private void setTextIfPresent(TextField field, String value) {
+        if (field != null) field.setText(value);
+    }
+
+    private float parseOptionalFloatField(TextField field, float fallback) {
+        return field == null ? fallback : parseFloatSafe(field.getText(), fallback);
+    }
+
     private float parseFloatSafe(String text, float fallback) {
         try { return Float.parseFloat(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
