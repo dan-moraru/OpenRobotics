@@ -155,7 +155,7 @@ public class CollisionManager {
                         String json = mapper.writeValueAsString(data);
 
                         SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), aId, a.getToTile().getX(), a.getToTile().getY());
-                        SimLogRecord record = recordBuilder.buildNearMissRecord("");
+                        SimLogRecord record = recordBuilder.buildNearMissRecord(json);
                         Logger.logRobotEvent(RobotEvent.NEAR_MISS, record);
                     } catch (JsonProcessingException e) {
                         System.err.println("Error serializing near miss data while logging near miss event: " + e.getMessage());
