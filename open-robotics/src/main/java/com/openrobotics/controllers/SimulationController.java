@@ -1367,11 +1367,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (!mainSplitPane.getItems().contains(sidebarPanel)) {
                 mainSplitPane.getItems().add(0, sidebarPanel);
                 javafx.application.Platform.runLater(() ->
-    javafx.application.Platform.runLater(() -> {
-        System.out.println("[Sidebar restore] width=" + mainSplitPane.getWidth() + " divider=" + (230.0 / mainSplitPane.getWidth()));
-        mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
-    })
-);
+                    javafx.application.Platform.runLater(() ->
+                        mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth())
+                    )
+                );
             }
         } else {
             mainSplitPane.getItems().remove(sidebarPanel);
@@ -1383,12 +1382,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (consoleShell == null || vSplitPane == null) return;
         if (toggleConsoleItem.isSelected()) {
             if (!vSplitPane.getItems().contains(consoleShell)) {
+                consoleShell.setPrefHeight(-1); // -1 means "use computed size"
                 vSplitPane.getItems().add(consoleShell);
-                javafx.application.Platform.runLater(() ->
-                    javafx.application.Platform.runLater(() ->
-                        vSplitPane.setDividerPosition(0, (vSplitPane.getHeight() - 120.0) / vSplitPane.getHeight())
-                    )
-                );
+                vSplitPane.heightProperty().addListener(new javafx.beans.value.ChangeListener<Number>() {
+                    @Override
+                    public void changed(javafx.beans.value.ObservableValue<? extends Number> obs, Number oldH, Number newH) {
+                        System.out.println("[Listener] height=" + newH + " setting divider=" + ((newH.doubleValue() - 120.0) / newH.doubleValue()));
+                        vSplitPane.heightProperty().removeListener(this);
+                        vSplitPane.setDividerPosition(0, (newH.doubleValue() - 120.0) / newH.doubleValue());
+                    }
+                });
             }
         } else {
             vSplitPane.getItems().remove(consoleShell);
