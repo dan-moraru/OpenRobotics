@@ -44,8 +44,6 @@ jobs:
 
       - name: Verify DB environment (secrets vs classpath)
         run: |
-          # ApplicationConfig uses DB_URL, DB_USER, DB_PASSWORD when non-blank; else application.config.
-          # GitHub: use Repository *Secrets* named exactly DB_URL, DB_USER, DB_PASSWORD (Variables do not populate ${{ secrets.* }}).
           if [ -n "${DB_URL}" ] || [ -n "${DB_USER}" ] || [ -n "${DB_PASSWORD}" ]; then
             if [ -z "${DB_URL}" ] || [ -z "${DB_USER}" ] || [ -z "${DB_PASSWORD}" ]; then
               echo "::error::Partial DB config: set all three secrets DB_URL, DB_USER, and DB_PASSWORD, or remove them and rely on application.config."
