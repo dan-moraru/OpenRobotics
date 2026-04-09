@@ -33,3 +33,6 @@ Thumbs.db
 
 # Local Config
 **/application.config
+
+# Claude Code
+.claude/
