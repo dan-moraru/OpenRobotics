@@ -1064,6 +1064,18 @@ public class SimulationController {
             AppState.setEngine(engine);
         }
 
+        // If no engine is loaded, restart still resets the UI state safely.
+        if (engine == null) {
+            if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
+            if (simProgressBar != null) simProgressBar.setProgress(0);
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("READY");
+                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+            }
+            log("Simulation reset.");
+            return;
+        }
+
         // Updating run ID for the new simulation run after restart
         engine.updateRunId();
 
