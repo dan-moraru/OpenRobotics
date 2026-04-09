@@ -70,7 +70,7 @@ public class SimulationEngineTest {
         }
 
         @Override
-        public void update() {
+        public void update(Map map) {
             updateCalls++;
         }
     }

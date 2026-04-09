@@ -89,7 +89,7 @@ public class RobotAdvancedTest {
     public void testChargingIncrementsBattery() {
         robot.setBattery(10.0f);
         robot.setState(RobotState.CHARGING);
-        robot.update();
+        robot.update(null);
         assertEquals(15.0f, robot.getBattery(), 0.001f);
     }
 
@@ -100,7 +100,7 @@ public class RobotAdvancedTest {
     public void testChargingCapsAt100() {
         robot.setBattery(98.0f);
         robot.setState(RobotState.CHARGING);
-        robot.update();
+        robot.update(null);
         assertEquals(100.0f, robot.getBattery(), 0.001f,
                 "Battery must not exceed 100 when charging");
     }
@@ -113,7 +113,7 @@ public class RobotAdvancedTest {
         robot.setBattery(10.0f);
         robot.setState(RobotState.CHARGING);
 
-        robot.update();
+        robot.update(null);
 
         assertEquals(1, robot.getTotalChargingTicks());
     }
@@ -128,7 +128,7 @@ public class RobotAdvancedTest {
         robot.setState(RobotState.CHARGING);
         robot.setBattery(95.0f); // will reach 100 after one tick
 
-        robot.update();
+        robot.update(null);
         assertEquals(RobotState.MOVING, robot.getState(),
                 "Fully charged robot with a task must transition to MOVING");
     }
@@ -140,7 +140,7 @@ public class RobotAdvancedTest {
     public void testChargingTransitionsToIdleWhenFullAndNoTask() {
         robot.setState(RobotState.CHARGING);
         robot.setBattery(95.0f);
-        robot.update();
+        robot.update(null);
         assertEquals(RobotState.IDLE, robot.getState(),
                 "Fully charged robot without a task must transition to IDLE");
     }
@@ -152,6 +152,7 @@ public class RobotAdvancedTest {
      */
     @Test
     public void testLoadingCompletesAfterOneTick() {
+        Map map = new Map(10, 10);
         // Robot is placed at the pickup location. The first update() in MOVING
         // state detects arrival and transitions to LOADING (setting loadingTicksRemaining=1).
         // The second update() completes loading and transitions to MOVING with hasPickedUp=true.
@@ -160,11 +161,11 @@ public class RobotAdvancedTest {
         robot.setState(RobotState.MOVING);
 
         // update() while at pickup position should transition to LOADING
-        robot.update();  // MOVING → checks arrival at (5,5) → LOADING
+        robot.update(map);  // MOVING → checks arrival at (5,5) → LOADING
         assertEquals(RobotState.LOADING, robot.getState());
 
         // one more update() should complete loading → MOVING, hasPickedUp = true
-        robot.update();
+        robot.update(map);
         assertEquals(RobotState.MOVING, robot.getState());
         assertTrue(robot.isHasPickedUp());
     }
@@ -174,11 +175,12 @@ public class RobotAdvancedTest {
      */
     @Test
     public void testArrivalAtPickupSetsLoadingTicksRemaining() {
+        Map map = new Map(10, 10);
         Task task = new Task(1, new Vector2D(5, 5), new Vector2D(8, 8), 1);
         robot.setCurrentTask(task);
         robot.setState(RobotState.MOVING);
 
-        robot.update();
+        robot.update(map);
 
         assertEquals(RobotState.LOADING, robot.getState());
         assertEquals(1, robot.getLoadingTicksRemaining());
@@ -190,17 +192,18 @@ public class RobotAdvancedTest {
      */
     @Test
     public void testUnloadingCompletesAfterOneTick() {
+        Map map = new Map(10, 10);
         Task task = new Task(1, new Vector2D(1, 1), new Vector2D(5, 5), 1);
         robot.setCurrentTask(task);
         robot.setHasPickedUp(true);
         robot.setState(RobotState.MOVING);
 
         // Trigger arrival at dropoff (robot is already at (5,5))
-        robot.update(); // MOVING → arrives at dropoff (5,5) → UNLOADING
+        robot.update(map); // MOVING → arrives at dropoff (5,5) → UNLOADING
 
         assertEquals(RobotState.UNLOADING, robot.getState());
 
-        robot.update(); // UNLOADING → IDLE
+        robot.update(map); // UNLOADING → IDLE
         assertEquals(RobotState.IDLE,       robot.getState());
         assertNull(robot.getCurrentTask(),   "currentTask must be null after delivery");
         assertFalse(robot.isHasPickedUp(),   "hasPickedUp must reset after delivery");
@@ -212,12 +215,13 @@ public class RobotAdvancedTest {
      */
     @Test
     public void testArrivalAtDropoffSetsUnloadingTicksRemaining() {
+        Map map = new Map(10, 10);
         Task task = new Task(1, new Vector2D(1, 1), new Vector2D(5, 5), 1);
         robot.setCurrentTask(task);
         robot.setHasPickedUp(true);
         robot.setState(RobotState.MOVING);
 
-        robot.update();
+        robot.update(map);
 
         assertEquals(RobotState.UNLOADING, robot.getState());
         assertEquals(1, robot.getUnloadingTicksRemaining());
@@ -228,13 +232,14 @@ public class RobotAdvancedTest {
      */
     @Test
     public void testUnloadingIncrementsCompletedTaskCounter() {
+        Map map = new Map(10, 10);
         Task task = new Task(1, new Vector2D(1, 1), new Vector2D(5, 5), 1);
         robot.setCurrentTask(task);
         robot.setHasPickedUp(true);
         robot.setState(RobotState.MOVING);
 
-        robot.update();
-        robot.update();
+        robot.update(map);
+        robot.update(map);
 
         assertEquals(1, robot.getTasksCompleted());
     }
@@ -259,7 +264,7 @@ public class RobotAdvancedTest {
         robot.setPosition(new Vector2D(6, 5));
         float batteryBefore = robot.getBattery();
 
-        robot.update();
+        robot.update(null);
 
         assertEquals(batteryBefore - 1.0f, robot.getBattery(), 0.001f,
                 "Moving robot must lose 1 energy unit per tick");
@@ -276,7 +281,7 @@ public class RobotAdvancedTest {
         robot.getNextMove(map);
         robot.setPosition(new Vector2D(6, 5));
 
-        robot.update();
+        robot.update(null);
 
         assertEquals(1, robot.getTotalMovingTicks());
         assertEquals(1, robot.getTotalDistanceMoved());
@@ -292,7 +297,7 @@ public class RobotAdvancedTest {
         // Call getNextMove to save previousPosition == current position
         robot.getNextMove(map);
         // Robot stays at same position, then update()
-        robot.update();
+        robot.update(null);
 
         assertTrue(robot.getStuckTicks() >= 1,
                 "stuckTicks must increment when robot does not move");
@@ -305,7 +310,7 @@ public class RobotAdvancedTest {
     public void testIdleUpdateIncrementsIdleTickCounter() {
         robot.setState(RobotState.IDLE);
 
-        robot.update();
+        robot.update(null);
 
         assertEquals(1, robot.getTotalIdleTicks());
     }

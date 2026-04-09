@@ -106,20 +106,25 @@ public class CollisionManager {
         for (int i = 0; i < candidates.length; i++) {
             MoveIntention a = candidates[i];
             UUID aId = a.getRobot().getId();
+
+            // If 'a' is already blocked by a target conflict in Step 2, skip it
             if (blockedRobots.contains(aId) || !isActualMove(a)) continue;
 
             for (int j = i + 1; j < candidates.length; j++) {
                 MoveIntention b = candidates[j];
                 UUID bId = b.getRobot().getId();
+
+                // If 'b' is already blocked, skip it
                 if (blockedRobots.contains(bId) || !isActualMove(b)) continue;
 
                 boolean isSwap = sameTile(a.getToTile(), b.getFromTile()) &&
                         sameTile(b.getToTile(), a.getFromTile());
 
                 if (isSwap) {
-                    // Only block if NEITHER tile involved allows overlap
                     if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
-                        blockedRobots.add(aId);
+                        // Since candidates are sorted by UUID string:
+                        // Robot 'a' is the winner (smaller UUID).
+                        // Robot 'b' is the loser (larger UUID).
                         blockedRobots.add(bId);
                     }
                 }

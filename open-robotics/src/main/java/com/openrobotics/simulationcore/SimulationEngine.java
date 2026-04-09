@@ -531,7 +531,7 @@ public class SimulationEngine {
     // calls update() on every robot for state machine transitions
     private void updateAllRobots() {
         for (Robot robot : robots) {
-            robot.update();
+            robot.update(this.map);
         }
     }
 

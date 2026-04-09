@@ -28,5 +28,5 @@ public class MapEntity {
     public void setPosition(Vector2D position) { this.position = position; }
 
     // overridable per-tick update hook
-    public void update() {}
+    public void update(Map map) {}
 }

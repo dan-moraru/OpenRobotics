@@ -248,7 +248,7 @@ public class Robot extends MapEntity {
 
     // per-tick update hook — called by sim engine after position commit
     @Override
-    public void update() {
+    public void update(Map map) {
         switch (state) {
             case CHARGING:
                 totalChargingTicks++;
@@ -295,18 +295,19 @@ public class Robot extends MapEntity {
                     stuckTicks++;
                 }
 
-                // check arrival at pickup location
-                if (currentTask != null && !hasPickedUp
-                        && getPosition().equals(currentTask.getPickupLocation())) {
-                    state = RobotState.LOADING;
-                    loadingTicksRemaining = DEFAULT_LOADING_TICKS;
-                }
+                if (currentTask != null) {
+                    Vector2D target = getTarget();
+                    boolean arrived = isAtTarget(map, target);
 
-                // check arrival at dropoff location
-                if (currentTask != null && hasPickedUp
-                        && getPosition().equals(currentTask.getDropoffLocation())) {
-                    state = RobotState.UNLOADING;
-                    unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
+                    if (arrived) {
+                        if (!hasPickedUp) {
+                            state = RobotState.LOADING;
+                            loadingTicksRemaining = DEFAULT_LOADING_TICKS;
+                        } else {
+                            state = RobotState.UNLOADING;
+                            unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
+                        }
+                    }
                 }
                 break;
 
@@ -316,6 +317,24 @@ public class Robot extends MapEntity {
 
             default:
                 break;
+        }
+    }
+
+    /**
+     * Helper to determine if the robot has "arrived".
+     * If the target is a Rack, arrival = Adjacency (Distance 1).
+     * If the target is anything else, arrival = Same Tile (Distance 0).
+     */
+    private boolean isAtTarget(Map map, Vector2D target) {
+        if (target == null) return false;
+
+        // Check if there is a Rack at the target location
+        boolean targetIsRack = map.getEntitiesAt(target).stream().anyMatch(e -> e instanceof com.openrobotics.map.entities.environment.Rack);
+
+        if (targetIsRack) {
+            return getPosition().manhattanDistance(target) == 1;
+        } else {
+            return getPosition().equals(target);
         }
     }
 
@@ -357,9 +376,18 @@ public class Robot extends MapEntity {
             return false;
         }
 
-        // Avoiding the target would make the task impossible to finish, so fall back instead.
         Vector2D target = getTarget();
-        return target != null && !lastRequestedNextTile.equals(target);
+        if (target == null) return false;
+
+        // Do not reroute if the robot is already standing on the target tile.
+        // Rack-adjacency arrival is detected by Robot.update() which transitions to LOADING;
+        // recoverDeadlockedRobots only runs on MOVING robots, so that case is already excluded
+        // before this method is ever called > no need to pass a null map here.
+        if (getPosition().equals(target)) {
+            return false;
+        }
+
+        return !lastRequestedNextTile.equals(target);
     }
 
     private boolean sameTask(Task a, Task b) {

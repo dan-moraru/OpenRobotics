@@ -5,6 +5,7 @@ import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.simulationcore.MoveIntention;
@@ -44,6 +45,20 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
         // no target or already at target -> stay in place
         if (target == null || current.equals(target)) {
             return stayIntention(fromTile, robot);
+        }
+
+        boolean targetIsRack = map.getEntitiesAt(target).stream().anyMatch(e -> e instanceof Rack);
+
+        if (targetIsRack) {
+            // If it's a rack, "Arrived" means being 1 tile away (Manhattan distance 1)
+            if (current.manhattanDistance(target) == 1) {
+                return stayIntention(fromTile, robot);
+            }
+        } else {
+            // If it's a floor target (like a Station), "Arrived" means being ON the tile
+            if (current.equals(target)) {
+                return stayIntention(fromTile, robot);
+            }
         }
 
         // get sensor-blocked positions (obstacles only, null-safe)
