@@ -55,9 +55,6 @@ public class SetupController {
     @FXML private ComboBox<String> mapCombo;
     @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
-    @FXML private Spinner<Integer> robotCountSpinner;
-    @FXML private ComboBox<String> navAlgoCombo;
-
     // ── COORDINATION POLICY ─────────────────────────────────────────────
     @FXML private ComboBox<String> policyCombo;
     @FXML private Spinner<Integer> reservationKSpinner;
@@ -95,8 +92,6 @@ public class SetupController {
     // ------------------------------------------------------------------ //
 
     private static final String DEFAULT_POLICY        = "NONE";
-    private static final int    DEFAULT_ROBOT_COUNT   = 4;
-    private static final String DEFAULT_NAV_ALGO      = "GREEDY";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final String DEFAULT_WORKLOAD_MODE = "FIXED_LIST";
     private static final int    DEFAULT_SPAWN_RATE    = 1;
@@ -123,16 +118,6 @@ public class SetupController {
         mapCombo.setItems(FXCollections.observableArrayList(
                 "empty", "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
-
-        if (robotCountSpinner != null) {
-            robotCountSpinner.setValueFactory(
-                    new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 500, DEFAULT_ROBOT_COUNT));
-        }
-
-        if (navAlgoCombo != null) {
-            navAlgoCombo.setItems(FXCollections.observableArrayList("GREEDY", "A_STAR"));
-            navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO);
-        }
 
         mapSeedRow.setVisible(false);
         mapSeedRow.managedProperty().bind(mapSeedRow.visibleProperty());
@@ -219,16 +204,6 @@ public class SetupController {
         checkCanvasConstraint();
     }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
-    @FXML private void onResetRobotCount()   {
-        if (robotCountSpinner != null && robotCountSpinner.getValueFactory() != null) {
-            robotCountSpinner.getValueFactory().setValue(DEFAULT_ROBOT_COUNT);
-        }
-    }
-    @FXML private void onResetNavAlgo()      {
-        if (navAlgoCombo != null) {
-            navAlgoCombo.getSelectionModel().select(DEFAULT_NAV_ALGO);
-        }
-    }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
     @FXML private void onResetWorkloadMode() { workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE); }
     @FXML private void onResetSpawnRate()    { spawnRateField.setText(String.valueOf(DEFAULT_SPAWN_RATE)); }

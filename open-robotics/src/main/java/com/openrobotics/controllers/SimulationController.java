@@ -127,6 +127,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
     private boolean paused  = false;
+    // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
+    // Restart always reloads from this, not from AppState.getConfigPath().
+    private String initialSnapshotPath = null;
 
     // ── Engine binding ────────────────────────────────────────────────────
     private SimulationEngine engine;
@@ -616,6 +619,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      */
     @FXML
     private void onObjectTileDragDetected(MouseEvent e) {
+        if (running) { e.consume(); return; }
         Button source = (Button) e.getSource();
         String type = (String) source.getUserData();
 
@@ -639,6 +643,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     /** Accept the drag as long as the dragboard carries an object-type string. */
     private void onCanvasDragOver(DragEvent e) {
+        if (running) { e.consume(); return; }
         if (e.getDragboard().hasString()) {
             e.acceptTransferModes(TransferMode.COPY);
             // Update status label with live position feedback
@@ -656,6 +661,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
+        if (running) { e.setDropCompleted(false); e.consume(); return; }
         Dragboard db = e.getDragboard();
         boolean dropCompleted = false;
         if (db.hasString()) {
@@ -1109,6 +1115,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 updateRamLabel();
             }
         } else {
+            // Snapshot the state right now (tick 0) as the restart baseline.
+            if (initialSnapshotPath == null && engine != null) {
+                try {
+                    java.io.File snap = java.io.File.createTempFile("openrobotics_initial_", ".json");
+                    snap.deleteOnExit();
+                    engine.configSaving(snap.getAbsolutePath());
+                    initialSnapshotPath = snap.getAbsolutePath();
+                } catch (Exception ex) {
+                    log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
+                }
+            }
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
@@ -1166,8 +1183,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         onStop();
         localTick = 0;
-        if (AppState.getConfigPath() != null) {
-            SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
+        // Reload from the initial snapshot taken when play was first pressed.
+        // This restores tick-0 state with all editor changes intact.
+        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        initialSnapshotPath = null; // clear so next play press re-snapshots fresh
+        if (reloadPath != null) {
+            SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
                 if (simStatusLabel != null) {
                     simStatusLabel.setText("ERROR");
