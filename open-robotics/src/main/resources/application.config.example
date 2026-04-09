@@ -1,7 +1,7 @@
 # Copy this file to application.config for local development.
 # Prefer environment variables DB_URL, DB_USER, DB_PASSWORD in CI/production.
 
-db.url=jdbc:postgresql://localhost:5432/openrobotics
+db.url=jdbc:postgresql://aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
 
-db.user=your_db_user
-db.password=your_db_password
+db.user=USER.kwspbnsugatipikpeblg
+db.password=PASSWORD
