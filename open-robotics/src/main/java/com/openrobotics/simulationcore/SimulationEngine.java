@@ -546,11 +546,6 @@ public class SimulationEngine {
             Robot robot = intention.getRobot();
             Vector2D newPosition = intention.getToTile().getPosition();
             robot.setPosition(newPosition);
-
-            // Logging robot movement execution event
-            SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), newPosition.getX(), newPosition.getY());
-            SimLogRecord moveRecord = recordBuilder.buildMoveExecutionRecord();
-            Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, moveRecord);
         }
     }
 
@@ -567,6 +562,13 @@ public class SimulationEngine {
             if (robot == null || robot.getState() != RobotState.MOVING || robot.getCurrentTask() == null) {
                 continue;
             }
+
+            // Skipping recovery for robots with depleted batteries
+            // TODO: Consider a method for handling dead robots
+            if (robot.getBattery() <= 0.0) {
+                continue; // Let battery recovery handle this robot, don't interfere with task recovery
+            }
+
             if (robot.getStuckTicks() < DEADLOCK_RECOVERY_THRESHOLD) {
                 continue;
             }

@@ -213,8 +213,8 @@ public class Robot extends MapEntity {
                 chargerTarget = null; // clear override
 
                 // Logging charging start event
-                SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
-                SimLogRecord record = recordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                SimLogRecordBuilder chargingStartRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                SimLogRecord record = chargingStartRecordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
                 Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
 
                 return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
@@ -276,8 +276,8 @@ public class Robot extends MapEntity {
                     state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
 
                     // Logging charging end event
-                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
-                    SimLogRecord record = recordBuilder.buildChargeEndRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                    SimLogRecordBuilder chargingEndRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = chargingEndRecordBuilder.buildChargeEndRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
                     Logger.logRobotEvent(RobotEvent.CHARGE_END, record);
                 }
                 break;
@@ -300,8 +300,8 @@ public class Robot extends MapEntity {
 
                         // Logging task completion event
                         int currentTick = AppState.getEngine().getTickCounter();
-                        WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), currentTask);
-                        WorkloadTaskRecord record = recordBuilder.buildTaskCompletionRecord(currentTick);
+                        WorkloadTaskRecordBuilder taskCompletionRecordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), currentTask);
+                        WorkloadTaskRecord record = taskCompletionRecordBuilder.buildTaskCompletionRecord(currentTick);
                         Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }
                     setCurrentTask(null);
@@ -315,11 +315,11 @@ public class Robot extends MapEntity {
 
                 // check if robots battery has died
                 if (battery <= 0) {
-                    state = RobotState.IDLE;
+                    state = RobotState.BATTER_DEAD;
 
                     // Logging battery death event
-                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
-                    SimLogRecord record = recordBuilder.buildBatteryDeathRecord();
+                    SimLogRecordBuilder batterDeathRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = batterDeathRecordBuilder.buildBatteryDeathRecord();
                     Logger.logRobotEvent(RobotEvent.BATTERY_DEATH, record);
 
                     break;
@@ -331,6 +331,11 @@ public class Robot extends MapEntity {
                     totalEnergyConsumed += ENERGY_PER_MOVE;
                     totalDistanceMoved++;
                     stuckTicks = 0;
+
+                    // Logging robot movement execution event
+                    SimLogRecordBuilder movementRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord moveRecord = movementRecordBuilder.buildMoveExecutionRecord();
+                    Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, moveRecord);
 
                     if (rerouteAvoidTile != null) {
                         // The first successful move after rerouting means the temporary avoid hint is no longer needed.
