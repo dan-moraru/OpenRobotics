@@ -239,7 +239,7 @@
                </VBox>
    
                <!-- ── VIEWPORT + CONSOLE ── -->
-               <VBox spacing="0">
+               <VBox spacing="0" HBox.hgrow="ALWAYS" minWidth="0">
       <children>
       
                              <!-- Viewport header bar #8D8A7F -->
@@ -276,7 +276,7 @@
                                  </right>
                              </BorderPane>
       
-                      <SplitPane dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
+                      <SplitPane fx:id="vSplitPane" dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
          <items>
                              <VBox spacing="0">
                                 <children>

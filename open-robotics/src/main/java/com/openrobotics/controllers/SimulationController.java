@@ -83,6 +83,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private CheckMenuItem toggleSidebarItem;
     @FXML private CheckMenuItem toggleConsoleItem;
     @FXML private SplitPane     mainSplitPane;
+    @FXML private SplitPane vSplitPane;
     @FXML private VBox sidebarPanel;
     @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
@@ -1361,17 +1362,36 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onToggleSidebar() {
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(toggleSidebarItem.isSelected());
-            sidebarPanel.setManaged(toggleSidebarItem.isSelected());
+        if (sidebarPanel == null || mainSplitPane == null) return;
+        if (toggleSidebarItem.isSelected()) {
+            if (!mainSplitPane.getItems().contains(sidebarPanel)) {
+                mainSplitPane.getItems().add(0, sidebarPanel);
+                javafx.application.Platform.runLater(() ->
+    javafx.application.Platform.runLater(() -> {
+        System.out.println("[Sidebar restore] width=" + mainSplitPane.getWidth() + " divider=" + (230.0 / mainSplitPane.getWidth()));
+        mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
+    })
+);
+            }
+        } else {
+            mainSplitPane.getItems().remove(sidebarPanel);
         }
     }
 
     @FXML
     private void onToggleConsole() {
-        if (consoleShell != null) {
-            consoleShell.setVisible(toggleConsoleItem.isSelected());
-            consoleShell.setManaged(toggleConsoleItem.isSelected());
+        if (consoleShell == null || vSplitPane == null) return;
+        if (toggleConsoleItem.isSelected()) {
+            if (!vSplitPane.getItems().contains(consoleShell)) {
+                vSplitPane.getItems().add(consoleShell);
+                javafx.application.Platform.runLater(() ->
+                    javafx.application.Platform.runLater(() ->
+                        vSplitPane.setDividerPosition(0, (vSplitPane.getHeight() - 120.0) / vSplitPane.getHeight())
+                    )
+                );
+            }
+        } else {
+            vSplitPane.getItems().remove(consoleShell);
         }
     }
 
