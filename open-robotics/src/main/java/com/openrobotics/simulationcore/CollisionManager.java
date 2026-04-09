@@ -1,7 +1,6 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Tile;
-import com.openrobotics.robot.Robot;
 
 import java.util.*;
 
@@ -117,10 +116,16 @@ public class CollisionManager {
                         sameTile(b.getToTile(), a.getFromTile());
 
                 if (isSwap) {
-                    // Only block if NEITHER tile involved allows overlap
+                    // Only resolve if NEITHER tile involved allows overlap
                     if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
-                        blockedRobots.add(aId);
-                        blockedRobots.add(bId);
+                        // Same tie-break as same-destination: lexicographically smallest UUID wins
+                        MoveIntention winner = Comparator
+                                .comparing((MoveIntention mi) -> mi.getRobot().getId().toString())
+                                .compare(a, b) <= 0
+                                ? a
+                                : b;
+                        UUID loserId = winner == a ? bId : aId;
+                        blockedRobots.add(loserId);
                     }
                 }
             }
