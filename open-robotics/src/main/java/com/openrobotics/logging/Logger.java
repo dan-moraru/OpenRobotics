@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 // TODO: Add unit tests for logging methods
 public class Logger {
+    private static LoggerMode mode = LoggerMode.DB;
     private static final BlockingQueue<SimLogRecord> robotEventQueue = new LinkedBlockingQueue<>();
 
     // Background worker to flush robot events in batches for better performance during simulation ticks
@@ -51,6 +52,15 @@ public class Logger {
     private Logger() { }
 
     /**
+     * Sets the logger mode. In DB mode, logs are written to the database. In NO_OP mode,
+     * logging calls are ignored.
+     * @param newMode the new logger mode to set
+     */
+    public static void setMode(LoggerMode newMode) {
+        mode = newMode;
+    }
+
+    /**
      * Logs task events into the run_workload_task table in the database.
      * A task event can be for task creation, task assignment, and task completion.
      * @param eventType the task event type
@@ -58,6 +68,10 @@ public class Logger {
      * @return the artifical ID of the logged task event (for task creation) or -1 for other event types
      */
     public static long logTaskEvent(TaskEvent eventType, WorkloadTaskRecord record) {
+        if (mode == LoggerMode.NO_OP) {
+            return -1; // no-op mode, do not log anything
+        }
+
         try {
             switch (eventType) {
                 case TASK_CREATED:
@@ -88,6 +102,10 @@ public class Logger {
      * @param record the simulation run record containing the relevant information for the event being logged
      */
     public static void logSimulationRunEvent(SimulationRunEvent eventType, SimulationRunRecord record) {
+        if (mode == LoggerMode.NO_OP) {
+            return; // no-op mode, do not log anything
+        }
+
         try {
             switch (eventType) {
                 case RUN_STARTED:
@@ -119,6 +137,10 @@ public class Logger {
      * @param record the simulation log record containing the relevant information for the robot event being logged
      */
     public static void logRobotEvent(RobotEvent eventType, SimLogRecord record) {
+        if (mode == LoggerMode.NO_OP) {
+            return; // no-op mode, do not log anything
+        }
+
         robotEventQueue.offer(record);
     }
 }

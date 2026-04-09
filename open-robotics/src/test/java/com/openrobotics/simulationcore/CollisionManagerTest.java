@@ -1,5 +1,9 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
+import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.robot.Robot;
@@ -21,11 +25,27 @@ public class CollisionManagerTest {
     private CollisionManager manager;
 
     /**
+     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     */
+    private void seedAppState() {
+        SimulationEngine dummyEngine = new SimulationEngine(
+                new Map(1, 1),
+                new Robot[0],
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+
+        AppState.setEngine(dummyEngine);
+    }
+
+    /**
      * Creates a fresh CollisionManager before every test.
      */
     @BeforeEach
     public void setUp() {
         manager = new CollisionManager();
+        seedAppState();
+        Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
     // Helpers
@@ -251,10 +271,10 @@ public class CollisionManagerTest {
     }
 
     /**
-     * Two robots swapping positions: only the UUID-lowest proceeds.
+     * Two robots swapping positions: none of them are approved.
      */
     @Test
-    public void testSwapConflictOnlyOneApproved() {
+    public void testSwapConflictNoneApproved() {
         Robot r1 = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
                 "R1", new Vector2D(0, 0));
         Robot r2 = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
@@ -265,10 +285,8 @@ public class CollisionManagerTest {
         MoveIntention mi2 = move(r2, 1, 0, 0, 0);
 
         MoveIntention[] result = manager.resolveConflicts(new MoveIntention[]{ mi1, mi2 });
-        assertEquals(1, result.length,
-                "Swap conflict must be resolved: only one robot proceeds");
-        // r1 has smaller UUID string → wins the swap
-        assertSame(r1, result[0].getRobot());
+        assertEquals(0, result.length,
+                "Both robots must be rejected in a swap conflict");
     }
 
     /**

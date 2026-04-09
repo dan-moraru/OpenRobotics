@@ -85,7 +85,7 @@ public class Dispatcher {
         // Assigning tasks to available robots
         for (Robot robot : robots) {
             if (robot == null) {
-                throw new IllegalArgumentException("Encountered a null robot while assigning tasks during tick " + currentTick);
+                continue; // skip null robots
             }
 
             // Checking if there are no more tasks left to assign

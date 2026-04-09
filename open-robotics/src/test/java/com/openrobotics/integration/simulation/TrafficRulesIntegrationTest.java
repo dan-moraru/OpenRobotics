@@ -1,13 +1,18 @@
 package com.openrobotics.integration.simulation;
 
+import com.openrobotics.AppState;
 import com.openrobotics.integration.SimulationIntegrationTestSupport;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
+import com.openrobotics.simulationcore.CoordinationPolicy;
 import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.simulationcore.TrafficRulesPolicy;
 import com.openrobotics.task.Task;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -18,6 +23,26 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class TrafficRulesIntegrationTest extends SimulationIntegrationTestSupport {
+
+    /**
+     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     */
+    private void seedAppState() {
+        SimulationEngine dummyEngine = new SimulationEngine(
+                new Map(1, 1),
+                new Robot[0],
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+
+        AppState.setEngine(dummyEngine);
+    }
+
+    @BeforeEach
+    public void setUp() {
+        seedAppState();
+        Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
+    }
 
     @Test
     void trafficRulesKeepsIntersectionExclusiveAcrossTicks() {

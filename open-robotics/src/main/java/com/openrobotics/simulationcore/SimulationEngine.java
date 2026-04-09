@@ -82,7 +82,7 @@ public class SimulationEngine {
                           String runName, int tickMs, int maxTicks, long seed) {
         this.runId = UUID.randomUUID();
         this.tickCounter = 0;
-        this.running = false;
+        this.running = true;
         this.map = map;
         this.robots = robots;
         this.collisionManager = new CollisionManager();
@@ -565,7 +565,7 @@ public class SimulationEngine {
 
             // Skipping recovery for robots with depleted batteries
             // TODO: Consider a method for handling dead robots
-            if (robot.getBattery() <= 0.0) {
+            if (robot.getState() == RobotState.BATTER_DEAD) {
                 continue; // Let battery recovery handle this robot, don't interfere with task recovery
             }
 
