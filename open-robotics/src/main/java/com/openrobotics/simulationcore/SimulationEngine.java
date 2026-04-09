@@ -82,7 +82,7 @@ public class SimulationEngine {
                           String runName, int tickMs, int maxTicks, long seed) {
         this.runId = UUID.randomUUID();
         this.tickCounter = 0;
-        this.running = true;
+        this.running = false;
         this.map = map;
         this.robots = robots;
         this.collisionManager = new CollisionManager();
@@ -450,11 +450,6 @@ public class SimulationEngine {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
 
-        // Early exit if simulation is already stopped
-        if (!running) {
-            return false;
-        }
-
         // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
         if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
@@ -467,6 +462,9 @@ public class SimulationEngine {
 
             return false;
         }
+
+        // Any tick that executes work/sandbox progression is considered running.
+        this.running = true;
 
         // Assigning tasks to available robots
         dispatcher.assignTasks(robots);
@@ -493,6 +491,12 @@ public class SimulationEngine {
         recoverDeadlockedRobots();
 
         incrementTickCounter();
+
+        // Re-evaluate completion after robot/task state transitions in this tick.
+        if (workloadComplete()) {
+            this.running = false;
+        }
+
         return true;
     }
 
