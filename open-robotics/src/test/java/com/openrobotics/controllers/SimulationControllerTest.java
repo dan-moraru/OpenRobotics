@@ -34,7 +34,9 @@ public class SimulationControllerTest extends ApplicationTest {
     @BeforeEach
     void resetState() {
         clickOn("↺"); // restart button → resets running/paused flags
-        clickOn("✕");  // clear console
+        WaitForAsyncUtils.waitForFxEvents();
+        clickOn("#clearConsoleButton");
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     // @Test
@@ -66,9 +68,11 @@ public class SimulationControllerTest extends ApplicationTest {
     @Test
     void clear_console_empties_output() {
         clickOn("▶");  // produce some console output
+        WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertFalse(console.getText().isEmpty(), "Console should have content after play");
-        clickOn("✕");
+        clickOn("#clearConsoleButton");
+        WaitForAsyncUtils.waitForFxEvents();
         assertEquals("", console.getText());
     }
 
