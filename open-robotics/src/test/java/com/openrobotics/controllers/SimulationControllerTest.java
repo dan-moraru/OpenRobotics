@@ -5,10 +5,14 @@ import com.openrobotics.util.ScreenNavigator;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
@@ -17,6 +21,20 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SimulationControllerTest extends ApplicationTest {
+
+    /**
+     * Robot clicks often miss small controls in headless/CI; firing runs the same {@code onAction} as the FXML button.
+     */
+    private void clearConsoleThroughUi() {
+        Button clear = lookup("#clearConsoleButton").queryAs(Button.class);
+        interact(clear::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    private void assertConsoleEventuallyEmpty() throws TimeoutException {
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () ->
+                lookup("#consoleArea").queryAs(TextArea.class).getText().isEmpty());
+    }
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -32,9 +50,11 @@ public class SimulationControllerTest extends ApplicationTest {
 
     /** Reset to a clean slate before every test: restart simulation, then clear the console. */
     @BeforeEach
-    void resetState() {
+    void resetState() throws TimeoutException {
         clickOn("↺"); // restart button → resets running/paused flags
-        clickOn("✕");  // clear console
+        WaitForAsyncUtils.waitForFxEvents();
+        clearConsoleThroughUi();
+        assertConsoleEventuallyEmpty();
     }
 
     // @Test
@@ -64,12 +84,14 @@ public class SimulationControllerTest extends ApplicationTest {
     }
 
     @Test
-    void clear_console_empties_output() {
+    void clear_console_empties_output() throws TimeoutException {
         clickOn("▶");  // produce some console output
+        WaitForAsyncUtils.waitForFxEvents();
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertFalse(console.getText().isEmpty(), "Console should have content after play");
-        clickOn("✕");
-        assertEquals("", console.getText());
+        clearConsoleThroughUi();
+        assertConsoleEventuallyEmpty();
+        assertEquals("", lookup("#consoleArea").queryAs(TextArea.class).getText());
     }
 
     @Test
