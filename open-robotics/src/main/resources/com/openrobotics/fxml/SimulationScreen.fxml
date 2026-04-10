@@ -297,7 +297,7 @@
                                                          </HBox>
                                        </children>
                                     </StackPane>
-            
+
                                 </children>
                              </VBox>
          
@@ -310,7 +310,7 @@
                                            <Region HBox.hgrow="ALWAYS" />
                                            <Label fx:id="tipLabel" styleClass="sim-tip-label" text="" />
                                            <Region HBox.hgrow="ALWAYS" />
-                                           <Button onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
+                                           <Button fx:id="clearConsoleButton" onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
                                        </children>
                                     </HBox>
                                     <TextArea fx:id="consoleArea" editable="false" promptText="&gt;" wrapText="true" VBox.vgrow="ALWAYS" />
