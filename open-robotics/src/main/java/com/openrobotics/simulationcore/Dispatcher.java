@@ -55,10 +55,12 @@ public class Dispatcher {
         }
 
         // Adding tasks to task queue
-        for (Task task : tasks) {
-            if (task != null) {
-                addTask(task);
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            if (task == null) {
+                throw new IllegalArgumentException("null task in tasks list at index " + i);
             }
+            addTask(task);
         }
     }
 
@@ -88,14 +90,23 @@ public class Dispatcher {
 
             if (robot.isAvailable()) { // robot is available for task assignment
                 // Assign a task to the robot
-                Task task = taskQueue.poll();
-                robot.setCurrentTask(task);
+                Task task = taskQueue.peek();
+                if (task == null) {
+                    break;
+                }
+                try {
+                    robot.setCurrentTask(task);
 
-                // Update robot state and task status
-                robot.setState(RobotState.MOVING);
-                task.setStatus(TaskStatus.IN_PROGRESS);
+                    // Update robot state and task status
+                    robot.setState(RobotState.MOVING);
+                    task.setStatus(TaskStatus.IN_PROGRESS);
 
-                assignmentCount++;
+                    taskQueue.poll();
+                    assignmentCount++;
+                } catch (RuntimeException ex) {
+                    System.err.println("[Dispatcher] Failed to assign task " + task.getId()
+                        + " to robot " + robot.getId() + ": " + ex.getMessage());
+                }
             }
         }
 
@@ -107,7 +118,7 @@ public class Dispatcher {
      * @param task the task to be requeued
      */
     public void requeueTask(Task task) {
-        enqueueTask(task, true);
+        enqueueTask(task, false);
     }
 
     /**

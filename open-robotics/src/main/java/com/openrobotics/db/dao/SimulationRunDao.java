@@ -32,7 +32,7 @@ public final class SimulationRunDao {
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setObject(1, id);
             ps.setObject(2, r.getMapId());
-            ps.setInt(3, r.getRobotCount());
+            ps.setObject(3, r.getRobotCount(), Types.INTEGER);
             ps.setString(4, r.getCoordinationPolicy());
             ps.setObject(5, jsonb(r.getRobotAlgorithms()));
             ps.setObject(6, r.getWorkloadSeed(), Types.INTEGER);
@@ -127,7 +127,7 @@ public final class SimulationRunDao {
         SimulationRunRecord r = new SimulationRunRecord();
         r.setId(rs.getObject("id", UUID.class));
         r.setMapId(rs.getObject("map_id", UUID.class));
-        r.setRobotCount(rs.getInt("robot_count"));
+        r.setRobotCount(rs.getObject("robot_count", Integer.class));
         r.setCoordinationPolicy(rs.getString("coordination_policy"));
         r.setRobotAlgorithms(rs.getString("robot_algorithms"));
         r.setWorkloadSeed((Integer) rs.getObject("workload_seed"));

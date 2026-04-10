@@ -35,6 +35,9 @@ public final class ScreenNavigator {
     /** The application's primary stage – set once in {@link com.openrobotics.MainApp}. */
     private static Stage primaryStage;
 
+    /** Holds the controller of the currently displayed screen so it can be cleaned up on navigation. */
+    private static Object currentController;
+
     private ScreenNavigator() {}
 
     // ------------------------------------------------------------------ //
@@ -61,7 +64,11 @@ public final class ScreenNavigator {
      */
     public static void loadScreen(String fxmlPath) {
         try {
-            System.out.println("[ScreenNavigator] Loading screen: " + fxmlPath);
+            // Clean up the previous screen's controller before replacing it
+            if (currentController instanceof Cleanable c) {
+                c.cleanup();
+            }
+
             URL url = ScreenNavigator.class.getResource(fxmlPath);
             if (url == null) {
                 throw new IllegalArgumentException("FXML resource not found: " + fxmlPath);
@@ -71,6 +78,7 @@ public final class ScreenNavigator {
             if (primaryStage == null) {
                 throw new IllegalStateException("Primary stage not set. Call ScreenNavigator.setPrimaryStage first.");
             }
+            currentController = loader.getController();
             Scene scene = primaryStage.getScene();
             if (scene == null) {
                 scene = new Scene(root);
@@ -79,7 +87,6 @@ public final class ScreenNavigator {
                 scene.setRoot(root);
             }
             primaryStage.show();
-            System.out.println("[ScreenNavigator] Loaded screen: " + fxmlPath);
         } catch (Exception e) {
             System.err.println("[ScreenNavigator] Failed to load screen: " + fxmlPath + " -> " + e);
             throw new RuntimeException("Failed to load screen: " + fxmlPath, e);
@@ -158,6 +165,9 @@ public final class ScreenNavigator {
         if (controller instanceof ExitConfirmResultHolder holder) {
             return holder.isConfirmed();
         }
+        String controllerClass = controller == null ? "null" : controller.getClass().getName();
+        System.err.println("[ScreenNavigator] Exit dialog controller does not implement ExitConfirmResultHolder: "
+            + controllerClass);
         return false;
     }
 
@@ -165,6 +175,14 @@ public final class ScreenNavigator {
     //  Marker interfaces – controllers implement these so the navigator
     //  can inject the stage without hard-casting to every concrete type.
     // ------------------------------------------------------------------ //
+
+    /**
+     * Implemented by screen controllers that hold resources (timelines, listeners, bindings)
+     * that must be released before the screen is replaced.
+     */
+    public interface Cleanable {
+        void cleanup();
+    }
 
     /** Implemented by every dialog controller that needs to close itself. */
     public interface DialogController {

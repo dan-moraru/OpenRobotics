@@ -28,19 +28,25 @@ public class ViewportTips {
     /* Shuffled deck for sequential non-repeating rotation */
     private static final List<String> deck = new ArrayList<>();
     private static int deckIndex = 0;
+    private static final Object lock = new Object();
 
     /**
      * Returns the next tip in shuffled sequence.
      * Reshuffles the deck once all tips have been shown.
      */
     public static String nextTip() {
-        if (deck.isEmpty() || deckIndex >= deck.size()) {
-            deck.clear();
-            deck.addAll(selectionTips);
-            Collections.shuffle(deck, new java.util.Random());
-            deckIndex = 0;
+        synchronized (lock) {
+            if (selectionTips.isEmpty()) {
+                return "Left-click to select";
+            }
+            if (deck.isEmpty() || deckIndex >= deck.size()) {
+                deck.clear();
+                deck.addAll(selectionTips);
+                Collections.shuffle(deck, ThreadLocalRandom.current());
+                deckIndex = 0;
+            }
+            return deck.get(deckIndex++);
         }
-        return deck.get(deckIndex++);
     }
 
     /**
@@ -55,19 +61,29 @@ public class ViewportTips {
     /** Adds a custom tip to the pool. */
     public static void addTip(String tip) {
         if (tip != null && !tip.isBlank()) {
-            selectionTips.add(tip);
-            deck.clear(); // force deck rebuild on next call
+            synchronized (lock) {
+                selectionTips.add(tip);
+                deck.clear(); // force deck rebuild on next call
+                deckIndex = 0;
+            }
         }
     }
 
     /** Replaces all tips with a custom set. */
     public static void setTips(List<String> tips) {
-        selectionTips.clear();
-        deck.clear();
+        List<String> filtered = new ArrayList<>();
         if (tips != null) {
             for (String tip : tips) {
-                if (tip != null && !tip.isBlank()) selectionTips.add(tip);
+                if (tip != null && !tip.isBlank()) filtered.add(tip);
             }
+        }
+        synchronized (lock) {
+            selectionTips.clear();
+            selectionTips.addAll(filtered);
+            deck.clear();
+            deck.addAll(selectionTips);
+            Collections.shuffle(deck, ThreadLocalRandom.current());
+            deckIndex = 0;
         }
     }
 

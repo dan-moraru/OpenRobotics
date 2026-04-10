@@ -40,7 +40,7 @@
   console bg #32312D, console header #C2BEAE
 -->
 
-<BorderPane prefHeight="1080.0" prefWidth="1920.0" styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
+<BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
 
     <top>
         <VBox spacing="0">
@@ -94,6 +94,8 @@
                <!-- Tab strip -->
                <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
                     <children>
+                        <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK" />
+                        <Region minWidth="8" />
                         <Region minWidth="232.0" />
                         <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
                         <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
@@ -110,11 +112,11 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.17" styleClass="sim-main-split">
+        <SplitPane fx:id="mainSplitPane" dividerPositions="0.17" styleClass="sim-main-split">
            <items>
    
                <!-- ── LEFT SIDEBAR #8D8A7F ── -->
-               <VBox fx:id="sidebarPanel" maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
+               <VBox fx:id="sidebarPanel" minWidth="200.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
       <children>
       
                       <!-- Add Object | Outliner tabs -->
@@ -204,7 +206,7 @@
                                     <VBox spacing="4" styleClass="sidebar-panel">
                                        <children>
                                            <TextField fx:id="outlinerSearchField" promptText="Filter objects…" styleClass="sidebar-filter-field" />
-                                           <ListView fx:id="outlinerListView" onMouseClicked="#onOutlinerSelect" VBox.vgrow="ALWAYS" />
+                                           <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS" />
                                        </children>
                                     </VBox>
             </content>
@@ -266,8 +268,8 @@
                                              <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
                                              <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
                                              <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />
-                                             <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
-                                             <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
+                                             <Button fx:id="playBtn" onAction="#onPlay" styleClass="playback-btn" text="▶" />
+                                             <Button fx:id="pauseBtn" onAction="#onPause" styleClass="playback-btn" text="⏸" />
                                              <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
                                          </children>
                                      </HBox>

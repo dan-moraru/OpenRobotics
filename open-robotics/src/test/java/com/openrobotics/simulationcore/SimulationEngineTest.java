@@ -994,7 +994,7 @@ public class SimulationEngineTest {
                 stationDto(UUID.fromString("00000000-0000-0000-0000-000000000010"), "Charger", 0, 0, "CHARGING"),
                 stationDto(UUID.fromString("00000000-0000-0000-0000-000000000011"), "Delivery", 5, 4, "DELIVERY")
         );
-        dto.entities.racks = List.of(stationDto(UUID.fromString("00000000-0000-0000-0000-000000000012"), "Rack", 2, 2, null));
+        dto.entities.racks = List.of(rackDto(UUID.fromString("00000000-0000-0000-0000-000000000012"), "Rack", 2, 2));
         dto.entities.obstacles = List.of(stationDto(UUID.fromString("00000000-0000-0000-0000-000000000013"), "Obstacle", 3, 1, null));
         dto.tasks = List.of(taskDto(7, 1, 1, 4, 4, 9, TaskStatus.PENDING));
         dto.coordination.type = "RESERVATION_K";
@@ -1249,6 +1249,14 @@ public class SimulationEngineTest {
         entity.name = name;
         entity.position = new SimulationConfigDTO.Vector2DDTO(x, y);
         entity.type = type;
+        return entity;
+    }
+
+    private SimulationConfigDTO.RackDTO rackDto(UUID id, String name, int x, int y) {
+        SimulationConfigDTO.RackDTO entity = new SimulationConfigDTO.RackDTO();
+        entity.id = id;
+        entity.name = name;
+        entity.position = new SimulationConfigDTO.Vector2DDTO(x, y);
         return entity;
     }
 

@@ -1,5 +1,7 @@
 package com.openrobotics.controllers;
 
+import com.openrobotics.AppState;
+import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -27,6 +29,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
 
     private Stage  dialogStage;
     private File   selectedDirectory;
+    private String resultFilePath; // set in onSave(), read by caller after dialog closes
 
     private static final String PREFS_KEY  = "recentSaveDirs";
     private static final int    MAX_RECENT = 8;
@@ -41,6 +44,11 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     @Override
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
+    }
+
+    /** Returns the full path (directory + file name) set when the user clicked Save, or null if not saved yet. */
+    public String getResultFilePath() {
+        return resultFilePath;
     }
 
     // ------------------------------------------------------------------ //
@@ -59,6 +67,9 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         directoryCombo.getItems().addAll(loadRecentDirs());
         if (!directoryCombo.getItems().isEmpty()) {
             directoryCombo.getSelectionModel().selectFirst();
+            selectedDirLabel.setText(directoryCombo.getSelectionModel().getSelectedItem());
+        } else if (selectedDirLabel != null) {
+            selectedDirLabel.setText("");
         }
 
         fileNameField.setText("experiment_" +
@@ -122,10 +133,20 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             return;
         }
 
-        saveRecentDir(selectedDirectory.getAbsolutePath());
-        // TODO Sprint 4: serialise current RunConfig to JSON and write to
-        //   selectedDirectory / fileName
-        close();
+        String fullPath = new File(selectedDirectory, fileName).getAbsolutePath();
+        SimulationEngine engine = AppState.getEngine();
+        if (engine == null) {
+            selectedDirLabel.setText("No simulation engine available.");
+            return;
+        }
+        try {
+            engine.configSaving(fullPath);
+            saveRecentDir(selectedDirectory.getAbsolutePath());
+            resultFilePath = fullPath;
+            close();
+        } catch (Exception ex) {
+            selectedDirLabel.setText("Save failed: " + ex.getMessage());
+        }
     }
 
     @FXML
@@ -139,7 +160,10 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     // ------------------------------------------------------------------ //
 
     public File getSelectedDirectory() { return selectedDirectory; }
-    public String getFileName()        { return fileNameField.getText().trim(); }
+    public String getFileName() {
+        String value = fileNameField == null ? null : fileNameField.getText();
+        return value == null ? "" : value.trim();
+    }
 
     // ------------------------------------------------------------------ //
     //  Helpers
@@ -164,8 +188,12 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         List<String> current = loadRecentDirs();
         current.remove(dir);
         current.add(0, dir);
-        for (int i = 0; i < Math.min(current.size(), MAX_RECENT); i++) {
+        int writeCount = Math.min(current.size(), MAX_RECENT);
+        for (int i = 0; i < writeCount; i++) {
             prefs.put(PREFS_KEY + i, current.get(i));
+        }
+        for (int i = writeCount; i < MAX_RECENT; i++) {
+            prefs.remove(PREFS_KEY + i);
         }
     }
 }

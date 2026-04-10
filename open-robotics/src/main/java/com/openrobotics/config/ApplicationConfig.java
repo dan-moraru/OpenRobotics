@@ -51,7 +51,9 @@ public class ApplicationConfig {
     }
 
     /**
-     * Loads properties from application.config on the classpath. Lines starting with # are comments and ignored.
+     * Loads properties from application.config on the classpath.
+     * Lines are trimmed first; blank lines and lines starting with {@code #} or {@code %}
+     * are treated as comments and ignored.
      * @return a Properties object containing the key-value pairs from the config file, or empty if the file is not found
      * @throws IOException if there is an error reading the config file
      */

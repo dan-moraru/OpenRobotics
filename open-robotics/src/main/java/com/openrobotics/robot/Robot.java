@@ -13,6 +13,8 @@ import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
 import java.util.UUID;
 
+import static com.openrobotics.robot.RobotState.IDLE;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -42,30 +44,27 @@ public class Robot extends MapEntity {
     private int totalChargingTicks;
     private float totalEnergyConsumed;
 
-    // provisional constants. future config task may override
-    private static final float ENERGY_PER_MOVE = 1.0f;
-    private static final float LOW_BATTERY_THRESHOLD = 20.0f;
-    private static final float CHARGE_PER_TICK = 5.0f;
-    private static final int DEFAULT_LOADING_TICKS = 1;
-    private static final int DEFAULT_UNLOADING_TICKS = 1;
+    private RobotConfig config;
 
     // takes Vector2D position, delegates to MapEntity via super()
     public Robot(String name, Vector2D position) {
         super(name, position);
+        this.config = RobotConfig.defaults();
         initMovementFields();
     }
 
     // constructor for loading robots
     public Robot(UUID id, String name, Vector2D position) {
         super(id, name, position);
+        this.config = RobotConfig.defaults();
         initMovementFields();
     }
 
     private void initMovementFields() {
-        this.battery = 100.0f;
+        this.battery = config.batteryCapacity;
         this.nav = null;
         this.sensor = null;
-        this.state = RobotState.IDLE;
+        this.state = IDLE;
         this.currentTask = null;
         this.stuckTicks = 0;
         this.previousPosition = null;
@@ -109,6 +108,11 @@ public class Robot extends MapEntity {
     public int getTotalChargingTicks() { return totalChargingTicks; }
     public float getTotalEnergyConsumed() { return totalEnergyConsumed; }
 
+    public RobotConfig getConfig() { return config; }
+    public void setConfig(RobotConfig config) {
+        this.config = config != null ? config : RobotConfig.defaults();
+    }
+
     // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
     public void setNav(NavigationStrategy nav) { this.nav = nav; }
@@ -150,7 +154,7 @@ public class Robot extends MapEntity {
         previousPosition = null;
         stuckTicks = 0;
         lastRequestedNextTile = null;
-        state = RobotState.IDLE;
+        state = IDLE;
     }
 
     // returns the current navigation target based on priority:
@@ -177,7 +181,7 @@ public class Robot extends MapEntity {
         }
 
         // safety net: idle robot with a task should start moving
-        if (state == RobotState.IDLE && currentTask != null) {
+        if (state == IDLE && currentTask != null) {
             state = RobotState.MOVING;
         }
 
@@ -187,7 +191,7 @@ public class Robot extends MapEntity {
         }
 
         // low battery; check if already on a charger or redirect to one
-        if (needsCharging(LOW_BATTERY_THRESHOLD)) {
+        if (needsCharging(config.lowBatteryThreshold)) {
             // check via instanceof so it works even if chargerTarget was never set
             boolean onCharger = false;
             for (MapEntity e : map.getEntitiesAt(getPosition())) {
@@ -209,7 +213,7 @@ public class Robot extends MapEntity {
                 } else {
                     System.err.println("[Robot] No charging station found for robot " + getName()
                             + " at " + getPosition() + " with battery=" + battery);
-                    state = RobotState.IDLE;
+                    state = IDLE;
                     return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
                 }
             }
@@ -228,7 +232,7 @@ public class Robot extends MapEntity {
 
     // dispatcher checks this to find robots that can accept tasks
     public boolean isAvailable() {
-        return state == RobotState.IDLE && currentTask == null;
+        return state == IDLE && currentTask == null;
     }
 
     // battery decreases per move, floors at 0 to prevent negative values
@@ -252,10 +256,10 @@ public class Robot extends MapEntity {
         switch (state) {
             case CHARGING:
                 totalChargingTicks++;
-                battery = Math.min(100.0f, battery + CHARGE_PER_TICK); // cap at 100
-                if (battery >= 100.0f) {
+                battery = Math.min(config.batteryCapacity, battery + config.chargePerTick); // cap at capacity
+                if (battery >= config.batteryCapacity) {
                     // fully charged — resume task or go idle
-                    state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
+                    state = (currentTask != null) ? RobotState.MOVING : IDLE;
                 }
                 break;
 
@@ -277,7 +281,7 @@ public class Robot extends MapEntity {
                     }
                     setCurrentTask(null);
                     hasPickedUp = false;
-                    state = RobotState.IDLE;
+                    state = IDLE;
                 }
                 break;
 
@@ -285,8 +289,8 @@ public class Robot extends MapEntity {
                 totalMovingTicks++;
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
-                    consumeEnergy(ENERGY_PER_MOVE);
-                    totalEnergyConsumed += ENERGY_PER_MOVE;
+                    consumeEnergy(config.energyPerMove);
+                    totalEnergyConsumed += config.energyPerMove;
                     totalDistanceMoved++;
                     stuckTicks = 0;
                     // The first successful move after rerouting means the temporary avoid hint is no longer needed.
@@ -298,14 +302,13 @@ public class Robot extends MapEntity {
                 if (currentTask != null) {
                     Vector2D target = getTarget();
                     boolean arrived = isAtTarget(map, target);
-
                     if (arrived) {
                         if (!hasPickedUp) {
                             state = RobotState.LOADING;
-                            loadingTicksRemaining = DEFAULT_LOADING_TICKS;
+                            loadingTicksRemaining = config.loadingTicks;
                         } else {
                             state = RobotState.UNLOADING;
-                            unloadingTicksRemaining = DEFAULT_UNLOADING_TICKS;
+                            unloadingTicksRemaining = config.unloadingTicks;
                         }
                     }
                 }
