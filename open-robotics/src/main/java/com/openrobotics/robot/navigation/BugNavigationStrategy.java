@@ -62,10 +62,13 @@ public class BugNavigationStrategy implements NavigationStrategy {
         Tile fromTile = map.getTile(current.getX(), current.getY());
         Vector2D target = robot.getTarget();
 
-        // no target or already at target -> stay in place
-        if (target == null || current.equals(target)) {
-            return stayIntention(fromTile, robot);
-        }
+        // no target -> stay in place
+        if (target == null) return stayIntention(fromTile, robot);
+        // arrived: adjacent for racks, on-tile for everything else
+        boolean arrived = map.isRackAt(target)
+            ? current.manhattanDistance(target) == 1
+            : current.equals(target);
+        if (arrived) return stayIntention(fromTile, robot);
 
         Set<Vector2D> blocked = getSensorBlockedPositions(robot, target);
         BugNavState state = getOrCreateState(robot);

@@ -5,7 +5,6 @@ import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Obstacle;
-import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.simulationcore.MoveIntention;
@@ -43,32 +42,23 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
         Tile fromTile = map.getTile(current.getX(), current.getY());
         Vector2D target = robot.getTarget();
 
-        // no target or already at target -> stay in place
-        if (target == null || current.equals(target)) {
-            return stayIntention(fromTile, robot);
-        }
+        // no target -> stay in place
+        if (target == null) return stayIntention(fromTile, robot);
 
-        boolean targetIsRack = map.getEntitiesAt(target).stream().anyMatch(e -> e instanceof Rack);
-
-        if (targetIsRack) {
-            // If it's a rack, "Arrived" means being 1 tile away (Manhattan distance 1)
-            if (current.manhattanDistance(target) == 1) {
-                return stayIntention(fromTile, robot);
-            }
-        } else {
-            // If it's a floor target (like a Station), "Arrived" means being ON the tile
-            if (current.equals(target)) {
-                return stayIntention(fromTile, robot);
-            }
-        }
+        // arrived: adjacent for racks, on-tile for everything else
+        boolean arrived = map.isRackAt(target)
+            ? current.manhattanDistance(target) == 1
+            : current.equals(target);
+        if (arrived) return stayIntention(fromTile, robot);
 
         // get sensor-blocked positions (obstacles only, null-safe)
         Set<Vector2D> blockedBySensors = new HashSet<>();
         Sensor sensorScan = robot.getLastScan();
         if (sensorScan != null) {
             for (MapEntity entity : sensorScan.getDetectedEntities()) {
-                // only treat obstacle positions as hard blockers
-                // racks/stations are traversable, robot-robot conflicts handled by collisionmanager
+                // only treat obstacle positions as hard blockers in sensor data;
+                // racks are blocked by isTraversable() so never appear as neighbors anyway
+                // robot-robot conflicts are handled by collisionmanager
                 if (entity instanceof Obstacle) {
                     blockedBySensors.add(entity.getPosition());
                 }

@@ -323,22 +323,14 @@ public class Robot extends MapEntity {
         }
     }
 
-    /**
-     * Helper to determine if the robot has "arrived".
-     * If the target is a Rack, arrival = Adjacency (Distance 1).
-     * If the target is anything else, arrival = Same Tile (Distance 0).
-     */
+    // returns true if the robot has arrived at target.
+    // racks are solid — arrival means standing adjacent (distance 1), not on top.
+    // all other targets require being on the same tile.
     private boolean isAtTarget(Map map, Vector2D target) {
-        if (target == null) return false;
-
-        // Check if there is a Rack at the target location
-        boolean targetIsRack = map.getEntitiesAt(target).stream().anyMatch(e -> e instanceof com.openrobotics.map.entities.environment.Rack);
-
-        if (targetIsRack) {
-            return getPosition().manhattanDistance(target) == 1;
-        } else {
-            return getPosition().equals(target);
-        }
+        if (target == null || map == null) return false;
+        return map.isRackAt(target)
+            ? getPosition().manhattanDistance(target) == 1
+            : getPosition().equals(target);
     }
 
     // readable debug output

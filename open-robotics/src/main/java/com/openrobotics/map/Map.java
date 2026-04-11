@@ -83,6 +83,26 @@ public class Map {
         return Collections.unmodifiableList(entities);
     }
 
+    // returns all traversable cardinal neighbors of pos (semantic alias of getNeighbors)
+    public List<Vector2D> getTraversableAdjacentTiles(Vector2D pos) {
+        return getNeighbors(pos);
+    }
+
+    // returns true if at least one traversable cardinal neighbor exists at pos
+    public boolean hasTraversableAdjacentTile(Vector2D pos) {
+        return !getTraversableAdjacentTiles(pos).isEmpty();
+    }
+
+    // returns true if a rack entity occupies the given position
+    public boolean isRackAt(Vector2D pos) {
+        for (MapEntity entity : entities) {
+            if (entity instanceof Rack && entity.getPosition().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // checks bounds and blocking entities only, not tile.isOccupied()
     // Obstacles and Racks are both non-traversable: robots must navigate around them
     // and interact with adjacent tiles instead of walking through them.

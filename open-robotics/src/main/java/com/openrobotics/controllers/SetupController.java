@@ -964,39 +964,34 @@ public class SetupController {
 
     /**
      * Generates up to maxTasks pickup-to-dropoff tasks.
-     * Task positions are checked for traversability first; if a rack tile is
-     * non-traversable the nearest traversable neighbour is used instead so robots
-     * can always reach the assigned location.
+     * Pickup location is the rack tile itself; robots arrive when adjacent.
+     * Racks with no accessible adjacent tile are skipped.
+     * Floor-tile fallback only fires when no racks are present at all.
      */
     private void generateFixedTasks(com.openrobotics.map.Map map, long seed, int maxTasks, Dispatcher dispatcher) {
         List<Vector2D> pickups  = new ArrayList<>();
         List<Vector2D> dropoffs = new ArrayList<>();
 
+        // track whether racks exist to distinguish "no racks" from "racks but all unreachable"
+        boolean racksPresent = false;
+
         int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
         for (MapEntity e : map.getEntities()) {
             if (e instanceof Rack) {
+                racksPresent = true;
                 Vector2D pos = e.getPosition();
-                if (map.isTraversable(pos)) {
+                // use the rack tile directly as pickup; skip if no adjacent tile is reachable
+                if (map.hasTraversableAdjacentTile(pos)) {
                     pickups.add(pos);
-                } else {
-                    // rack tile is blocked, use a traversable neighbour instead
-                    for (int[] d : dirs) {
-                        int nx = pos.getX() + d[0], ny = pos.getY() + d[1];
-                        if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
-                            Vector2D adj = new Vector2D(nx, ny);
-                            if (map.isTraversable(adj)) {
-                                pickups.add(adj);
-                                break;
-                            }
-                        }
-                    }
                 }
+                // else: walled-in rack — skip silently
             } else if (e instanceof DeliveryStation) {
                 Vector2D pos = e.getPosition();
                 if (map.isTraversable(pos)) {
                     dropoffs.add(pos);
                 } else {
+                    // station tile itself is blocked (unusual) — fall back to adjacent tile
                     for (int[] d : dirs) {
                         int nx = pos.getX() + d[0], ny = pos.getY() + d[1];
                         if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
@@ -1011,8 +1006,10 @@ public class SetupController {
             }
         }
 
-        // Fallback pickups: any traversable non-dropoff tile
-        if (pickups.isEmpty()) {
+        // floor-tile fallback: only when no racks are present on the map at all.
+        // if racks exist but are all unreachable, pickups stays empty and the early
+        // return below fires — do not generate floor-tile pickups in that case.
+        if (pickups.isEmpty() && !racksPresent) {
             for (int y = 0; y < map.getHeight(); y++)
                 for (int x = 0; x < map.getWidth(); x++) {
                     Vector2D p = new Vector2D(x, y);

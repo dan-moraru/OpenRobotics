@@ -54,6 +54,8 @@ public class SimulationEngine {
     private int maxTasks; // absolute cap on total tasks to generate
     private int tasksGenerated;
     private int ticksSinceLastSpawn;
+    // set true when racks exist but none are reachable; prevents infinite non-termination in SPAWN_RATE
+    private boolean spawnSourceExhausted = false;
 
     // Add a private variable to store initialization errors
     private String initError;
@@ -224,6 +226,8 @@ public class SimulationEngine {
             // Initialize Dispatcher and Tasks
             this.dispatcher = new Dispatcher();
             if (dto.tasks != null) {
+                // accumulate first so we can validate before adding to dispatcher
+                List<Task> loadedTasks = new ArrayList<>();
                 for (SimulationConfigDTO.TaskDTO tDto : dto.tasks) {
                     Task task = new Task(
                             tDto.id,
@@ -232,6 +236,16 @@ public class SimulationEngine {
                             tDto.priority
                     );
                     task.setStatus(tDto.status);
+                    loadedTasks.add(task);
+                }
+                // warn on config-loaded tasks whose pickup is a walled-in rack
+                for (Task task : loadedTasks) {
+                    if (this.map.isRackAt(task.getPickupLocation())
+                            && !this.map.hasTraversableAdjacentTile(task.getPickupLocation())) {
+                        System.err.println("warning: task " + task.getId()
+                            + " pickup " + task.getPickupLocation()
+                            + " is a walled-in rack — this task may never complete");
+                    }
                     this.dispatcher.addTask(task);
                 }
             }
@@ -527,7 +541,8 @@ public class SimulationEngine {
 
         // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
-        if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
+        // spawnSourceExhausted bypasses the > 0 guard: if no pickups will ever exist, terminate.
+        if (workloadComplete() && (dispatcher.getTotalTasksAdded() > 0 || spawnSourceExhausted)) {
             this.running = false;
             return false;
         }
@@ -571,6 +586,7 @@ public class SimulationEngine {
      */
     private void spawnTasksIfNeeded() {
         if (tasksGenerated >= maxTasks) return;
+        if (spawnSourceExhausted) return; // no spawnable pickups — avoid repeated map scans
         if (map == null) return;
 
         // Rate: spawnRate tasks per minute.  tickMs controls sim speed (real-time ms per tick).
@@ -592,22 +608,39 @@ public class SimulationEngine {
     private void spawnOneTask() {
         if (tasksGenerated >= maxTasks) return;
 
-        // Collect all racks (pickup) and delivery stations (dropoff)
-        List<Vector2D> pickups = new ArrayList<>();
+        // collect reachable racks and delivery stations.
+        // three-way branch to avoid falling back to floor-tile pickups when racks exist but are walled in.
+        List<Rack> reachableRacks = new ArrayList<>();
+        boolean anyRacksPresent = false;
         List<Vector2D> dropoffs = new ArrayList<>();
         for (MapEntity e : map.getEntities()) {
-            if (e instanceof Rack) {
-                pickups.add(e.getPosition());
+            if (e instanceof Rack r) {
+                anyRacksPresent = true;
+                if (map.hasTraversableAdjacentTile(r.getPosition())) {
+                    reachableRacks.add(r);
+                }
             } else if (e instanceof DeliveryStation) {
                 dropoffs.add(e.getPosition());
             }
         }
-        // Fallback: use any traversable non-obstacle tile as pickup if no racks exist
-        if (pickups.isEmpty()) {
+
+        List<Vector2D> pickups;
+        if (anyRacksPresent) {
+            if (reachableRacks.isEmpty()) {
+                // racks exist but all are walled in — mark exhausted so SPAWN_RATE terminates cleanly
+                spawnSourceExhausted = true;
+                return;
+            }
+            pickups = new ArrayList<>();
+            for (Rack r : reachableRacks) pickups.add(r.getPosition());
+        } else {
+            // no racks on the map — legacy floor-tile fallback
+            pickups = new ArrayList<>();
             for (int y = 0; y < map.getHeight(); y++) {
                 for (int x = 0; x < map.getWidth(); x++) {
                     Vector2D p = new Vector2D(x, y);
-                    if (map.isTraversable(p) && !p.equals(dropoffs.isEmpty() ? null : dropoffs.get(0))) {
+                    // exclude all delivery station tiles, not just the first one
+                    if (map.isTraversable(p) && !dropoffs.contains(p)) {
                         pickups.add(p);
                     }
                 }
@@ -661,7 +694,8 @@ public class SimulationEngine {
                     return false;
                 }
             }
-            return tasksGenerated >= maxTasks;
+            // spawnSourceExhausted: racks exist but none reachable — treat as workload exhausted
+            return tasksGenerated >= maxTasks || spawnSourceExhausted;
         } else {
             // FIXED_LIST mode: complete when dispatcher is empty and all robots idle
             if (dispatcher.hasPendingTasks()) return false;
