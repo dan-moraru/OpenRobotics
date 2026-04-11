@@ -1,7 +1,10 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
 import com.openrobotics.io.ConfigLoader;
 import com.openrobotics.io.SimulationConfigDTO;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
@@ -84,6 +87,8 @@ public class SimulationEngineTest {
         map = new Map(MAP_W, MAP_H);
         dispatcher = new Dispatcher();
         engine = new SimulationEngine(map, new Robot[]{}, dispatcher, CoordinationPolicy.noOp());
+        AppState.setEngine(engine); // some engine methods require AppState.getEngine() to be non-null; set this up for all tests for simplicity
+        Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
     /**
@@ -1164,12 +1169,14 @@ public class SimulationEngineTest {
     private SimulationConfigDTO baseConfigDto() {
         SimulationConfigDTO dto = new SimulationConfigDTO();
         dto.config = new SimulationConfigDTO.ConfigSection();
+        dto.config.runId = UUID.randomUUID();
         dto.config.runName = "base-run";
         dto.config.tickMs = 100;
         dto.config.maxTicks = 500;
         dto.config.seed = 42L;
 
         dto.map = new SimulationConfigDTO.MapSection();
+        dto.map.mapId = UUID.randomUUID();
         dto.map.width = 4;
         dto.map.height = 4;
         dto.map.tiles = List.of();
