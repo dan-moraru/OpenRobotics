@@ -1,7 +1,0 @@
-# Copy this file to application.config for local development.
-# Prefer environment variables DB_URL, DB_USER, DB_PASSWORD in CI/production.
-
-db.url=jdbc:postgresql://aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
-
-db.user=USER.kwspbnsugatipikpeblg
-db.password=PASSWORD
