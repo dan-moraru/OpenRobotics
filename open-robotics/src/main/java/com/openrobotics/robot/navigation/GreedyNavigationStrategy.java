@@ -42,18 +42,23 @@ public class GreedyNavigationStrategy implements NavigationStrategy {
         Tile fromTile = map.getTile(current.getX(), current.getY());
         Vector2D target = robot.getTarget();
 
-        // no target or already at target -> stay in place
-        if (target == null || current.equals(target)) {
-            return stayIntention(fromTile, robot);
-        }
+        // no target -> stay in place
+        if (target == null) return stayIntention(fromTile, robot);
+
+        // arrived: adjacent for racks, on-tile for everything else
+        boolean arrived = map.isRackAt(target)
+            ? current.manhattanDistance(target) == 1
+            : current.equals(target);
+        if (arrived) return stayIntention(fromTile, robot);
 
         // get sensor-blocked positions (obstacles only, null-safe)
         Set<Vector2D> blockedBySensors = new HashSet<>();
         Sensor sensorScan = robot.getLastScan();
         if (sensorScan != null) {
             for (MapEntity entity : sensorScan.getDetectedEntities()) {
-                // only treat obstacle positions as hard blockers
-                // racks/stations are traversable, robot-robot conflicts handled by collisionmanager
+                // only treat obstacle positions as hard blockers in sensor data;
+                // racks are blocked by isTraversable() so never appear as neighbors anyway
+                // robot-robot conflicts are handled by collisionmanager
                 if (entity instanceof Obstacle) {
                     blockedBySensors.add(entity.getPosition());
                 }

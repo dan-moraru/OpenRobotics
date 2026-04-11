@@ -62,7 +62,12 @@ public class TaskGenerator {
                 if (validStations.isEmpty()) validStations = new ArrayList<>(allStations);
             }
 
-            // Generate up to boxCount tasks from this rack
+            // skip racks with no accessible adjacent tile (e.g. surrounded by walls)
+            if (!map.hasTraversableAdjacentTile(rack.getPosition())) {
+                continue;
+            }
+
+            // generate up to boxCount tasks from this rack
             for (int i = 0; i < rack.getBoxCount(); i++) {
                 if (tasks.size() >= maxCount) break outer;
                 DeliveryStation station = validStations.get(random.nextInt(validStations.size()));

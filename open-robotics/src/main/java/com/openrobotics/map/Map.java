@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 
 // warehouse grid (uml 3.3.3)
@@ -86,15 +87,40 @@ public class Map {
         return Collections.unmodifiableList(entities);
     }
 
-    // checks bounds and obstacle entities only, not tile.isOccupied()
+    // returns all traversable cardinal neighbors of pos (semantic alias of getNeighbors)
+    public List<Vector2D> getTraversableAdjacentTiles(Vector2D pos) {
+        return getNeighbors(pos);
+    }
+
+    // returns true if at least one traversable cardinal neighbor exists at pos
+    public boolean hasTraversableAdjacentTile(Vector2D pos) {
+        return !getTraversableAdjacentTiles(pos).isEmpty();
+    }
+
+    // returns true if a rack entity occupies the given position
+    public boolean isRackAt(Vector2D pos) {
+        for (MapEntity entity : entities) {
+            if (entity instanceof Rack && entity.getPosition().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // checks bounds and blocking entities only, not tile.isOccupied()
+    // Obstacles and Racks are both non-traversable: robots must navigate around them
+    // and interact with adjacent tiles instead of walking through them.
     // robot-robot conflicts are handled by collisionmanager
     public boolean isTraversable(Vector2D pos) {
         Tile tile = getTile(pos.getX(), pos.getY());
-        if (tile == null) return false; // out of bounds
+        if (tile == null) return false;
+
         for (MapEntity entity : entities) {
-            // block if an obstacle entity sits on this tile
-            if (entity instanceof Obstacle && entity.getPosition().equals(pos)) {
-                return false;
+            if (entity.getPosition().equals(pos)) {
+                // Racks are solid. Robots interact with them from the side.
+                if (entity instanceof Rack || entity instanceof Obstacle) {
+                    return false;
+                }
             }
         }
         return true;

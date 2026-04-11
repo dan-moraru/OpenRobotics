@@ -168,7 +168,7 @@ public class MapEntityTest {
         String nameBefore = entity.getName();
         Vector2D posBefore = entity.getPosition();
 
-        entity.update(); // should be a no-op
+        entity.update(null); // should be a no-op
 
         assertEquals(nameBefore, entity.getName());
         assertEquals(posBefore, entity.getPosition());

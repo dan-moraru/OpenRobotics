@@ -25,6 +25,8 @@ import com.openrobotics.map.Vector2D;
 import java.util.HashMap;
 import java.util.UUID;
 
+import static com.openrobotics.robot.RobotState.IDLE;
+
 // robot entity — extends mapentity with robot-specific state (uml 3.3.4)
 // inherits uuid, name, position, update() hook
 public class Robot extends MapEntity {
@@ -74,7 +76,7 @@ public class Robot extends MapEntity {
         this.battery = config.batteryCapacity;
         this.nav = null;
         this.sensor = null;
-        this.state = RobotState.IDLE;
+        this.state = IDLE;
         this.currentTask = null;
         this.stuckTicks = 0;
         this.previousPosition = null;
@@ -164,7 +166,7 @@ public class Robot extends MapEntity {
         previousPosition = null;
         stuckTicks = 0;
         lastRequestedNextTile = null;
-        state = RobotState.IDLE;
+        state = IDLE;
     }
 
     // returns the current navigation target based on priority:
@@ -191,7 +193,7 @@ public class Robot extends MapEntity {
         }
 
         // safety net: idle robot with a task should start moving
-        if (state == RobotState.IDLE && currentTask != null) {
+        if (state == IDLE && currentTask != null) {
             state = RobotState.MOVING;
         }
 
@@ -229,7 +231,7 @@ public class Robot extends MapEntity {
                 } else {
                     System.err.println("[Robot] No charging station found for robot " + getName()
                             + " at " + getPosition() + " with battery=" + battery);
-                    state = RobotState.IDLE;
+                    state = IDLE;
                     return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
                 }
             }
@@ -248,7 +250,7 @@ public class Robot extends MapEntity {
 
     // dispatcher checks this to find robots that can accept tasks
     public boolean isAvailable() {
-        return state == RobotState.IDLE && currentTask == null;
+        return state == IDLE && currentTask == null;
     }
 
     // battery decreases per move, floors at 0 to prevent negative values
@@ -268,13 +270,14 @@ public class Robot extends MapEntity {
 
     // per-tick update hook — called by sim engine after position commit
     @Override
-    public void update() {
+    public void update(Map map) {
         switch (state) {
             case CHARGING:
                 totalChargingTicks++;
                 battery = Math.min(config.batteryCapacity, battery + config.chargePerTick); // cap at capacity
                 if (battery >= config.batteryCapacity) {
                     // fully charged — resume task or go idle
+
                     state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
 
                     // Logging charging end event
@@ -308,7 +311,7 @@ public class Robot extends MapEntity {
                     }
                     setCurrentTask(null);
                     hasPickedUp = false;
-                    state = RobotState.IDLE;
+                    state = IDLE;
                 }
                 break;
 
@@ -362,18 +365,18 @@ public class Robot extends MapEntity {
                     stuckTicks++;
                 }
 
-                // check arrival at pickup location
-                if (currentTask != null && !hasPickedUp
-                        && getPosition().equals(currentTask.getPickupLocation())) {
-                    state = RobotState.LOADING;
-                    loadingTicksRemaining = config.loadingTicks;
-                }
-
-                // check arrival at dropoff location
-                if (currentTask != null && hasPickedUp
-                        && getPosition().equals(currentTask.getDropoffLocation())) {
-                    state = RobotState.UNLOADING;
-                    unloadingTicksRemaining = config.unloadingTicks;
+                if (currentTask != null) {
+                    Vector2D target = getTarget();
+                    boolean arrived = isAtTarget(map, target);
+                    if (arrived) {
+                        if (!hasPickedUp) {
+                            state = RobotState.LOADING;
+                            loadingTicksRemaining = config.loadingTicks;
+                        } else {
+                            state = RobotState.UNLOADING;
+                            unloadingTicksRemaining = config.unloadingTicks;
+                        }
+                    }
                 }
                 break;
 
@@ -384,6 +387,16 @@ public class Robot extends MapEntity {
             default:
                 break;
         }
+    }
+
+    // returns true if the robot has arrived at target.
+    // racks are solid — arrival means standing adjacent (distance 1), not on top.
+    // all other targets require being on the same tile.
+    private boolean isAtTarget(Map map, Vector2D target) {
+        if (target == null || map == null) return false;
+        return map.isRackAt(target)
+            ? getPosition().manhattanDistance(target) == 1
+            : getPosition().equals(target);
     }
 
     // readable debug output
@@ -424,9 +437,18 @@ public class Robot extends MapEntity {
             return false;
         }
 
-        // Avoiding the target would make the task impossible to finish, so fall back instead.
         Vector2D target = getTarget();
-        return target != null && !lastRequestedNextTile.equals(target);
+        if (target == null) return false;
+
+        // Do not reroute if the robot is already standing on the target tile.
+        // Rack-adjacency arrival is detected by Robot.update() which transitions to LOADING;
+        // recoverDeadlockedRobots only runs on MOVING robots, so that case is already excluded
+        // before this method is ever called > no need to pass a null map here.
+        if (getPosition().equals(target)) {
+            return false;
+        }
+
+        return !lastRequestedNextTile.equals(target);
     }
 
     private boolean sameTask(Task a, Task b) {
