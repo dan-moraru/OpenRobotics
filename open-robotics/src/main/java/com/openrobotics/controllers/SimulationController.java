@@ -1,6 +1,16 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
+import com.openrobotics.db.dao.MapDao;
+import com.openrobotics.db.model.MapRecord;
+import com.openrobotics.db.model.SimulationRunRecord;
+import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.db.recordbuilders.MapRecordBuilder;
+import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
+import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.SimulationRunEvent;
+import com.openrobotics.logging.eventtypes.TaskEvent;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
@@ -35,10 +45,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -231,9 +240,11 @@ public class SimulationController {
             }
             e.consume();
         });
+
         // Outliner search filter
         if (outlinerSearchField != null)
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
+
         // Bind engine from shared AppState
         engine = AppState.getEngine();
         if (engine == null && AppState.hasConfigPath()) {
@@ -250,6 +261,15 @@ public class SimulationController {
 
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
+
+            // Saving map to database.
+            try {
+                MapRecordBuilder recordBuilder = new MapRecordBuilder(loadedMap);
+                MapRecord record = recordBuilder.build();
+                MapDao.insert(record);
+            } catch (Exception e) {
+                System.out.println("Error saving map to database: " + e.getMessage());
+            }
 
             // Compute canvas to tightly fit the loaded entities, then centre them inside.
             // The user's configured size (from SetupScreen) sets a minimum — the canvas
@@ -969,6 +989,22 @@ public class SimulationController {
                 simStatusLabel.setText("RUNNING");
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
+
+            // Logging simulation run start event
+            SimulationRunRecordBuilder simRunRecordBuilder = new SimulationRunRecordBuilder(engine);
+            SimulationRunRecord record = simRunRecordBuilder.buildSimulationStartRecord();
+            Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, record);
+
+            // Logging task creation events for existing tasks in dispatcher at simulation start
+            List<Task> existingTasks = engine.getDispatcher().getAllTasks();
+
+            for (Task task : existingTasks) {
+                WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
+                WorkloadTaskRecord taskRecord = taskRecordBuilder.buildTaskCreationRecord(engine.getTickCounter());
+                long artificialId = Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
+                task.setArtificialId(artificialId); // setting artificial ID for tracking in logs
+            }
+
             startLoop();
             log("Simulation started.");
         } else if (paused) {
@@ -1027,6 +1063,22 @@ public class SimulationController {
             engine = reloaded;
             AppState.setEngine(engine);
         }
+
+        // If no engine is loaded, restart still resets the UI state safely.
+        if (engine == null) {
+            if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
+            if (simProgressBar != null) simProgressBar.setProgress(0);
+            if (simStatusLabel != null) {
+                simStatusLabel.setText("READY");
+                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+            }
+            log("Simulation reset.");
+            return;
+        }
+
+        // Updating run ID for the new simulation run after restart
+        engine.updateRunId();
+
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
         if (simStatusLabel != null) {

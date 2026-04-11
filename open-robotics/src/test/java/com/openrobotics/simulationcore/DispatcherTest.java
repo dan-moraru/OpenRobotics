@@ -1,5 +1,9 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
+import com.openrobotics.map.Map;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
@@ -22,11 +26,27 @@ public class DispatcherTest {
     private Dispatcher dispatcher;
 
     /**
+     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     */
+    private void seedAppState() {
+        SimulationEngine dummyEngine = new SimulationEngine(
+                new Map(1, 1),
+                new Robot[0],
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+
+        AppState.setEngine(dummyEngine);
+    }
+
+    /**
      * Creates a fresh Dispatcher before every test.
      */
     @BeforeEach
     public void setUp() {
         dispatcher = new Dispatcher();
+        seedAppState();
+        Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
     // Helpers

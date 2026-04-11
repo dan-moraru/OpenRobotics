@@ -1,5 +1,7 @@
 package com.openrobotics.db.model;
 
+import com.openrobotics.task.Task;
+
 import java.util.UUID;
 
 public class WorkloadTaskRecord {

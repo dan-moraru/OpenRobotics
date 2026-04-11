@@ -36,6 +36,7 @@ public class SimulationConfigDTO {
     public CoordinationSection coordination;
 
     public static class ConfigSection {
+        public UUID runId;
         public String runName;
         public int tickMs;
         public int maxTicks;
@@ -43,6 +44,7 @@ public class SimulationConfigDTO {
     }
 
     public static class MapSection {
+        public UUID mapId;
         public int width;
         public int height;
         public List<TileDTO> tiles;
@@ -101,7 +103,7 @@ public class SimulationConfigDTO {
     }
 
     public static class TaskDTO {
-        public int id;
+        public long id;
         public Vector2DDTO pickupLocation;
         public Vector2DDTO dropoffLocation;
         public int priority;

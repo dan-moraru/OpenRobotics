@@ -1,5 +1,12 @@
 package com.openrobotics.simulationcore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openrobotics.AppState;
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.map.Tile;
 
 import java.util.*;
@@ -97,6 +104,23 @@ public class CollisionManager {
                     blockedRobots.add(id);
                 }
             }
+
+            // Logging robot collision events
+            try {
+                // Serialize the list of all colliding robot IDs to JSON for logging
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, UUID[]> data = new HashMap<>();
+                data.put("allCollidingRobots", group.stream().map(i -> i.getRobot().getId()).toArray(UUID[]::new));
+                String json = mapper.writeValueAsString(data);
+
+                // Build and log the collision record with the JSON data
+                SimulationEngine engine = AppState.getEngine(); // getting the simulation engine from global state
+                SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(engine.getRunId(), engine.getTickCounter(), winnerId, targetTile.getX(), targetTile.getY());
+                SimLogRecord record = recordBuilder.buildCollisionRecord(json);
+                Logger.logRobotEvent(RobotEvent.COLLISION, record);
+            } catch (JsonProcessingException e) {
+                System.err.println("Error serializing collision data while logging collision event: " + e.getMessage());
+            }
         }
 
         // ===== Step 3: swap conflicts =====
@@ -118,14 +142,22 @@ public class CollisionManager {
                 if (isSwap) {
                     // Only resolve if NEITHER tile involved allows overlap
                     if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
-                        // Same tie-break as same-destination: lexicographically smallest UUID wins
-                        MoveIntention winner = Comparator
-                                .comparing((MoveIntention mi) -> mi.getRobot().getId().toString())
-                                .compare(a, b) <= 0
-                                ? a
-                                : b;
-                        UUID loserId = winner == a ? bId : aId;
-                        blockedRobots.add(loserId);
+                        blockedRobots.add(aId);
+                        blockedRobots.add(bId);
+                    }
+
+                    // Logging robot near miss events for swaps
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map<String, UUID> data = new HashMap<>();
+                        data.put("otherRobotId", bId);
+                        String json = mapper.writeValueAsString(data);
+
+                        SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), aId, a.getToTile().getX(), a.getToTile().getY());
+                        SimLogRecord record = recordBuilder.buildNearMissRecord(json);
+                        Logger.logRobotEvent(RobotEvent.NEAR_MISS, record);
+                    } catch (JsonProcessingException e) {
+                        System.err.println("Error serializing near miss data while logging near miss event: " + e.getMessage());
                     }
                 }
             }

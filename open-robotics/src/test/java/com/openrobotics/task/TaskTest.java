@@ -25,7 +25,7 @@ public class TaskTest {
     }
 
     /**
-     * getId() should return the id supplied to the constructor.
+     * getMapid() should return the id supplied to the constructor.
      */
     @Test
     public void testGetId() {

@@ -119,7 +119,7 @@ public class DaoIntegrationTest {
     // ── MapDao ────────────────────────────────────────────────────────────────
 
     /** insert() with null id auto-generates UUID; inserted fields round-trip correctly. */
-    @Test 
+    @Test
     @Order(1)
     void mapDao_insert_autoGeneratesId_andFieldsRoundTrip() throws SQLException {
         MapRecord m = mapRec("Test Warehouse");
@@ -140,7 +140,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with an explicit id uses it; null randomSeed preserved; COALESCE fills createdAt. */
-    @Test 
+    @Test
     @Order(2)
     void mapDao_insert_usesProvidedId_andNullRandomSeedPreserved() throws SQLException {
         UUID customId = UUID.randomUUID();
@@ -164,14 +164,14 @@ public class DaoIntegrationTest {
     }
 
     /** findById() returns empty for an unknown UUID. */
-    @Test 
+    @Test
     @Order(3)
     void mapDao_findById_notFound() throws SQLException {
         assertTrue(MapDao.findById(UUID.randomUUID()).isEmpty());
     }
 
     /** findAll() returns all rows ordered by created_at DESC. */
-    @Test 
+    @Test
     @Order(4)
     void mapDao_findAll_containsInsertedMaps_orderedByCreatedAtDesc() throws SQLException {
         MapRecord older = mapRec("Older Map");
@@ -229,7 +229,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with explicit id uses it; all null JSONB fields stored as NULL. */
-    @Test 
+    @Test
     @Order(7)
     void simulationRunDao_insert_usesProvidedId_andNullJsonFieldsPreserved() throws SQLException {
         UUID customId = UUID.randomUUID();
@@ -254,7 +254,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with non-null JSONB fields and workloadSeed round-trips all values. */
-    @Test 
+    @Test
     @Order(8)
     void simulationRunDao_insert_withAllJsonFields_roundTrip() throws SQLException {
         SimulationRunRecord r = simRun(mapId);
@@ -273,14 +273,14 @@ public class DaoIntegrationTest {
     }
 
     /** findById() returns empty for an unknown UUID. */
-    @Test 
+    @Test
     @Order(9)
     void simulationRunDao_findById_notFound() throws SQLException {
         assertTrue(SimulationRunDao.findById(UUID.randomUUID()).isEmpty());
     }
 
     /** findByMapId() filters by map and orders by started_at DESC. */
-    @Test 
+    @Test
     @Order(10)
     void simulationRunDao_findByMapId_filteredAndOrderedByStartedAtDesc() throws SQLException {
         SimulationRunRecord r1 = simRun(mapId);
@@ -308,14 +308,14 @@ public class DaoIntegrationTest {
     }
 
     /** findByMapId() returns empty for an unknown map UUID. */
-    @Test 
+    @Test
     @Order(11)
     void simulationRunDao_findByMapId_emptyForUnknownMap() throws SQLException {
         assertTrue(SimulationRunDao.findByMapId(UUID.randomUUID()).isEmpty());
     }
 
     /** updateStatus() sets status and finishedAt on existing run. */
-    @Test 
+    @Test
     @Order(12)
     void simulationRunDao_updateStatus_setsStatusAndFinishedAt() throws SQLException {
         SimulationRunDao.updateStatus(runId, "COMPLETED", Timestamp.from(Instant.now()));
@@ -326,7 +326,7 @@ public class DaoIntegrationTest {
     }
 
     /** updateStatus() on a non-existent UUID is a no-op for other runs. */
-    @Test 
+    @Test
     @Order(13)
     void simulationRunDao_updateStatus_noEffectOnUnrelatedRun() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -336,7 +336,7 @@ public class DaoIntegrationTest {
     }
 
     /** deleteById() returns true for existing row and false for missing. */
-    @Test 
+    @Test
     @Order(14)
     void simulationRunDao_deleteById_trueWhenFound_falseWhenMissing() throws SQLException {
         UUID toDelete = insertRun(mapId);
@@ -348,7 +348,7 @@ public class DaoIntegrationTest {
     // ── RunResultDao ──────────────────────────────────────────────────────────
 
     /** insert() with all non-null metrics and findByRunId() retrieve correctly. */
-    @Test 
+    @Test
     @Order(15)
     void runResultDao_insert_andFind_withAllMetrics() throws SQLException {
         RunResultRecord r = new RunResultRecord();
@@ -374,7 +374,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with all null optional metrics preserves NULLs. */
-    @Test 
+    @Test
     @Order(16)
     void runResultDao_insert_andFind_withNullMetrics() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -405,7 +405,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with non-null extraMetrics JSONB stores and retrieves the JSON. */
-    @Test 
+    @Test
     @Order(17)
     void runResultDao_insert_andFind_extraMetricsJsonb() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -423,14 +423,14 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunId() returns empty for an unknown UUID. */
-    @Test 
+    @Test
     @Order(18)
     void runResultDao_findByRunId_notFound() throws SQLException {
         assertTrue(RunResultDao.findByRunId(UUID.randomUUID()).isEmpty());
     }
 
     /** deleteByRunId() returns true for existing row and false for missing. */
-    @Test 
+    @Test
     @Order(19)
     void runResultDao_deleteByRunId_trueWhenFound_falseWhenMissing() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -448,7 +448,7 @@ public class DaoIntegrationTest {
     // ── WorkloadTaskDao ───────────────────────────────────────────────────────
 
     /** insert() with all fields (including non-null JSONB details) round-trips correctly. */
-    @Test 
+    @Test
     @Order(20)
     void workloadTaskDao_insert_andFind_withFullFields_includesJsonbDetails() throws SQLException {
         WorkloadTaskRecord t = new WorkloadTaskRecord();
@@ -477,7 +477,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with all null optional fields stores NULLs in the DB. */
-    @Test 
+    @Test
     @Order(21)
     void workloadTaskDao_insert_andFind_withNullOptionals() throws SQLException {
         WorkloadTaskRecord t = new WorkloadTaskRecord();
@@ -511,7 +511,7 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunId() returns tasks ordered by id ascending. */
-    @Test 
+    @Test
     @Order(22)
     void workloadTaskDao_findByRunId_orderedById() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -527,14 +527,14 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunId() returns empty for an unknown run UUID. */
-    @Test 
+    @Test
     @Order(23)
     void workloadTaskDao_findByRunId_emptyForUnknownRun() throws SQLException {
         assertTrue(WorkloadTaskDao.findByRunId(UUID.randomUUID()).isEmpty());
     }
 
     /** assignToRobot() sets assigned_robot_id, assigned_tick, and status to IN_PROGRESS. */
-    @Test 
+    @Test
     @Order(24)
     void workloadTaskDao_assignToRobot_setsRobotIdTickAndStatus() throws SQLException {
         long taskId = WorkloadTaskDao.insert(task(runId, "DELIVER"));
@@ -548,11 +548,11 @@ public class DaoIntegrationTest {
     }
 
     /** updateStatus() sets status and non-null completedTick. */
-    @Test 
+    @Test
     @Order(25)
     void workloadTaskDao_updateStatus_withNonNullCompletedTick() throws SQLException {
         long taskId = WorkloadTaskDao.insert(task(runId, "DELIVER"));
-        WorkloadTaskDao.updateStatus(taskId, "COMPLETED", 123);
+        WorkloadTaskDao.markCompleted(taskId, "COMPLETED", 123);
 
         WorkloadTaskRecord f = WorkloadTaskDao.findByRunId(runId).stream()
                 .filter(x -> x.getId() == taskId).findFirst().orElseThrow();
@@ -561,11 +561,11 @@ public class DaoIntegrationTest {
     }
 
     /** updateStatus() with null completedTick stores NULL in the DB. */
-    @Test 
+    @Test
     @Order(26)
     void workloadTaskDao_updateStatus_withNullCompletedTick() throws SQLException {
         long taskId = WorkloadTaskDao.insert(task(runId, "DELIVER"));
-        WorkloadTaskDao.updateStatus(taskId, "CANCELLED", null);
+        WorkloadTaskDao.markCompleted(taskId, "CANCELLED", null);
 
         WorkloadTaskRecord f = WorkloadTaskDao.findByRunId(runId).stream()
                 .filter(x -> x.getId() == taskId).findFirst().orElseThrow();
@@ -574,11 +574,11 @@ public class DaoIntegrationTest {
     }
 
     /** updateStatus() and assignToRobot() on a non-existent id are no-ops. */
-    @Test 
+    @Test
     @Order(27)
     void workloadTaskDao_updateAndAssign_nonExistingId_noEffect() throws SQLException {
         long taskId = WorkloadTaskDao.insert(task(runId, "DELIVER"));
-        WorkloadTaskDao.updateStatus(999_999L, "COMPLETED", 1);
+        WorkloadTaskDao.markCompleted(999_999L, "COMPLETED", 1);
         WorkloadTaskDao.assignToRobot(999_999L, UUID.randomUUID(), 2);
 
         WorkloadTaskRecord f = WorkloadTaskDao.findByRunId(runId).stream()
@@ -588,7 +588,7 @@ public class DaoIntegrationTest {
     }
 
     /** deleteByRunId() removes all tasks and returns count; 0 for missing run. */
-    @Test 
+    @Test
     @Order(28)
     void workloadTaskDao_deleteByRunId_existingAndMissing() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -604,7 +604,7 @@ public class DaoIntegrationTest {
     // ── SimLogDao ─────────────────────────────────────────────────────────────
 
     /** insert() with x/y coordinates and null details stores correctly. */
-    @Test 
+    @Test
     @Order(29)
     void simLogDao_insert_andFind_withCoordinatesAndNullDetails() throws SQLException {
         SimLogRecord l = log(runId, 1, ROBOT_ID_0, "MOVE");
@@ -624,7 +624,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with null x, y, and details stores NULLs. */
-    @Test 
+    @Test
     @Order(30)
     void simLogDao_insert_andFind_withNullCoordinatesAndNullDetails() throws SQLException {
         SimLogRecord l = log(runId, 5, ROBOT_ID_0, "EVENT");
@@ -641,7 +641,7 @@ public class DaoIntegrationTest {
     }
 
     /** insert() with non-null details JSONB covers the non-null jsonb() branch. */
-    @Test 
+    @Test
     @Order(31)
     void simLogDao_insert_withNonNullDetails_jsonbBranchCovered() throws SQLException {
         SimLogRecord l = log(runId, 6, ROBOT_ID_0, "COLLISION");
@@ -655,7 +655,7 @@ public class DaoIntegrationTest {
     }
 
     /** insertBatch() with an empty list is a no-op. */
-    @Test 
+    @Test
     @Order(32)
     void simLogDao_insertBatch_emptyList_isNoOp() throws SQLException {
         int sizeBefore = SimLogDao.findByRunId(runId).size();
@@ -664,7 +664,7 @@ public class DaoIntegrationTest {
     }
 
     /** insertBatch() with a non-empty list persists all records. */
-    @Test 
+    @Test
     @Order(33)
     void simLogDao_insertBatch_nonEmpty_insertsAll() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -678,7 +678,7 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunId() orders results by tick ASC then id ASC. */
-    @Test 
+    @Test
     @Order(34)
     void simLogDao_findByRunId_orderedByTickThenId() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -697,7 +697,7 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunIdAndTick() returns matching records; empty for unknown run. */
-    @Test 
+    @Test
     @Order(35)
     void simLogDao_findByRunIdAndTick_resultsAndEmpty() throws SQLException {
         List<SimLogRecord> present = SimLogDao.findByRunIdAndTick(runId, 1);
@@ -708,7 +708,7 @@ public class DaoIntegrationTest {
     }
 
     /** deleteByRunId() removes all logs for a run; returns 0 for missing run. */
-    @Test 
+    @Test
     @Order(36)
     void simLogDao_deleteByRunId_existingAndMissing() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -723,7 +723,7 @@ public class DaoIntegrationTest {
     // ── RobotRunStatsDao ──────────────────────────────────────────────────────
 
     /** upsert() on same (run_id, robot_id) always returns same id; last write wins. */
-    @Test 
+    @Test
     @Order(37)
     void robotRunStatsDao_upsert_idStableAcrossMultipleUpdates() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -741,7 +741,7 @@ public class DaoIntegrationTest {
     }
 
     /** upsert() with all null numeric metrics stores NULLs. */
-    @Test 
+    @Test
     @Order(38)
     void robotRunStatsDao_upsert_withNullMetrics() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -771,7 +771,7 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunId() returns all robots ordered by robot_id; empty for unknown run. */
-    @Test 
+    @Test
     @Order(39)
     void robotRunStatsDao_findByRunId_orderedByRobotId_andEmptyForUnknown() throws SQLException {
         UUID localRunId = insertRun(mapId);
@@ -792,7 +792,7 @@ public class DaoIntegrationTest {
     }
 
     /** findByRunIdAndRobotId() returns empty for unknown run or non-existent robot. */
-    @Test 
+    @Test
     @Order(40)
     void robotRunStatsDao_findByRunIdAndRobotId_notFound() throws SQLException {
         assertTrue(RobotRunStatsDao.findByRunIdAndRobotId(UUID.randomUUID(), ROBOT_ID_0).isEmpty());
@@ -800,7 +800,7 @@ public class DaoIntegrationTest {
     }
 
     /** deleteByRunId() removes all stats for a run; returns 0 for missing run. */
-    @Test 
+    @Test
     @Order(41)
     void robotRunStatsDao_deleteByRunId_existingAndMissing() throws SQLException {
         UUID localRunId = insertRun(mapId);

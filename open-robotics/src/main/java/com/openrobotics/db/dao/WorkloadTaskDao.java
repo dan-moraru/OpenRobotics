@@ -77,7 +77,7 @@ public final class WorkloadTaskDao {
      * @param completedTick Tick when the task was completed
      * @throws SQLException if a database error occurs
      */
-    public static void updateStatus(long id, String status, Integer completedTick) throws SQLException {
+    public static void markCompleted(long id, String status, Integer completedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET status = ?, completed_tick = ? WHERE id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {

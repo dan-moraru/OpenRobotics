@@ -58,7 +58,7 @@ public class MoveIntentionTest {
     }
 
     /**
-     * getRobotId() must return the same UUID as the robot's own getId().
+     * getRobotId() must return the same UUID as the robot's own getMapid().
      */
     @Test
     public void testGetRobotIdMatchesRobotId() {

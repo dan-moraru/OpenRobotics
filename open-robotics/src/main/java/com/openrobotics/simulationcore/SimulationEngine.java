@@ -1,8 +1,18 @@
 package com.openrobotics.simulationcore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.model.SimulationRunRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
+import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
 import com.openrobotics.io.ConfigLoader;
 import com.openrobotics.io.SimulationConfigDTO;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.map.*;
+import com.openrobotics.map.Map;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
@@ -16,10 +26,7 @@ import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The SimulationEngine is the core component responsible for advancing the
@@ -29,6 +36,7 @@ import java.util.Set;
  * of simulation steps that have been executed.
  */
 public class SimulationEngine {
+    private UUID runId; // unique identifier for the simulation run, useful for logging and tracking
     private static final int DEADLOCK_RECOVERY_THRESHOLD = 5;
     private int tickCounter;
     private boolean running; // tracks if the simulation is still running
@@ -72,6 +80,7 @@ public class SimulationEngine {
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
+        this.runId = UUID.randomUUID();
         this.tickCounter = 0;
         this.running = false;
         this.map = map;
@@ -98,6 +107,7 @@ public class SimulationEngine {
             this.tickCounter = 0;
             this.running = false;
             this.initialized = false;
+            this.runId = UUID.randomUUID();
         }
     }
 
@@ -119,7 +129,7 @@ public class SimulationEngine {
             this.collisionManager = new CollisionManager();
 
             // Initialize the Map
-            this.map = new Map(dto.map.width, dto.map.height);
+            this.map = new Map(dto.map.mapId, dto.map.width, dto.map.height);
 
             // Update tile occupancy from the JSON
             if (dto.map.tiles != null) {
@@ -208,6 +218,7 @@ public class SimulationEngine {
             // Set simulation state
             this.tickCounter = dto.simulation.tick;
             this.running = dto.simulation.isRunning;
+            this.runId = dto.config.runId;
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
@@ -288,6 +299,7 @@ public class SimulationEngine {
 
         // Config Metadata
         dto.config = new SimulationConfigDTO.ConfigSection();
+        dto.config.runId = this.runId;
         dto.config.runName = this.runName;
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
@@ -295,6 +307,7 @@ public class SimulationEngine {
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
+        dto.map.mapId = map.getMapid();
         dto.map.width = map.getWidth();
         dto.map.height = map.getHeight();
         dto.map.tiles = new ArrayList<>();
@@ -420,10 +433,6 @@ public class SimulationEngine {
         return eDto;
     }
 
-    public Map getMap() {
-        return map;
-    }
-
     /**
      * Runs a tick of the simulation
      *
@@ -440,12 +449,22 @@ public class SimulationEngine {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
+
         // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
         if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
             this.running = false;
+
+            // Logging simulation run completion event
+            SimulationRunRecordBuilder recordBuilder = new SimulationRunRecordBuilder(this);
+            SimulationRunRecord record = recordBuilder.buildSimulationCompleteRecord();
+            Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, record);
+
             return false;
         }
+
+        // Any tick that executes work/sandbox progression is considered running.
+        this.running = true;
 
         // Assigning tasks to available robots
         dispatcher.assignTasks(robots);
@@ -472,6 +491,12 @@ public class SimulationEngine {
         recoverDeadlockedRobots();
 
         incrementTickCounter();
+
+        // Re-evaluate completion after robot/task state transitions in this tick.
+        if (workloadComplete()) {
+            this.running = false;
+        }
+
         return true;
     }
 
@@ -541,8 +566,30 @@ public class SimulationEngine {
             if (robot == null || robot.getState() != RobotState.MOVING || robot.getCurrentTask() == null) {
                 continue;
             }
+
+            // Skipping recovery for robots with depleted batteries
+            // TODO: Consider a method for handling dead robots
+            if (robot.getState() == RobotState.BATTER_DEAD) {
+                continue; // Let battery recovery handle this robot, don't interfere with task recovery
+            }
+
             if (robot.getStuckTicks() < DEADLOCK_RECOVERY_THRESHOLD) {
                 continue;
+            }
+
+            // Logging robot deadlock detection event
+            try {
+                // Serialize the number of stuck ticks of the robot
+                ObjectMapper mapper = new ObjectMapper();
+                java.util.Map<String, Integer> data = new HashMap<>();
+                data.put("stuckTicks", robot.getStuckTicks());
+                String json = mapper.writeValueAsString(data);
+
+                SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), robot.getPosition().getX(), robot.getPosition().getY());
+                SimLogRecord deadlockRecord = recordBuilder.buildDeadlockDetectionRecord(json);
+                Logger.logRobotEvent(RobotEvent.DEADLOCK_DETECTED, deadlockRecord);
+            } catch (JsonProcessingException e) {
+                System.err.println("Error serializing deadlock data while logging deadlock detection event: " + e.getMessage());
             }
 
             Task task = robot.getCurrentTask();
@@ -557,6 +604,20 @@ public class SimulationEngine {
             // Stage 2: if rerouting is exhausted or impossible, fall back to reset-and-requeue.
             if (task != null) {
                 dispatcher.requeueTask(task);
+
+                // Logging robot deadlock recovery event via task requeue
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    java.util.Map<String, String> data = new HashMap<>();
+                    data.put("resolutionMethod", "task_requeue");
+                    String json = mapper.writeValueAsString(data);
+
+                    SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(this.runId, this.tickCounter, robot.getId(), robot.getPosition().getX(), robot.getPosition().getY());
+                    SimLogRecord recoveryRecord = recordBuilder.buildDeadlockResolutionRecord(json);
+                    Logger.logRobotEvent(RobotEvent.DEADLOCK_RESOLVED, recoveryRecord);
+                } catch (JsonProcessingException e) {
+                    System.err.println("Error serializing recovery data while logging deadlock recovery event: " + e.getMessage());
+                }
             }
 
             // Policies could hold per-robot coordination state that should be released on fallback recovery.
@@ -591,6 +652,14 @@ public class SimulationEngine {
     }
 
     // Getters
+    public UUID getRunId() {
+        return runId;
+    }
+
+    public Map getMap() {
+        return map;
+    }
+
     public int getTickCounter() {
         return tickCounter;
     }
@@ -604,11 +673,34 @@ public class SimulationEngine {
     }
 
     /**
+     * Gets the name of the coordination policy class being used in this simulation.
+     * @return the name of the coordination policy class, or null if no policy is set
+     */
+    public String getCoordinationPolicy() {
+        return coordinationPolicy != null ? coordinationPolicy.getClass().getName() : null;
+    }
+
+    /**
+     * Returns the dispatcher for task management.
+     * @return the dispatcher
+     */
+    public Dispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    /**
      * Returns the initialization error message, if any.
      * @return the initialization error message or null if no error occurred.
      */
     public String getInitError() {
         return initError;
+    }
+
+    /**
+     * Updates the runId with a new random UUID. This is used when restarting a simulation.
+     */
+    public void updateRunId() {
+        this.runId = UUID.randomUUID();
     }
 
     /**
@@ -647,13 +739,5 @@ public class SimulationEngine {
                     .map(e -> (Robot) e)
                     .toArray(Robot[]::new);
         }
-    }
-
-    /**
-     * Returns the dispatcher for task management.
-     * @return the dispatcher
-     */
-    public Dispatcher getDispatcher() {
-        return dispatcher;
     }
 }

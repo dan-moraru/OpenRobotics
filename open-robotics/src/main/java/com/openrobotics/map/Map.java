@@ -3,6 +3,7 @@ package com.openrobotics.map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
@@ -10,12 +11,19 @@ import com.openrobotics.map.entities.station.ChargingStation;
 
 // warehouse grid (uml 3.3.3)
 public class Map {
+    private UUID mapid; // unique identifier for database storage
     private final int width;  // number of columns (x-axis)
     private final int height; // number of rows (y-axis)
     private final Tile[][] grid; // grid[height][width] -> grid[row][col] -> grid[y][x]
     private final List<MapEntity> entities; // all objects placed on the map
 
+    public Map(UUID mapId, int width, int height) {
+        this(width, height);
+        this.mapid = mapId;
+    }
+
     public Map(int width, int height) {
+        this.mapid = UUID.randomUUID();
         if (width < 1 || height < 1) {
             throw new IllegalArgumentException("width and height must be positive");
         }
@@ -34,6 +42,7 @@ public class Map {
         }
     }
 
+    public UUID getMapid() { return mapid; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
