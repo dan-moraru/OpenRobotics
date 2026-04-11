@@ -142,14 +142,8 @@ public class CollisionManager {
                 if (isSwap) {
                     // Only resolve if NEITHER tile involved allows overlap
                     if (!allowsOverlap(a.getToTile()) && !allowsOverlap(b.getToTile())) {
-                        // Same tie-break as same-destination: lexicographically smallest UUID wins
-                        MoveIntention winner = Comparator
-                                .comparing((MoveIntention mi) -> mi.getRobot().getId().toString())
-                                .compare(a, b) <= 0
-                                ? a
-                                : b;
-                        UUID loserId = winner == a ? bId : aId;
-                        blockedRobots.add(loserId);
+                        blockedRobots.add(aId);
+                        blockedRobots.add(bId);
                     }
 
                     // Logging robot near miss events for swaps
