@@ -243,7 +243,7 @@
       <children>
       
                              <!-- Viewport header bar #8D8A7F -->
-                             <BorderPane styleClass="viewport-header">
+                             <BorderPane styleClass="viewport-header" minHeight="36">
                                  <left>
                                      <HBox alignment="CENTER_LEFT" spacing="6">
                                          <children>
@@ -297,7 +297,7 @@
                                     </StackPane>
             
                                     <!-- Tick bar + tip -->
-                                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="info-bar">
+                                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="info-bar" minHeight="24">
                <children>
                                            <Label fx:id="viewportModeLabel" styleClass="viewport-subtle-label" text="drag" />
                                                          <Region HBox.hgrow="ALWAYS" />
