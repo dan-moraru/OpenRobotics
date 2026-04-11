@@ -15,6 +15,7 @@ import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
 import com.openrobotics.util.ViewportTips;
+import javafx.application.Platform;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -83,9 +84,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private CheckMenuItem toggleSidebarItem;
     @FXML private CheckMenuItem toggleConsoleItem;
     @FXML private SplitPane     mainSplitPane;
+    @FXML private SplitPane     viewportConsoleSplit;
     @FXML private VBox sidebarPanel;
     @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
+
+    // Saved divider positions so collapse/expand is smooth
+    private double savedSidebarDivider  = 0.17;
+    private double savedConsoleDivider  = 0.83;
 
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
     @FXML private VBox propertiesPanel;
@@ -163,6 +169,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
+    // ── Drag-over tile highlight ──────────────────────────────────────────
+    private int dragHighlightTileX = -1;
+    private int dragHighlightTileY = -1;
+
     // Animation state
     private boolean animating = false;
     private double animationProgress = 0.0;
@@ -181,19 +191,21 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         canvasWidthTiles  = AppState.getCanvasWidthTiles();
         canvasHeightTiles = AppState.getCanvasHeightTiles();
 
-        // Bind canvas size to the viewport stack so it fills the pane
-        warehouseCanvas.widthProperty().bind(viewportStack.widthProperty());
-        warehouseCanvas.heightProperty().bind(viewportStack.heightProperty());
-
-        // Redraw whenever size changes; centre canvas on first layout
-        warehouseCanvas.widthProperty().addListener((obs, oldW, newW) -> {
+        // Track viewport stack size with listeners (not bind) — same pattern as SetupController.
+        // Using bind() makes the Canvas report its pixel size as its preferred size to the
+        // layout engine, which then locks the SplitPane divider and prevents free dragging.
+        // With managed="false" on the Canvas and listener-driven setWidth/setHeight, the
+        // layout engine ignores the Canvas when computing preferred sizes, so dividers stay free.
+        viewportStack.widthProperty().addListener((obs, oldW, newW) -> {
+            warehouseCanvas.setWidth(newW.doubleValue());
             if (!viewportCentered && newW.doubleValue() > 0 && warehouseCanvas.getHeight() > 0) {
                 centerViewportOnCanvas();
                 viewportCentered = true;
             }
             drawViewport();
         });
-        warehouseCanvas.heightProperty().addListener((obs, oldH, newH) -> {
+        viewportStack.heightProperty().addListener((obs, oldH, newH) -> {
+            warehouseCanvas.setHeight(newH.doubleValue());
             if (!viewportCentered && warehouseCanvas.getWidth() > 0 && newH.doubleValue() > 0) {
                 centerViewportOnCanvas();
                 viewportCentered = true;
@@ -208,13 +220,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         viewportStack.setOnMouseMoved(e -> { viewportMouseX = e.getX(); viewportMouseY = e.getY(); });
         viewportStack.setOnScroll(e -> {
             double factor = e.getDeltaY() > 0 ? 1.1 : 0.9;
-            double mouseX = e.getX();
-            double mouseY = e.getY();
+            // Zoom toward the canvas center (where the crosshair is), not the mouse position
+            double cx = warehouseCanvas.getWidth()  / 2;
+            double cy = warehouseCanvas.getHeight() / 2;
             double oldZoom = zoom;
             zoom = Math.max(0.2, Math.min(zoom * factor, 10.0));
             double zoomRatio = zoom / oldZoom;
-            viewOffsetX = mouseX - zoomRatio * (mouseX - viewOffsetX);
-            viewOffsetY = mouseY - zoomRatio * (mouseY - viewOffsetY);
+            viewOffsetX = cx - zoomRatio * (cx - viewOffsetX);
+            viewOffsetY = cy - zoomRatio * (cy - viewOffsetY);
             drawViewport();
         });
 
@@ -223,6 +236,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         viewportStack.setOnDragDropped(this::onCanvasDragDropped);
         viewportStack.setOnDragExited(e -> {
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
+            dragHighlightTileX = -1;
+            dragHighlightTileY = -1;
+            drawViewport();
         });
 
         // Keyboard shortcuts: Delete, Cmd+C, Cmd+V
@@ -316,17 +332,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
 
-        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling.
-        // Re-lock on every width change so layout passes from label/outliner updates cannot drift it.
-        if (mainSplitPane != null) {
-            mainSplitPane.widthProperty().addListener((obs, oldW, newW) -> {
-                if (newW.doubleValue() > 0) {
-                    mainSplitPane.setDividerPosition(0, 230.0 / newW.doubleValue());
-                }
-            });
-            if (mainSplitPane.getWidth() > 0) {
-                mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
-            }
+        // Set initial sidebar position — not locked, user can drag freely
+        if (mainSplitPane != null && mainSplitPane.getWidth() > 0) {
+            mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
         }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
@@ -383,6 +391,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         gc.strokeRect(bx, by, bw, bh);
 
         drawEntities(gc);
+
+        // Highlight the tile the user is hovering over during a drag-from-sidebar
+        if (dragHighlightTileX >= 0 && dragHighlightTileY >= 0) {
+            double hx = viewOffsetX + (dragHighlightTileX + entityOffsetTileX) * tileSize;
+            double hy = viewOffsetY + (dragHighlightTileY + entityOffsetTileY) * tileSize;
+            gc.setFill(Color.web("#599068", 0.35));
+            gc.fillRect(hx, hy, tileSize, tileSize);
+            gc.setStroke(Color.web("#3a7a50"));
+            gc.setLineWidth(2.0);
+            gc.strokeRect(hx, hy, tileSize, tileSize);
+        }
     }
 
     /** Renders every entity from the engine onto the canvas. */
@@ -646,11 +665,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (running) { e.consume(); return; }
         if (e.getDragboard().hasString()) {
             e.acceptTransferModes(TransferMode.COPY);
-            // Update status label with live position feedback
+            double tileSize = 32 * zoom;
+            int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+            int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+            // Redraw only when the highlighted tile changes (avoids thrashing)
+            if (tx != dragHighlightTileX || ty != dragHighlightTileY) {
+                dragHighlightTileX = tx;
+                dragHighlightTileY = ty;
+                drawViewport();
+            }
             if (viewportStatusLabel != null) {
-                double tileSize = 32 * zoom;
-                int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
-                int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
                 viewportStatusLabel.setText(
                         "dragging(" + e.getDragboard().getString().toLowerCase()
                         + ")  →  (" + tx + ", " + ty + ")");
@@ -664,6 +688,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (running) { e.setDropCompleted(false); e.consume(); return; }
         Dragboard db = e.getDragboard();
         boolean dropCompleted = false;
+        dragHighlightTileX = -1;
+        dragHighlightTileY = -1;
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
@@ -1045,10 +1071,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         List<String> newItems = new ArrayList<>();
         List<Object> newBacking = new ArrayList<>();
         for (MapEntity e : engine.getMap().getEntities()) {
-            String icon  = (e instanceof Robot) ? "\ud83e\udd16 "
-                         : (e instanceof Rack)  ? "\ud83d\udce6 "
-                         : (e instanceof Station) ? "\u26a1 "
-                         : (e instanceof Obstacle) ? "\ud83e\uddf1 " : "\u25ab ";
+            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // 🤖 robot
+                         : (e instanceof Rack)     ? "\ud83d\udce6 "  // 📦 rack/shelf
+                         : (e instanceof Station)  ? "\u26a1 "        // ⚡ station
+                         : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // 🧱 wall/obstacle
+                         :                           "\u25ab ";        // ▫ generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                 newItems.add(entry);
@@ -1351,24 +1378,24 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ------------------------------------------------------------------ //
 
     @FXML private void onZoomIn() {
-        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
-        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double cx = warehouseCanvas.getWidth()  / 2;
+        double cy = warehouseCanvas.getHeight() / 2;
         double oldZoom = zoom;
         zoom = Math.min(zoom * 1.2, 10.0);
         double r = zoom / oldZoom;
-        viewOffsetX = px - r * (px - viewOffsetX);
-        viewOffsetY = py - r * (py - viewOffsetY);
+        viewOffsetX = cx - r * (cx - viewOffsetX);
+        viewOffsetY = cy - r * (cy - viewOffsetY);
         drawViewport();
     }
 
     @FXML private void onZoomOut() {
-        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
-        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double cx = warehouseCanvas.getWidth()  / 2;
+        double cy = warehouseCanvas.getHeight() / 2;
         double oldZoom = zoom;
         zoom = Math.max(zoom / 1.2, 0.2);
         double r = zoom / oldZoom;
-        viewOffsetX = px - r * (px - viewOffsetX);
-        viewOffsetY = py - r * (py - viewOffsetY);
+        viewOffsetX = cx - r * (cx - viewOffsetX);
+        viewOffsetY = cy - r * (cy - viewOffsetY);
         drawViewport();
     }
 
@@ -1382,17 +1409,31 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onToggleSidebar() {
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(toggleSidebarItem.isSelected());
-            sidebarPanel.setManaged(toggleSidebarItem.isSelected());
+        if (sidebarPanel == null || mainSplitPane == null) return;
+        if (toggleSidebarItem.isSelected()) {
+            // Restore: reposition divider after the current layout pass
+            Platform.runLater(() -> mainSplitPane.setDividerPosition(0, savedSidebarDivider));
+        } else {
+            // Collapse: save position, then push divider to 0
+            if (mainSplitPane.getDividerPositions().length > 0) {
+                savedSidebarDivider = mainSplitPane.getDividerPositions()[0];
+            }
+            Platform.runLater(() -> mainSplitPane.setDividerPosition(0, 0.0));
         }
     }
 
     @FXML
     private void onToggleConsole() {
-        if (consoleShell != null) {
-            consoleShell.setVisible(toggleConsoleItem.isSelected());
-            consoleShell.setManaged(toggleConsoleItem.isSelected());
+        if (consoleShell == null || viewportConsoleSplit == null) return;
+        if (toggleConsoleItem.isSelected()) {
+            // Restore: reposition divider after the current layout pass
+            Platform.runLater(() -> viewportConsoleSplit.setDividerPosition(0, savedConsoleDivider));
+        } else {
+            // Collapse: save position, then push divider to 1.0
+            if (viewportConsoleSplit.getDividerPositions().length > 0) {
+                savedConsoleDivider = viewportConsoleSplit.getDividerPositions()[0];
+            }
+            Platform.runLater(() -> viewportConsoleSplit.setDividerPosition(0, 1.0));
         }
     }
 
