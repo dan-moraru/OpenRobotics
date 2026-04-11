@@ -278,7 +278,7 @@
       
                       <SplitPane fx:id="vSplitPane" dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
          <items>
-                             <VBox spacing="0">
+                             <VBox spacing="0" minHeight="0">
                                 <children>
                                     <!-- Canvas viewport #CDCBC3 -->
                                     <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">

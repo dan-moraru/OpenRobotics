@@ -1389,14 +1389,27 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 // Defer the divider update to after JavaFX has completed the layout pass
                 // triggered by adding the new child. Without this, getHeight() is already
                 // the final value and no change event fires, so the divider stays at 1.0.
-                javafx.application.Platform.runLater(() ->
                     javafx.application.Platform.runLater(() -> {
                         double h = vSplitPane.getHeight();
-                        if (h > 0) {
-                            vSplitPane.setDividerPosition(0, (h - 120.0) / h);
-                        }
-                    })
-                );
+                        double pos = (h - 120.0) / h;
+                        System.out.println("[Toggle] vSplitPane height=" + h + " dividerPos=" + pos);
+                        System.out.println("[Toggle] items count=" + vSplitPane.getItems().size());
+                        vSplitPane.setDividerPosition(0, pos);
+
+                        // Add these:
+                        javafx.scene.Parent vSplitParent = vSplitPane.getParent();
+                        System.out.println("[Toggle] vSplitPane parent type=" + (vSplitParent == null ? "null" : vSplitParent.getClass().getSimpleName()));
+                        System.out.println("[Toggle] vSplitPane parent height=" + (vSplitParent instanceof javafx.scene.layout.Region r ? r.getHeight() : "n/a"));
+                        System.out.println("[Toggle] vSplitPane layoutY=" + vSplitPane.getLayoutY());
+                        System.out.println("[Toggle] vSplitPane prefHeight=" + vSplitPane.getPrefHeight());
+                        System.out.println("[Toggle] consoleShell height=" + consoleShell.getHeight());
+                        System.out.println("[Toggle] consoleShell isManaged=" + consoleShell.isManaged());
+                        System.out.println("[Toggle] consoleShell minHeight=" + consoleShell.getMinHeight());
+                        javafx.scene.Node topChild = vSplitPane.getItems().get(0);
+System.out.println("[Toggle] topChild type=" + topChild.getClass().getSimpleName());
+System.out.println("[Toggle] topChild minHeight=" + ((javafx.scene.layout.Region) topChild).getMinHeight());
+System.out.println("[Toggle] topChild height=" + ((javafx.scene.layout.Region) topChild).getHeight());
+                    });
             }
         } else {
             vSplitPane.getItems().remove(consoleShell);
