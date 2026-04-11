@@ -1,5 +1,15 @@
 package com.openrobotics.robot;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openrobotics.AppState;
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.logging.eventtypes.TaskEvent;
+import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
@@ -11,6 +21,8 @@ import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
+
+import java.util.HashMap;
 import java.util.UUID;
 
 import static com.openrobotics.robot.RobotState.IDLE;
@@ -203,6 +215,12 @@ public class Robot extends MapEntity {
             if (onCharger) {
                 state = RobotState.CHARGING;
                 chargerTarget = null; // clear override
+
+                // Logging charging start event
+                SimLogRecordBuilder chargingStartRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                SimLogRecord record = chargingStartRecordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
+
                 return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
             }
             // find nearest charger and override nav target
@@ -259,7 +277,13 @@ public class Robot extends MapEntity {
                 battery = Math.min(config.batteryCapacity, battery + config.chargePerTick); // cap at capacity
                 if (battery >= config.batteryCapacity) {
                     // fully charged — resume task or go idle
-                    state = (currentTask != null) ? RobotState.MOVING : IDLE;
+
+                    state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
+
+                    // Logging charging end event
+                    SimLogRecordBuilder chargingEndRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = chargingEndRecordBuilder.buildChargeEndRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
+                    Logger.logRobotEvent(RobotEvent.CHARGE_END, record);
                 }
                 break;
 
@@ -278,6 +302,12 @@ public class Robot extends MapEntity {
                     if (currentTask != null) {
                         currentTask.setStatus(TaskStatus.COMPLETED);
                         tasksCompleted++;
+
+                        // Logging task completion event
+                        int currentTick = AppState.getEngine().getTickCounter();
+                        WorkloadTaskRecordBuilder taskCompletionRecordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), currentTask);
+                        WorkloadTaskRecord record = taskCompletionRecordBuilder.buildTaskCompletionRecord(currentTick);
+                        Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }
                     setCurrentTask(null);
                     hasPickedUp = false;
@@ -287,14 +317,50 @@ public class Robot extends MapEntity {
 
             case MOVING:
                 totalMovingTicks++;
+
+                // check if robots battery has died
+                if (battery <= 0) {
+                    state = RobotState.BATTER_DEAD;
+
+                    // Logging battery death event
+                    SimLogRecordBuilder batterDeathRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = batterDeathRecordBuilder.buildBatteryDeathRecord();
+                    Logger.logRobotEvent(RobotEvent.BATTERY_DEATH, record);
+
+                    break;
+                }
+
                 // check if robot actually moved this tick
                 if (previousPosition != null && !getPosition().equals(previousPosition)) {
                     consumeEnergy(config.energyPerMove);
                     totalEnergyConsumed += config.energyPerMove;
                     totalDistanceMoved++;
                     stuckTicks = 0;
-                    // The first successful move after rerouting means the temporary avoid hint is no longer needed.
-                    rerouteAvoidTile = null;
+
+                    // Logging robot movement execution event
+                    SimLogRecordBuilder movementRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord moveRecord = movementRecordBuilder.buildMoveExecutionRecord();
+                    Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, moveRecord);
+
+                    if (rerouteAvoidTile != null) {
+                        // The first successful move after rerouting means the temporary avoid hint is no longer needed.
+                        rerouteAvoidTile = null;
+
+                        // Logging robot deadlock resolution event via rerouting
+                        try {
+                            ObjectMapper mapper = new ObjectMapper();
+                            java.util.Map<String, String> details = new HashMap<>();
+                            details.put("resolutionMethod", "reroute");
+                            String json = mapper.writeValueAsString(details);
+
+                            SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                            SimLogRecord record = recordBuilder.buildDeadlockResolutionRecord(json);
+                            Logger.logRobotEvent(RobotEvent.DEADLOCK_RESOLVED, record);
+                        } catch (JsonProcessingException e) {
+                            System.out.println("Error serializing deadlock resolution details for logging: " + e.getMessage());
+                        }
+                    }
+
                 } else {
                     stuckTicks++;
                 }

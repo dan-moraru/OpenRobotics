@@ -1,11 +1,13 @@
 {
   "config": {
+    "runId": "57533ae4-103e-49a7-a5fa-288ff4f60dc2",
     "runName": "Warehouse Beta - Multi-Aisle",
     "tickMs": 100,
     "maxTicks": 10000,
     "seed": 12345
   },
   "map": {
+    "mapId": "e8b76c63-4505-499e-8070-4eb32d17b96e",
     "width": 12,
     "height": 10,
     "tiles": [

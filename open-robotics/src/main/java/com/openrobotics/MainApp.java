@@ -1,8 +1,12 @@
 package com.openrobotics;
 
+import com.openrobotics.db.Database;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.application.Application;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * Application entry point.
@@ -12,6 +16,17 @@ import javafx.stage.Stage;
  * All subsequent screen transitions are handled by {@link ScreenNavigator}.
  */
 public class MainApp extends Application {
+
+    @Override
+    public void init() {
+        // Database initialization
+        try {
+            Database.init();
+            System.out.println("Database initialized successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to initialize database: " + e.getMessage());
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) {

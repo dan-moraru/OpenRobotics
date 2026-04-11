@@ -1,11 +1,17 @@
 package com.openrobotics.robot;
 
+import com.openrobotics.AppState;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.robot.sensors.SensorStrategy;
+import com.openrobotics.simulationcore.CoordinationPolicy;
+import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.MoveIntention;
+import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,12 +37,28 @@ public class RobotAdvancedTest {
     private Robot robot;
 
     /**
+     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     */
+    private void seedAppState() {
+        SimulationEngine dummyEngine = new SimulationEngine(
+                new Map(1, 1),
+                new Robot[0],
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+
+        AppState.setEngine(dummyEngine);
+    }
+
+    /**
      * Creates a fresh 10×10 map and a robot at (5,5) before each test.
      */
     @BeforeEach
     public void setUp() {
         map   = new Map(MAP_SIZE, MAP_SIZE);
         robot = new Robot("Bot", new Vector2D(5, 5));
+        seedAppState();
+        Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
     /**
