@@ -314,7 +314,7 @@
                                        <children>
                                            <Label text="Console" />
                                            <Region HBox.hgrow="ALWAYS" />
-                                           <Button onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
+                                           <Button fx:id="clearConsoleButton" onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
                                        </children>
                                     </HBox>
                                     <TextArea fx:id="consoleArea" editable="false" promptText="&gt;" wrapText="true" VBox.vgrow="ALWAYS" />
