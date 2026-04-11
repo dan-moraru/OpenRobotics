@@ -80,6 +80,7 @@ src/main/resources/com/openrobotics/img/
 └── logo_black.png   ← Black & white logo
 ```
 
+<a id="-color-reference"></a>
 ## 🎨 Color Reference
 
 All colors used in the UI:
@@ -193,6 +194,7 @@ java -jar target/open-robotics-1.0.0.jar
 | Ctrl+Alt+L | Format code (IntelliJ) |
 | Ctrl+/ | Toggle comment (both IDEs) |
 
+<a id="-common-issues--fixes"></a>
 ## 🐛 Common Issues & Fixes
 
 ### "Java not found"

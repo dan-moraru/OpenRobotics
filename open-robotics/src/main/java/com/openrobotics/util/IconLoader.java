@@ -3,6 +3,7 @@ package com.openrobotics.util;
 import javafx.scene.image.Image;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Icons are cached after first load to avoid repeated file I/O.
  */
 public class IconLoader {
-    private static final Map<String, Image> imageCache = new ConcurrentHashMap<>();
+    private static final Map<String, Optional<Image>> imageCache = new ConcurrentHashMap<>();
 
     // Standard object types with icon assets
     private static final List<String> SUPPORTED_TYPES = List.of(
@@ -30,7 +31,9 @@ public class IconLoader {
         if (type == null) return null;
 
         String key = type.toUpperCase();
-        return imageCache.computeIfAbsent(key, IconLoader::loadIconFromResource);
+        return imageCache
+            .computeIfAbsent(key, k -> Optional.ofNullable(loadIconFromResource(k)))
+            .orElse(null);
     }
 
     /**

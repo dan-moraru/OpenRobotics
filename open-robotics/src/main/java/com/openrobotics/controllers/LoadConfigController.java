@@ -78,6 +78,9 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
             selectedPathLabel.setText(result.getAbsolutePath());
             if (!configFileCombo.getItems().contains(result.getAbsolutePath())) {
                 configFileCombo.getItems().add(0, result.getAbsolutePath());
+                while (configFileCombo.getItems().size() > MAX_RECENT) {
+                    configFileCombo.getItems().remove(configFileCombo.getItems().size() - 1);
+                }
             }
             configFileCombo.getSelectionModel().select(result.getAbsolutePath());
         }
@@ -131,8 +134,12 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         List<String> current = loadRecentPaths();
         current.remove(path);
         current.add(0, path);
-        for (int i = 0; i < Math.min(current.size(), MAX_RECENT); i++) {
+        int writeCount = Math.min(current.size(), MAX_RECENT);
+        for (int i = 0; i < writeCount; i++) {
             prefs.put(PREFS_KEY + i, current.get(i));
+        }
+        for (int i = writeCount; i < MAX_RECENT; i++) {
+            prefs.remove(PREFS_KEY + i);
         }
     }
 }

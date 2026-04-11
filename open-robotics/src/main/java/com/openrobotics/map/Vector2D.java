@@ -17,12 +17,19 @@ public class Vector2D {
 
     // returns new vector offset by dx, dy (immutable)
     public Vector2D add(int dx, int dy) {
-        return new Vector2D(this.x + dx, this.y + dy);
+        return new Vector2D(Math.addExact(this.x, dx), Math.addExact(this.y, dy));
     }
 
     // manhattan distance for grid-based pathfinding
     public int manhattanDistance(Vector2D other) {
-        return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+        Objects.requireNonNull(other, "other must not be null");
+        long dx = (long) this.x - (long) other.x;
+        long dy = (long) this.y - (long) other.y;
+        long distance = Math.abs(dx) + Math.abs(dy);
+        if (distance > Integer.MAX_VALUE) {
+            throw new ArithmeticException("manhattan distance overflow: " + distance);
+        }
+        return (int) distance;
     }
 
     @Override

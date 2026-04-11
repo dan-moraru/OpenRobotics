@@ -24,8 +24,12 @@ import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
 import com.openrobotics.robot.sensors.ProximitySensor;
 import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
-
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.*;
 
 /**
@@ -46,12 +50,21 @@ public class SimulationEngine {
     private Dispatcher dispatcher;
     private CoordinationPolicy coordinationPolicy;
 
+    private RobotConfig robotConfig = RobotConfig.defaults();
+
     // Added these for config file loading/saving
     private String runName;
     private int tickMs;
     private int maxTicks;
     private long seed;
     private boolean initialized;
+
+    // Workload configuration for spawn-rate mode
+    private String workloadMode;
+    private int spawnRate; // tasks per minute  (ticks / 60 * spawnRate)
+    private int maxTasks; // absolute cap on total tasks to generate
+    private int tasksGenerated;
+    private int ticksSinceLastSpawn;
 
     // Add a private variable to store initialization errors
     private String initError;
@@ -64,7 +77,7 @@ public class SimulationEngine {
      * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
-        this(map, robots, dispatcher, coordinationPolicy, "default_run", 100, 5000, 42L);
+        this(map, robots, dispatcher, coordinationPolicy, "default_run", 100, 5000, 42);
     }
 
     /**
@@ -80,6 +93,28 @@ public class SimulationEngine {
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
+        this(map, robots, dispatcher, coordinationPolicy, runName, tickMs, maxTicks, seed, "FIXED_LIST", 10, 10);
+    }
+
+    /**
+     * Constructs a new simulation engine instance with full configuration including workload parameters.
+     *
+     * @param map the map representing the warehouse environment
+     * @param robots the robots
+     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
+     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
+     * @param runName the name of the simulation run
+     * @param tickMs milliseconds per tick
+     * @param maxTicks maximum number of ticks before simulation stops
+     * @param seed random seed for navigation strategies
+     * @param workloadMode "FIXED_LIST" or "SPAWN_RATE"
+     * @param spawnRate tasks per minute (only used for SPAWN_RATE)
+     * @param maxTasks absolute cap on total tasks to generate (applies to both modes)
+     */
+    public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
+                          String runName, int tickMs, int maxTicks, long seed,
+                          String workloadMode, int spawnRate, int maxTasks) {
+
         this.runId = UUID.randomUUID();
         this.tickCounter = 0;
         this.running = false;
@@ -92,6 +127,11 @@ public class SimulationEngine {
         this.tickMs = tickMs;
         this.maxTicks = maxTicks;
         this.seed = seed;
+        this.workloadMode = workloadMode != null ? workloadMode : "FIXED_LIST";
+        this.spawnRate = spawnRate;
+        this.maxTasks = maxTasks;
+        this.tasksGenerated = 0;
+        this.ticksSinceLastSpawn = 0;
         this.initialized = map != null && robots != null && dispatcher != null;
     }
 
@@ -174,6 +214,19 @@ public class SimulationEngine {
             }  // closes for loop
         }  
 
+            // Build RobotConfig from loaded config section
+            this.robotConfig = new RobotConfig(
+                dto.config.batteryCapacity     > 0 ? dto.config.batteryCapacity     : 100.0f,
+                dto.config.lowBatteryThreshold > 0 ? dto.config.lowBatteryThreshold : 20.0f,
+                dto.config.chargePerTick       > 0 ? dto.config.chargePerTick       : 5.0f,
+                dto.config.energyPerMove       > 0 ? dto.config.energyPerMove       : 1.0f,
+                dto.config.loadingTicks        > 0 ? dto.config.loadingTicks        : 1,
+                dto.config.unloadingTicks      > 0 ? dto.config.unloadingTicks      : 1
+            );
+            for (MapEntity e : this.map.getEntities()) {
+                if (e instanceof Robot r) r.setConfig(this.robotConfig);
+            }
+
             // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
 
@@ -208,7 +261,10 @@ public class SimulationEngine {
                     Set<Tile> intersectionTiles = new HashSet<>();
                     if (dto.coordination.intersections != null) {
                         for (SimulationConfigDTO.Vector2DDTO v : dto.coordination.intersections) {
-                            intersectionTiles.add(this.map.getTile(v.x, v.y));
+                            Tile tile = this.map.getTile(v.x, v.y);
+                            if (tile != null) {
+                                intersectionTiles.add(tile);
+                            }
                         }
                     }
                     this.coordinationPolicy = new TrafficRulesPolicy(intersectionTiles);
@@ -269,11 +325,20 @@ public class SimulationEngine {
     }
 
     // creates Rack entities to preserve type
-    private void addRacksToMap(List<SimulationConfigDTO.MapEntityDTO> entityDtos) {
+    private void addRacksToMap(List<SimulationConfigDTO.RackDTO> entityDtos) {
         if (entityDtos == null) return;
-        for (SimulationConfigDTO.MapEntityDTO eDto : entityDtos) {
+        for (SimulationConfigDTO.RackDTO eDto : entityDtos) {
             Vector2D pos = new Vector2D(eDto.position.x, eDto.position.y);
-            this.map.addEntity(new Rack(eDto.id, eDto.name, pos));
+            Rack rack = new Rack(eDto.id, eDto.name, pos);
+            rack.setBoxCount(eDto.boxCount);
+            if (eDto.validDropoffIds != null) {
+                List<UUID> ids = new ArrayList<>();
+                for (String s : eDto.validDropoffIds) {
+                    try { ids.add(UUID.fromString(s)); } catch (IllegalArgumentException ignored) {}
+                }
+                rack.setValidDropoffIds(ids);
+            }
+            this.map.addEntity(rack);
         }
     }
 
@@ -304,6 +369,12 @@ public class SimulationEngine {
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
         dto.config.seed = this.seed;
+        dto.config.batteryCapacity     = robotConfig.batteryCapacity;
+        dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
+        dto.config.chargePerTick       = robotConfig.chargePerTick;
+        dto.config.energyPerMove       = robotConfig.energyPerMove;
+        dto.config.loadingTicks        = robotConfig.loadingTicks;
+        dto.config.unloadingTicks      = robotConfig.unloadingTicks;
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
@@ -343,8 +414,18 @@ public class SimulationEngine {
                 SimulationConfigDTO.MapEntityDTO eDto = mapToEntityDTO(entity);
                 eDto.type = "DELIVERY"; // persisted so loader recreates correct type
                 dto.entities.stations.add(eDto);
-            } else if (entity instanceof Rack) {
-                dto.entities.racks.add(mapToEntityDTO(entity));
+            } else if (entity instanceof Rack rack) {
+                SimulationConfigDTO.RackDTO rDto = new SimulationConfigDTO.RackDTO();
+                rDto.id = rack.getId();
+                rDto.name = rack.getName();
+                rDto.position = new SimulationConfigDTO.Vector2DDTO(
+                    (int)rack.getPosition().getX(), (int)rack.getPosition().getY());
+                rDto.boxCount = rack.getBoxCount();
+                if (!rack.getValidDropoffIds().isEmpty()) {
+                    rDto.validDropoffIds = rack.getValidDropoffIds().stream()
+                        .map(UUID::toString).collect(java.util.stream.Collectors.toList());
+                }
+                dto.entities.racks.add(rDto);
             } else if (entity instanceof Obstacle) {
                 dto.entities.obstacles.add(mapToEntityDTO(entity));
             } else {
@@ -450,6 +531,11 @@ public class SimulationEngine {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
 
+        if (tickCounter >= maxTicks) {
+            this.running = false;
+            return false;
+        }
+
         // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
         if (workloadComplete() && dispatcher.getTotalTasksAdded() > 0) {
@@ -465,6 +551,11 @@ public class SimulationEngine {
 
         // Any tick that executes work/sandbox progression is considered running.
         this.running = true;
+
+        // SPAWN_RATE: dynamically generate tasks until maxTasks is reached
+        if ("SPAWN_RATE".equals(workloadMode)) {
+            spawnTasksIfNeeded();
+        }
 
         // Assigning tasks to available robots
         dispatcher.assignTasks(robots);
@@ -501,25 +592,112 @@ public class SimulationEngine {
     }
 
     /**
+     * Dynamically generates tasks on-the-fly in SPAWN_RATE mode.
+     * Tasks spawn at a configurable rate (tasks-per-minute) until maxTasks is reached.
+     */
+    private void spawnTasksIfNeeded() { //TODO: either remove or ensure this works properly
+        if (tasksGenerated >= maxTasks) return;
+        if (map == null) return;
+
+        // Rate: spawnRate tasks per minute.  tickMs controls sim speed (real-time ms per tick).
+        // convert: ticks per minute = 60000 / tickMs
+        // Tasks per spawn interval = spawnRate / (ticksPerMinute) = spawnRate * tickMs / 60000
+        // spawn 1 task every (60000 / (spawnRate * tickMs)) ticks (rounded up).
+        double ticksPerMinute = 60000.0 / Math.max(1, tickMs);
+        int ticksPerSpawn = Math.max(1, (int) Math.round(ticksPerMinute / Math.max(1, spawnRate)));
+        if (tickCounter == 0 || ticksSinceLastSpawn >= ticksPerSpawn) {
+            spawnOneTask();
+            ticksSinceLastSpawn = 0;
+        } else {
+            ticksSinceLastSpawn++;
+        }
+    }
+
+    private int nextTaskId = 1;
+
+    private void spawnOneTask() {
+        if (tasksGenerated >= maxTasks) return;
+
+        // Collect all racks (pickup) and delivery stations (dropoff)
+        List<Vector2D> pickups = new ArrayList<>();
+        List<Vector2D> dropoffs = new ArrayList<>();
+        for (MapEntity e : map.getEntities()) {
+            if (e instanceof Rack) {
+                pickups.add(e.getPosition());
+            } else if (e instanceof DeliveryStation) {
+                dropoffs.add(e.getPosition());
+            }
+        }
+        // Fallback: use any traversable non-obstacle tile as pickup if no racks exist
+        if (pickups.isEmpty()) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                for (int x = 0; x < map.getWidth(); x++) {
+                    Vector2D p = new Vector2D(x, y);
+                    if (map.isTraversable(p) && !p.equals(dropoffs.isEmpty() ? null : dropoffs.get(0))) {
+                        pickups.add(p);
+                    }
+                }
+            }
+        }
+        // Fallback dropoff: any traversable tile not used as pickup
+        if (dropoffs.isEmpty()) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                for (int x = 0; x < map.getWidth(); x++) {
+                    Vector2D p = new Vector2D(x, y);
+                    if (map.isTraversable(p) && pickups.stream().noneMatch(pu -> pu.equals(p))) {
+                        dropoffs.add(p);
+                        break;
+                    }
+                }
+                if (!dropoffs.isEmpty()) break;
+            }
+        }
+        if (pickups.isEmpty() || dropoffs.isEmpty()) return;
+
+        java.util.Random rng = new java.util.Random(seed + tickCounter + tasksGenerated);
+        Vector2D pickup = pickups.get(rng.nextInt(pickups.size()));
+        if (dropoffs.size() == 1 && dropoffs.get(0).equals(pickup)) {
+            return;
+        }
+        Vector2D dropoff;
+        do {
+            dropoff = dropoffs.get(rng.nextInt(dropoffs.size()));
+        } while (dropoff.equals(pickup) && dropoffs.size() > 1);
+
+        int priority = 1;
+        Task task = new Task(nextTaskId++, pickup, dropoff, priority);
+        dispatcher.addTask(task);
+        tasksGenerated++;
+    }
+
+    /**
      * Indicates if the warehouse workload has been completed.
+     * In SPAWN_RATE mode, also checks that all tasks have been generated.
      * @return true if there are no pending tasks AND all robots are idle.
      */
     private boolean workloadComplete() {
-        // If the dispatcher still has tasks waiting to be assigned, not done.
-        if (dispatcher.hasPendingTasks()) {
-            return false;
-        }
-
-        // Check if all robots are currently executing a task
-        for (Robot robot : robots) {
-            // If a robot has a currentTask or is not IDLE, there is work
-            if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
-                return false;
+        if ("SPAWN_RATE".equals(workloadMode)) {
+            // In SPAWN_RATE mode, complete when:
+            // - no pending tasks in dispatcher AND
+            // - all robots are idle (nothing in flight) AND
+            // - we have generated maxTasks (no more to come)
+            if (dispatcher.hasPendingTasks()) return false;
+            for (Robot robot : robots) {
+                if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
+                    return false;
+                }
             }
+            return tasksGenerated >= maxTasks;
+        } else {
+            // FIXED_LIST mode: complete when dispatcher is empty and all robots idle
+            if (dispatcher.hasPendingTasks()) return false;
+            for (Robot robot : robots) {
+                if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
+                    return false;
+                }
+            }
+            return true;
         }
-
-        // No pending tasks, and no robot is working on a task = workload is complete.
-        return true;
     }
 
     /**
@@ -635,11 +813,16 @@ public class SimulationEngine {
 
     /**
      * Tracks robot visits on tiles for heatmap visualization.
-     * Each robot's current position increments the visit count of that tile.
+     * Only robots that are actively moving contribute to visit counts —
+     * idle, charging, loading, or unloading robots are excluded so they
+     * do not inflate the count on a single tile.
      */
     private void trackVisits() {
         if (robots == null || map == null) return;
         for (Robot robot : robots) {
+            // Only count visits when the robot is actively navigating;
+            // idle/charging/loading/unloading states would inflate a single tile.
+            if (robot.getState() != RobotState.MOVING) continue;
             Tile tile = map.getTile(robot.getPosition().getX(), robot.getPosition().getY());
             if (tile != null) {
                 tile.incrementVisitCount();
@@ -649,6 +832,16 @@ public class SimulationEngine {
 
     private CoordinationPolicy normalizeCoordinationPolicy(CoordinationPolicy coordinationPolicy) {
         return coordinationPolicy != null ? coordinationPolicy : CoordinationPolicy.noOp();
+    }
+
+    public RobotConfig getRobotConfig() { return robotConfig; }
+
+    /** Replaces the robot physics config and propagates it to all loaded robots. */
+    public void setRobotConfig(RobotConfig config) {
+        this.robotConfig = config;
+        if (robots != null) {
+            for (Robot r : robots) r.setConfig(config);
+        }
     }
 
     // Getters
@@ -664,6 +857,14 @@ public class SimulationEngine {
         return tickCounter;
     }
 
+    public int getMaxTicks() {
+        return maxTicks;
+    }
+
+    public int getTickMs() {
+        return tickMs;
+    }
+
     public boolean getIsRunning() {
         return running;
     }
@@ -671,6 +872,8 @@ public class SimulationEngine {
     public Robot[] getRobots() {
         return robots;
     }
+
+    public long getSeed() { return seed; }
 
     /**
      * Gets the name of the coordination policy class being used in this simulation.

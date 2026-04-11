@@ -60,10 +60,12 @@ public class Dispatcher {
         }
 
         // Adding tasks to task queue
-        for (Task task : tasks) {
-            if (task != null) {
-                addTask(task);
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            if (task == null) {
+                throw new IllegalArgumentException("null task in tasks list at index " + i);
             }
+            addTask(task);
         }
     }
 
@@ -71,6 +73,7 @@ public class Dispatcher {
      * Assigns at most one task per available robot
      * Logs task assignment events
      * @param robots a list of all the robots in the warehouse
+     * @return the number of successful assignments performed
      */
     public int assignTasks(Robot[] robots) {
         if (robots == null) {
@@ -95,19 +98,28 @@ public class Dispatcher {
 
             if (robot.isAvailable()) { // robot is available for task assignment
                 // Assign a task to the robot
-                Task task = taskQueue.poll();
-                robot.setCurrentTask(task);
+                Task task = taskQueue.peek();
+                if (task == null) {
+                    break;
+                }
+                try {
+                    robot.setCurrentTask(task);
 
-                // Update robot state and task status
-                robot.setState(RobotState.MOVING);
-                task.setStatus(TaskStatus.IN_PROGRESS);
+                    // Update robot state and task status
+                    robot.setState(RobotState.MOVING);
+                    task.setStatus(TaskStatus.IN_PROGRESS);
 
-                assignmentCount++;
+                    taskQueue.poll();
+                    assignmentCount++;
 
-                // Logging task assignment event
-                WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), task);
-                WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
-                Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
+                    // Logging task assignment event
+                    WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), task);
+                    WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
+                    Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
+                } catch (RuntimeException ex) {
+                    System.err.println("[Dispatcher] Failed to assign task " + task.getId()
+                            + " to robot " + robot.getId() + ": " + ex.getMessage());
+                }
             }
         }
 
@@ -119,7 +131,7 @@ public class Dispatcher {
      * @param task the task to be requeued
      */
     public void requeueTask(Task task) {
-        enqueueTask(task, true);
+        enqueueTask(task, false);
     }
 
     /**

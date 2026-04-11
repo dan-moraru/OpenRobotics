@@ -63,6 +63,16 @@ public class ExitConfirmController
         close();
     }
 
+    @FXML
+    private void onQuit() {
+        onYes();
+    }
+
+    @FXML
+    private void onReturn() {
+        onNo();
+    }
+
     // ------------------------------------------------------------------ //
     //  Helper
     // ------------------------------------------------------------------ //

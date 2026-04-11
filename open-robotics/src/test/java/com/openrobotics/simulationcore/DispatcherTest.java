@@ -168,14 +168,15 @@ public class DispatcherTest {
     }
 
     /**
-     * addTasks() ignores null entries while adding the non-null tasks.
+     * addTasks() rejects null entries and reports the failing index.
      */
     @Test
     public void testAddTasksIgnoresNullEntries() {
-        dispatcher.addTasks(Arrays.asList(makeTask(1, 1), null, makeTask(2, 2)));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> dispatcher.addTasks(Arrays.asList(makeTask(1, 1), null, makeTask(2, 2))));
 
-        assertEquals(2, dispatcher.getPendingTaskCount());
-        assertEquals(2, dispatcher.getTotalTasksAdded());
+        assertTrue(ex.getMessage().contains("index 1"));
     }
 
     /**
@@ -405,7 +406,7 @@ public class DispatcherTest {
     }
 
     /**
-     * requeueTask() also contributes to the total-tasks-added counter because it delegates to addTask().
+     * requeueTask() should not increase total-tasks-added because it is not a newly added task.
      */
     @Test
     public void testRequeueTaskIncrementsTotalTasksAdded() {
@@ -417,6 +418,6 @@ public class DispatcherTest {
 
         dispatcher.requeueTask(task);
 
-        assertEquals(2, dispatcher.getTotalTasksAdded());
+        assertEquals(1, dispatcher.getTotalTasksAdded());
     }
 }

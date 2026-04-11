@@ -39,7 +39,7 @@
     </VBox>
 
     <HBox styleClass="dialog-footer object-desc-dialog-footer" spacing="12" alignment="CENTER">
-        <Button text="ADD" styleClass="btn-success" prefWidth="150" onAction="#onAdd" />
-        <Button text="CLOSE" styleClass="btn-neutral" prefWidth="150" onAction="#onClose" />
+        <Button text="ADD" accessibleText="Add Object" styleClass="btn-success" prefWidth="150" onAction="#onAdd" />
+        <Button text="CLOSE" accessibleText="Close Dialog" styleClass="btn-neutral" prefWidth="150" onAction="#onClose" />
     </HBox>
 </VBox>

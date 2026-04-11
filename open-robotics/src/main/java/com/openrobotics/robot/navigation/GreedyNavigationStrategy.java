@@ -10,13 +10,14 @@ import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 // greedy navigation: always move toward target by manhattan distance,
 // with seeded-random tie breaking and backtracking for dead ends
 public class GreedyNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id
-    private final java.util.Map<UUID, RobotNavState> navStates = new HashMap<>();
+    private final java.util.Map<UUID, RobotNavState> navStates = new ConcurrentHashMap<>();
 
     public GreedyNavigationStrategy(long baseSeed) {
         this.baseSeed = baseSeed;

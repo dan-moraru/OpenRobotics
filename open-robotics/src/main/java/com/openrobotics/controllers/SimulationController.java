@@ -25,10 +25,10 @@ import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
 import com.openrobotics.util.ViewportTips;
+import javafx.application.Platform;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -65,7 +65,7 @@ import java.util.*;
  *   <li>Viewport navigation (right-click pan, scroll zoom)</li>
  * </ul>
  */
-public class SimulationController {
+public class SimulationController implements ScreenNavigator.Cleanable {
 
     // ── TOPBAR LIVE STATS ────────────────────────────────────────────────
     @FXML private Label objsLabel;
@@ -93,9 +93,14 @@ public class SimulationController {
     @FXML private CheckMenuItem toggleSidebarItem;
     @FXML private CheckMenuItem toggleConsoleItem;
     @FXML private SplitPane     mainSplitPane;
+    @FXML private SplitPane     viewportConsoleSplit;
     @FXML private VBox sidebarPanel;
     @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
+
+    // Saved divider positions so collapse/expand is smooth
+    private double savedSidebarDivider  = 0.17;
+    private double savedConsoleDivider  = 0.83;
 
     // ── PROPERTIES PANEL ────────────────────────────────────────────────
     @FXML private VBox propertiesPanel;
@@ -113,6 +118,8 @@ public class SimulationController {
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
     @FXML private Button      speed3Btn;
+    @FXML private Button      playBtn;
+    @FXML private Button      pauseBtn;
     @FXML private ProgressBar simProgressBar;
 
     // ── Viewport navigation state ─────────────────────────────────────────
@@ -135,6 +142,9 @@ public class SimulationController {
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
     private boolean paused  = false;
+    // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
+    // Restart always reloads from this, not from AppState.getConfigPath().
+    private String initialSnapshotPath = null;
 
     // ── Engine binding ────────────────────────────────────────────────────
     private SimulationEngine engine;
@@ -168,9 +178,14 @@ public class SimulationController {
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
+    // ── Drag-over tile highlight ──────────────────────────────────────────
+    private int dragHighlightTileX = -1;
+    private int dragHighlightTileY = -1;
+
     // Animation state
     private boolean animating = false;
     private double animationProgress = 0.0;
+    private Timeline animTimeline = null;
     private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
     private static final int ANIMATION_FRAMES = 5;
 
@@ -185,19 +200,21 @@ public class SimulationController {
         canvasWidthTiles  = AppState.getCanvasWidthTiles();
         canvasHeightTiles = AppState.getCanvasHeightTiles();
 
-        // Bind canvas size to the viewport stack so it fills the pane
-        warehouseCanvas.widthProperty().bind(viewportStack.widthProperty());
-        warehouseCanvas.heightProperty().bind(viewportStack.heightProperty());
-
-        // Redraw whenever size changes; centre canvas on first layout
-        warehouseCanvas.widthProperty().addListener((obs, oldW, newW) -> {
+        // Track viewport stack size with listeners (not bind) — same pattern as SetupController.
+        // Using bind() makes the Canvas report its pixel size as its preferred size to the
+        // layout engine, which then locks the SplitPane divider and prevents free dragging.
+        // With managed="false" on the Canvas and listener-driven setWidth/setHeight, the
+        // layout engine ignores the Canvas when computing preferred sizes, so dividers stay free.
+        viewportStack.widthProperty().addListener((obs, oldW, newW) -> {
+            warehouseCanvas.setWidth(newW.doubleValue());
             if (!viewportCentered && newW.doubleValue() > 0 && warehouseCanvas.getHeight() > 0) {
                 centerViewportOnCanvas();
                 viewportCentered = true;
             }
             drawViewport();
         });
-        warehouseCanvas.heightProperty().addListener((obs, oldH, newH) -> {
+        viewportStack.heightProperty().addListener((obs, oldH, newH) -> {
+            warehouseCanvas.setHeight(newH.doubleValue());
             if (!viewportCentered && warehouseCanvas.getWidth() > 0 && newH.doubleValue() > 0) {
                 centerViewportOnCanvas();
                 viewportCentered = true;
@@ -212,13 +229,14 @@ public class SimulationController {
         viewportStack.setOnMouseMoved(e -> { viewportMouseX = e.getX(); viewportMouseY = e.getY(); });
         viewportStack.setOnScroll(e -> {
             double factor = e.getDeltaY() > 0 ? 1.1 : 0.9;
-            double mouseX = e.getX();
-            double mouseY = e.getY();
+            // Zoom toward the canvas center (where the crosshair is), not the mouse position
+            double cx = warehouseCanvas.getWidth()  / 2;
+            double cy = warehouseCanvas.getHeight() / 2;
             double oldZoom = zoom;
             zoom = Math.max(0.2, Math.min(zoom * factor, 10.0));
             double zoomRatio = zoom / oldZoom;
-            viewOffsetX = mouseX - zoomRatio * (mouseX - viewOffsetX);
-            viewOffsetY = mouseY - zoomRatio * (mouseY - viewOffsetY);
+            viewOffsetX = cx - zoomRatio * (cx - viewOffsetX);
+            viewOffsetY = cy - zoomRatio * (cy - viewOffsetY);
             drawViewport();
         });
 
@@ -227,6 +245,9 @@ public class SimulationController {
         viewportStack.setOnDragDropped(this::onCanvasDragDropped);
         viewportStack.setOnDragExited(e -> {
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
+            dragHighlightTileX = -1;
+            dragHighlightTileY = -1;
+            drawViewport();
         });
 
         // Keyboard shortcuts: Delete, Cmd+C, Cmd+V
@@ -242,15 +263,19 @@ public class SimulationController {
         });
 
         // Outliner search filter
-        if (outlinerSearchField != null)
+        if (outlinerSearchField != null) {
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
+        }
 
         // Bind engine from shared AppState
         engine = AppState.getEngine();
         if (engine == null && AppState.hasConfigPath()) {
             engine = new SimulationEngine(AppState.getConfigPath());
             if (engine == null || engine.getMap() == null) {
-                log("\u26a0 Config reload failed: " + (engine.getInitError() != null ? engine.getInitError() : "unknown error"));
+                String initErrorMsg = engine != null && engine.getInitError() != null
+                        ? engine.getInitError()
+                        : "constructor returned null";
+                log("\u26a0 Config reload failed: " + initErrorMsg);
                 if (viewportStatusLabel != null) {
                     viewportStatusLabel.setText("Load failed");
                 }
@@ -258,6 +283,9 @@ public class SimulationController {
             }
             AppState.setEngine(engine);
         }
+
+        // Update RAM display
+        updateRamLabel();
 
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
@@ -314,13 +342,13 @@ public class SimulationController {
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
-        // Lock sidebar divider to 230px to prevent fractional-pixel drift on Windows DPI scaling
-        if (mainSplitPane != null) {
-            Platform.runLater(() -> {
-                if (mainSplitPane.getWidth() > 0) {
-                    mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
-                }
-            });
+        // Reset button colors to default CSS style (beige)
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
+
+        // Set initial sidebar position — not locked, user can drag freely
+        if (mainSplitPane != null && mainSplitPane.getWidth() > 0) {
+            mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
         }
 
         log("Simulation screen ready. Drag an object from the panel into the viewport.");
@@ -377,6 +405,17 @@ public class SimulationController {
         gc.strokeRect(bx, by, bw, bh);
 
         drawEntities(gc);
+
+        // Highlight the tile the user is hovering over during a drag-from-sidebar
+        if (dragHighlightTileX >= 0 && dragHighlightTileY >= 0) {
+            double hx = viewOffsetX + (dragHighlightTileX + entityOffsetTileX) * tileSize;
+            double hy = viewOffsetY + (dragHighlightTileY + entityOffsetTileY) * tileSize;
+            gc.setFill(Color.web("#599068", 0.35));
+            gc.fillRect(hx, hy, tileSize, tileSize);
+            gc.setStroke(Color.web("#3a7a50"));
+            gc.setLineWidth(2.0);
+            gc.strokeRect(hx, hy, tileSize, tileSize);
+        }
     }
 
     /** Renders every entity from the engine onto the canvas. */
@@ -548,6 +587,61 @@ public class SimulationController {
     private int clampTileX(int tx) { return Math.max(0, Math.min(tx, maxMapTileX())); }
     private int clampTileY(int ty) { return Math.max(0, Math.min(ty, maxMapTileY())); }
 
+    private boolean isRobotEntity(MapEntity entity) {
+        return entity instanceof Robot;
+    }
+
+    private boolean isStationOrDockEntity(MapEntity entity) {
+        return entity instanceof ChargingStation || entity instanceof DeliveryStation;
+    }
+
+    private boolean isValidTileOccupancy(List<MapEntity> occupants) {
+        int robotCount = 0;
+        int stationDockCount = 0;
+        int otherCount = 0;
+
+        for (MapEntity entity : occupants) {
+            if (isRobotEntity(entity)) {
+                robotCount++;
+            } else if (isStationOrDockEntity(entity)) {
+                stationDockCount++;
+            } else {
+                otherCount++;
+            }
+        }
+
+        if (robotCount > 1 || stationDockCount > 1) {
+            return false;
+        }
+
+        // Any non station/dock non-robot entity must be alone on its tile.
+        if (otherCount > 0) {
+            return occupants.size() == 1;
+        }
+
+        // Valid: single robot, single station/dock, or one of each.
+        return occupants.size() <= 2;
+    }
+
+    private boolean canPlaceEntityAt(MapEntity candidate, int x, int y, MapEntity ignoreEntity) {
+        if (engine == null || engine.getMap() == null || candidate == null) {
+            return false;
+        }
+
+        List<MapEntity> occupants = new ArrayList<>();
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity == ignoreEntity) {
+                continue;
+            }
+            if ((int) entity.getPosition().getX() == x && (int) entity.getPosition().getY() == y) {
+                occupants.add(entity);
+            }
+        }
+
+        occupants.add(candidate);
+        return isValidTileOccupancy(occupants);
+    }
+
     // ------------------------------------------------------------------ //
     //  Drag FROM sidebar tile → canvas  (JavaFX DnD API)
     // ------------------------------------------------------------------ //
@@ -558,6 +652,7 @@ public class SimulationController {
      */
     @FXML
     private void onObjectTileDragDetected(MouseEvent e) {
+        if (running) { e.consume(); return; }
         Button source = (Button) e.getSource();
         String type = (String) source.getUserData();
 
@@ -581,13 +676,19 @@ public class SimulationController {
 
     /** Accept the drag as long as the dragboard carries an object-type string. */
     private void onCanvasDragOver(DragEvent e) {
+        if (running) { e.consume(); return; }
         if (e.getDragboard().hasString()) {
             e.acceptTransferModes(TransferMode.COPY);
-            // Update status label with live position feedback
+            double tileSize = 32 * zoom;
+            int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+            int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+            // Redraw only when the highlighted tile changes (avoids thrashing)
+            if (tx != dragHighlightTileX || ty != dragHighlightTileY) {
+                dragHighlightTileX = tx;
+                dragHighlightTileY = ty;
+                drawViewport();
+            }
             if (viewportStatusLabel != null) {
-                double tileSize = 32 * zoom;
-                int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
-                int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
                 viewportStatusLabel.setText(
                         "dragging(" + e.getDragboard().getString().toLowerCase()
                         + ")  →  (" + tx + ", " + ty + ")");
@@ -598,7 +699,11 @@ public class SimulationController {
 
     /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
+        if (running) { e.setDropCompleted(false); e.consume(); return; }
         Dragboard db = e.getDragboard();
+        boolean dropCompleted = false;
+        dragHighlightTileX = -1;
+        dragHighlightTileY = -1;
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
@@ -606,20 +711,27 @@ public class SimulationController {
             int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
 
             if (engine != null && engine.getMap() != null) {
-                MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId++);
+                MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId);
                 if (entity != null) {
-                    engine.addEntity(entity);
-                    selectEntity(entity);
+                    if (canPlaceEntityAt(entity, tx, ty, null)) {
+                        engine.addEntity(entity);
+                        nextObjId++;
+                        selectEntity(entity);
+                        populateOutliner();
+                        drawViewport();
+                        log("Added " + type + " at tile (" + tx + ", " + ty + ").");
+                        if (viewportStatusLabel != null) viewportStatusLabel.setText("");
+                        dropCompleted = true;
+                    } else {
+                        log("Placement blocked at tile (" + tx + ", " + ty + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+                        if (viewportStatusLabel != null) {
+                            viewportStatusLabel.setText("blocked at (" + tx + ", " + ty + ")");
+                        }
+                    }
                 }
             }
-
-            populateOutliner();
-            drawViewport();
-
-            log("Added " + type + " at tile (" + tx + ", " + ty + ").");
-            if (viewportStatusLabel != null) viewportStatusLabel.setText("");
-            e.setDropCompleted(true);
         }
+        e.setDropCompleted(dropCompleted);
         e.consume();
     }
 
@@ -669,6 +781,9 @@ public class SimulationController {
             // Right click: pan mode
             draggingOnCanvas = null;
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseDragged(MouseEvent e) {
@@ -680,11 +795,15 @@ public class SimulationController {
             double tileSize = 32 * zoom;
             int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
             int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
-            draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
-            if (viewportStatusLabel != null)
-                viewportStatusLabel.setText(
-                        "dragging(" + draggingOnCanvas.getName()
-                        + ")  →  (" + newTX + ", " + newTY + ")");
+            if (canPlaceEntityAt(draggingOnCanvas, newTX, newTY, draggingOnCanvas)) {
+                draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
+                if (viewportStatusLabel != null)
+                    viewportStatusLabel.setText(
+                            "dragging(" + draggingOnCanvas.getName()
+                            + ")  →  (" + newTX + ", " + newTY + ")");
+            } else if (viewportStatusLabel != null) {
+                viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
+            }
             drawViewport();
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right-drag: pan the viewport
@@ -695,6 +814,9 @@ public class SimulationController {
 
         lastMouseX = e.getX();
         lastMouseY = e.getY();
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     private void onViewportMouseReleased(MouseEvent e) {
@@ -705,6 +827,9 @@ public class SimulationController {
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
         }
+
+        // Update RAM display
+        updateRamLabel();
     }
 
     // ------------------------------------------------------------------ //
@@ -757,11 +882,15 @@ public class SimulationController {
             clipboardEntity instanceof DeliveryStation ? "STATION" :
             clipboardEntity instanceof Rack ? "RACK" : "OBSTACLE",
             newX, newY, clipboardEntity.getName() + "_copy");
-        engine.addEntity(copy);
-        selectEntity(copy);
-        populateOutliner();
-        drawViewport();
-        log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
+        if (copy != null && canPlaceEntityAt(copy, newX, newY, null)) {
+            engine.addEntity(copy);
+            selectEntity(copy);
+            populateOutliner();
+            drawViewport();
+            log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
+        } else {
+            log("Paste blocked at tile (" + newX + ", " + newY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+        }
     }
 
     private MapEntity clipboardEntity = null;
@@ -836,12 +965,28 @@ public class SimulationController {
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            entity.setPosition(new com.openrobotics.map.Vector2D(newVal, (int)entity.getPosition().getY()));
-            drawViewport();
+            if (newVal == null || oldVal == null) return;
+            int targetX = newVal;
+            int targetY = (int) entity.getPosition().getY();
+            if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
+                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                drawViewport();
+            } else {
+                xSpinner.getValueFactory().setValue(oldVal);
+                log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+            }
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            entity.setPosition(new com.openrobotics.map.Vector2D((int)entity.getPosition().getX(), newVal));
-            drawViewport();
+            if (newVal == null || oldVal == null) return;
+            int targetX = (int) entity.getPosition().getX();
+            int targetY = newVal;
+            if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
+                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                drawViewport();
+            } else {
+                ySpinner.getValueFactory().setValue(oldVal);
+                log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
+            }
         });
         posBox.getChildren().addAll(
                 new Label("Position:"),
@@ -912,6 +1057,10 @@ public class SimulationController {
     /** Handles selection in the Outliner list. */
     @FXML
     private void onOutlinerSelect(MouseEvent e) {
+        onOutlinerSelect();
+    }
+
+    private void onOutlinerSelect() {
         if (outlinerListView == null) return;
         int idx = outlinerListView.getSelectionModel().getSelectedIndex();
         if (idx < 0 || idx >= outlinerBacking.size()) return;
@@ -922,45 +1071,55 @@ public class SimulationController {
         }
     }
 
-    private void filterOutliner(String query) {
+    private void filterOutliner(@SuppressWarnings("unused") String query) {
+        // query is consumed by populateOutliner() via outlinerSearchField.getText()
         populateOutliner();
     }
 
-    /** Rebuilds the outliner list from the current engine map. */
+    /** Rebuilds the outliner list from the current engine map.
+     *  Compares new entries against current list to avoid unnecessary layout invalidation. */
     private void populateOutliner() {
         if (outlinerListView == null || engine == null || engine.getMap() == null || engine.getMap().getEntities() == null) return;
         String filter = (outlinerSearchField != null && outlinerSearchField.getText() != null)
                 ? outlinerSearchField.getText().toLowerCase() : "";
-        outlinerListView.getItems().clear();
-        outlinerBacking.clear();
-        int count = 0;
+        List<String> newItems = new ArrayList<>();
+        List<Object> newBacking = new ArrayList<>();
         for (MapEntity e : engine.getMap().getEntities()) {
-            String icon  = (e instanceof Robot) ? "\ud83e\udd16 "
-                         : (e instanceof Rack)  ? "\ud83d\udce6 "
-                         : (e instanceof Station) ? "\u26a1 "
-                         : (e instanceof Obstacle) ? "\ud83e\uddf1 " : "\u25ab ";
+            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // 🤖 robot
+                         : (e instanceof Rack)     ? "\ud83d\udce6 "  // 📦 rack/shelf
+                         : (e instanceof Station)  ? "\u26a1 "        // ⚡ station
+                         : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // 🧱 wall/obstacle
+                         :                           "\u25ab ";        // ▫ generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
-                outlinerListView.getItems().add(entry);
-                outlinerBacking.add(e);
-                count++;
+                newItems.add(entry);
+                newBacking.add(e);
             }
         }
 
         if (engine.getDispatcher() != null) {
             for (Task task : engine.getDispatcher().getAllTasks()) {
                 String icon = "\u2b07 ";
-                String entry = icon + "Task #" + task.getId() + " " + task.getStatus() 
+                String entry = icon + "Task #" + task.getId() + " " + task.getStatus()
                     + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
                 if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
-                    outlinerListView.getItems().add(entry);
-                    outlinerBacking.add(task);
-                    count++;
+                    newItems.add(entry);
+                    newBacking.add(task);
                 }
             }
         }
 
-        if (objsLabel != null) objsLabel.setText("Objects: " + count);
+        // Only update the ListView if content actually changed to avoid layout thrashing
+        if (!newItems.equals(outlinerListView.getItems())) {
+            outlinerListView.getItems().setAll(newItems);
+            outlinerBacking.clear();
+            outlinerBacking.addAll(newBacking);
+        }
+
+        String newText = "Objects: " + newItems.size();
+        if (objsLabel != null && !newText.equals(objsLabel.getText())) {
+            objsLabel.setText(newText);
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -982,13 +1141,41 @@ public class SimulationController {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
-        if (!running) {
+        if (running) {
+            if (paused) {
+                paused = false;
+                if (simStatusLabel != null) {
+                    simStatusLabel.setText("RUNNING");
+                    simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+                }
+                playBtn.setStyle("-fx-background-color: #2E9E5B;");
+                pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+                startLoop();
+                log("Simulation resumed.");
+                // Update RAM display
+                updateRamLabel();
+            }
+        } else {
+            // Snapshot the state right now (tick 0) as the restart baseline.
+            if (initialSnapshotPath == null && engine != null) {
+                try {
+                    java.io.File snap = java.io.File.createTempFile("openrobotics_initial_", ".json");
+                    snap.deleteOnExit();
+                    engine.configSaving(snap.getAbsolutePath());
+                    initialSnapshotPath = snap.getAbsolutePath();
+                } catch (Exception ex) {
+                    log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
+                }
+            }
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
                 simStatusLabel.setText("RUNNING");
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
+
+            playBtn.setStyle("-fx-background-color: #2E9E5B;");
+            pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
 
             // Logging simulation run start event
             SimulationRunRecordBuilder simRunRecordBuilder = new SimulationRunRecordBuilder(engine);
@@ -1007,14 +1194,8 @@ public class SimulationController {
 
             startLoop();
             log("Simulation started.");
-        } else if (paused) {
-            paused = false;
-            if (simStatusLabel != null) {
-                simStatusLabel.setText("RUNNING");
-                simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
-            }
-            startLoop();
-            log("Simulation resumed.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1027,7 +1208,11 @@ public class SimulationController {
                 simStatusLabel.setText("PAUSED");
                 simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
             }
+            playBtn.setStyle("-fx-background-color: #90EE90;");
+            pauseBtn.setStyle("-fx-background-color: #C23B42;");
             log("Simulation paused.");
+            // Update RAM display
+            updateRamLabel();
         }
     }
 
@@ -1040,15 +1225,28 @@ public class SimulationController {
             simStatusLabel.setText("STOPPED");
             simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
         }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation stopped.");
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML
     private void onRestart() {
+        if (animTimeline != null) { animTimeline.stop(); animTimeline = null; }
+        animating = false;
+        animationProgress = 0.0;
+        prevRobotPositions.clear();
+        selectedEntity = null;
         onStop();
         localTick = 0;
-        if (AppState.getConfigPath() != null) {
-            SimulationEngine reloaded = new SimulationEngine(AppState.getConfigPath());
+        // Reload from the initial snapshot taken when play was first pressed.
+        // This restores tick-0 state with all editor changes intact.
+        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        initialSnapshotPath = null; // clear so next play press re-snapshots fresh
+        if (reloadPath != null) {
+            SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
                 if (simStatusLabel != null) {
                     simStatusLabel.setText("ERROR");
@@ -1062,6 +1260,8 @@ public class SimulationController {
             }
             engine = reloaded;
             AppState.setEngine(engine);
+        } else {
+            // TODO: make sure template map resets here
         }
 
         // If no engine is loaded, restart still resets the UI state safely.
@@ -1086,6 +1286,8 @@ public class SimulationController {
             simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
         }
         log("Simulation reset.");
+        // Update RAM display
+        updateRamLabel();
         populateOutliner();
         drawViewport();
     }
@@ -1102,6 +1304,8 @@ public class SimulationController {
         }
         doTick();
         log("Step \u2192 TICK " + localTick);
+        // Update RAM display
+        updateRamLabel();
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -1132,6 +1336,17 @@ public class SimulationController {
             simLoop.stop();
             simLoop = null;
         }
+    }
+
+    /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
+    @Override
+    public void cleanup() {
+        stopLoop();
+        if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
+        if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
+        warehouseCanvas.widthProperty().unbind();
+        warehouseCanvas.heightProperty().unbind();
+        animating = false;
     }
 
     private void doTick() {
@@ -1175,13 +1390,16 @@ public class SimulationController {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation complete at TICK " + localTick + ".");
     }
 
     private void startAnimation() {
+        if (animTimeline != null) animTimeline.stop();
         animating = true;
         animationProgress = 0.0;
-        Timeline animTimeline = new Timeline();
+        animTimeline = new Timeline();
         final int totalFrames = ANIMATION_FRAMES;
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
@@ -1207,48 +1425,62 @@ public class SimulationController {
     // ------------------------------------------------------------------ //
 
     @FXML private void onZoomIn() {
-        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
-        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double cx = warehouseCanvas.getWidth()  / 2;
+        double cy = warehouseCanvas.getHeight() / 2;
         double oldZoom = zoom;
         zoom = Math.min(zoom * 1.2, 10.0);
         double r = zoom / oldZoom;
-        viewOffsetX = px - r * (px - viewOffsetX);
-        viewOffsetY = py - r * (py - viewOffsetY);
+        viewOffsetX = cx - r * (cx - viewOffsetX);
+        viewOffsetY = cy - r * (cy - viewOffsetY);
         drawViewport();
     }
 
     @FXML private void onZoomOut() {
-        double px = viewportMouseX >= 0 ? viewportMouseX : warehouseCanvas.getWidth()  / 2;
-        double py = viewportMouseY >= 0 ? viewportMouseY : warehouseCanvas.getHeight() / 2;
+        double cx = warehouseCanvas.getWidth()  / 2;
+        double cy = warehouseCanvas.getHeight() / 2;
         double oldZoom = zoom;
         zoom = Math.max(zoom / 1.2, 0.2);
         double r = zoom / oldZoom;
-        viewOffsetX = px - r * (px - viewOffsetX);
-        viewOffsetY = py - r * (py - viewOffsetY);
+        viewOffsetX = cx - r * (cx - viewOffsetX);
+        viewOffsetY = cy - r * (cy - viewOffsetY);
         drawViewport();
     }
 
     @FXML
-private void onReturnToOrigin() {
-    zoom = 1.0;
-    centerViewportOnCanvas();
-    drawViewport();
-    log("Viewport reset to origin.");
-}
+    private void onReturnToOrigin() {
+        zoom = 1.0;
+        centerViewportOnCanvas();
+        drawViewport();
+        log("Viewport reset to origin.");
+    }
 
     @FXML
     private void onToggleSidebar() {
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(toggleSidebarItem.isSelected());
-            sidebarPanel.setManaged(toggleSidebarItem.isSelected());
+        if (sidebarPanel == null || mainSplitPane == null) return;
+        if (toggleSidebarItem.isSelected()) {
+            // Restore: reposition divider after the current layout pass
+            Platform.runLater(() -> mainSplitPane.setDividerPosition(0, savedSidebarDivider));
+        } else {
+            // Collapse: save position, then push divider to 0
+            if (mainSplitPane.getDividerPositions().length > 0) {
+                savedSidebarDivider = mainSplitPane.getDividerPositions()[0];
+            }
+            Platform.runLater(() -> mainSplitPane.setDividerPosition(0, 0.0));
         }
     }
 
     @FXML
     private void onToggleConsole() {
-        if (consoleShell != null) {
-            consoleShell.setVisible(toggleConsoleItem.isSelected());
-            consoleShell.setManaged(toggleConsoleItem.isSelected());
+        if (consoleShell == null || viewportConsoleSplit == null) return;
+        if (toggleConsoleItem.isSelected()) {
+            // Restore: reposition divider after the current layout pass
+            Platform.runLater(() -> viewportConsoleSplit.setDividerPosition(0, savedConsoleDivider));
+        } else {
+            // Collapse: save position, then push divider to 1.0
+            if (viewportConsoleSplit.getDividerPositions().length > 0) {
+                savedConsoleDivider = viewportConsoleSplit.getDividerPositions()[0];
+            }
+            Platform.runLater(() -> viewportConsoleSplit.setDividerPosition(0, 1.0));
         }
     }
 
@@ -1282,6 +1514,15 @@ private void onReturnToOrigin() {
     }
 
     @FXML
+    private void onBackToSetup() {
+        stopLoop();
+        running = false;
+        paused = false;
+        AppState.clear();
+        ScreenNavigator.goToSetup();
+    }
+
+    @FXML
     private void onMenuWelcome() { ScreenNavigator.goToWelcome(); }
 
     @FXML
@@ -1304,6 +1545,13 @@ private void onReturnToOrigin() {
     @FXML
     private void onExit() {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
+    }
+
+    private void updateRamLabel() {
+        if (ramLabel != null) {
+            long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
+            ramLabel.setText("RAM: " + usedKb + " KB");
+        }
     }
 }
 

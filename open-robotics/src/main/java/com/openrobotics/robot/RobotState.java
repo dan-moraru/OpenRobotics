@@ -7,5 +7,9 @@ public enum RobotState {
     MOVING, // navigating toward pickup or dropoff location
     LOADING, // robot is at a rack picking up a box
     UNLOADING, // robot is at delivery station, dropping off box
-    CHARGING // replenishing battery
+    CHARGING, // replenishing battery
+    ERROR,
+    EMERGENCY_STOP,
+    MAINTENANCE,
+    ERROR_RECOVERY
 }

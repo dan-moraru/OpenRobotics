@@ -31,7 +31,7 @@ public class RangeSensor implements SensorStrategy {
         // Cast rays within a 90 degree arc (PI/2 radians)
         double startAngle = facingAngle - (Math.PI / 4); // -45 degrees
         double endAngle = facingAngle + (Math.PI / 4); // +45 degrees
-        double angleStep = (endAngle - startAngle) / (rayCount - 1);
+        double angleStep = rayCount <= 1 ? 0.0 : (endAngle - startAngle) / (rayCount - 1);
 
         for (int i = 0; i < rayCount; i++) {
             double currentAngle = startAngle + (i * angleStep);

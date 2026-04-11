@@ -51,7 +51,9 @@ public final class RobotRunStatsDao {
             ps.setObject(10, r.getNearMisses(), Types.INTEGER);
             ps.setObject(11, r.getDeadlocks(), Types.INTEGER);
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
+                if (!rs.next()) {
+                    throw new SQLException("Expected upsert to return a row but none was returned");
+                }
                 return rs.getLong(1);
             }
         }

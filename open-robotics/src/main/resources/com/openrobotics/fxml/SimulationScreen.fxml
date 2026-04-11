@@ -40,7 +40,7 @@
   console bg #32312D, console header #C2BEAE
 -->
 
-<BorderPane prefHeight="1080.0" prefWidth="1920.0" styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
+<BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
 
     <top>
         <VBox spacing="0">
@@ -94,6 +94,8 @@
                <!-- Tab strip -->
                <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
                     <children>
+                        <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK" />
+                        <Region minWidth="8" />
                         <Region minWidth="232.0" />
                         <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
                         <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
@@ -110,11 +112,11 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.17" styleClass="sim-main-split">
+        <SplitPane fx:id="mainSplitPane" dividerPositions="0.17" styleClass="sim-main-split">
            <items>
    
                <!-- ── LEFT SIDEBAR #8D8A7F ── -->
-               <VBox fx:id="sidebarPanel" maxWidth="230.0" minWidth="230.0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
+               <VBox fx:id="sidebarPanel" minWidth="0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
       <children>
       
                       <!-- Add Object | Outliner tabs -->
@@ -204,7 +206,7 @@
                                     <VBox spacing="4" styleClass="sidebar-panel">
                                        <children>
                                            <TextField fx:id="outlinerSearchField" promptText="Filter objects…" styleClass="sidebar-filter-field" />
-                                           <ListView fx:id="outlinerListView" onMouseClicked="#onOutlinerSelect" VBox.vgrow="ALWAYS" />
+                                           <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS" />
                                        </children>
                                     </VBox>
             </content>
@@ -255,33 +257,35 @@
                                      <Label fx:id="viewportStatusLabel" styleClass="viewport-status-label" text="" />
                                  </center>
                                  <right>
-                                     <HBox alignment="CENTER_RIGHT" spacing="6">
+                                     <HBox alignment="CENTER_RIGHT" spacing="4">
                                          <children>
-                                             <!-- Zoom -->
-                                             <Button onAction="#onReturnToOrigin" styleClass="playback-btn" text="⌖" />
-                                             <Button onAction="#onZoomIn" styleClass="playback-btn" text="zoom+" />
-                                             <Button onAction="#onZoomOut" styleClass="playback-btn" text="zoom-" />
-                                             <!-- Restart + speeds + play/pause/step -->
                                              <Button onAction="#onRestart" styleClass="playback-btn" text="↺" />
+                                             <Button fx:id="playBtn" onAction="#onPlay" styleClass="playback-btn" text="▶" />
+                                             <Button fx:id="pauseBtn" onAction="#onPause" styleClass="playback-btn" text="⏸" />
+                                             <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
                                              <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
                                              <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
                                              <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />
-                                             <Button onAction="#onPlay" styleClass="playback-btn" text="▶" />
-                                             <Button onAction="#onPause" styleClass="playback-btn" text="⏸" />
-                                             <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
+                                             <!-- View -->
+                                             <Label styleClass="viewport-subtle-label" text="View">
+                                                 <HBox.margin><Insets left="6"/></HBox.margin>
+                                             </Label>
+                                             <Button onAction="#onZoomIn" styleClass="playback-btn" text="⊕" />
+                                             <Button onAction="#onReturnToOrigin" styleClass="playback-btn" text="⌖" />
+                                             <Button onAction="#onZoomOut" styleClass="playback-btn" text="⊖" />
                                          </children>
                                      </HBox>
                                  </right>
                              </BorderPane>
       
-                      <SplitPane dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
+                      <SplitPane fx:id="viewportConsoleSplit" dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
          <items>
                              <VBox spacing="0">
                                 <children>
                                     <!-- Canvas viewport #CDCBC3 -->
                                     <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">
                                        <children>
-                                           <Canvas fx:id="warehouseCanvas" />
+                                           <Canvas fx:id="warehouseCanvas" managed="false" />
                                                          <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" mouseTransparent="true" pickOnBounds="false" spacing="8" styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">
                                                              <children>
                                                                  <Label fx:id="tickDisplayLabel" styleClass="tick-label" text="TICK 0" />
@@ -293,24 +297,18 @@
                                                          </HBox>
                                        </children>
                                     </StackPane>
-            
-                                    <!-- Tick bar + tip -->
-                                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="info-bar">
-               <children>
-                                           <Label fx:id="viewportModeLabel" styleClass="viewport-subtle-label" text="drag" />
-                                                         <Region HBox.hgrow="ALWAYS" />
-                                           <Label fx:id="tipLabel" styleClass="sim-tip-label" text="" />
-               </children>
-                                    </HBox>
+
                                 </children>
                              </VBox>
          
                              <!-- Console: header #C2BEAE, body #32312D -->
-                             <VBox fx:id="consoleShell" minHeight="80" prefHeight="120" spacing="0" styleClass="console-shell">
+                             <VBox fx:id="consoleShell" minHeight="0" prefHeight="120" spacing="0" styleClass="console-shell">
             <children>
                                     <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                        <children>
                                            <Label text="Console" />
+                                           <Region HBox.hgrow="ALWAYS" />
+                                           <Label fx:id="tipLabel" styleClass="sim-tip-label" text="" />
                                            <Region HBox.hgrow="ALWAYS" />
                                            <Button fx:id="clearConsoleButton" onAction="#onClearConsole" styleClass="console-clear-btn" text="✕" />
                                        </children>

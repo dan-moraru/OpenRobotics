@@ -95,38 +95,30 @@ public class MoveIntentionTest {
     }
 
     /**
-     * A MoveIntention constructed with null tiles should store those nulls
-     * and not throw during construction.
+     * Constructor should reject null tiles.
      */
     @Test
     public void testNullTilesStoredWithoutException() {
         Robot robot = new Robot("R4", new Vector2D(0, 0));
-        MoveIntention mi = assertDoesNotThrow(
+        assertThrows(NullPointerException.class,
                 () -> new MoveIntention(null, null, robot));
-        assertNull(mi.getFromTile());
-        assertNull(mi.getToTile());
     }
 
     /**
-     * A null robot is stored as-is by the constructor.
+     * Constructor should reject a null robot.
      */
     @Test
     public void testNullRobotStoredWithoutException() {
-        MoveIntention mi = assertDoesNotThrow(
+        assertThrows(NullPointerException.class,
                 () -> new MoveIntention(new Tile(0, 0), new Tile(1, 0), null));
-
-        assertNull(mi.getRobot());
-        assertEquals(0, mi.getFromTile().getX());
-        assertEquals(1, mi.getToTile().getX());
     }
 
     /**
-     * getRobotId() currently requires a non-null robot and should fail fast otherwise.
+     * Constructor fail-fast prevents constructing an instance with a null robot.
      */
     @Test
     public void testGetRobotIdThrowsWhenRobotIsNull() {
-        MoveIntention mi = new MoveIntention(new Tile(0, 0), new Tile(1, 0), null);
-
-        assertThrows(NullPointerException.class, mi::getRobotId);
+        assertThrows(NullPointerException.class,
+                () -> new MoveIntention(new Tile(0, 0), new Tile(1, 0), null));
     }
 }

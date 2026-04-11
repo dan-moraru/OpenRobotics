@@ -1,0 +1,853 @@
+{
+  "config" : {
+    "runName" : "experiment_1",
+    "tickMs" : 50,
+    "maxTicks" : 30000,
+    "seed" : 42
+  },
+  "map" : {
+    "width" : 18,
+    "height" : 12,
+    "tiles" : [ ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "961112bd-472d-4029-b97e-11e545112626",
+      "name" : "robot_0",
+      "position" : {
+        "x" : 0,
+        "y" : 4
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    }, {
+      "id" : "3a45bf25-a7e5-4d8c-8f4a-63aed38e6663",
+      "name" : "robot_1",
+      "position" : {
+        "x" : 0,
+        "y" : 5
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    }, {
+      "id" : "b00eca9c-7e9a-4677-802a-622eae636c51",
+      "name" : "robot_2",
+      "position" : {
+        "x" : 0,
+        "y" : 6
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    }, {
+      "id" : "155d2559-add1-46a1-87e5-453ec71bbc3c",
+      "name" : "robot_3",
+      "position" : {
+        "x" : 1,
+        "y" : 4
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ {
+      "id" : "e2b0a19b-2859-4a8c-8a1e-f4c213d3056d",
+      "name" : "charger",
+      "position" : {
+        "x" : 1,
+        "y" : 5
+      },
+      "type" : "CHARGING"
+    }, {
+      "id" : "a1dcccb4-7c58-4f5d-b0be-5af7654c3168",
+      "name" : "delivery",
+      "position" : {
+        "x" : 16,
+        "y" : 5
+      },
+      "type" : "DELIVERY"
+    } ],
+    "racks" : [ {
+      "id" : "9aedcefa-72f2-400b-a031-ae079e0350d5",
+      "name" : "rack_0",
+      "position" : {
+        "x" : 3,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "ba283be9-4277-4acf-96e6-acfad1d16895",
+      "name" : "rack_1",
+      "position" : {
+        "x" : 3,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "79d50349-1519-4250-b736-a351cf47e725",
+      "name" : "rack_2",
+      "position" : {
+        "x" : 3,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "e1652ed3-a425-4fab-be40-8995de232e59",
+      "name" : "rack_3",
+      "position" : {
+        "x" : 4,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "35bd8c39-db9b-4dfc-8e93-936d8311fb96",
+      "name" : "rack_4",
+      "position" : {
+        "x" : 4,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "04972beb-5e60-4df6-a406-30b96a878f35",
+      "name" : "rack_5",
+      "position" : {
+        "x" : 4,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "e6ebc671-2bce-4c7e-997e-ef14c7397541",
+      "name" : "rack_6",
+      "position" : {
+        "x" : 3,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "dfd55cc1-a8ba-49b7-99be-e4aa46468ab8",
+      "name" : "rack_7",
+      "position" : {
+        "x" : 3,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "65fdf50e-3f3a-4219-9a4f-0e700d32408e",
+      "name" : "rack_8",
+      "position" : {
+        "x" : 3,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "e23357e3-4f0c-41ed-90c7-c7f6f56afeef",
+      "name" : "rack_9",
+      "position" : {
+        "x" : 4,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "863d1c45-2c68-4cd1-b52a-0408f02807f8",
+      "name" : "rack_10",
+      "position" : {
+        "x" : 4,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "561abc59-200d-471c-901d-fa8932c24001",
+      "name" : "rack_11",
+      "position" : {
+        "x" : 4,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "3dbe0f40-8ef3-4f62-9420-cc4fae2d9c3d",
+      "name" : "rack_12",
+      "position" : {
+        "x" : 6,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "8dcd46cc-3e43-420a-aa61-92b486ac2f48",
+      "name" : "rack_13",
+      "position" : {
+        "x" : 6,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "712e0cb0-c4fb-4f67-ae21-bb4812b969b9",
+      "name" : "rack_14",
+      "position" : {
+        "x" : 6,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "d6b9ecc2-fdd2-4d23-91c1-6991149e7c2f",
+      "name" : "rack_15",
+      "position" : {
+        "x" : 7,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "b104dc12-7ef7-4824-9362-0fe7d47cc1c0",
+      "name" : "rack_16",
+      "position" : {
+        "x" : 7,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "e572f2b2-54d8-476c-9618-8d4faa7af5b9",
+      "name" : "rack_17",
+      "position" : {
+        "x" : 7,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "44666a42-649e-42be-aae7-2fd18bf89505",
+      "name" : "rack_18",
+      "position" : {
+        "x" : 6,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "193bc6a5-7447-42a3-8468-c16b1027b653",
+      "name" : "rack_19",
+      "position" : {
+        "x" : 6,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "b31240fa-5dda-4c64-aa42-453f5f789e66",
+      "name" : "rack_20",
+      "position" : {
+        "x" : 6,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "60f2f89c-ca8d-4c9d-9a04-6786f5f5e743",
+      "name" : "rack_21",
+      "position" : {
+        "x" : 7,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "89c67c56-6ab6-43ea-9ede-1bbf2bd888ce",
+      "name" : "rack_22",
+      "position" : {
+        "x" : 7,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "2e962ccd-2ee3-473d-948d-40d212f3dd34",
+      "name" : "rack_23",
+      "position" : {
+        "x" : 7,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "1d3de491-ee94-4bde-9e34-dd69dcaac97f",
+      "name" : "rack_24",
+      "position" : {
+        "x" : 9,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "20176de7-5dc5-45f4-a2c2-9922af5fdcc7",
+      "name" : "rack_25",
+      "position" : {
+        "x" : 9,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "202e1c5b-66d8-4a88-af80-64bddc387115",
+      "name" : "rack_26",
+      "position" : {
+        "x" : 9,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "f210e9f9-4283-406a-9c9a-ee22a07daf13",
+      "name" : "rack_27",
+      "position" : {
+        "x" : 10,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "6452c50a-1e15-40a0-86f6-70b54dbac066",
+      "name" : "rack_28",
+      "position" : {
+        "x" : 10,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "29940932-b6e1-43d6-b9ad-8c49f5b2e07d",
+      "name" : "rack_29",
+      "position" : {
+        "x" : 10,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "9efad409-4d16-488d-aee4-6c58b9a77cee",
+      "name" : "rack_30",
+      "position" : {
+        "x" : 9,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "71344d9e-cf61-4576-a9b3-5506a4c58330",
+      "name" : "rack_31",
+      "position" : {
+        "x" : 9,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "d5d0f27f-633f-4d80-9ec4-01fe073b9bd7",
+      "name" : "rack_32",
+      "position" : {
+        "x" : 9,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "45997e66-c74b-437b-9943-d9f194378420",
+      "name" : "rack_33",
+      "position" : {
+        "x" : 10,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "5630fb79-051a-4c78-bfdf-4d3cb4a31878",
+      "name" : "rack_34",
+      "position" : {
+        "x" : 10,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "a8e6d4bb-25c7-4261-ad15-99d586ad4d15",
+      "name" : "rack_35",
+      "position" : {
+        "x" : 10,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "a79637bc-8c9e-4d8c-b194-73d3b836c92a",
+      "name" : "rack_36",
+      "position" : {
+        "x" : 12,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "5e1d3dd9-171a-47ba-a20f-24706399b11a",
+      "name" : "rack_37",
+      "position" : {
+        "x" : 12,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "fe2b4c63-1d04-4d12-beea-304562187d62",
+      "name" : "rack_38",
+      "position" : {
+        "x" : 12,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "1a1e46d1-4426-4435-8a52-68025900fc2a",
+      "name" : "rack_39",
+      "position" : {
+        "x" : 13,
+        "y" : 2
+      },
+      "type" : null
+    }, {
+      "id" : "be624c4a-58ce-4763-9a7d-7e67aac0c4b1",
+      "name" : "rack_40",
+      "position" : {
+        "x" : 13,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "45905a20-7831-4056-bd98-c74bc95cd9c6",
+      "name" : "rack_41",
+      "position" : {
+        "x" : 13,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "9c643e69-9ed8-403b-82fc-adc6c505c4c4",
+      "name" : "rack_42",
+      "position" : {
+        "x" : 12,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "ecad38d8-b03f-41bb-93ca-4c3a1c419b8f",
+      "name" : "rack_43",
+      "position" : {
+        "x" : 12,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "e3968a4f-9590-416c-a753-703ea697dc42",
+      "name" : "rack_44",
+      "position" : {
+        "x" : 12,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "377d7b08-5a16-413f-a679-bc3ebeb77907",
+      "name" : "rack_45",
+      "position" : {
+        "x" : 13,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "7f23c944-10fa-4930-a0c2-dabdce727848",
+      "name" : "rack_46",
+      "position" : {
+        "x" : 13,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "d2d27532-5142-45e6-abde-2ef81fa33ea7",
+      "name" : "rack_47",
+      "position" : {
+        "x" : 13,
+        "y" : 8
+      },
+      "type" : null
+    } ],
+    "obstacles" : [ {
+      "id" : "63d8f3a8-72e5-4990-804b-d962b3d2a9cb",
+      "name" : "wall_top_0",
+      "position" : {
+        "x" : 1,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "c18ae0e9-9051-4961-99e1-87c9229bf163",
+      "name" : "wall_bot_0",
+      "position" : {
+        "x" : 1,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "7c1bc0a4-797e-456c-80e6-86ae9422361d",
+      "name" : "wall_top_1",
+      "position" : {
+        "x" : 2,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "86607dd2-26cb-46fe-9da7-c2f0392c290c",
+      "name" : "wall_bot_1",
+      "position" : {
+        "x" : 2,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "8ecae53e-69f5-4582-9041-34ba1327e3b1",
+      "name" : "wall_top_2",
+      "position" : {
+        "x" : 3,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "32fc4ead-bfa7-4966-81b8-4143b63a8a4c",
+      "name" : "wall_bot_2",
+      "position" : {
+        "x" : 3,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "2d757070-f9c4-4031-ad11-352dc0ed66a7",
+      "name" : "wall_top_3",
+      "position" : {
+        "x" : 4,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "266b9e7b-9eea-46bb-86c6-e134ad395ded",
+      "name" : "wall_bot_3",
+      "position" : {
+        "x" : 4,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "05ee6f88-4200-43a6-b4d1-0d1ac274f0e6",
+      "name" : "wall_top_4",
+      "position" : {
+        "x" : 5,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "35e0e72c-499f-4fe5-b099-d3bc39558501",
+      "name" : "wall_bot_4",
+      "position" : {
+        "x" : 5,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "0c9df022-12f4-46f0-abc5-23f7ea2f6299",
+      "name" : "wall_top_5",
+      "position" : {
+        "x" : 6,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "643d7650-c3ef-4b44-adb4-12e1afd6a7e0",
+      "name" : "wall_bot_5",
+      "position" : {
+        "x" : 6,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "5f0b0f8d-bf1d-40f7-ae62-74eeaa8b9130",
+      "name" : "wall_top_6",
+      "position" : {
+        "x" : 7,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "28407d43-a60a-4317-ae69-c914348aba28",
+      "name" : "wall_bot_6",
+      "position" : {
+        "x" : 7,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "7cb67d7e-fd2e-438b-9038-a0f43a44ff6e",
+      "name" : "wall_top_7",
+      "position" : {
+        "x" : 8,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "5bf51e19-9558-420a-bc03-e64275254cae",
+      "name" : "wall_bot_7",
+      "position" : {
+        "x" : 8,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "7623be04-425a-4e02-b13a-8780fdb36c77",
+      "name" : "wall_top_8",
+      "position" : {
+        "x" : 9,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "ac29750a-db49-4ae3-95ad-52bc49faa6e0",
+      "name" : "wall_bot_8",
+      "position" : {
+        "x" : 9,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "d7062e26-252d-4ebe-9b65-449b5ab5cfab",
+      "name" : "wall_top_9",
+      "position" : {
+        "x" : 10,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "45ed1feb-a4a9-4f90-aed5-317741a6de80",
+      "name" : "wall_bot_9",
+      "position" : {
+        "x" : 10,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "a0845f4b-dc9a-4942-8db2-f222860e760d",
+      "name" : "wall_top_10",
+      "position" : {
+        "x" : 11,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "fb195bef-5306-43f4-ba09-0369a8e250d7",
+      "name" : "wall_bot_10",
+      "position" : {
+        "x" : 11,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "31913773-2ba5-4419-9e86-69e01228387c",
+      "name" : "wall_top_11",
+      "position" : {
+        "x" : 12,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "eee8008c-59dd-4dce-8c8c-899d0c28b21e",
+      "name" : "wall_bot_11",
+      "position" : {
+        "x" : 12,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "b92d29c7-5f4e-4805-ac6a-ca79c1799f86",
+      "name" : "wall_top_12",
+      "position" : {
+        "x" : 13,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "de9d858d-f53a-48e2-8a4a-feaab9aa032d",
+      "name" : "wall_bot_12",
+      "position" : {
+        "x" : 13,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "793e58ae-643a-49ad-b1de-061d25d59c1c",
+      "name" : "wall_top_13",
+      "position" : {
+        "x" : 14,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "600a254f-3142-4a15-bbc9-982c80feec81",
+      "name" : "wall_bot_13",
+      "position" : {
+        "x" : 14,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "ba7aaabc-9d76-48ca-abdf-df55346a50fc",
+      "name" : "wall_top_14",
+      "position" : {
+        "x" : 15,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "c5a5a9c3-1927-42f3-8986-f9e48a76de7b",
+      "name" : "wall_bot_14",
+      "position" : {
+        "x" : 15,
+        "y" : 10
+      },
+      "type" : null
+    }, {
+      "id" : "8e1e4e33-1dc8-4a8f-a836-9bd5e0ea6974",
+      "name" : "wall_top_15",
+      "position" : {
+        "x" : 16,
+        "y" : 1
+      },
+      "type" : null
+    }, {
+      "id" : "ac8e6199-6ec2-444a-b3c5-a95f29bb656e",
+      "name" : "wall_bot_15",
+      "position" : {
+        "x" : 16,
+        "y" : 10
+      },
+      "type" : null
+    } ]
+  },
+  "tasks" : [ {
+    "id" : 1,
+    "pickupLocation" : {
+      "x" : 9,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 2,
+    "pickupLocation" : {
+      "x" : 3,
+      "y" : 2
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 3,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 6
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 4,
+    "pickupLocation" : {
+      "x" : 7,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 5,
+    "pickupLocation" : {
+      "x" : 9,
+      "y" : 7
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 6,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 7,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 2
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 8,
+    "pickupLocation" : {
+      "x" : 12,
+      "y" : 8
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 9,
+    "pickupLocation" : {
+      "x" : 9,
+      "y" : 2
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  }, {
+    "id" : 10,
+    "pickupLocation" : {
+      "x" : 3,
+      "y" : 7
+    },
+    "dropoffLocation" : {
+      "x" : 16,
+      "y" : 5
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  } ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : false,
+    "speedMultiplier" : 1.0
+  }
+}

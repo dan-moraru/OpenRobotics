@@ -4,9 +4,9 @@ A modern JavaFX-based multi-robot warehouse simulation platform with real-time v
 
 ## Quick Links
 
-- **[QUICKSTART.md](./QUICKSTART.md)** - Get running in 5 minutes
-- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Detailed setup and development guide  
-- **[UI_IMPLEMENTATION_SUMMARY.md](./UI_IMPLEMENTATION_SUMMARY.md)** - UI architecture overview
+- **[QUICKSTART.md](./docs/guides/QUICKSTART.md)** - Get running in 5 minutes
+- **[SETUP_GUIDE.md](./docs/guides/SETUP_GUIDE.md)** - Detailed setup and development guide  
+- **[UI_IMPLEMENTATION.md](./docs/UI_IMPLEMENTATION.md)** - UI architecture overview
 
 ## ✨ Features
 
@@ -91,13 +91,13 @@ open-robotics/
 ## 📚 Documentation
 
 ### For First-Time Setup
-See [QUICKSTART.md](./QUICKSTART.md) for a 5-minute getting started guide.
+See [QUICKSTART.md](./docs/guides/QUICKSTART.md) for a 5-minute getting started guide.
 
 ### For Development
-See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for detailed setup, IDE configuration, and development instructions.
+See [SETUP_GUIDE.md](./docs/guides/SETUP_GUIDE.md) for detailed setup, IDE configuration, and development instructions.
 
 ### For Architecture Details
-See [UI_IMPLEMENTATION_SUMMARY.md](./UI_IMPLEMENTATION_SUMMARY.md) for CSS classes, navigation flow, and technical decisions.
+See [UI_IMPLEMENTATION.md](./docs/UI_IMPLEMENTATION.md) for CSS classes, navigation flow, and technical decisions.
 
 ## 💻 Build & Run Commands
 

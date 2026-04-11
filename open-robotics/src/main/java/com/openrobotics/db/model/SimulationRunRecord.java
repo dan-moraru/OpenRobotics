@@ -1,13 +1,14 @@
 package com.openrobotics.db.model;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 import java.util.UUID;
 
 public class SimulationRunRecord {
 
     private UUID id;
     private UUID mapId;
-    private int robotCount;
+    private Integer robotCount;
     private String coordinationPolicy;
     private String robotAlgorithms;
     private Integer workloadSeed;
@@ -55,7 +56,7 @@ public class SimulationRunRecord {
      * Gets the number of robots of the simulation run record.
      * @return Number of robots of the simulation run record
      */
-    public int getRobotCount() {
+    public Integer getRobotCount() {
         return robotCount; 
     }
 
@@ -63,7 +64,10 @@ public class SimulationRunRecord {
      * Sets the number of robots of the simulation run record.
      * @param robotCount Number of robots of the simulation run record
      */
-    public void setRobotCount(int robotCount) {
+    public void setRobotCount(Integer robotCount) {
+        if (robotCount != null && robotCount < 0) {
+            throw new IllegalArgumentException("robotCount must be non-negative");
+        }
         this.robotCount = robotCount; 
     }
 
@@ -152,7 +156,7 @@ public class SimulationRunRecord {
      * @return Started at timestamp of the simulation run record
      */
     public Timestamp getStartedAt() { 
-        return startedAt; 
+        return startedAt == null ? null : new Timestamp(startedAt.getTime()); 
     }
 
     /**
@@ -160,7 +164,7 @@ public class SimulationRunRecord {
      * @param startedAt Started at timestamp of the simulation run record
      */
     public void setStartedAt(Timestamp startedAt) { 
-        this.startedAt = startedAt; 
+        this.startedAt = startedAt == null ? null : new Timestamp(startedAt.getTime()); 
     }
 
     /**
@@ -168,7 +172,7 @@ public class SimulationRunRecord {
      * @return Finished at timestamp of the simulation run record
      */
     public Timestamp getFinishedAt() {
-        return finishedAt; 
+        return finishedAt == null ? null : new Timestamp(finishedAt.getTime()); 
     }
 
     /**
@@ -176,7 +180,7 @@ public class SimulationRunRecord {
      * @param finishedAt Finished at timestamp of the simulation run record
      */
     public void setFinishedAt(Timestamp finishedAt) {
-        this.finishedAt = finishedAt; 
+        this.finishedAt = finishedAt == null ? null : new Timestamp(finishedAt.getTime()); 
     }
 
     /**
@@ -193,5 +197,34 @@ public class SimulationRunRecord {
      */
     public void setStatus(String status) {
         this.status = status; 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimulationRunRecord other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "SimulationRunRecord{" +
+            "id=" + id +
+            ", mapId=" + mapId +
+            ", robotCount=" + robotCount +
+            ", coordinationPolicy='" + coordinationPolicy + '\'' +
+            ", robotAlgorithms='" + robotAlgorithms + '\'' +
+            ", workloadSeed=" + workloadSeed +
+            ", workloadSettings='" + workloadSettings + '\'' +
+            ", simSettings='" + simSettings + '\'' +
+            ", startedAt=" + startedAt +
+            ", finishedAt=" + finishedAt +
+            ", status='" + status + '\'' +
+            '}';
     }
 }

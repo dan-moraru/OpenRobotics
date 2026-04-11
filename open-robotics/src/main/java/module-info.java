@@ -16,6 +16,8 @@ module com.openrobotics {
     opens com.openrobotics.controllers to javafx.fxml;
     opens com.openrobotics.io to com.fasterxml.jackson.databind; // Jackson needs reflective access to deserialize DTOs
     opens com.openrobotics.task to com.fasterxml.jackson.databind;
+    opens com.openrobotics.simulationcore;
+    opens com.openrobotics.util;
 
     exports com.openrobotics;
     exports com.openrobotics.controllers;

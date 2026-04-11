@@ -203,7 +203,7 @@ See `src/main/resources/com/openrobotics/css/theme.css` for complete styling ref
 **Solution**: Install Maven or add it to system PATH
 
 ### Issue: JavaFX modules not found
-**Solution**: Ensure Java 21+ and JavaFX 21 are installed. Maven will download them automatically.
+**Solution**: Java 21+ is required. For normal Maven builds (`mvn clean compile javafx:run`), JavaFX 21 is provided via Maven dependencies, so a separate manual JavaFX install is usually not needed. Manual/platform-specific JavaFX runtime setup may still be required for modular runtime images (`jlink`/`jpackage`) or native packaging workflows.
 
 ### Issue: Scene Builder won't open FXML
 **Solution**: Configure Scene Builder path in IntelliJ settings

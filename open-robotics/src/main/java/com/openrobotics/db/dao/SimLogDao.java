@@ -35,7 +35,9 @@ public final class SimLogDao {
             ps.setObject(7, jsonb(r.getDetails()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                keys.next();
+                if (!keys.next()) {
+                    throw new SQLException("No generated key returned for insert into sim_logs");
+                }
                 return keys.getLong(1);
             }
         }
@@ -54,17 +56,27 @@ public final class SimLogDao {
             """;
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            for (SimLogRecord r : records) {
-                ps.setObject(1, r.getRunId());
-                ps.setObject(2, r.getTick(), Types.INTEGER);
-                ps.setObject(3, r.getRobotId());
-                ps.setString(4, r.getEventType());
-                ps.setObject(5, r.getX(), Types.INTEGER);
-                ps.setObject(6, r.getY(), Types.INTEGER);
-                ps.setObject(7, jsonb(r.getDetails()));
-                ps.addBatch();
+            boolean originalAutoCommit = c.getAutoCommit();
+            c.setAutoCommit(false);
+            try {
+                for (SimLogRecord r : records) {
+                    ps.setObject(1, r.getRunId());
+                    ps.setObject(2, r.getTick(), Types.INTEGER);
+                    ps.setObject(3, r.getRobotId());
+                    ps.setString(4, r.getEventType());
+                    ps.setObject(5, r.getX(), Types.INTEGER);
+                    ps.setObject(6, r.getY(), Types.INTEGER);
+                    ps.setObject(7, jsonb(r.getDetails()));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                c.commit();
+            } catch (SQLException ex) {
+                c.rollback();
+                throw ex;
+            } finally {
+                c.setAutoCommit(originalAutoCommit);
             }
-            ps.executeBatch();
         }
     }
 

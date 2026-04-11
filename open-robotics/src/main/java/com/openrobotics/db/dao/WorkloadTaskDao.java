@@ -43,7 +43,9 @@ public final class WorkloadTaskDao {
             ps.setObject(13, jsonb(r.getDetails()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                keys.next();
+                if (!keys.next()) {
+                    throw new SQLException("No generated key returned for insert into run_workload_tasks");
+                }
                 return keys.getLong(1);
             }
         }

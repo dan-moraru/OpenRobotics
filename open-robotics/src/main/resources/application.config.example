@@ -4,4 +4,4 @@
 db.url=jdbc:postgresql://aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
 
 db.user=USER.kwspbnsugatipikpeblg
-db.password=PASSWORD
+db.password=

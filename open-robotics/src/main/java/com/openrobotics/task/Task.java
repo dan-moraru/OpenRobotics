@@ -32,6 +32,11 @@ public class Task implements Comparable<Task> {
     public TaskStatus getStatus() { return status; }
 
     // Setters
+    /**
+     * Avoid mutating priority while this task is stored in sorted collections,
+     * as it can invalidate ordering assumptions.
+     */
+    @Deprecated
     public void setPriority(int priority) { this.priority = priority; }
     public void setStatus(TaskStatus status) { this.status = status; }
     public void setArtificialId(long artificialId) { this.artificialId = artificialId; }
@@ -58,6 +63,10 @@ public class Task implements Comparable<Task> {
 
     @Override
     public int compareTo(Task task) {
-        return Integer.compare(task.priority, this.priority);
+        int byPriority = Integer.compare(task.priority, this.priority);
+        if (byPriority != 0) {
+            return byPriority;
+        }
+        return Long.compare(this.id, task.id);
     }
 }
