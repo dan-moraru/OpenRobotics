@@ -1380,18 +1380,23 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onToggleConsole() {
         if (consoleShell == null || vSplitPane == null) return;
+
         if (toggleConsoleItem.isSelected()) {
+            // Only add if not already present (guard against double-trigger)
             if (!vSplitPane.getItems().contains(consoleShell)) {
-                consoleShell.setPrefHeight(-1); // -1 means "use computed size"
                 vSplitPane.getItems().add(consoleShell);
-                vSplitPane.heightProperty().addListener(new javafx.beans.value.ChangeListener<Number>() {
-                    @Override
-                    public void changed(javafx.beans.value.ObservableValue<? extends Number> obs, Number oldH, Number newH) {
-                        System.out.println("[Listener] height=" + newH + " setting divider=" + ((newH.doubleValue() - 120.0) / newH.doubleValue()));
-                        vSplitPane.heightProperty().removeListener(this);
-                        vSplitPane.setDividerPosition(0, (newH.doubleValue() - 120.0) / newH.doubleValue());
-                    }
-                });
+
+                // Defer the divider update to after JavaFX has completed the layout pass
+                // triggered by adding the new child. Without this, getHeight() is already
+                // the final value and no change event fires, so the divider stays at 1.0.
+                javafx.application.Platform.runLater(() ->
+                    javafx.application.Platform.runLater(() -> {
+                        double h = vSplitPane.getHeight();
+                        if (h > 0) {
+                            vSplitPane.setDividerPosition(0, (h - 120.0) / h);
+                        }
+                    })
+                );
             }
         } else {
             vSplitPane.getItems().remove(consoleShell);
