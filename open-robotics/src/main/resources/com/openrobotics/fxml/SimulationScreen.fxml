@@ -243,7 +243,7 @@
       <children>
       
                              <!-- Viewport header bar #8D8A7F -->
-                             <BorderPane styleClass="viewport-header" minHeight="36" VBox.vgrow="NEVER">
+                             <BorderPane styleClass="viewport-header" minHeight="36" maxHeight="36" VBox.vgrow="NEVER">
                                  <left>
                                      <HBox alignment="CENTER_LEFT" spacing="6">
                                          <children>
