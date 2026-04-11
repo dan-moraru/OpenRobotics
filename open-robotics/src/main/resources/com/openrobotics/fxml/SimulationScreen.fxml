@@ -243,7 +243,7 @@
       <children>
       
                              <!-- Viewport header bar #8D8A7F -->
-                             <BorderPane styleClass="viewport-header" minHeight="36">
+                             <BorderPane styleClass="viewport-header" minHeight="36" VBox.vgrow="NEVER">
                                  <left>
                                      <HBox alignment="CENTER_LEFT" spacing="6">
                                          <children>
@@ -281,7 +281,7 @@
                              <VBox spacing="0" minHeight="0">
                                 <children>
                                     <!-- Canvas viewport #CDCBC3 -->
-                                    <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">
+                                    <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS"  minHeight="0">
                                        <children>
                                            <Canvas fx:id="warehouseCanvas" />
                                                          <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" mouseTransparent="true" pickOnBounds="false" spacing="8" styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">

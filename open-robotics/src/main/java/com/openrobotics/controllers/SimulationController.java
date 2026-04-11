@@ -1377,44 +1377,72 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    @FXML
-    private void onToggleConsole() {
-        if (consoleShell == null || vSplitPane == null) return;
+@FXML
+private void onToggleConsole() {
+    if (consoleShell == null || vSplitPane == null) return;
 
-        if (toggleConsoleItem.isSelected()) {
-            // Only add if not already present (guard against double-trigger)
-            if (!vSplitPane.getItems().contains(consoleShell)) {
-                vSplitPane.getItems().add(consoleShell);
+    System.out.println("=== TOGGLE CONSOLE: selected=" + toggleConsoleItem.isSelected() + " ===");
+    System.out.println("[Before] vSplitPane height=" + vSplitPane.getHeight());
+    System.out.println("[Before] vSplitPane items=" + vSplitPane.getItems().size());
 
-                // Defer the divider update to after JavaFX has completed the layout pass
-                // triggered by adding the new child. Without this, getHeight() is already
-                // the final value and no change event fires, so the divider stays at 1.0.
-                    javafx.application.Platform.runLater(() -> {
-                        double h = vSplitPane.getHeight();
-                        double pos = (h - 120.0) / h;
-                        System.out.println("[Toggle] vSplitPane height=" + h + " dividerPos=" + pos);
-                        System.out.println("[Toggle] items count=" + vSplitPane.getItems().size());
-                        vSplitPane.setDividerPosition(0, pos);
-
-                        // Add these:
-                        javafx.scene.Parent vSplitParent = vSplitPane.getParent();
-                        System.out.println("[Toggle] vSplitPane parent type=" + (vSplitParent == null ? "null" : vSplitParent.getClass().getSimpleName()));
-                        System.out.println("[Toggle] vSplitPane parent height=" + (vSplitParent instanceof javafx.scene.layout.Region r ? r.getHeight() : "n/a"));
-                        System.out.println("[Toggle] vSplitPane layoutY=" + vSplitPane.getLayoutY());
-                        System.out.println("[Toggle] vSplitPane prefHeight=" + vSplitPane.getPrefHeight());
-                        System.out.println("[Toggle] consoleShell height=" + consoleShell.getHeight());
-                        System.out.println("[Toggle] consoleShell isManaged=" + consoleShell.isManaged());
-                        System.out.println("[Toggle] consoleShell minHeight=" + consoleShell.getMinHeight());
-                        javafx.scene.Node topChild = vSplitPane.getItems().get(0);
-System.out.println("[Toggle] topChild type=" + topChild.getClass().getSimpleName());
-System.out.println("[Toggle] topChild minHeight=" + ((javafx.scene.layout.Region) topChild).getMinHeight());
-System.out.println("[Toggle] topChild height=" + ((javafx.scene.layout.Region) topChild).getHeight());
-                    });
-            }
-        } else {
-            vSplitPane.getItems().remove(consoleShell);
+    // Print every child of the outer VBox (viewport header + vSplitPane's parent)
+    javafx.scene.Parent outerVBox = vSplitPane.getParent();
+    if (outerVBox instanceof javafx.scene.layout.VBox vb) {
+        for (int i = 0; i < vb.getChildren().size(); i++) {
+            javafx.scene.Node child = vb.getChildren().get(i);
+            String type = child.getClass().getSimpleName();
+            double h = child instanceof javafx.scene.layout.Region r ? r.getHeight() : -1;
+            double minH = child instanceof javafx.scene.layout.Region r2 ? r2.getMinHeight() : -1;
+            System.out.println("[Before] outerVBox child[" + i + "] " + type + " height=" + h + " minHeight=" + minH);
         }
     }
+
+    // Print vSplitPane's first child (inner VBox with viewport+infobar)
+    if (!vSplitPane.getItems().isEmpty()) {
+        javafx.scene.Node topPane = vSplitPane.getItems().get(0);
+        if (topPane instanceof javafx.scene.layout.VBox tvb) {
+            for (int i = 0; i < tvb.getChildren().size(); i++) {
+                javafx.scene.Node child = tvb.getChildren().get(i);
+                double h = child instanceof javafx.scene.layout.Region r ? r.getHeight() : -1;
+                double minH = child instanceof javafx.scene.layout.Region r2 ? r2.getMinHeight() : -1;
+                System.out.println("[Before] innerVBox child[" + i + "] " + child.getClass().getSimpleName() + " height=" + h + " minHeight=" + minH);
+            }
+        }
+    }
+
+    if (toggleConsoleItem.isSelected()) {
+        if (!vSplitPane.getItems().contains(consoleShell)) {
+            vSplitPane.getItems().add(consoleShell);
+            javafx.application.Platform.runLater(() -> {
+                double h = vSplitPane.getHeight();
+                if (h > 0) vSplitPane.setDividerPosition(0, (h - 120.0) / h);
+
+                System.out.println("=== AFTER SHOW ===");
+                System.out.println("[After] vSplitPane height=" + vSplitPane.getHeight());
+                javafx.scene.Parent outerVBox2 = vSplitPane.getParent();
+                if (outerVBox2 instanceof javafx.scene.layout.VBox vb2) {
+                    for (int i = 0; i < vb2.getChildren().size(); i++) {
+                        javafx.scene.Node child = vb2.getChildren().get(i);
+                        double h2 = child instanceof javafx.scene.layout.Region r ? r.getHeight() : -1;
+                        System.out.println("[After] outerVBox child[" + i + "] " + child.getClass().getSimpleName() + " height=" + h2);
+                    }
+                }
+                if (!vSplitPane.getItems().isEmpty()) {
+                    javafx.scene.Node topPane = vSplitPane.getItems().get(0);
+                    if (topPane instanceof javafx.scene.layout.VBox tvb) {
+                        for (int i = 0; i < tvb.getChildren().size(); i++) {
+                            javafx.scene.Node child = tvb.getChildren().get(i);
+                            double h2 = child instanceof javafx.scene.layout.Region r ? r.getHeight() : -1;
+                            System.out.println("[After] innerVBox child[" + i + "] " + child.getClass().getSimpleName() + " height=" + h2);
+                        }
+                    }
+                }
+            });
+        }
+    } else {
+        vSplitPane.getItems().remove(consoleShell);
+    }
+}
 
     // ------------------------------------------------------------------ //
     //  Console
