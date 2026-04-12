@@ -126,50 +126,55 @@
                              <Tab text="Add Object">
             <content>
                                     <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="sidebar-scroll">
-    <VBox spacing="4" styleClass="sidebar-panel" style="-fx-padding: 6;">
-        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                styleClass="object-tile" userData="ROBOT" maxWidth="Infinity">
-            <graphic>
-                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                    <image><Image url="@../img/robot.png" /></image>
-                </ImageView>
-            </graphic>
-        </Button>
-        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                styleClass="object-tile" userData="CHARGER" maxWidth="Infinity">
-            <graphic>
-                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                    <image><Image url="@../img/charger.png" /></image>
-                </ImageView>
-            </graphic>
-        </Button>
-        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                styleClass="object-tile" userData="STATION" maxWidth="Infinity">
-            <graphic>
-                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                    <image><Image url="@../img/station.png" /></image>
-                </ImageView>
-            </graphic>
-        </Button>
-        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                styleClass="object-tile" userData="WALL" maxWidth="Infinity">
-            <graphic>
-                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                    <image><Image url="@../img/wall.png" /></image>
-                </ImageView>
-            </graphic>
-        </Button>
-        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                styleClass="object-tile" userData="SHELF" maxWidth="Infinity">
-            <graphic>
-                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                    <image><Image url="@../img/shelf.png" /></image>
-                </ImageView>
-            </graphic>
-        </Button>
-        <Label prefWidth="229.0" styleClass="sim-help-label"
-               text="To add an object, drag and drop it into the viewport." />
-    </VBox>
+    <VBox spacing="0" styleClass="sidebar-panel">
+    <Label prefWidth="229.0" styleClass="sim-help-label"
+           text="To add an object, drag and drop it into the viewport." />
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                styleClass="sidebar-scroll" maxHeight="320">
+        <VBox spacing="4" styleClass="sidebar-panel" style="-fx-padding: 6;">
+            <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                    styleClass="object-tile" userData="ROBOT" maxWidth="Infinity">
+                <graphic>
+                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                        <image><Image url="@../img/robot.png" /></image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                    styleClass="object-tile" userData="CHARGER" maxWidth="Infinity">
+                <graphic>
+                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                        <image><Image url="@../img/charger.png" /></image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                    styleClass="object-tile" userData="STATION" maxWidth="Infinity">
+                <graphic>
+                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                        <image><Image url="@../img/station.png" /></image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                    styleClass="object-tile" userData="WALL" maxWidth="Infinity">
+                <graphic>
+                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                        <image><Image url="@../img/wall.png" /></image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                    styleClass="object-tile" userData="SHELF" maxWidth="Infinity">
+                <graphic>
+                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                        <image><Image url="@../img/shelf.png" /></image>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </ScrollPane>
+</VBox>
 </ScrollPane>
             </content>
                              </Tab>
