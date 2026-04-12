@@ -807,13 +807,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         Vector2D position = new Vector2D(tx, ty);
+        boolean alreadyMarked = engine.hasTrafficRuleIntersection(tx, ty);
         if (!engine.getMap().isTraversable(position)) {
             log("Intersection markers can only be placed on traversable floor tiles.");
             if (viewportStatusLabel != null) viewportStatusLabel.setText("intersection requires floor tile");
             return false;
         }
 
-        boolean alreadyMarked = engine.hasTrafficRuleIntersection(tx, ty);
+        if (!alreadyMarked) {
+            boolean hasBlockingOccupant = engine.getMap().getEntitiesAt(position).stream()
+                    .anyMatch(entity -> entity instanceof Robot
+                            || entity instanceof ChargingStation
+                            || entity instanceof DeliveryStation);
+            if (hasBlockingOccupant) {
+                log("Intersection markers cannot be placed on robots or station tiles.");
+                if (viewportStatusLabel != null) viewportStatusLabel.setText("intersection requires empty floor");
+                return false;
+            }
+        }
+
         if (!engine.toggleTrafficRuleIntersection(tx, ty)) {
             log("Could not update the traffic intersection at tile (" + tx + ", " + ty + ").");
             return false;
