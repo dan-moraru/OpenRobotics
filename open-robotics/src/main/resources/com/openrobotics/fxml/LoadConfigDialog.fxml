@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.LoadConfigController"
+      styleClass="dialog-root load-dialog-root"
+      prefWidth="380" spacing="0"
+      stylesheets="@../css/theme.css">
+
+    <HBox styleClass="dialog-title-bar load-dialog-title" alignment="CENTER_LEFT" spacing="12">
+        <Label text="LOAD CONFIGURATION" styleClass="dialog-title-label-dark" />
+    </HBox>
+
+    <VBox styleClass="dialog-body load-dialog-body" spacing="12">
+        <Label text="Select configuration file (.txt, .json):" styleClass="dialog-body-label" />
+
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button accessibleText="Reset to default" text="↺" styleClass="button-reset"
+                    prefWidth="36" onAction="#onResetToDefault">
+                <tooltip>
+                    <Tooltip text="Reset to default" />
+                </tooltip>
+            </Button>
+            <ComboBox fx:id="configFileCombo" promptText="Select file..."
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        </HBox>
+
+        <Label fx:id="selectedPathLabel" text="No configuration file selected"
+               styleClass="dialog-hint-label" />
+
+        <Button text="Browse Files…" styleClass="dialog-browse-btn-dark" onAction="#onBrowse" />
+    </VBox>
+
+    <HBox styleClass="dialog-footer load-dialog-footer" spacing="12" alignment="CENTER">
+        <Button text="LOAD" styleClass="button-green" prefWidth="150" onAction="#onLoad" />
+        <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
+    </HBox>
+</VBox>

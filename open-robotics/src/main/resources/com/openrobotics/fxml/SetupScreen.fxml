@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.text.Font?>
+
+<!--
+  Setup Screen – outer #C2BEAE, topbar #C2BEAE (sim style), tab strip #8D8A7F,
+  sidebar same beige as outer bg, viewport #CECCC4, bottom bar #C2BEAE,
+  START SIMULATION button green
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.openrobotics.controllers.SetupController"
+            styleClass="outer-bg"
+            stylesheets="@../css/theme.css">
+
+    <top>
+        <VBox spacing="0">
+            <!-- Top bar — matches SimulationScreen style -->
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
+                <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
+                    <image>
+                        <Image url="@../img/logo_black.png" backgroundLoading="true"/>
+                    </image>
+                </ImageView>
+                <VBox spacing="1">
+                    <Label text="OpenRobotics" styleClass="app-title" />
+                    <Label text="v1.0.0" styleClass="version-label" />
+                </VBox>
+                <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
+                    <Menu text="File">
+                        <MenuItem text="Welcome Screen" onAction="#onMenuWelcome" />
+                        <MenuItem text="Exit"           onAction="#onExit" />
+                    </Menu>
+                    <Menu text="Help">
+                        <MenuItem text="GitHub Page" onAction="#onMenuGithub" />
+                    </Menu>
+                </MenuBar>
+            </HBox>
+            <!-- Tab strip #8D8A7F – EDITOR active -->
+            <HBox styleClass="tab-strip" alignment="CENTER_LEFT">
+                <Button text="EDITOR" styleClass="tab-btn-active" onAction="#onTabEditor" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.22">
+
+            <!-- ── ZONE 1 – Config sidebar ── -->
+            <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
+                <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
+
+                    <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
+                    <!-- map -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMap" />
+                        <Label text="Map" styleClass="prop-label" />
+                        <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- map seed (visible only when random_map is selected) -->
+                    <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed" />
+                        <Label text="Map Seed" styleClass="prop-label" />
+                        <TextField fx:id="randomSeedField" promptText="auto"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- coordination policy -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
+                        <Label text="Coordination Policy" styleClass="prop-label" />
+                        <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- reservation k -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK" />
+                        <Label text="Reservation K" styleClass="prop-label" />
+                        <Spinner fx:id="reservationKSpinner"
+                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- workload mode -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadMode" />
+                        <Label text="Workload Mode" styleClass="prop-label" />
+                        <ComboBox fx:id="workloadModeCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- spawn rate -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetSpawnRate" />
+                        <Label text="Spawn Rate (t/min)" styleClass="prop-label" />
+                        <TextField fx:id="spawnRateField" text="1"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- max tasks -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />
+                        <Label text="Max Tasks" styleClass="prop-label" />
+                        <TextField fx:id="maxTasksField" text="10"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- workload seed -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed" />
+                        <Label text="Workload Seed" styleClass="prop-label" />
+                        <TextField fx:id="workloadSeedField" text="42"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- max ticks -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks" />
+                        <Label text="Max Ticks" styleClass="prop-label" />
+                        <TextField fx:id="maxTicksField" text="30000"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- run name -->
+                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetRunName" />
+                        <Label text="Run Name" styleClass="prop-label" />
+                        <TextField fx:id="runNameField" text="experiment_1"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                    </HBox>
+                    <!-- canvas size (width × height) -->
+                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                        <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
+                        <Label text="W" styleClass="prop-label" />
+                        <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
+                        <Label text="× H" styleClass="canvas-size-separator" />
+                        <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
+                    </HBox>
+                    <!-- canvas warning -->
+                    <Label fx:id="canvasWarnLabel" styleClass="label-hint"
+                              wrapText="true" visible="false" managed="false"
+                           style="-fx-padding: 4 8 4 8; -fx-text-fill: #7a1f1b; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                </VBox>
+            </ScrollPane>
+
+            <!-- ── ZONE 2 – 2-D Preview Viewport ── -->
+            <BorderPane styleClass="viewport-preview">
+                <top>
+                    <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
+                        <Label text="2D Viewport" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label text="Preview" styleClass="viewport-subtle-label" />
+                    </HBox>
+                </top>
+                <center>
+                    <StackPane fx:id="viewportPreviewStack" styleClass="viewport-preview">
+                        <Canvas fx:id="previewCanvas" managed="false" />
+                    </StackPane>
+                </center>
+            </BorderPane>
+        </SplitPane>
+    </center>
+
+    <!-- ── ZONE 3 – Bottom bar ── -->
+    <bottom>
+        <HBox styleClass="bottom-bar" alignment="CENTER_RIGHT" spacing="8">
+            <Label fx:id="statusLabel" text="" styleClass="label-hint" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig" />
+            <Button text="NEXT" styleClass="button-green" onAction="#onStartSimulation" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

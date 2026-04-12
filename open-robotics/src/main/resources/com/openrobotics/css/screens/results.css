@@ -1,0 +1,264 @@
+/* ============================================================
+   OpenRobotics – Results Screen
+   Charts, data table, mask viewport, legend tiles,
+   settings panel, and export bar.
+   ============================================================ */
+
+/* Chart panels */
+.chart-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+.chart-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 28px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.chart-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+}
+
+.charts-row {
+    -fx-pref-height: 280px;
+    -fx-min-height: 200px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.chart-col {
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
+.chart-container {
+    -fx-background-color: #C2BEAE;
+}
+
+.chart-section-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Bottom settings panel */
+.results-bottom-panel {
+    -fx-background-color: #32312D;
+    -fx-padding: 10 14 10 14;
+    -fx-min-height: 120px;
+}
+
+.results-bottom-panel .label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+}
+
+/* Mask legend tiles */
+.mask-legend-tile-red {
+    -fx-background-color: #C0392B;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-yellow {
+    -fx-background-color: #D4860A;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-cyan {
+    -fx-background-color: #6E9BAA;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-sand {
+    -fx-background-color: #F4F1EA;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+    -fx-border-color: #B8B4AA;
+    -fx-border-width: 1;
+}
+
+/* Entity overlay legend tiles */
+.mask-legend-separator {
+    -fx-background-color: #B8B4AA;
+    -fx-pref-height: 1px;
+}
+
+.mask-legend-tile-brown {
+    -fx-background-color: #8C7B38;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-black {
+    -fx-background-color: #2A2926;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-grey {
+    -fx-background-color: #6E6B65;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+.mask-legend-tile-blue {
+    -fx-background-color: #3A5A8C;
+    -fx-min-height: 30px;
+    -fx-background-radius: 4;
+}
+
+/* Mask panels */
+.mask-legend-panel {
+    -fx-background-color: #CDCBC3;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+.mask-settings-panel {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+}
+
+.mask-panel-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a18;
+}
+
+.mask-panel-subtitle {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.mask-legend-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-pref-width: 66px;
+    -fx-wrap-text: true;
+}
+
+/* Viewport overlay */
+.viewport-overlay-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Results labels */
+.results-section-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8D8A7F;
+}
+
+.results-info-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
+.results-opt-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-family: "Monospace";
+}
+
+.results-setting-swatch {
+    -fx-background-color: #4D4B45;
+    -fx-min-width: 44px;
+    -fx-max-width: 44px;
+    -fx-min-height: 16px;
+    -fx-max-height: 16px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+}
+
+.results-actions-bar {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 40px;
+}
+
+/* Line chart */
+.results-chart {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 2;
+}
+
+.results-chart .chart-content {
+    -fx-padding: 4;
+}
+
+.results-chart .chart-plot-background {
+    -fx-background-color: #CDCBC3;
+}
+
+.results-chart .chart-vertical-grid-lines {
+    -fx-stroke: #8D8A7F;
+    -fx-stroke-width: 0.5;
+}
+
+.results-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #8D8A7F;
+    -fx-stroke-width: 0.5;
+}
+
+.results-chart .axis {
+    -fx-tick-label-fill: #5D5B54;
+    -fx-font-size: 10px;
+}
+
+.results-chart .axis-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 10px;
+}
+
+.results-chart .chart-series-line {
+    -fx-stroke-width: 2;
+}
+
+.results-chart .chart-bar {
+    -fx-bar-fill: #5D5B54;
+}
+
+.results-chart .default-color0.chart-bar {
+    -fx-bar-fill: #599068;
+}
+
+.table-info-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.heatmap-container {
+    -fx-background-color: #CDCBC3;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+}
+
+.heatmap-container > Canvas {
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+}
+
+.overlay-setting-label {
+    -fx-pref-width: 100px;
+    -fx-font-size: 11px;
+}
+
+.run-name-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}

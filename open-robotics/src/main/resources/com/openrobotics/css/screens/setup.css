@@ -1,0 +1,90 @@
+/* ============================================================
+   OpenRobotics – Setup Screen
+   Sidebar property rows, labels, and layout specific to
+   the simulation configuration screen.
+   ============================================================ */
+
+/* Sidebars */
+.sidebar-setup {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
+.sidebar-sim {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Property rows */
+.prop-row-a {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.prop-row-b {
+    -fx-background-color: #7a7870;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.setup-prop-row-a {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.setup-prop-row-b {
+    -fx-background-color: #b0ad9e;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 26px;
+}
+
+.prop-label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-pref-width: 160px;
+    -fx-min-width: 120px;
+}
+
+/* Viewport header */
+.viewport-pane {
+    -fx-background-color: #CDCBC3;
+}
+
+.viewport-header {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 4 10 4 10;
+    -fx-min-height: 26px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 0 1 0;
+}
+
+.viewport-header > .center {
+    -fx-alignment: center;
+}
+
+.viewport-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+.viewport-disabled-label {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+.viewport-preview {
+    -fx-background-color: #CECCC4;
+}
+
+.config-panel {
+    -fx-padding: 0 0 20 0;
+}
+
+.canvas-size-separator {
+    -fx-font-size: 11px;
+    -fx-padding: 0 2 0 2;
+}

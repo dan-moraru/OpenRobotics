@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+  Object Description Dialog (Specialty Screen col 3, row 2)
+       Object image placeholder top, description text, ADD (green #599068) / CLOSE (dark)
+-->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.openrobotics.controllers.ObjectDescController"
+      styleClass="dialog-root object-desc-dialog-root" prefWidth="340" spacing="0"
+      stylesheets="@../css/theme.css">
+
+    <HBox styleClass="dialog-title-bar object-desc-dialog-title" alignment="CENTER_LEFT" spacing="12">
+        <Label fx:id="objectNameLabel" text="Object Description"
+               styleClass="dialog-title-label-dark" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="✕"
+                accessibleText="Close dialog"
+                styleClass="dialog-close-btn"
+                onAction="#onClose" />
+    </HBox>
+
+    <!-- Object image placeholder -->
+    <StackPane styleClass="object-desc-dialog-body object-image-zone"
+           VBox.vgrow="SOMETIMES">
+        <StackPane fx:id="objectImagePane" styleClass="object-image-pane" maxWidth="100" maxHeight="100">
+            <Label fx:id="objectIconLabel" text="?" accessibleText="Placeholder icon for object type"
+                   styleClass="dialog-icon-label" />
+        </StackPane>
+    </StackPane>
+
+    <!-- Description body -->
+    <VBox styleClass="dialog-body object-desc-dialog-body" spacing="8" VBox.vgrow="ALWAYS">
+        <Label fx:id="objectDescLabel"
+               text="Select an object type to add to your simulation. Each object type has specific properties and behaviors."
+               styleClass="dialog-body-text" />
+    </VBox>
+
+    <HBox styleClass="dialog-footer object-desc-dialog-footer" spacing="12" alignment="CENTER">
+        <Button text="ADD" accessibleText="Add Object" styleClass="btn-success" prefWidth="150" onAction="#onAdd" />
+        <Button text="CLOSE" accessibleText="Close Dialog" styleClass="btn-neutral" prefWidth="150" onAction="#onClose" />
+    </HBox>
+</VBox>
