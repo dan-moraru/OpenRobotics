@@ -372,10 +372,10 @@ public class ResultsController {
                         color = javafx.scene.paint.Color.web("#C0392B");
                     } else if (visits >= lowThreshold) {
                         // Medium traffic, amber
-                        color = javafx.scene.paint.Color.web("#D4860A");
+                        color = javafx.scene.paint.Color.web("#e89003");
                     } else {
-                        // Low traffic, cool blue-grey to differentiate from unvisited
-                        color = javafx.scene.paint.Color.web("#6E9BAA");
+                        // Low traffic, yellow
+                        color = javafx.scene.paint.Color.web("#fffaa2");
                     }
                     gc.setFill(color);
                     gc.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize - 1, tileSize - 1);
