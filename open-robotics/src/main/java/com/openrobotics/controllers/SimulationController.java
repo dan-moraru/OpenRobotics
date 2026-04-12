@@ -196,7 +196,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private final java.util.Deque<EditorAction> redoStack = new java.util.ArrayDeque<>();
 
     /** Sealed interface for reversible editor actions. */
-    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction {
+    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction {
         void undo(SimulationController ctrl);
         void redo(SimulationController ctrl);
         String description();
@@ -244,6 +244,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         public void undo(SimulationController ctrl) { robot.setBattery(oldBattery); ctrl.drawViewport(); }
         public void redo(SimulationController ctrl) { robot.setBattery(newBattery); ctrl.drawViewport(); }
         public String description() { return "Change " + robot.getName() + " battery " + oldBattery + " → " + newBattery; }
+    }
+    private record SensorChangeAction(Robot robot, String oldSensor, String newSensor, com.openrobotics.robot.sensors.SensorStrategy oldSensorStrat, com.openrobotics.robot.sensors.SensorStrategy newSensorStrat) implements EditorAction {
+        public void undo(SimulationController ctrl) { robot.setSensor(oldSensorStrat); ctrl.drawViewport(); }
+        public void redo(SimulationController ctrl) { robot.setSensor(newSensorStrat); ctrl.drawViewport(); }
+        public String description() { return "Change " + robot.getName() + " sensor " + oldSensor + " → " + newSensor; }
     }
 
     private void pushAction(EditorAction action) {
@@ -1169,6 +1174,29 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             });
             algoBox.getChildren().addAll(new Label("Algorithm:"), algoCombo);
             propertiesPanel.getChildren().add(algoBox);
+
+            // Sensor dropdown
+            HBox sensorBox = new HBox(8);
+            sensorBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            ComboBox<String> sensorCombo = new ComboBox<>(
+                    FXCollections.observableArrayList("PROXIMITY", "RANGE"));
+            sensorCombo.setPrefWidth(120);
+            String detectedSensor = robot.getSensor() != null ? robot.getSensor().toString() : "PROXIMITY";
+            final String currentSensor = sensorCombo.getItems().contains(detectedSensor) ? detectedSensor : "PROXIMITY";
+            sensorCombo.setValue(currentSensor);
+            sensorCombo.setOnAction(ev -> {
+                if (guardEditor("change sensor")) { sensorCombo.setValue(currentSensor); return; }
+                String selected = sensorCombo.getValue();
+                String oldSensor = robot.getSensor() != null ? robot.getSensor().toString() : "PROXIMITY";
+                if (selected.equals(oldSensor)) return;
+                com.openrobotics.robot.sensors.SensorStrategy oldSensorStrat = robot.getSensor();
+                robot.setSensor(com.openrobotics.robot.sensors.SensorStrategy.create(
+                        com.openrobotics.robot.SensorType.fromConfigString(selected)));
+                log("Set " + robot.getName() + " sensor to " + selected);
+                pushAction(new SensorChangeAction(robot, oldSensor, selected, oldSensorStrat, robot.getSensor()));
+            });
+            sensorBox.getChildren().addAll(new Label("Sensor:"), sensorCombo);
+            propertiesPanel.getChildren().add(sensorBox);
 
             // Battery level spinner
             HBox batteryBox = new HBox(8);

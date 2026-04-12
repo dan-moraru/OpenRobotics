@@ -20,8 +20,7 @@ import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
 import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
 import com.openrobotics.robot.navigation.NavigationStrategy;
-import com.openrobotics.robot.sensors.ProximitySensor;
-import com.openrobotics.robot.sensors.RangeSensor;
+import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.*;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -198,13 +197,8 @@ public class SimulationEngine {
 
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
                 robot.setNav(NavigationStrategy.create(algo, this.seed));
-                // do same with sensor strategy
                 SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
-                switch (sensorType) {
-                    case PROXIMITY -> robot.setSensor(new ProximitySensor());
-                    case RANGE -> robot.setSensor(new RangeSensor());
-                    default -> robot.setSensor(new ProximitySensor());
-                }
+                robot.setSensor(SensorStrategy.create(sensorType));
                 this.map.addEntity(robot);
             }  // closes for loop
         }  
