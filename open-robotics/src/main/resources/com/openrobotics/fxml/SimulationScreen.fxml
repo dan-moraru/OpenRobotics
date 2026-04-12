@@ -33,6 +33,13 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
+<!--
+  Simulation Screen
+  topbar #4D4B45, tab strip #8D8A7F, sidebar #8D8A7F,
+  object tiles #5D5B54, viewport #CDCBC3,
+  console bg #32312D, console header #C2BEAE
+-->
+
 <BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
 
     <top>
@@ -96,7 +103,7 @@
                         </Button>
                     </children>
                 </HBox>
-            </children>
+           </children>
         </VBox>
     </top>
 
