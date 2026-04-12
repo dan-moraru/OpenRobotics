@@ -4,13 +4,12 @@ import com.openrobotics.map.Vector2D;
 
 import java.util.UUID;
 
-// robot charging location
+/** charging station; robots travel here to recharge when battery is low */
 public class ChargingStation extends Station {
     public ChargingStation(String name, Vector2D position) {
         super(name, position);
     }
 
-    // constructor for loading charging stations from config
     public ChargingStation(UUID id, String name, Vector2D position) {
         super(id, name, position);
     }
