@@ -125,57 +125,91 @@
          
                              <Tab text="Add Object">
             <content>
-                                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="sidebar-scroll">
-    <VBox spacing="0" styleClass="sidebar-panel">
+                                    <VBox spacing="0" styleClass="sidebar-panel">
     <Label prefWidth="229.0" styleClass="sim-help-label"
            text="To add an object, drag and drop it into the viewport." />
     <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
                 styleClass="sidebar-scroll" maxHeight="320">
         <VBox spacing="4" styleClass="sidebar-panel" style="-fx-padding: 6;">
+
             <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
                     styleClass="object-tile" userData="ROBOT" maxWidth="Infinity">
                 <graphic>
-                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                        <image><Image url="@../img/robot.png" /></image>
-                    </ImageView>
+                    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image><Image url="@../img/robot.png" /></image>
+                        </ImageView>
+                        <VBox spacing="2">
+                            <Label text="Robot" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                            <Label text="Autonomous warehouse agent" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                        </VBox>
+                    </HBox>
                 </graphic>
             </Button>
+
             <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
                     styleClass="object-tile" userData="CHARGER" maxWidth="Infinity">
                 <graphic>
-                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                        <image><Image url="@../img/charger.png" /></image>
-                    </ImageView>
+                    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image><Image url="@../img/charger.png" /></image>
+                        </ImageView>
+                        <VBox spacing="2">
+                            <Label text="Charging Station" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                            <Label text="Recharges robot batteries" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                        </VBox>
+                    </HBox>
                 </graphic>
             </Button>
+
             <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
                     styleClass="object-tile" userData="STATION" maxWidth="Infinity">
                 <graphic>
-                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                        <image><Image url="@../img/station.png" /></image>
-                    </ImageView>
+                    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image><Image url="@../img/station.png" /></image>
+                        </ImageView>
+                        <VBox spacing="2">
+                            <Label text="Delivery Station" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                            <Label text="Task dropoff point for robots" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                        </VBox>
+                    </HBox>
                 </graphic>
             </Button>
+
             <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
                     styleClass="object-tile" userData="WALL" maxWidth="Infinity">
                 <graphic>
-                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                        <image><Image url="@../img/wall.png" /></image>
-                    </ImageView>
+                    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image><Image url="@../img/wall.png" /></image>
+                        </ImageView>
+                        <VBox spacing="2">
+                            <Label text="Wall" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                            <Label text="Impassable obstacle tile" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                        </VBox>
+                    </HBox>
                 </graphic>
             </Button>
+
             <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
                     styleClass="object-tile" userData="SHELF" maxWidth="Infinity">
                 <graphic>
-                    <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                        <image><Image url="@../img/shelf.png" /></image>
-                    </ImageView>
+                    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image><Image url="@../img/shelf.png" /></image>
+                        </ImageView>
+                        <VBox spacing="2">
+                            <Label text="Shelf / Rack" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                            <Label text="Storage rack, task pickup point" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" />
+                        </VBox>
+                    </HBox>
                 </graphic>
             </Button>
+
         </VBox>
     </ScrollPane>
 </VBox>
-</ScrollPane>
             </content>
                              </Tab>
          

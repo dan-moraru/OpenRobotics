@@ -35,11 +35,11 @@
     -fx-background-color: #B8B4A6;
     -fx-border-color: #4D4B45;
     -fx-border-width: 2px;
-    -fx-pref-height: 80px;       /* was 100px — slightly shorter works better in a list */
-    -fx-min-height: 80px;
-    -fx-max-height: 80px;
+    -fx-pref-height: 56px;
+    -fx-min-height: 56px;
+    -fx-max-height: 56px;
     -fx-cursor: hand;
-    -fx-alignment: CENTER;
+    -fx-alignment: CENTER_LEFT;
     -fx-text-fill: #2A2926;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
