@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.util.ResourceBundle;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,8 +24,9 @@ public class ExitConfirmControllerTest extends ApplicationTest {
     public void start(Stage stage) throws Exception {
         dialogStage = stage;
         ScreenNavigator.setPrimaryStage(stage);
+        ResourceBundle bundle = ResourceBundle.getBundle("com.openrobotics.fxml.ExitConfirmDialog");
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/com/openrobotics/fxml/ExitConfirmDialog.fxml"));
+                getClass().getResource("/com/openrobotics/fxml/ExitConfirmDialog.fxml"), bundle);
         Parent root = loader.load();
         controller = loader.getController();
         controller.setDialogStage(stage);
