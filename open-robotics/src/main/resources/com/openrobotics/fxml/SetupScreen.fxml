@@ -81,19 +81,6 @@
                         <Spinner fx:id="reservationKSpinner"
                                  editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                     </HBox>
-                    <!-- workload mode -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadMode" />
-                        <Label text="Workload Mode" styleClass="prop-label" />
-                        <ComboBox fx:id="workloadModeCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- spawn rate -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetSpawnRate" />
-                        <Label text="Spawn Rate (t/min)" styleClass="prop-label" />
-                        <TextField fx:id="spawnRateField" text="1"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
                     <!-- max tasks -->
                     <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                         <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />

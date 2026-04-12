@@ -59,15 +59,6 @@ public class SimulationEngine {
     private long seed;
     private boolean initialized;
 
-    // Workload configuration for spawn-rate mode
-    private String workloadMode;
-    private int spawnRate; // tasks per minute  (ticks / 60 * spawnRate)
-    private int maxTasks; // absolute cap on total tasks to generate
-    private int tasksGenerated;
-    private int ticksSinceLastSpawn;
-    // set true when racks exist but none are reachable; prevents infinite non-termination in SPAWN_RATE
-    private boolean spawnSourceExhausted = false;
-
     // Add a private variable to store initialization errors
     private String initError;
 
@@ -95,7 +86,7 @@ public class SimulationEngine {
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
-        this(map, robots, dispatcher, coordinationPolicy, runName, tickMs, maxTicks, seed, "FIXED_LIST", 10, 10);
+        this(map, robots, dispatcher, coordinationPolicy, runName, tickMs, maxTicks, seed, 10);
     }
 
     /**
@@ -109,13 +100,10 @@ public class SimulationEngine {
      * @param tickMs milliseconds per tick
      * @param maxTicks maximum number of ticks before simulation stops
      * @param seed random seed for navigation strategies
-     * @param workloadMode "FIXED_LIST" or "SPAWN_RATE"
-     * @param spawnRate tasks per minute (only used for SPAWN_RATE)
      * @param maxTasks absolute cap on total tasks to generate (applies to both modes)
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
-                          String runName, int tickMs, int maxTicks, long seed,
-                          String workloadMode, int spawnRate, int maxTasks) {
+                          String runName, int tickMs, int maxTicks, long seed, int maxTasks) {
 
         this.runId = UUID.randomUUID();
         this.tickCounter = 0;
@@ -129,11 +117,6 @@ public class SimulationEngine {
         this.tickMs = tickMs;
         this.maxTicks = maxTicks;
         this.seed = seed;
-        this.workloadMode = workloadMode != null ? workloadMode : "FIXED_LIST";
-        this.spawnRate = spawnRate;
-        this.maxTasks = maxTasks;
-        this.tasksGenerated = 0;
-        this.ticksSinceLastSpawn = 0;
         this.initialized = map != null && robots != null && dispatcher != null;
     }
 
@@ -553,7 +536,7 @@ public class SimulationEngine {
         // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
         // spawnSourceExhausted bypasses the > 0 guard: if no pickups will ever exist, terminate.
-        if (workloadComplete() && (dispatcher.getTotalTasksAdded() > 0 || spawnSourceExhausted)) {
+        if (workloadComplete()) {
             this.running = false;
 
             // Logging simulation run completion event
@@ -566,11 +549,6 @@ public class SimulationEngine {
 
         // Any tick that executes work/sandbox progression is considered running.
         this.running = true;
-
-        // SPAWN_RATE: dynamically generate tasks until maxTasks is reached
-        if ("SPAWN_RATE".equals(workloadMode)) {
-            spawnTasksIfNeeded();
-        }
 
         // Assigning tasks to available robots
         dispatcher.assignTasks(robots);
@@ -607,131 +585,20 @@ public class SimulationEngine {
     }
 
     /**
-     * Dynamically generates tasks on-the-fly in SPAWN_RATE mode.
-     * Tasks spawn at a configurable rate (tasks-per-minute) until maxTasks is reached.
-     */
-    private void spawnTasksIfNeeded() { //TODO: either remove or ensure this works properly
-        if (tasksGenerated >= maxTasks) return;
-        if (spawnSourceExhausted) return; // no spawnable pickups — avoid repeated map scans
-        if (map == null) return;
-
-        // Rate: spawnRate tasks per minute.  tickMs controls sim speed (real-time ms per tick).
-        // convert: ticks per minute = 60000 / tickMs
-        // Tasks per spawn interval = spawnRate / (ticksPerMinute) = spawnRate * tickMs / 60000
-        // spawn 1 task every (60000 / (spawnRate * tickMs)) ticks (rounded up).
-        double ticksPerMinute = 60000.0 / Math.max(1, tickMs);
-        int ticksPerSpawn = Math.max(1, (int) Math.round(ticksPerMinute / Math.max(1, spawnRate)));
-        if (tickCounter == 0 || ticksSinceLastSpawn >= ticksPerSpawn) {
-            spawnOneTask();
-            ticksSinceLastSpawn = 0;
-        } else {
-            ticksSinceLastSpawn++;
-        }
-    }
-
-    private int nextTaskId = 1;
-
-    private void spawnOneTask() {
-        if (tasksGenerated >= maxTasks) return;
-
-        // collect reachable racks and delivery stations.
-        // three-way branch to avoid falling back to floor-tile pickups when racks exist but are walled in.
-        List<Rack> reachableRacks = new ArrayList<>();
-        boolean anyRacksPresent = false;
-        List<Vector2D> dropoffs = new ArrayList<>();
-        for (MapEntity e : map.getEntities()) {
-            if (e instanceof Rack r) {
-                anyRacksPresent = true;
-                if (map.hasTraversableAdjacentTile(r.getPosition())) {
-                    reachableRacks.add(r);
-                }
-            } else if (e instanceof DeliveryStation) {
-                dropoffs.add(e.getPosition());
-            }
-        }
-
-        List<Vector2D> pickups;
-        if (anyRacksPresent) {
-            if (reachableRacks.isEmpty()) {
-                // racks exist but all are walled in — mark exhausted so SPAWN_RATE terminates cleanly
-                spawnSourceExhausted = true;
-                return;
-            }
-            pickups = new ArrayList<>();
-            for (Rack r : reachableRacks) pickups.add(r.getPosition());
-        } else {
-            // no racks on the map — legacy floor-tile fallback
-            pickups = new ArrayList<>();
-            for (int y = 0; y < map.getHeight(); y++) {
-                for (int x = 0; x < map.getWidth(); x++) {
-                    Vector2D p = new Vector2D(x, y);
-                    // exclude all delivery station tiles, not just the first one
-                    if (map.isTraversable(p) && !dropoffs.contains(p)) {
-                        pickups.add(p);
-                    }
-                }
-            }
-        }
-        // Fallback dropoff: any traversable tile not used as pickup
-        if (dropoffs.isEmpty()) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                for (int x = 0; x < map.getWidth(); x++) {
-                    Vector2D p = new Vector2D(x, y);
-                    if (map.isTraversable(p) && pickups.stream().noneMatch(pu -> pu.equals(p))) {
-                        dropoffs.add(p);
-                        break;
-                    }
-                }
-                if (!dropoffs.isEmpty()) break;
-            }
-        }
-        if (pickups.isEmpty() || dropoffs.isEmpty()) return;
-
-        java.util.Random rng = new java.util.Random(seed + tickCounter + tasksGenerated);
-        Vector2D pickup = pickups.get(rng.nextInt(pickups.size()));
-        if (dropoffs.size() == 1 && dropoffs.get(0).equals(pickup)) {
-            return;
-        }
-        Vector2D dropoff;
-        do {
-            dropoff = dropoffs.get(rng.nextInt(dropoffs.size()));
-        } while (dropoff.equals(pickup) && dropoffs.size() > 1);
-
-        int priority = 1;
-        Task task = new Task(nextTaskId++, pickup, dropoff, priority);
-        dispatcher.addTask(task);
-        tasksGenerated++;
-    }
-
-    /**
      * Indicates if the warehouse workload has been completed.
-     * In SPAWN_RATE mode, also checks that all tasks have been generated.
-     * @return true if there are no pending tasks AND all robots are idle.
+     * @return true if there are no pending tasks AND all robots are idle or dead or charging.
      */
     private boolean workloadComplete() {
-        if ("SPAWN_RATE".equals(workloadMode)) {
-            // In SPAWN_RATE mode, complete when:
-            // - no pending tasks in dispatcher AND
-            // - all robots are idle (nothing in flight) AND
-            // - we have generated maxTasks (no more to come)
-            if (dispatcher.hasPendingTasks()) return false;
-            for (Robot robot : robots) {
-                if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
-                    return false;
-                }
+            if (dispatcher.hasPendingTasks()) {
+                return false;
             }
-            // spawnSourceExhausted: racks exist but none reachable — treat as workload exhausted
-            return tasksGenerated >= maxTasks || spawnSourceExhausted;
-        } else {
-            // FIXED_LIST mode: complete when dispatcher is empty and all robots idle
-            if (dispatcher.hasPendingTasks()) return false;
+
             for (Robot robot : robots) {
                 if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
                     return false;
                 }
             }
             return true;
-        }
     }
 
     /**

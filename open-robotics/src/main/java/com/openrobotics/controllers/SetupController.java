@@ -60,8 +60,6 @@ public class SetupController {
     @FXML private Spinner<Integer> reservationKSpinner;
 
     // ── WORKLOAD ────────────────────────────────────────────────────────
-    @FXML private ComboBox<String> workloadModeCombo;
-    @FXML private TextField        spawnRateField;
     @FXML private TextField        maxTasksField;
     @FXML private TextField        workloadSeedField;
 
@@ -140,11 +138,6 @@ public class SetupController {
                 "NONE", "TRAFFIC_RULES", "RESERVATION_K"));
         policyCombo.getSelectionModel().select(DEFAULT_POLICY);
 
-        // Workload mode
-        workloadModeCombo.setItems(FXCollections.observableArrayList(
-                "SPAWN_RATE", "FIXED_LIST"));
-        workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE);
-
         // Canvas size spinners
         canvasWidthSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5000, AppState.getCanvasWidthTiles()));
@@ -162,7 +155,6 @@ public class SetupController {
         });
 
         // Default text fields
-        spawnRateField.setText(String.valueOf(DEFAULT_SPAWN_RATE));
         maxTasksField.setText(String.valueOf(DEFAULT_MAX_TASKS));
         workloadSeedField.setText(String.valueOf(DEFAULT_WORKLOAD_SEED));
         maxTicksField.setText(String.valueOf(DEFAULT_MAX_TICKS));
@@ -205,8 +197,6 @@ public class SetupController {
     }
     @FXML private void onResetRandomSeed()   { randomSeedField.setText(""); }
     @FXML private void onResetPolicy()       { policyCombo.getSelectionModel().select(DEFAULT_POLICY); }
-    @FXML private void onResetWorkloadMode() { workloadModeCombo.getSelectionModel().select(DEFAULT_WORKLOAD_MODE); }
-    @FXML private void onResetSpawnRate()    { spawnRateField.setText(String.valueOf(DEFAULT_SPAWN_RATE)); }
     @FXML private void onResetMaxTasks()     { maxTasksField.setText(String.valueOf(DEFAULT_MAX_TASKS)); }
     @FXML private void onResetWorkloadSeed() { workloadSeedField.setText(String.valueOf(DEFAULT_WORKLOAD_SEED)); }
     @FXML private void onResetMaxTicks()     { maxTicksField.setText(String.valueOf(DEFAULT_MAX_TICKS)); }
@@ -686,30 +676,6 @@ public class SetupController {
         }
     }
 
-    @FXML
-    private void onSaveConfig() {
-        if (!AppState.hasEngine()) {
-            debugStatus("\u26a0 Load a configuration first.");
-            return;
-        }
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Save Simulation Configuration");
-        chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("JSON Config (*.json)", "*.json"));
-        chooser.setInitialFileName("config_saved.json");
-        File file = chooser.showSaveDialog(statusLabel.getScene().getWindow());
-        if (file == null) {
-            debugStatus("Save cancelled.");
-            return;
-        }
-        try {
-            AppState.getEngine().configSaving(file.getAbsolutePath());
-            debugStatus("\u2714 Saved: " + file.getName());
-        } catch (Exception e) {
-            debugStatus("\u26a0 Save error: " + e.getMessage());
-        }
-    }
-
     // ------------------------------------------------------------------ //
     //  Start Simulation
     // ------------------------------------------------------------------ //
@@ -804,12 +770,6 @@ public class SetupController {
             map = buildBuiltinMapInCanvas(mapName, canvasW, canvasH);
         }
 
-        String workloadMode = workloadModeCombo.getValue();
-        if (workloadMode == null) workloadMode = DEFAULT_WORKLOAD_MODE;
-
-        int spawnRate = DEFAULT_SPAWN_RATE;
-        try { spawnRate = Integer.parseInt(spawnRateField.getText().trim()); } catch (NumberFormatException ignored) { }
-
         int maxTasks = DEFAULT_MAX_TASKS;
         try { maxTasks = Integer.parseInt(maxTasksField.getText().trim()); } catch (NumberFormatException ignored) { }
 
@@ -819,9 +779,7 @@ public class SetupController {
         // or loaded from a JSON config file (handled via SimulationEngine(configPath)).
 
         Dispatcher dispatcher = new Dispatcher();
-        if ("FIXED_LIST".equals(workloadMode)) {
-            generateFixedTasks(map, seed, maxTasks, dispatcher);
-        }
+        generateFixedTasks(map, seed, maxTasks, dispatcher);
 
         String runName = runNameField.getText().trim();
         if (runName.isEmpty()) runName = DEFAULT_RUN_NAME;
@@ -829,7 +787,7 @@ public class SetupController {
         int maxTicks = DEFAULT_MAX_TICKS;
         try { maxTicks = Integer.parseInt(maxTicksField.getText().trim()); } catch (NumberFormatException ignored) { }
 
-        SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, DEFAULT_TICK_MS, maxTicks, seed, workloadMode, spawnRate, maxTasks);
+        SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, DEFAULT_TICK_MS, maxTicks, seed, maxTasks);
 
         com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
             parseOptionalFloatField(batteryCapacityField, DEFAULT_BATTERY_CAPACITY),
