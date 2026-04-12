@@ -90,7 +90,6 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
     private void onLoad() {
         if (selectedFile != null) {
             saveRecentPath(selectedFile.getAbsolutePath());
-            // TODO Sprint 4: parse selectedFile and return parsed RunConfig to SetupController
         }
         close();
     }

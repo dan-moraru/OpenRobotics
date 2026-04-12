@@ -1734,6 +1734,49 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration");
     }
 
+    @FXML
+    private void onLoadConfig() {
+        javafx.fxml.FXMLLoader loader = ScreenNavigator.openDialog(
+                ScreenNavigator.DIALOG_LOAD_CONFIG, "Load Configuration");
+        Object ctrl = loader.getController();
+        if (!(ctrl instanceof LoadConfigController lcc)) return;
+        java.io.File file = lcc.getSelectedFile();
+        if (file == null) return;
+
+        // Full reset: stop the loop, clear transient editor state, drop undo/redo,
+        // then rebuild the engine from the chosen file.
+        stopLoop();
+        running = false;
+        paused = false;
+        localTick = 0;
+        selectedEntity = null;
+        undoStack.clear();
+        redoStack.clear();
+
+        SimulationEngine loaded = new SimulationEngine(file.getAbsolutePath());
+        if (loaded == null || loaded.getMap() == null || loaded.getInitError() != null) {
+            log("\u26a0 Load failed: "
+                    + (loaded != null && loaded.getInitError() != null ? loaded.getInitError() : "unknown error"));
+            return;
+        }
+        engine = loaded;
+        AppState.setEngine(engine);
+        AppState.setConfigPath(file.getAbsolutePath());
+        initialSnapshotPath = null;
+        saveEditorBaseline();
+
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
+        if (simProgressBar != null) simProgressBar.setProgress(0);
+        if (simStatusLabel != null) {
+            simStatusLabel.setText("READY");
+            simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+        }
+        populateOutliner();
+        drawViewport();
+        updateRamLabel();
+        log("Loaded configuration from " + file.getAbsolutePath());
+    }
+
     private void log(String message) {
         System.out.println("[SimulationController] " + message);
         if (consoleArea != null) consoleArea.appendText(message + "\n");
