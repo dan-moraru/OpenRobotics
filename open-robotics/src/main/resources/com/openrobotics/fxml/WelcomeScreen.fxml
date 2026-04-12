@@ -166,13 +166,5 @@
             <Button text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
         </HBox>
 
-        <!-- FOOTER -->
-        <HBox styleClass="welcome-footer" alignment="CENTER_LEFT" spacing="0">
-            <Label text="Multi-robot warehouse simulation — configure, run, and compare experiments."
-                   styleClass="welcome-footer-tip"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="COMP 361 · McGill University · 2026" styleClass="welcome-footer-hint"/>
-        </HBox>
-
     </VBox>
 </StackPane>
