@@ -70,28 +70,34 @@
                            styleClass="welcome-hero-copy" wrapText="true"/>
 
                     <!-- Feature cards -->
-                    <VBox styleClass="welcome-features-list" spacing="8">
+                    <VBox styleClass="welcome-features-list" spacing="0">
 
-                        <VBox styleClass="welcome-feature-card" spacing="6">
-                            <Label text="EDITOR" styleClass="welcome-feature-tag"/>
-                            <Label text="Drag-and-drop map editor" styleClass="welcome-feature-title"/>
-                            <Label text="Place robots, shelves, chargers, and stations on a live grid canvas."
-                                   styleClass="welcome-feature-desc" wrapText="true"/>
-                        </VBox>
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Drag-and-drop map editor" styleClass="welcome-feature-title"/>
+                                <Label text="Place robots, shelves, chargers, and stations on a live grid canvas."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
 
-                        <VBox styleClass="welcome-feature-card" spacing="6">
-                            <Label text="SIMULATION" styleClass="welcome-feature-tag"/>
-                            <Label text="Configurable simulation engine" styleClass="welcome-feature-title"/>
-                            <Label text="Choose coordination policies, task workloads, and tick limits before each run."
-                                   styleClass="welcome-feature-desc" wrapText="true"/>
-                        </VBox>
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Configurable simulation engine" styleClass="welcome-feature-title"/>
+                                <Label text="Choose coordination policies, task workloads, and tick limits before each run."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
 
-                        <VBox styleClass="welcome-feature-card" spacing="6">
-                            <Label text="RESULTS" styleClass="welcome-feature-tag"/>
-                            <Label text="Results and heatmap analysis" styleClass="welcome-feature-title"/>
-                            <Label text="Inspect per-robot metrics, task completion charts, and travel frequency masks."
-                                   styleClass="welcome-feature-desc" wrapText="true"/>
-                        </VBox>
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Results and heatmap analysis" styleClass="welcome-feature-title"/>
+                                <Label text="Inspect per-robot metrics, task completion charts, and travel frequency masks."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
 
                     </VBox>
                 </VBox>
@@ -102,7 +108,7 @@
             <Region styleClass="welcome-panel-divider" minWidth="1" maxWidth="1"/>
 
             <!-- RIGHT: how it works steps -->
-            <VBox styleClass="welcome-right-panel" spacing="0" prefWidth="340" minWidth="280" maxWidth="380">
+            <VBox styleClass="welcome-right-panel" spacing="0" prefWidth="460" minWidth="400" maxWidth="500">
 
                 <Label text="HOW IT WORKS" styleClass="welcome-section-title"
                        style="-fx-padding: 28 28 16 28;"/>

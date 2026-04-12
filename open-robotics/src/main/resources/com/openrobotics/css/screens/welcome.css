@@ -70,21 +70,19 @@
 }
 
 .welcome-feature-card {
-    -fx-background-color: #BAB7A8;
-    -fx-padding: 14 16 14 16;
+    -fx-background-color: transparent;
+    -fx-padding: 14 0 14 0;
     -fx-border-color: #8D8A7F;
-    -fx-border-width: 1px;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
+    -fx-border-width: 0 0 1 0;
 }
 
-.welcome-feature-tag {
-    -fx-font-size: 9px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1a743f;
-    -fx-padding: 2 6 2 6;
-    -fx-background-color: #d4ead9;
-    -fx-background-radius: 3;
+.welcome-feature-accent {
+    -fx-background-color: #1a743f;
+    -fx-min-width: 3px;
+    -fx-max-width: 3px;
+    -fx-min-height: 36px;
+    -fx-max-height: 36px;
+    -fx-background-radius: 2;
 }
 
 .welcome-feature-title {
