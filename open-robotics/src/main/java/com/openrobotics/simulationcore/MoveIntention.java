@@ -3,7 +3,6 @@ package com.openrobotics.simulationcore;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.map.Tile;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -22,9 +21,9 @@ public class MoveIntention {
      * @param robot the robot this move intention belongs to
      */
     public MoveIntention(Tile from, Tile to, Robot robot) {
-        this.from = Objects.requireNonNull(from, "from must not be null");
-        this.to = Objects.requireNonNull(to, "to must not be null");
-        this.robot = Objects.requireNonNull(robot, "robot must not be null");
+        this.from = from;
+        this.to = to;
+        this.robot = robot;
     }
 
     public Robot getRobot() {
