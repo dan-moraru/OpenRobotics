@@ -365,7 +365,7 @@ public class Robot extends MapEntity {
                     stuckTicks++;
                 }
 
-                if (currentTask != null) {
+                if (currentTask != null && chargerTarget == null) {
                     Vector2D target = getTarget();
                     boolean arrived = isAtTarget(map, target);
                     if (arrived) {
