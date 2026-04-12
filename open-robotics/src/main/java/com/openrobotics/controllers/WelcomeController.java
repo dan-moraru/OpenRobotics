@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 public class WelcomeController {
     private static final Logger LOGGER = Logger.getLogger(WelcomeController.class.getName());
 
-    @FXML private StackPane rootPane;
-    @FXML private VBox      changelogContent;
+    @FXML
+    private StackPane rootPane;
 
     // ------------------------------------------------------------------ //
     //  Initialisation
@@ -29,15 +29,15 @@ public class WelcomeController {
     @FXML
     private void initialize() {
         LOGGER.fine("Default JavaFX font: " + javafx.scene.text.Font.getDefault());
-        // TODO Sprint 6: fetch real changelog / version history from DB or
-        //  bundled resource file and populate changelogContent dynamically.
     }
 
     // ------------------------------------------------------------------ //
     //  Event Handlers
     // ------------------------------------------------------------------ //
 
-    /** START SETUP button navigates to the Setup screen (§2.2.6). */
+    /**
+     * START SETUP button navigates to the Setup screen (§2.2.6).
+     */
     @FXML
     private void onStartSetup(ActionEvent event) {
         ScreenNavigator.goToSetup();
@@ -52,6 +52,7 @@ public class WelcomeController {
     private void onMenuGithub() {
         try {
             Desktop.getDesktop().browse(new java.net.URI("https://github.com/dan-moraru/OpenRobotics"));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 }
