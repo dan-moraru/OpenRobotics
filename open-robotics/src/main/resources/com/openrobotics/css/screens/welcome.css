@@ -12,7 +12,25 @@
     -fx-pref-height: infinity;
 }
 
-/* Menu bar — transparent background, left-aligned next to logo */
+/* Top bar */
+.top-bar {
+    -fx-background-color: #2A2926;
+    -fx-padding: 10 16 10 16;
+    -fx-min-height: 52px;
+}
+
+.app-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.version-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
+/* Menu bar */
 .welcome-root .menu-bar-top {
     -fx-background-color: transparent !important;
     -fx-padding: 0;
@@ -25,7 +43,7 @@
 
 .welcome-root .menu-bar-top .menu .label {
     -fx-text-fill: #C2BEAE !important;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
 
@@ -40,23 +58,22 @@
 /* Hero zone */
 .welcome-hero-logo-zone {
     -fx-background-color: #2A2926;
-    -fx-min-height: 180px;
-    -fx-pref-height: 200px;
-    -fx-padding: 32 48 32 48;
+    -fx-min-height: 220px;
+    -fx-pref-height: 240px;
+    -fx-padding: 40 48 40 48;
     -fx-alignment: CENTER;
 }
 
 .welcome-hero-wordmark {
-    -fx-font-size: 42px;
+    -fx-font-size: 52px;
     -fx-font-weight: bold;
     -fx-text-fill: #C2BEAE;
 }
 
 .welcome-eyebrow {
-    -fx-font-size: 10px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-text-fill: #5D5B54;
-    -fx-letter-spacing: 2;
 }
 
 .welcome-divider {
@@ -74,29 +91,29 @@
 }
 
 .welcome-hero-copy-zone {
-    -fx-padding: 32 40 32 48;
+    -fx-padding: 36 48 36 48;
     -fx-background-color: #C2BEAE;
 }
 
 .welcome-hero-title {
-    -fx-font-size: 22px;
+    -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: #1a1a18;
 }
 
 .welcome-hero-copy {
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-text-fill: #4D4B45;
 }
 
 /* Feature cards */
 .welcome-features-list {
-    -fx-padding: 8 0 0 0;
+    -fx-padding: 12 0 0 0;
 }
 
 .welcome-feature-card {
     -fx-background-color: transparent;
-    -fx-padding: 14 0 14 0;
+    -fx-padding: 16 0 16 0;
     -fx-border-color: #8D8A7F;
     -fx-border-width: 0 0 1 0;
 }
@@ -105,19 +122,19 @@
     -fx-background-color: #2A2926;
     -fx-min-width: 3px;
     -fx-max-width: 3px;
-    -fx-min-height: 36px;
-    -fx-max-height: 36px;
+    -fx-min-height: 40px;
+    -fx-max-height: 40px;
     -fx-background-radius: 2;
 }
 
 .welcome-feature-title {
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: #1a1a18;
 }
 
 .welcome-feature-desc {
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-text-fill: #5D5B54;
 }
 
@@ -128,12 +145,12 @@
 
 .welcome-section-title {
     -fx-text-fill: #2A2926;
-    -fx-font-size: 10px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
 .welcome-step-card {
-    -fx-padding: 20 24 20 24;
+    -fx-padding: 24 28 24 28;
     -fx-background-color: transparent;
 }
 
@@ -142,21 +159,21 @@
 }
 
 .welcome-step-num {
-    -fx-font-size: 28px;
+    -fx-font-size: 32px;
     -fx-font-weight: bold;
     -fx-text-fill: #2A2926;
-    -fx-min-width: 36px;
+    -fx-min-width: 40px;
     -fx-alignment: CENTER_RIGHT;
 }
 
 .welcome-step-title {
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: #1a1a18;
 }
 
 .welcome-step-desc {
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-text-fill: #4D4B45;
 }
 
@@ -168,37 +185,13 @@
 /* CTA row */
 .welcome-cta-row {
     -fx-background-color: #BAB7A8;
-    -fx-padding: 18 48 18 48;
+    -fx-padding: 20 48 20 48;
     -fx-border-color: #8D8A7F;
     -fx-border-width: 1 0 0 0;
-}
-
-.welcome-cta-row .button {
-    -fx-font-size: 12px;
-    -fx-padding: 11 28 11 28;
 }
 
 /* Panel divider */
 .welcome-panel-divider {
     -fx-background-color: #8D8A7F;
     -fx-opacity: 0.5;
-}
-
-/* Footer */
-.welcome-footer {
-    -fx-background-color: #2A2926;
-    -fx-padding: 13 18 13 18;
-    -fx-border-color: #1a1a18;
-    -fx-border-width: 1 0 0 0;
-}
-
-.welcome-footer-tip {
-    -fx-text-fill: #5D5B54;
-    -fx-font-size: 11px;
-}
-
-.welcome-footer-hint {
-    -fx-font-size: 10px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #4D4B45;
 }
