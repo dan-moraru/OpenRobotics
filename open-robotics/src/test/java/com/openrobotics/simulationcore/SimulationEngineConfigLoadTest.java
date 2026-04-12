@@ -8,6 +8,7 @@ import com.openrobotics.task.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -22,9 +23,13 @@ class SimulationEngineConfigLoadTest {
 
     @Test
     void loadsJsonScenarioFromRepositoryRoot() throws IOException {
-        Path source = Path.of("src", "test", "resources", "com", "openrobotics", "io", "test_scenario.json");
         Path configPath = Files.createTempFile("test_scenario", ".json");
-        Files.copy(source, configPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream in = SimulationEngineConfigLoadTest.class.getResourceAsStream(
+                "/com/openrobotics/io/test_scenario.json")) {
+            assertNotNull(in,
+                    "test_scenario.json must live under src/test/resources/com/openrobotics/io/ (classpath).");
+            Files.copy(in, configPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
 
         SimulationEngine engine = new SimulationEngine(configPath.toString());
 
