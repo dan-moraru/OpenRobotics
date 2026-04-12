@@ -109,6 +109,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
+    @FXML private Button    clearConsoleButton;
 
     // - DATABASE LOGGING
     @FXML private TextArea databaseArea;
@@ -340,7 +341,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         // Pre-load icons and initialize tips
         IconLoader.preloadAllIcons();
-        updateSelectionLabel();
+        // Keep "Loaded N objects" after a successful load; otherwise show the default selection tip
+        // (replaces the transient "No config loaded" empty-state message).
+        if (engine == null || engine.getMap() == null) {
+            updateSelectionLabel();
+        }
         startTipRotation();
 
         if (editModeLabel    != null) editModeLabel.setText("Edit mode");
