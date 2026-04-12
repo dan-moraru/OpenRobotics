@@ -12,7 +12,6 @@ import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
 import com.openrobotics.logging.eventtypes.TaskEvent;
 import com.openrobotics.map.MapEntity;
-import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
@@ -83,7 +82,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private TabPane          outlinerTabPane;
     @FXML private ListView<String> outlinerListView;
     @FXML private TextField        outlinerSearchField;
-    @FXML private Button           intersectionObjectTile;
 
     // ── VIEWPORT ────────────────────────────────────────────────────────
     @FXML private StackPane viewportStack;
@@ -111,6 +109,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
+
+    // - DATABASE LOGGING
+    @FXML private TextArea databaseArea;
 
     // ── TAB STRIP ─────────────────────────────────────────────────────────
     @FXML private Button editorTabBtn;
@@ -169,8 +170,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private static final Color ENTITY_FALLBACK_COLOR = Color.web("#8D8A7F");
     private static final Color ENTITY_LABEL_COLOR = Color.web("#1a1a18");
     private static final Color OBJECT_SELECTION_COLOR = Color.web("#C2BEAE");
-    private static final Color INTERSECTION_FILL_COLOR = Color.web("#8C7B38", 0.25);
-    private static final Color INTERSECTION_STROKE_COLOR = Color.web("#6A4828");
     // ── Object rendering ──────────────────────────────────────────────────
     // Uses IconLoader utility for icon caching
 
@@ -178,8 +177,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private final List<Object> outlinerBacking = new ArrayList<>();
     private MapEntity selectedEntity = null;
-    private Vector2D selectedIntersection = null;
     private MapEntity draggingOnCanvas = null;
+    // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
+    private com.openrobotics.map.Vector2D dragStartPosition = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
@@ -201,11 +201,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void initialize() {
-        if (intersectionObjectTile != null) {
-            intersectionObjectTile.managedProperty().bind(intersectionObjectTile.visibleProperty());
-            intersectionObjectTile.setVisible(false);
-        }
-
         // Read canvas size from shared state (set in Setup screen)
         canvasWidthTiles  = AppState.getCanvasWidthTiles();
         canvasHeightTiles = AppState.getCanvasHeightTiles();
@@ -330,7 +325,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (canvasSizeLabel != null)
                 canvasSizeLabel.setText("Canvas Size: " + canvasWidthTiles + "×" + canvasHeightTiles + " Tiles");
 
-            refreshIntersectionObjectTileVisibility();
             populateOutliner();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("Loaded " + loadedMap.getEntities().size() + " objects");
@@ -338,7 +332,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("Loaded simulation with " + loadedMap.getEntities().size() + " entities. Press \u25b6 to start.");
             drawViewport();
         } else {
-            refreshIntersectionObjectTileVisibility();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("No config loaded");
             }
@@ -417,7 +410,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         gc.strokeRect(bx, by, bw, bh);
 
         drawEntities(gc);
-        drawTrafficRuleIntersections(gc);
 
         // Highlight the tile the user is hovering over during a drag-from-sidebar
         if (dragHighlightTileX >= 0 && dragHighlightTileY >= 0) {
@@ -512,39 +504,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    private void drawTrafficRuleIntersections(GraphicsContext gc) {
-        if (engine == null || !engine.usesTrafficRulesPolicy()) return;
-
-        double tileSize = 32 * zoom;
-        double markerInset = Math.max(3.0, tileSize * 0.22);
-        double centerInset = Math.max(2.0, tileSize * 0.38);
-
-        gc.setFill(INTERSECTION_FILL_COLOR);
-        gc.setStroke(INTERSECTION_STROKE_COLOR);
-        gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
-
-        for (Vector2D intersection : engine.getTrafficRuleIntersections()) {
-            double sx = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize;
-            double sy = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize;
-            gc.fillOval(sx + markerInset, sy + markerInset, tileSize - 2 * markerInset, tileSize - 2 * markerInset);
-            gc.strokeLine(sx + centerInset, sy + tileSize / 2.0, sx + tileSize - centerInset, sy + tileSize / 2.0);
-            gc.strokeLine(sx + tileSize / 2.0, sy + centerInset, sx + tileSize / 2.0, sy + tileSize - centerInset);
-
-            if (intersection.equals(selectedIntersection)) {
-                gc.setStroke(OBJECT_SELECTION_COLOR);
-                gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
-                gc.strokeOval(
-                        sx + Math.max(1.0, markerInset - 2.0),
-                        sy + Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0)
-                );
-                gc.setStroke(INTERSECTION_STROKE_COLOR);
-                gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
-            }
-        }
-    }
-
     /** Resolves the best-matching icon for an engine-loaded map entity. */
     private javafx.scene.image.Image resolveEntityIcon(MapEntity entity) {
         List<String> candidates = new ArrayList<>();
@@ -612,15 +571,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             case "DOCK"    -> "#6A4828";
             case "WALL"    -> "#3D3C39";
             case "SHELF"   -> "#52504A";
-            case "INTERSECTION" -> "#8C7B38";
             default        -> "#5D5B54";
         };
-    }
-
-    private void refreshIntersectionObjectTileVisibility() {
-        if (intersectionObjectTile != null) {
-            intersectionObjectTile.setVisible(engine != null && engine.usesTrafficRulesPolicy());
-        }
     }
 
     // ------------------------------------------------------------------ //
@@ -744,7 +696,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText(
                         "dragging(" + e.getDragboard().getString().toLowerCase()
-                        + ")  →  (" + tx + ", " + ty + ")");
+                                + ")  →  (" + tx + ", " + ty + ")");
             }
         }
         e.consume();
@@ -764,14 +716,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
 
             if (engine != null && engine.getMap() != null) {
-                if ("INTERSECTION".equalsIgnoreCase(type)) {
-                    dropCompleted = handleIntersectionDrop(tx, ty);
-                    if (dropCompleted && viewportStatusLabel != null) viewportStatusLabel.setText("");
-                    e.setDropCompleted(dropCompleted);
-                    e.consume();
-                    return;
-                }
-
                 MapEntity entity = createEntityFromType(type, tx, ty, type.toLowerCase() + "_" + nextObjId);
                 if (entity != null) {
                     if (canPlaceEntityAt(entity, tx, ty, null)) {
@@ -794,46 +738,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
         e.setDropCompleted(dropCompleted);
         e.consume();
-    }
-
-    private boolean handleIntersectionDrop(int tx, int ty) {
-        if (engine == null || engine.getMap() == null) {
-            return false;
-        }
-        if (!engine.usesTrafficRulesPolicy()) {
-            log("Intersection markers are only available when TRAFFIC_RULES coordination is active.");
-            if (viewportStatusLabel != null) viewportStatusLabel.setText("traffic rules only");
-            return false;
-        }
-
-        Vector2D position = new Vector2D(tx, ty);
-        boolean alreadyMarked = engine.hasTrafficRuleIntersection(tx, ty);
-        if (!engine.getMap().isTraversable(position)) {
-            log("Intersection markers can only be placed on traversable floor tiles.");
-            if (viewportStatusLabel != null) viewportStatusLabel.setText("intersection requires floor tile");
-            return false;
-        }
-
-        if (!alreadyMarked) {
-            boolean hasBlockingOccupant = engine.getMap().getEntitiesAt(position).stream()
-                    .anyMatch(entity -> entity instanceof Robot
-                            || entity instanceof ChargingStation
-                            || entity instanceof DeliveryStation);
-            if (hasBlockingOccupant) {
-                log("Intersection markers cannot be placed on robots or station tiles.");
-                if (viewportStatusLabel != null) viewportStatusLabel.setText("intersection requires empty floor");
-                return false;
-            }
-        }
-
-        if (!engine.toggleTrafficRuleIntersection(tx, ty)) {
-            log("Could not update the traffic intersection at tile (" + tx + ", " + ty + ").");
-            return false;
-        }
-
-        drawViewport();
-        log((alreadyMarked ? "Removed" : "Added") + " INTERSECTION at tile (" + tx + ", " + ty + ").");
-        return true;
     }
 
     private MapEntity createEntityFromType(String type, int x, int y, String name) {
@@ -869,24 +773,24 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         viewportMouseY = e.getY();
 
         if (e.getButton() == MouseButton.PRIMARY) {
-            // Left click: selection only
-            Vector2D intersectionHit = intersectionAtScreenPos(e.getX(), e.getY());
-            if (intersectionHit != null) {
-                selectIntersection(intersectionHit);
-                draggingOnCanvas = null;
+            // Left click: select. If on an entity, also arm for drag.
+            MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
+            if (entityHit != null) {
+                selectEntity(entityHit);
+                draggingOnCanvas = entityHit;
+                // Snapshot position before any drag movement so we can update tasks on release
+                dragStartPosition = new com.openrobotics.map.Vector2D(
+                        (int) entityHit.getPosition().getX(),
+                        (int) entityHit.getPosition().getY());
             } else {
-                MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
-                if (entityHit != null) {
-                    selectEntity(entityHit);
-                    draggingOnCanvas = null;
-                } else {
-                    clearSelection();
-                    draggingOnCanvas = null;
-                }
+                selectEntity(null);
+                draggingOnCanvas = null;
+                dragStartPosition = null;
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right click: pan mode
             draggingOnCanvas = null;
+            dragStartPosition = null;
         }
 
         // Update RAM display
@@ -907,7 +811,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 if (viewportStatusLabel != null)
                     viewportStatusLabel.setText(
                             "dragging(" + draggingOnCanvas.getName()
-                            + ")  →  (" + newTX + ", " + newTY + ")");
+                                    + ")  →  (" + newTX + ", " + newTY + ")");
             } else if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
             }
@@ -928,11 +832,22 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void onViewportMouseReleased(MouseEvent e) {
         if (draggingOnCanvas != null) {
+            com.openrobotics.map.Vector2D newPos = draggingOnCanvas.getPosition();
             log("Moved " + draggingOnCanvas.getName()
-                + " to tile (" + (int)draggingOnCanvas.getPosition().getX() + ", " + (int)draggingOnCanvas.getPosition().getY() + ").");
+                    + " to tile (" + (int)newPos.getX() + ", " + (int)newPos.getY() + ").");
+
+            // If the entity moved, update any tasks that referenced its old position
+            if (dragStartPosition != null && !dragStartPosition.equals(newPos)) {
+                syncTaskPositions(dragStartPosition, newPos);
+            }
+
             draggingOnCanvas = null;
+            dragStartPosition = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
+
+            // Persist editor changes so the play-button snapshot and restart are always fresh
+            persistEditorChanges();
         }
 
         // Update RAM display
@@ -958,40 +873,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return null;
     }
 
-    private Vector2D intersectionAtScreenPos(double sx, double sy) {
-        if (engine == null || !engine.usesTrafficRulesPolicy()) return null;
-
-        double tileSize = 32 * zoom;
-        double markerInset = Math.max(3.0, tileSize * 0.22);
-        double radius = (tileSize - 2 * markerInset) / 2.0;
-
-        for (Vector2D intersection : engine.getTrafficRuleIntersections()) {
-            double centerX = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize + tileSize / 2.0;
-            double centerY = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize + tileSize / 2.0;
-            double dx = sx - centerX;
-            double dy = sy - centerY;
-            if ((dx * dx) + (dy * dy) <= radius * radius) {
-                return intersection;
-            }
-        }
-        return null;
-    }
-
     // ------------------------------------------------------------------ //
     //  Selection & Properties panel
     // ------------------------------------------------------------------ //
 
     private void deleteSelected() {
-        if (selectedIntersection != null) {
-            if (engine != null && engine.toggleTrafficRuleIntersection(
-                    selectedIntersection.getX(), selectedIntersection.getY())) {
-                log("Deleted INTERSECTION at tile (" + selectedIntersection.getX() + ", " + selectedIntersection.getY() + ").");
-            }
-            selectedIntersection = null;
-            populateOutliner();
-            drawViewport();
-            return;
-        }
         if (selectedEntity == null) return;
         log("Deleted " + selectedEntity.getName() + ".");
         if (engine != null) {
@@ -1013,11 +899,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         int newX = clampTileX((int)clipboardEntity.getPosition().getX() + 1);
         int newY = clampTileY((int)clipboardEntity.getPosition().getY() + 1);
         MapEntity copy = createEntityFromType(
-            clipboardEntity instanceof Robot ? "ROBOT" :
-            clipboardEntity instanceof ChargingStation ? "CHARGER" :
-            clipboardEntity instanceof DeliveryStation ? "STATION" :
-            clipboardEntity instanceof Rack ? "RACK" : "OBSTACLE",
-            newX, newY, clipboardEntity.getName() + "_copy");
+                clipboardEntity instanceof Robot ? "ROBOT" :
+                        clipboardEntity instanceof ChargingStation ? "CHARGER" :
+                                clipboardEntity instanceof DeliveryStation ? "STATION" :
+                                        clipboardEntity instanceof Rack ? "RACK" : "OBSTACLE",
+                newX, newY, clipboardEntity.getName() + "_copy");
         if (copy != null && canPlaceEntityAt(copy, newX, newY, null)) {
             engine.addEntity(copy);
             selectEntity(copy);
@@ -1031,19 +917,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private MapEntity clipboardEntity = null;
 
-    private void clearSelection() {
-        selectedEntity = null;
-        selectedIntersection = null;
-        if (outlinerListView != null)
-            outlinerListView.getSelectionModel().clearSelection();
-        clearPropertiesPanel();
-        updateSelectionLabel();
-        drawViewport();
-    }
-
     private void selectEntity(MapEntity entity) {
         selectedEntity = entity;
-        selectedIntersection = null;
 
         if (entity != null) {
             if (engine != null && engine.getMap() != null) {
@@ -1053,18 +928,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             showPropertiesFor(entity);
         } else {
-            clearSelection();
-            return;
+            if (outlinerListView != null)
+                outlinerListView.getSelectionModel().clearSelection();
+            clearPropertiesPanel();
+            updateSelectionLabel();
         }
-        drawViewport();
-    }
-
-    private void selectIntersection(Vector2D intersection) {
-        selectedEntity = null;
-        selectedIntersection = intersection;
-        if (outlinerListView != null)
-            outlinerListView.getSelectionModel().clearSelection();
-        showIntersectionProperties(intersection);
         drawViewport();
     }
 
@@ -1091,7 +959,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         HBox uuidBox = new HBox(8);
         uuidBox.getChildren().addAll(
                 new Label("UUID:"),
-            new Label(entity.getId().toString()) {{ setStyle("-fx-text-fill: #3D3C39; -fx-font-family: monospace;"); }}
+                new Label(entity.getId().toString()) {{ setStyle("-fx-text-fill: #3D3C39; -fx-font-family: monospace;"); }}
         );
         propertiesPanel.getChildren().add(uuidBox);
 
@@ -1122,8 +990,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (newVal == null || oldVal == null) return;
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
+            com.openrobotics.map.Vector2D oldPos = new com.openrobotics.map.Vector2D(oldVal, targetY);
+            com.openrobotics.map.Vector2D newPos = new com.openrobotics.map.Vector2D(targetX, targetY);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                entity.setPosition(newPos);
+                syncTaskPositions(oldPos, newPos);
+                persistEditorChanges();
                 drawViewport();
             } else {
                 xSpinner.getValueFactory().setValue(oldVal);
@@ -1134,8 +1006,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (newVal == null || oldVal == null) return;
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
+            com.openrobotics.map.Vector2D oldPos = new com.openrobotics.map.Vector2D(targetX, oldVal);
+            com.openrobotics.map.Vector2D newPos = new com.openrobotics.map.Vector2D(targetX, targetY);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                entity.setPosition(newPos);
+                syncTaskPositions(oldPos, newPos);
+                persistEditorChanges();
                 drawViewport();
             } else {
                 ySpinner.getValueFactory().setValue(oldVal);
@@ -1159,36 +1035,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             Label rackProps = new Label("Rack configuration");
             propertiesPanel.getChildren().add(rackProps);
         }
-    }
-
-    private void showIntersectionProperties(Vector2D intersection) {
-        if (propertiesPanel == null || intersection == null) return;
-        propertiesPanel.getChildren().clear();
-
-        Label title = new Label("Traffic Intersection");
-        title.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
-        propertiesPanel.getChildren().add(title);
-
-        Separator sep = new Separator();
-        propertiesPanel.getChildren().add(sep);
-
-        HBox typeBox = new HBox(8);
-        typeBox.getChildren().addAll(
-                new Label("Type:"),
-                new Label("Intersection Marker") {{ setStyle("-fx-text-fill: #666;"); }}
-        );
-        propertiesPanel.getChildren().add(typeBox);
-
-        HBox posBox = new HBox(8);
-        posBox.getChildren().addAll(
-                new Label("Position:"),
-                new Label(intersection.toString()) {{ setStyle("-fx-text-fill: #3D3C39; -fx-font-family: monospace;"); }}
-        );
-        propertiesPanel.getChildren().add(posBox);
-
-        Label hint = new Label("Press Delete to remove this intersection.");
-        hint.setStyle("-fx-text-fill: #666;");
-        propertiesPanel.getChildren().add(hint);
     }
 
     private void clearPropertiesPanel() {
@@ -1232,13 +1078,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         if (e.getClickCount() == 2) {
             ScreenNavigator.openDialog(
-                    ScreenNavigator.DIALOG_OBJECT_DESC,
-                    type + " – Description",
-                    controller -> {
-                        if (controller instanceof ObjectDescController descController) {
-                            descController.setObjectType(type);
-                        }
-                    });
+                    ScreenNavigator.DIALOG_OBJECT_DESC, type + " – Description");
         } else {
             log("Selected object type: " + type + ".  Drag it into the viewport to place.");
         }
@@ -1276,10 +1116,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         List<Object> newBacking = new ArrayList<>();
         for (MapEntity e : engine.getMap().getEntities()) {
             String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // 🤖 robot
-                         : (e instanceof Rack)     ? "\ud83d\udce6 "  // 📦 rack/shelf
-                         : (e instanceof Station)  ? "\u26a1 "        // ⚡ station
-                         : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // 🧱 wall/obstacle
-                         :                           "\u25ab ";        // ▫ generic entity
+                    : (e instanceof Rack)     ? "\ud83d\udce6 "  // 📦 rack/shelf
+                    : (e instanceof Station)  ? "\u26a1 "        // ⚡ station
+                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // 🧱 wall/obstacle
+                    :                           "\u25ab ";        // ▫ generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                 newItems.add(entry);
@@ -1291,7 +1131,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             for (Task task : engine.getDispatcher().getAllTasks()) {
                 String icon = "\u2b07 ";
                 String entry = icon + "Task #" + task.getId() + " " + task.getStatus()
-                    + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
+                        + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
                 if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                     newItems.add(entry);
                     newBacking.add(task);
@@ -1384,6 +1224,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             startLoop();
             log("Simulation started.");
+            queryLogs(); //TODO REMOVE
             // Update RAM display
             updateRamLabel();
         }
@@ -1429,7 +1270,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animationProgress = 0.0;
         prevRobotPositions.clear();
         selectedEntity = null;
-        selectedIntersection = null;
         onStop();
         localTick = 0;
         // Reload from the initial snapshot taken when play was first pressed.
@@ -1451,7 +1291,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine = reloaded;
             AppState.setEngine(engine);
-            refreshIntersectionObjectTileVisibility();
         } else {
             // TODO: make sure template map resets here
         }
@@ -1465,7 +1304,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
             log("Simulation reset.");
-            refreshIntersectionObjectTileVisibility();
             return;
         }
 
@@ -1481,7 +1319,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         log("Simulation reset.");
         // Update RAM display
         updateRamLabel();
-        refreshIntersectionObjectTileVisibility();
         populateOutliner();
         drawViewport();
     }
@@ -1551,7 +1388,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             prevRobotPositions.clear();
             for (Robot robot : engine.getRobots()) {
                 prevRobotPositions.put(robot.getId(), new com.openrobotics.map.Vector2D(
-                    robot.getPosition().getX(), robot.getPosition().getY()));
+                        robot.getPosition().getX(), robot.getPosition().getY()));
             }
         }
 
@@ -1598,11 +1435,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
             animTimeline.getKeyFrames().add(new KeyFrame(
-                Duration.millis((frame + 1) * BASE_TICK_MS / speedFactor / totalFrames),
-                e -> {
-                    animationProgress = (double)(frame + 1) / totalFrames;
-                    drawViewport();
-                }
+                    Duration.millis((frame + 1) * BASE_TICK_MS / speedFactor / totalFrames),
+                    e -> {
+                        animationProgress = (double)(frame + 1) / totalFrames;
+                        drawViewport();
+                    }
             ));
         }
         animTimeline.setOnFinished(e -> {
@@ -1697,6 +1534,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (consoleArea != null) consoleArea.appendText(message + "\n");
     }
 
+    /**
+     * Database Logging in second console
+     */
+    public void queryLogs() {
+        if (databaseArea != null) databaseArea.appendText("hello testing");
+    }
+
     // ------------------------------------------------------------------ //
     //  Navigation & Menu
     // ------------------------------------------------------------------ //
@@ -1739,6 +1583,54 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onExit() {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
+    }
+
+    /**
+     * Updates any pending tasks whose pickup or dropoff location matches {@code oldPos}
+     * to use {@code newPos} instead. Called whenever an entity is moved in the editor
+     * so that tasks remain aligned with the actual rack/station positions on the map.
+     */
+    private void syncTaskPositions(com.openrobotics.map.Vector2D oldPos, com.openrobotics.map.Vector2D newPos) {
+        if (engine == null || engine.getDispatcher() == null) return;
+        int updated = 0;
+        for (Task task : engine.getDispatcher().getAllTasks()) {
+            boolean changed = false;
+            if (task.getPickupLocation().equals(oldPos)) {
+                task.setPickupLocation(newPos);
+                changed = true;
+            }
+            if (task.getDropoffLocation().equals(oldPos)) {
+                task.setDropoffLocation(newPos);
+                changed = true;
+            }
+            if (changed) updated++;
+        }
+        if (updated > 0) {
+            log("Updated " + updated + " task(s) to reflect entity move from " + oldPos + " → " + newPos + ".");
+            populateOutliner(); // refresh task list in the outliner
+        }
+    }
+
+    /**
+     * Saves the current engine state to a temp file and updates
+     * so that pressing Play (or Restart) always uses the latest editor layout, including
+     * any rack/entity moves made before the simulation has started.
+     */
+    private void persistEditorChanges() {
+        if (engine == null || running) return; // never overwrite a running sim
+        try {
+            // Reuse the existing snapshot file if one already exists, otherwise create fresh
+            String savePath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+            if (savePath == null) {
+                java.io.File tmp = java.io.File.createTempFile("openrobotics_editor_", ".json");
+                tmp.deleteOnExit();
+                savePath = tmp.getAbsolutePath();
+                initialSnapshotPath = savePath;
+            }
+            engine.configSaving(savePath);
+        } catch (Exception ex) {
+            log("\u26a0 Could not auto-save editor changes: " + ex.getMessage());
+        }
     }
 
     private void updateRamLabel() {

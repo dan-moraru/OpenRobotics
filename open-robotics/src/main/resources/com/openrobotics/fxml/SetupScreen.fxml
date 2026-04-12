@@ -50,81 +50,83 @@
     <center>
         <SplitPane dividerPositions="0.22">
 
-            <!-- ── ZONE 1 – Config sidebar ── -->
-            <ScrollPane fitToWidth="true" styleClass="sidebar-setup" minWidth="190" prefWidth="240">
-                <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
+            <!--ZONE 1 – Config sidebar & Config list-->
+            <SplitPane orientation="VERTICAL" minWidth="190" prefWidth="240" dividerPositions="0.65">
 
-                    <!-- Each row: reset btn + label + control, alternating #C2BEAE / #b0ad9e -->
-                    <!-- map -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetMap" />
-                        <Label text="Map" styleClass="prop-label" />
-                        <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                <ScrollPane fitToWidth="true" styleClass="sidebar-setup">
+                    <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
+
+                        <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetMap" />
+                            <Label text="Map" styleClass="prop-label" />
+                            <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed" />
+                            <Label text="Map Seed" styleClass="prop-label" />
+                            <TextField fx:id="randomSeedField" promptText="auto"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
+                            <Label text="Coordination Policy" styleClass="prop-label" />
+                            <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK" />
+                            <Label text="Reservation K" styleClass="prop-label" />
+                            <Spinner fx:id="reservationKSpinner"
+                                     editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />
+                            <Label text="Max Tasks" styleClass="prop-label" />
+                            <TextField fx:id="maxTasksField" text="10"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed" />
+                            <Label text="Workload Seed" styleClass="prop-label" />
+                            <TextField fx:id="workloadSeedField" text="42"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks" />
+                            <Label text="Max Ticks" styleClass="prop-label" />
+                            <TextField fx:id="maxTicksField" text="30000"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetRunName" />
+                            <Label text="Run Name" styleClass="prop-label" />
+                            <TextField fx:id="runNameField" text="experiment_1"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        </HBox>
+                        <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
+                            <Label text="W" styleClass="prop-label" />
+                            <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
+                            <Label text="× H" styleClass="canvas-size-separator" />
+                            <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
+                        </HBox>
+                        <Label fx:id="canvasWarnLabel" styleClass="label-hint"
+                               wrapText="true" visible="false" managed="false"
+                               style="-fx-padding: 4 8 4 8; -fx-text-fill: #7a1f1b; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                    </VBox>
+                </ScrollPane>
+
+                <VBox spacing="0" styleClass="outer-bg">
+                    <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 4 8 4 8;">
+                        <Label text="Saved Configs" style="-fx-font-weight: bold; -fx-text-fill: #32312D;"/>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="↻" styleClass="button-reset" onAction="#onRefreshFileList" />
                     </HBox>
-                    <!-- map seed (visible only when random_map is selected) -->
-                    <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed" />
-                        <Label text="Map Seed" styleClass="prop-label" />
-                        <TextField fx:id="randomSeedField" promptText="auto"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- coordination policy -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy" />
-                        <Label text="Coordination Policy" styleClass="prop-label" />
-                        <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- reservation k -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK" />
-                        <Label text="Reservation K" styleClass="prop-label" />
-                        <Spinner fx:id="reservationKSpinner"
-                                 editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- max tasks -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks" />
-                        <Label text="Max Tasks" styleClass="prop-label" />
-                        <TextField fx:id="maxTasksField" text="10"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- workload seed -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed" />
-                        <Label text="Workload Seed" styleClass="prop-label" />
-                        <TextField fx:id="workloadSeedField" text="42"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- max ticks -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks" />
-                        <Label text="Max Ticks" styleClass="prop-label" />
-                        <TextField fx:id="maxTicksField" text="30000"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- run name -->
-                    <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetRunName" />
-                        <Label text="Run Name" styleClass="prop-label" />
-                        <TextField fx:id="runNameField" text="experiment_1"
-                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
-                    </HBox>
-                    <!-- canvas size (width × height) -->
-                    <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                        <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles" />
-                        <Label text="W" styleClass="prop-label" />
-                        <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="58" />
-                        <Label text="× H" styleClass="canvas-size-separator" />
-                        <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="58" />
-                    </HBox>
-                    <!-- canvas warning -->
-                    <Label fx:id="canvasWarnLabel" styleClass="label-hint"
-                              wrapText="true" visible="false" managed="false"
-                           style="-fx-padding: 4 8 4 8; -fx-text-fill: #7a1f1b; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                    <ListView fx:id="configListView" VBox.vgrow="ALWAYS" style="-fx-background-color: #CDCBC3; -fx-border-color: #B0ADA5; -fx-border-width: 1 0 0 0;" />
                 </VBox>
-            </ScrollPane>
 
-            <!-- ── ZONE 2 – 2-D Preview Viewport ── -->
+            </SplitPane>
+
+            <!--ZONE 2 – 2-D Preview Viewport-->
             <BorderPane styleClass="viewport-preview">
                 <top>
                     <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
@@ -142,7 +144,7 @@
         </SplitPane>
     </center>
 
-    <!-- ── ZONE 3 – Bottom bar ── -->
+    <!--ZONE 3 – Bottom bar-->
     <bottom>
         <HBox styleClass="bottom-bar" alignment="CENTER_RIGHT" spacing="8">
             <Label fx:id="statusLabel" text="" styleClass="label-hint" />

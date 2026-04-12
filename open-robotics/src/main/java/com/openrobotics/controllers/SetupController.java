@@ -85,14 +85,15 @@ public class SetupController {
     // ── STATUS ──────────────────────────────────────────────────────────
     @FXML private Label statusLabel;
 
+    // Config file list
+    @FXML private ListView<String> configListView;
+
     // ------------------------------------------------------------------ //
     //  Default values (spec §5.1.3.4)
     // ------------------------------------------------------------------ //
 
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
-    private static final String DEFAULT_WORKLOAD_MODE = "FIXED_LIST";
-    private static final int    DEFAULT_SPAWN_RATE    = 1;
     private static final int    DEFAULT_MAX_TASKS     = 10;
     private static final long   DEFAULT_WORKLOAD_SEED = 42;
     private static final int    DEFAULT_MAX_TICKS     = 30000;
@@ -104,6 +105,7 @@ public class SetupController {
     private static final float  DEFAULT_LOW_BATTERY      = 20.0f;
     private static final float  DEFAULT_CHARGE_PER_TICK  = 5.0f;
     private static final float  DEFAULT_ENERGY_PER_MOVE  = 1.0f;
+    private final String CONFIG_DIRECTORY_PATH = "./configs";
     // private static final int    DEFAULT_CANVAS_TILES  = 15;
 
     // ------------------------------------------------------------------ //
@@ -112,6 +114,7 @@ public class SetupController {
 
     @FXML
     private void initialize() {
+
         // Map dropdown
         mapCombo.setItems(FXCollections.observableArrayList(
                 "empty", "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
@@ -125,7 +128,18 @@ public class SetupController {
         mapCombo.valueProperty().addListener((obs, o, n) -> {
             boolean isRandom = "random_map".equals(n);
             mapSeedRow.setVisible(isRandom);
-            if (n != null) autoSetCanvasForMap(n);
+            if (n != null) {
+                // User explicitly chose a template, drop any previously loaded config file
+                // so the preview and NEXT button both use the template, not the old engine.
+                if (AppState.hasEngine()) {
+                    AppState.clear();
+                    configListView.getSelectionModel().clearSelection();
+                }
+                // Re-enable canvas size spinners now that a template map is active
+                canvasWidthSpinner.setDisable(false);
+                canvasHeightSpinner.setDisable(false);
+                autoSetCanvasForMap(n);
+            }
             refreshPreview();
             checkCanvasConstraint();
         });
@@ -179,6 +193,29 @@ public class SetupController {
         viewportPreviewStack.heightProperty().addListener((obs, o, n) -> {
             previewCanvas.setHeight(n.doubleValue());
             refreshPreview();
+        });
+
+        // Get config lists
+        onRefreshFileList();
+
+        // Listener to load config from list
+        configListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                File selectedFile = new File(CONFIG_DIRECTORY_PATH, newValue);
+                boolean success = loadConfigFile(selectedFile);
+                if (success) {
+                    // Unselect the dropdown map since custom file is active
+                    mapCombo.getSelectionModel().clearSelection();
+
+                    // Disable canvas size spinners, config file dimensions are fixed
+                    canvasWidthSpinner.setDisable(true);
+                    canvasHeightSpinner.setDisable(true);
+
+                    // Redraw the canvas
+                    refreshPreview();
+                    checkCanvasConstraint();
+                }
+            }
         });
 
         // Apply canvas sizing for the initial map selection (listener fires only on changes)
@@ -236,9 +273,17 @@ public class SetupController {
 
         int cw = canvasWidthSpinner.getValue() != null ? canvasWidthSpinner.getValue() : AppState.getCanvasWidthTiles();
         int ch = canvasHeightSpinner.getValue() != null ? canvasHeightSpinner.getValue() : AppState.getCanvasHeightTiles();
-        if (previewMap != null) {
+
+        // For config file maps the dimensions are fixed by the file — use them directly.
+        // For template maps the user controls the canvas size via the spinners, so keep cw/ch
+        // from the spinners above and let the entity centering logic place content inside it.
+        boolean isConfigFile = AppState.hasEngine() && AppState.getEngine().getMap() == previewMap;
+        if (isConfigFile && previewMap != null) {
             cw = previewMap.getWidth();
             ch = previewMap.getHeight();
+            // Disable canvas size spinners, config file dimensions are fixed
+            canvasWidthSpinner.setDisable(true);
+            canvasHeightSpinner.setDisable(true);
         }
 
         double padding = 16;
@@ -271,7 +316,14 @@ public class SetupController {
                                      double ox, double oy, double tileSize,
                                      int tileOffX, int tileOffY) {
         double pad = Math.max(1.0, tileSize * 0.06);
+
+        // Show robots only when previewing a loaded config file, not for template maps.
+        boolean showRobots = AppState.hasEngine() && AppState.getEngine().getMap() == map;
+
         for (MapEntity entity : map.getEntities()) {
+            // Skip robots entirely for template maps
+            if (entity instanceof Robot && !showRobots) continue;
+
             double sx = ox + (tileOffX + entity.getPosition().getX()) * tileSize;
             double sy = oy + (tileOffY + entity.getPosition().getY()) * tileSize;
             Image icon = resolvePreviewIcon(entity);
@@ -279,17 +331,28 @@ public class SetupController {
             if (icon != null && !icon.isError()) {
                 if (wallLike) gc.drawImage(icon, sx, sy, tileSize, tileSize);
                 else          gc.drawImage(icon, sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
-            } else {
-                if (entity instanceof Rack)              { gc.setFill(Color.web("#8D8A7F")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad); }
-                else if (entity instanceof ChargingStation) { gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad); }
-                else if (entity instanceof DeliveryStation) { gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad); }
-                else if (entity instanceof Obstacle)     { gc.setFill(Color.web("#5D5B54")); gc.fillRect(sx, sy, tileSize, tileSize); }
+            } else if (entity instanceof Robot) {
+                // Fallback robot rendering: dark rounded rect + small green dot
+                gc.setFill(Color.web("#4D4B45"));
+                gc.fillRoundRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad, 4, 4);
+                double r = Math.max(2.0, tileSize * 0.15);
+                gc.setFill(Color.web("#599068"));
+                gc.fillOval(sx + tileSize - r*2 - pad, sy + pad, r*2, r*2);
+            } else if (entity instanceof Rack) {
+                gc.setFill(Color.web("#8D8A7F")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
+            } else if (entity instanceof ChargingStation) {
+                gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
+            } else if (entity instanceof DeliveryStation) {
+                gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
+            } else if (entity instanceof Obstacle) {
+                gc.setFill(Color.web("#5D5B54")); gc.fillRect(sx, sy, tileSize, tileSize);
             }
         }
     }
 
     private Image resolvePreviewIcon(MapEntity entity) {
         List<String> candidates = new ArrayList<>();
+        if (entity instanceof Robot)            candidates.add("ROBOT");
         if (entity instanceof ChargingStation) candidates.add("CHARGER");
         if (entity instanceof DeliveryStation) { candidates.add("STATION"); candidates.add("DOCK"); }
         if (entity instanceof Station)         candidates.add("STATION");
@@ -676,6 +739,30 @@ public class SetupController {
         }
     }
 
+    // Get config file list
+    @FXML
+    private void onRefreshFileList() {
+        if (configListView == null) return;
+
+        configListView.getItems().clear();
+        File configDir = new File(CONFIG_DIRECTORY_PATH);
+
+        // Create directory if it doesn't exist
+        if (!configDir.exists()) {
+            configDir.mkdirs();
+        }
+
+        File[] files = configDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                configListView.getItems().add(file.getName());
+            }
+        } else {
+            configListView.getItems().add("No configs found.");
+        }
+    }
+
     // ------------------------------------------------------------------ //
     //  Start Simulation
     // ------------------------------------------------------------------ //
@@ -763,7 +850,8 @@ public class SetupController {
             map = buildRandomMap(canvasW, canvasH, mapSeed);
         } else {
             String mapName = mapCombo.getValue();
-            if (mapName == null) {
+            if (mapName == null || mapName.isBlank()) {
+                // Shouldn't reach here if validate() passed, but guard just in case
                 statusLabel.setText("\u26a0 Please select a map.");
                 return null;
             }
@@ -790,12 +878,12 @@ public class SetupController {
         SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, DEFAULT_TICK_MS, maxTicks, seed, maxTasks);
 
         com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
-            parseOptionalFloatField(batteryCapacityField, DEFAULT_BATTERY_CAPACITY),
-            parseOptionalFloatField(lowBatteryField,      DEFAULT_LOW_BATTERY),
-            parseOptionalFloatField(chargePerTickField,   DEFAULT_CHARGE_PER_TICK),
-            parseOptionalFloatField(energyPerMoveField,   DEFAULT_ENERGY_PER_MOVE),
-            DEFAULT_LOADING_TICKS,
-            DEFAULT_UNLOADING_TICKS
+                parseOptionalFloatField(batteryCapacityField, DEFAULT_BATTERY_CAPACITY),
+                parseOptionalFloatField(lowBatteryField,      DEFAULT_LOW_BATTERY),
+                parseOptionalFloatField(chargePerTickField,   DEFAULT_CHARGE_PER_TICK),
+                parseOptionalFloatField(energyPerMoveField,   DEFAULT_ENERGY_PER_MOVE),
+                DEFAULT_LOADING_TICKS,
+                DEFAULT_UNLOADING_TICKS
         );
         engine.setRobotConfig(robotConfig);
 
@@ -1020,8 +1108,10 @@ public class SetupController {
 
     /** Basic validation – returns {@code true} if all required fields are filled. */
     private boolean validate() {
-        if (mapCombo.getValue() == null) {
-            statusLabel.setText("\u26a0 Please select a map or enable Random Map.");
+        // If a config file was loaded from the list, the engine and path are already set
+        // skip the map combo check entirely since it was intentionally cleared on file selection.
+        if (!AppState.hasEngine() && mapCombo.getValue() == null) {
+            statusLabel.setText("\u26a0 Please select a map or load a config file.");
             return false;
         }
         try {
