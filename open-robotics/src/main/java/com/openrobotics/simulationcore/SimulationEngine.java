@@ -49,6 +49,7 @@ public class SimulationEngine {
     private CollisionManager collisionManager;
     private Dispatcher dispatcher;
     private CoordinationPolicy coordinationPolicy;
+    private SimulationError simulationError;
 
     private RobotConfig robotConfig = RobotConfig.defaults();
 
@@ -118,6 +119,7 @@ public class SimulationEngine {
                           String workloadMode, int spawnRate, int maxTasks) {
 
         this.runId = UUID.randomUUID();
+        this.simulationError = SimulationError.NONE;
         this.tickCounter = 0;
         this.running = false;
         this.map = map;
@@ -567,6 +569,7 @@ public class SimulationEngine {
         // Check if all robots have died
         if (allRobotsDead()) {
             this.running = false;
+            simulationError = SimulationError.ALL_ROBOTS_DEAD;
             return false;
         }
 
@@ -950,6 +953,14 @@ public class SimulationEngine {
      */
     public String getInitError() {
         return initError;
+    }
+
+    /**
+     * Returns the current simulation error state, if any.
+     * @return the current simulation error state
+     */
+    public SimulationError getSimulationError() {
+        return simulationError;
     }
 
     /**
