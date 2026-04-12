@@ -21,8 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SimulationEngineConfigLoadTest {
 
     @Test
-    void loadsJsonScenarioFromRepositoryRoot() {
-        Path configPath = Path.of("..", "test_scenario.json").toAbsolutePath().normalize();
+    void loadsJsonScenarioFromRepositoryRoot() throws IOException {
+        Path source = Path.of("src", "test", "resources", "com", "openrobotics", "io", "test_scenario.json");
+        Path configPath = Files.createTempFile("test_scenario", ".json");
+        Files.copy(source, configPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
         SimulationEngine engine = new SimulationEngine(configPath.toString());
 
