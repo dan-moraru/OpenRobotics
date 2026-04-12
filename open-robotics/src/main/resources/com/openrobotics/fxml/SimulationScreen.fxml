@@ -157,15 +157,6 @@
                                                           </ImageView>
                                                       </graphic>
                                                   </Button>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="DOCK" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/dock.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
                                                   <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="WALL" GridPane.columnIndex="0" GridPane.rowIndex="2">
                                                       <graphic>
                                                           <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
