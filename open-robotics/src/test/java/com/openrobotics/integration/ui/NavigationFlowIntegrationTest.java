@@ -46,7 +46,7 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         ComboBox<?> mapCombo = lookup("#mapCombo").queryAs(ComboBox.class);
-        assertEquals("baseline_small", mapCombo.getValue());
+        assertEquals("empty", mapCombo.getValue());
 
         clickOn(simulationStartButton());
         WaitForAsyncUtils.waitForFxEvents();
@@ -102,6 +102,6 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
     }
 
     private Button simulationStartButton() {
-        return lookup((Button b) -> "START SIMULATION".equals(b.getText())).queryAs(Button.class);
+        return lookup((Button b) -> "NEXT".equals(b.getText())).queryAs(Button.class);
     }
 }
