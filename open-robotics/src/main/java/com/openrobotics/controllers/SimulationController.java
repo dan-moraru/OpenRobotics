@@ -519,22 +519,32 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void drawTrafficRuleIntersections(GraphicsContext gc) {
         if (engine == null || !engine.usesTrafficRulesPolicy()) return;
-
         double tileSize = 32 * zoom;
         double markerInset = Math.max(3.0, tileSize * 0.22);
-        double centerInset = Math.max(2.0, tileSize * 0.38);
 
-        gc.setFill(INTERSECTION_FILL_COLOR);
+        // Load intersection icon — falls back to primitive drawing if not found
+        javafx.scene.image.Image intersectionIcon = IconLoader.getIcon("INTERSECTION");
+
         gc.setStroke(INTERSECTION_STROKE_COLOR);
         gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
 
         for (Vector2D intersection : engine.getTrafficRuleIntersections()) {
             double sx = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize;
             double sy = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize;
-            gc.fillOval(sx + markerInset, sy + markerInset, tileSize - 2 * markerInset, tileSize - 2 * markerInset);
-            gc.strokeLine(sx + centerInset, sy + tileSize / 2.0, sx + tileSize - centerInset, sy + tileSize / 2.0);
-            gc.strokeLine(sx + tileSize / 2.0, sy + centerInset, sx + tileSize / 2.0, sy + tileSize - centerInset);
 
+            if (intersectionIcon != null && !intersectionIcon.isError()) {
+                // Draw PNG icon
+                gc.drawImage(intersectionIcon, sx, sy, tileSize, tileSize);
+            } else {
+                // Fallback: original primitive drawing
+                double centerInset = Math.max(2.0, tileSize * 0.38);
+                gc.setFill(INTERSECTION_FILL_COLOR);
+                gc.fillOval(sx + markerInset, sy + markerInset, tileSize - 2 * markerInset, tileSize - 2 * markerInset);
+                gc.strokeLine(sx + centerInset, sy + tileSize / 2.0, sx + tileSize - centerInset, sy + tileSize / 2.0);
+                gc.strokeLine(sx + tileSize / 2.0, sy + centerInset, sx + tileSize / 2.0, sy + tileSize - centerInset);
+            }
+
+            // Selection highlight — always drawn regardless of icon
             if (intersection.equals(selectedIntersection)) {
                 gc.setStroke(OBJECT_SELECTION_COLOR);
                 gc.setLineWidth(Math.max(2.0, tileSize * 0.1));

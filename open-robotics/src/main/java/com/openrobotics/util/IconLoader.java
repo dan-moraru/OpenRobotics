@@ -17,7 +17,7 @@ public class IconLoader {
     // Standard object types with icon assets
     private static final List<String> SUPPORTED_TYPES = List.of(
             "ROBOT", "CHARGER", "STATION", "DOCK", "WALL", "SHELF",
-            "RACK", "OBSTACLE", "DELIVERY"
+            "RACK", "OBSTACLE", "DELIVERY", "INTERSECTION"
     );
 
     /**
