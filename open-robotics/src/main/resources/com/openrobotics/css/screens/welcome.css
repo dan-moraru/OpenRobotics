@@ -12,6 +12,31 @@
     -fx-pref-height: infinity;
 }
 
+/* Menu bar — transparent background, left-aligned next to logo */
+.welcome-root .menu-bar-top {
+    -fx-background-color: transparent !important;
+    -fx-padding: 0;
+}
+
+.welcome-root .menu-bar-top .menu {
+    -fx-background-color: transparent;
+    -fx-padding: 4 10 4 10;
+}
+
+.welcome-root .menu-bar-top .menu .label {
+    -fx-text-fill: #C2BEAE !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.welcome-root .menu-bar-top .menu:hover {
+    -fx-background-color: #3D3C39;
+}
+
+.welcome-root .menu-bar-top .menu:showing {
+    -fx-background-color: #3D3C39;
+}
+
 /* Hero zone */
 .welcome-hero-logo-zone {
     -fx-background-color: #2A2926;
@@ -77,7 +102,7 @@
 }
 
 .welcome-feature-accent {
-    -fx-background-color: #1a743f;
+    -fx-background-color: #2A2926;
     -fx-min-width: 3px;
     -fx-max-width: 3px;
     -fx-min-height: 36px;
@@ -102,7 +127,7 @@
 }
 
 .welcome-section-title {
-    -fx-text-fill: #5D5B54;
+    -fx-text-fill: #2A2926;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
@@ -119,7 +144,7 @@
 .welcome-step-num {
     -fx-font-size: 28px;
     -fx-font-weight: bold;
-    -fx-text-fill: #C2BEAE;
+    -fx-text-fill: #2A2926;
     -fx-min-width: 36px;
     -fx-alignment: CENTER_RIGHT;
 }

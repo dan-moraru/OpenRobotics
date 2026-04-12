@@ -3,6 +3,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
@@ -15,7 +16,7 @@
 
         <!-- TOP BAR -->
         <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
-            <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
+            <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
                 <image>
                     <Image url="@../img/logo_color.png" backgroundLoading="true"/>
                 </image>
@@ -24,7 +25,6 @@
                 <Label text="OpenRobotics" styleClass="app-title"/>
                 <Label text="Warehouse Simulation Platform" styleClass="version-label"/>
             </VBox>
-            <Region HBox.hgrow="ALWAYS"/>
             <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                 <menus>
                     <Menu text="File">
@@ -39,6 +39,7 @@
                     </Menu>
                 </menus>
             </MenuBar>
+            <Region HBox.hgrow="ALWAYS"/>
         </HBox>
 
         <!-- HERO ZONE -->
