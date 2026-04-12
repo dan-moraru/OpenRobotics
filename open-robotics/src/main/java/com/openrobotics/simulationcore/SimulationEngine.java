@@ -18,9 +18,8 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
-import com.openrobotics.robot.navigation.BugNavigationStrategy;
 import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
-import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
+import com.openrobotics.robot.navigation.NavigationStrategy;
 import com.openrobotics.robot.sensors.ProximitySensor;
 import com.openrobotics.robot.sensors.RangeSensor;
 import com.openrobotics.task.*;
@@ -197,15 +196,8 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                // normalize config strategy name and wire nav with seed (default to greedy)
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
-                switch (algo) {
-                    case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                    case BUG -> robot.setNav(new BugNavigationStrategy(this.seed));
-                    case RTA_STAR -> robot.setNav(new RtaStarNavigationStrategy(this.seed));
-                    case RANDOM -> robot.setNav(new com.openrobotics.robot.navigation.RandomNavigation());
-                    default -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                }
+                robot.setNav(NavigationStrategy.create(algo, this.seed));
                 // do same with sensor strategy
                 SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
                 switch (sensorType) {

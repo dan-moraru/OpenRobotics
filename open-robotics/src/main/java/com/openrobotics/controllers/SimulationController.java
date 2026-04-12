@@ -176,6 +176,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private final List<Object> outlinerBacking = new ArrayList<>();
     private MapEntity selectedEntity = null;
     private MapEntity draggingOnCanvas = null;
+    private com.openrobotics.map.Vector2D dragStartPosition = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
@@ -189,6 +190,114 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private Timeline animTimeline = null;
     private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
     private static final int ANIMATION_FRAMES = 5;
+
+    // ── Undo / Redo ─────────────────────────────────────────────────────
+    private final java.util.Deque<EditorAction> undoStack = new java.util.ArrayDeque<>();
+    private final java.util.Deque<EditorAction> redoStack = new java.util.ArrayDeque<>();
+
+    /** Sealed interface for reversible editor actions. */
+    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction {
+        void undo(SimulationController ctrl);
+        void redo(SimulationController ctrl);
+        String description();
+    }
+    private record AddAction(MapEntity entity) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine != null) ctrl.engine.removeEntity(entity);
+            if (ctrl.selectedEntity == entity) ctrl.selectedEntity = null;
+            ctrl.populateOutliner(); ctrl.drawViewport();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine != null) ctrl.engine.addEntity(entity);
+            ctrl.populateOutliner(); ctrl.drawViewport();
+        }
+        public String description() { return "Add " + entity.getName(); }
+    }
+    private record DeleteAction(MapEntity entity) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine != null) ctrl.engine.addEntity(entity);
+            ctrl.populateOutliner(); ctrl.drawViewport();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine != null) ctrl.engine.removeEntity(entity);
+            if (ctrl.selectedEntity == entity) ctrl.selectedEntity = null;
+            ctrl.populateOutliner(); ctrl.drawViewport();
+        }
+        public String description() { return "Delete " + entity.getName(); }
+    }
+    private record MoveAction(MapEntity entity, com.openrobotics.map.Vector2D from, com.openrobotics.map.Vector2D to) implements EditorAction {
+        public void undo(SimulationController ctrl) { entity.setPosition(from); ctrl.drawViewport(); }
+        public void redo(SimulationController ctrl) { entity.setPosition(to); ctrl.drawViewport(); }
+        public String description() { return "Move " + entity.getName() + " from " + from + " to " + to; }
+    }
+    private record RenameAction(MapEntity entity, String oldName, String newName) implements EditorAction {
+        public void undo(SimulationController ctrl) { entity.setName(oldName); ctrl.populateOutliner(); ctrl.drawViewport(); }
+        public void redo(SimulationController ctrl) { entity.setName(newName); ctrl.populateOutliner(); ctrl.drawViewport(); }
+        public String description() { return "Rename " + oldName + " → " + newName; }
+    }
+    private record AlgorithmChangeAction(Robot robot, String oldAlgo, String newAlgo, com.openrobotics.robot.navigation.NavigationStrategy oldNav, com.openrobotics.robot.navigation.NavigationStrategy newNav) implements EditorAction {
+        public void undo(SimulationController ctrl) { robot.setNav(oldNav); ctrl.drawViewport(); }
+        public void redo(SimulationController ctrl) { robot.setNav(newNav); ctrl.drawViewport(); }
+        public String description() { return "Change " + robot.getName() + " algorithm " + oldAlgo + " → " + newAlgo; }
+    }
+    private record BatteryChangeAction(Robot robot, float oldBattery, float newBattery) implements EditorAction {
+        public void undo(SimulationController ctrl) { robot.setBattery(oldBattery); ctrl.drawViewport(); }
+        public void redo(SimulationController ctrl) { robot.setBattery(newBattery); ctrl.drawViewport(); }
+        public String description() { return "Change " + robot.getName() + " battery " + oldBattery + " → " + newBattery; }
+    }
+
+    private void pushAction(EditorAction action) {
+        undoStack.push(action);
+        redoStack.clear();
+        saveEditorBaseline();
+    }
+
+    private void undoAction() {
+        if (undoStack.isEmpty()) { log("Nothing to undo."); return; }
+        EditorAction action = undoStack.pop();
+        action.undo(this);
+        redoStack.push(action);
+        log("Undo: " + action.description());
+        saveEditorBaseline();
+    }
+
+    private void redoAction() {
+        if (redoStack.isEmpty()) { log("Nothing to redo."); return; }
+        EditorAction action = redoStack.pop();
+        action.redo(this);
+        undoStack.push(action);
+        log("Redo: " + action.description());
+        saveEditorBaseline();
+    }
+
+    /** Returns true if editor mutations (add/move/delete/rename/property changes) are blocked. */
+    private boolean isEditorLocked() {
+        return running || localTick > 0;
+    }
+
+    /** Logs an error and returns true if the editor is locked. Use as a guard at the top of mutating methods. */
+    private boolean guardEditor(String actionName) {
+        if (isEditorLocked()) {
+            log("\u26a0 Cannot " + actionName + " while the simulation is running or has advanced past tick 0. Reset first.");
+            return true;
+        }
+        return false;
+    }
+
+    /** Saves the current editor state as the baseline for reset. Reuses a single temp file. */
+    private void saveEditorBaseline() {
+        if (engine == null) return;
+        try {
+            if (initialSnapshotPath == null) {
+                java.io.File snap = java.io.File.createTempFile("openrobotics_baseline_", ".json");
+                snap.deleteOnExit();
+                initialSnapshotPath = snap.getAbsolutePath();
+            }
+            engine.configSaving(initialSnapshotPath);
+        } catch (Exception ex) {
+            log("\u26a0 Could not save editor baseline: " + ex.getMessage());
+        }
+    }
 
     // ------------------------------------------------------------------ //
     // ------------------------------------------------------------------ //
@@ -251,13 +360,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         });
 
-        // Keyboard shortcuts: Delete, Cmd+C, Cmd+V
+        // Keyboard shortcuts: Delete, Cmd+C, Cmd+V, Ctrl+Z, Ctrl+Y
         viewportStack.setFocusTraversable(true);
         viewportStack.setOnKeyPressed(e -> {
             switch (e.getCode()) {
                 case DELETE, BACK_SPACE -> deleteSelected();
                 case C -> { if (e.isShortcutDown()) copySelected(); }
                 case V -> { if (e.isShortcutDown()) pasteClipboard(); }
+                case Z -> { if (e.isShortcutDown()) undoAction(); }
+                case Y -> { if (e.isShortcutDown()) redoAction(); }
                 default -> {}
             }
             e.consume();
@@ -700,7 +811,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
-        if (running) { e.setDropCompleted(false); e.consume(); return; }
+        if (guardEditor("add objects")) { e.setDropCompleted(false); e.consume(); return; }
         Dragboard db = e.getDragboard();
         boolean dropCompleted = false;
         dragHighlightTileX = -1;
@@ -723,6 +834,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                         log("Added " + type + " at tile (" + tx + ", " + ty + ").");
                         if (viewportStatusLabel != null) viewportStatusLabel.setText("");
                         dropCompleted = true;
+                        pushAction(new AddAction(entity));
                     } else {
                         log("Placement blocked at tile (" + tx + ", " + ty + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
                         if (viewportStatusLabel != null) {
@@ -774,13 +886,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (entityHit != null) {
                 selectEntity(entityHit);
                 draggingOnCanvas = null;
+                dragStartPosition = new com.openrobotics.map.Vector2D(
+                        entityHit.getPosition().getX(), entityHit.getPosition().getY());
             } else {
                 selectEntity(null);
                 draggingOnCanvas = null;
+                dragStartPosition = null;
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right click: pan mode
             draggingOnCanvas = null;
+            dragStartPosition = null;
         }
 
         // Update RAM display
@@ -792,20 +908,26 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         double dy = e.getY() - lastMouseY;
 
         if (draggingOnCanvas != null && e.getButton() == MouseButton.PRIMARY) {
-            // Left-drag: move selected entity – snap to nearest tile, clamped to map bounds
-            double tileSize = 32 * zoom;
-            int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
-            int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
-            if (canPlaceEntityAt(draggingOnCanvas, newTX, newTY, draggingOnCanvas)) {
-                draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
-                if (viewportStatusLabel != null)
-                    viewportStatusLabel.setText(
-                            "dragging(" + draggingOnCanvas.getName()
-                            + ")  →  (" + newTX + ", " + newTY + ")");
-            } else if (viewportStatusLabel != null) {
-                viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
+            if (isEditorLocked()) {
+                draggingOnCanvas = null;
+                dragStartPosition = null;
+                log("\u26a0 Cannot move objects while the simulation is running or has advanced past tick 0. Reset first.");
+            } else {
+                // Left-drag: move selected entity – snap to nearest tile, clamped to map bounds
+                double tileSize = 32 * zoom;
+                int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+                int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+                if (canPlaceEntityAt(draggingOnCanvas, newTX, newTY, draggingOnCanvas)) {
+                    draggingOnCanvas.setPosition(new com.openrobotics.map.Vector2D(newTX, newTY));
+                    if (viewportStatusLabel != null)
+                        viewportStatusLabel.setText(
+                                "dragging(" + draggingOnCanvas.getName()
+                                + ")  →  (" + newTX + ", " + newTY + ")");
+                } else if (viewportStatusLabel != null) {
+                    viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
+                }
+                drawViewport();
             }
-            drawViewport();
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right-drag: pan the viewport
             viewOffsetX += dx;
@@ -822,9 +944,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void onViewportMouseReleased(MouseEvent e) {
         if (draggingOnCanvas != null) {
+            com.openrobotics.map.Vector2D endPos = draggingOnCanvas.getPosition();
+            if (dragStartPosition != null && !dragStartPosition.equals(endPos)) {
+                pushAction(new MoveAction(draggingOnCanvas, dragStartPosition, endPos));
+            }
             log("Moved " + draggingOnCanvas.getName()
-                + " to tile (" + (int)draggingOnCanvas.getPosition().getX() + ", " + (int)draggingOnCanvas.getPosition().getY() + ").");
+                + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
+            dragStartPosition = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
         }
@@ -858,13 +985,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void deleteSelected() {
         if (selectedEntity == null) return;
-        log("Deleted " + selectedEntity.getName() + ".");
+        if (guardEditor("delete")) return;
+        MapEntity deleted = selectedEntity;
+        log("Deleted " + deleted.getName() + ".");
         if (engine != null) {
-            engine.removeEntity(selectedEntity);
+            engine.removeEntity(deleted);
         }
         selectedEntity = null;
         populateOutliner();
         drawViewport();
+        pushAction(new DeleteAction(deleted));
     }
 
     private void copySelected() {
@@ -875,6 +1005,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void pasteClipboard() {
         if (clipboardEntity == null || engine == null || engine.getMap() == null) return;
+        if (guardEditor("paste")) return;
         int newX = clampTileX((int)clipboardEntity.getPosition().getX() + 1);
         int newY = clampTileY((int)clipboardEntity.getPosition().getY() + 1);
         MapEntity copy = createEntityFromType(
@@ -889,6 +1020,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             populateOutliner();
             drawViewport();
             log("Pasted " + copy.getName() + " at tile (" + newX + ", " + newY + ").");
+            pushAction(new AddAction(copy));
         } else {
             log("Paste blocked at tile (" + newX + ", " + newY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
         }
@@ -945,13 +1077,21 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         HBox nameBox = new HBox(8);
         TextField nameField = new TextField(entity.getName());
         nameField.setStyle("-fx-font-size: 11;");
-        nameField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.isBlank()) {
-                entity.setName(newVal);
-                populateOutliner();
-                drawViewport();
+        // Track rename on focus lost (commit) rather than every keystroke
+        nameField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (!isFocused) {
+                String newVal = nameField.getText();
+                String oldVal = entity.getName();
+                if (newVal != null && !newVal.isBlank() && !newVal.equals(oldVal)) {
+                    if (guardEditor("rename")) { nameField.setText(oldVal); return; }
+                    entity.setName(newVal);
+                    populateOutliner();
+                    drawViewport();
+                    pushAction(new RenameAction(entity, oldVal, newVal));
+                }
             }
         });
+        nameField.setOnAction(ev -> nameField.getParent().requestFocus()); // Enter commits
         nameBox.getChildren().addAll(new Label("Name:"), nameField);
         propertiesPanel.getChildren().add(nameBox);
 
@@ -967,11 +1107,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || oldVal == null) return;
+            if (guardEditor("move")) { xSpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
+            com.openrobotics.map.Vector2D from = new com.openrobotics.map.Vector2D(oldVal, targetY);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                com.openrobotics.map.Vector2D to = new com.openrobotics.map.Vector2D(targetX, targetY);
+                entity.setPosition(to);
                 drawViewport();
+                pushAction(new MoveAction(entity, from, to));
             } else {
                 xSpinner.getValueFactory().setValue(oldVal);
                 log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
@@ -979,11 +1123,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || oldVal == null) return;
+            if (guardEditor("move")) { ySpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
+            com.openrobotics.map.Vector2D from = new com.openrobotics.map.Vector2D(targetX, oldVal);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                entity.setPosition(new com.openrobotics.map.Vector2D(targetX, targetY));
+                com.openrobotics.map.Vector2D to = new com.openrobotics.map.Vector2D(targetX, targetY);
+                entity.setPosition(to);
                 drawViewport();
+                pushAction(new MoveAction(entity, from, to));
             } else {
                 ySpinner.getValueFactory().setValue(oldVal);
                 log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
@@ -1004,22 +1152,20 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR", "RANDOM"));
             algoCombo.setPrefWidth(120);
             // Determine current algorithm from the robot's nav strategy
-            String currentAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
-            if (!algoCombo.getItems().contains(currentAlgo)) {
-                currentAlgo = "GREEDY";
-            }
+            String detectedAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
+            final String currentAlgo = algoCombo.getItems().contains(detectedAlgo) ? detectedAlgo : "GREEDY";
             algoCombo.setValue(currentAlgo);
             algoCombo.setOnAction(ev -> {
+                if (guardEditor("change algorithm")) { algoCombo.setValue(currentAlgo); return; }
                 String selected = algoCombo.getValue();
+                String oldAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
+                if (selected.equals(oldAlgo)) return;
+                com.openrobotics.robot.navigation.NavigationStrategy oldNav = robot.getNav();
                 long seed = engine != null ? engine.getSeed() : 42;
-                switch (selected) {
-                    case "GREEDY"   -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
-                    case "BUG"      -> robot.setNav(new com.openrobotics.robot.navigation.BugNavigationStrategy(seed));
-                    case "RTA_STAR" -> robot.setNav(new com.openrobotics.robot.navigation.RtaStarNavigationStrategy(seed));
-                    case "RANDOM"   -> robot.setNav(new com.openrobotics.robot.navigation.RandomNavigation());
-                    default         -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
-                }
+                robot.setNav(com.openrobotics.robot.navigation.NavigationStrategy.create(
+                        com.openrobotics.robot.AlgorithmType.fromConfigString(selected), seed));
                 log("Set " + robot.getName() + " algorithm to " + selected);
+                pushAction(new AlgorithmChangeAction(robot, oldAlgo, selected, oldNav, robot.getNav()));
             });
             algoBox.getChildren().addAll(new Label("Algorithm:"), algoCombo);
             propertiesPanel.getChildren().add(algoBox);
@@ -1033,9 +1179,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             batterySpinner.setPrefWidth(90);
             batterySpinner.setEditable(true);
             batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
+                if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
+                    if (guardEditor("change battery")) {
+                        batterySpinner.getValueFactory().setValue(oldVal);
+                        return;
+                    }
                     robot.setBattery(newVal.floatValue());
                     drawViewport();
+                    pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
                 }
             });
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
@@ -1203,16 +1354,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 updateRamLabel();
             }
         } else {
-            // Snapshot the state right now (tick 0) as the restart baseline.
+            // Ensure a baseline snapshot exists before starting (editor actions save it continuously,
+            // but if no edits were made this is the first snapshot).
             if (initialSnapshotPath == null && engine != null) {
-                try {
-                    java.io.File snap = java.io.File.createTempFile("openrobotics_initial_", ".json");
-                    snap.deleteOnExit();
-                    engine.configSaving(snap.getAbsolutePath());
-                    initialSnapshotPath = snap.getAbsolutePath();
-                } catch (Exception ex) {
-                    log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
-                }
+                saveEditorBaseline();
             }
             running = true;
             paused  = false;
@@ -1293,6 +1438,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onRestart() {
+        // If already at tick 0 and not running, nothing to reset
+        if (localTick == 0 && !running) {
+            log("Already at tick 0. Nothing to reset.");
+            return;
+        }
         if (animTimeline != null) { animTimeline.stop(); animTimeline = null; }
         animating = false;
         animationProgress = 0.0;
@@ -1300,10 +1450,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         onStop();
         localTick = 0;
-        // Reload from the initial snapshot taken when play was first pressed.
-        // This restores tick-0 state with all editor changes intact.
+        // Reload from the editor baseline snapshot (continuously updated on every editor action).
+        // This restores the most recent editor state, not the original config file.
         String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
-        initialSnapshotPath = null; // clear so next play press re-snapshots fresh
         if (reloadPath != null) {
             SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
