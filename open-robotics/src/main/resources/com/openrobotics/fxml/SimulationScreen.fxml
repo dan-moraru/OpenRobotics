@@ -125,70 +125,52 @@
          
                              <Tab text="Add Object">
             <content>
-                                    <VBox spacing="0" styleClass="sidebar-panel">
-                                       <children>
-                                           <!-- 2-column grid of object tiles #5D5B54 -->
-                                           <GridPane alignment="CENTER" hgap="4" styleClass="object-grid" vgap="4">
-                                              <children>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="ROBOT" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/robot.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="CHARGER" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/charger.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="STATION" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/station.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="WALL" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/wall.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
-                                                  <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="SHELF" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                                      <graphic>
-                                                          <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                              <image>
-                                                      <Image url="@../img/shelf.png" />
-                                                   </image>
-                                                          </ImageView>
-                                                      </graphic>
-                                                  </Button>
-                                              </children>
-                                       <columnConstraints>
-                                          <ColumnConstraints />
-                                          <ColumnConstraints />
-                                       </columnConstraints>
-                                       <rowConstraints>
-                                          <RowConstraints />
-                                          <RowConstraints />
-                                          <RowConstraints />
-                                       </rowConstraints>
-                                           </GridPane>
-                                           <Label prefHeight="38.0" prefWidth="229.0" styleClass="sim-help-label" text="To add an object, drag and drop it into the viewport." />
-                                       </children>
-                                    </VBox>
+                                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="sidebar-scroll">
+    <VBox spacing="4" styleClass="sidebar-panel" style="-fx-padding: 6;">
+        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                styleClass="object-tile" userData="ROBOT" maxWidth="Infinity">
+            <graphic>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image><Image url="@../img/robot.png" /></image>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                styleClass="object-tile" userData="CHARGER" maxWidth="Infinity">
+            <graphic>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image><Image url="@../img/charger.png" /></image>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                styleClass="object-tile" userData="STATION" maxWidth="Infinity">
+            <graphic>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image><Image url="@../img/station.png" /></image>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                styleClass="object-tile" userData="WALL" maxWidth="Infinity">
+            <graphic>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image><Image url="@../img/wall.png" /></image>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                styleClass="object-tile" userData="SHELF" maxWidth="Infinity">
+            <graphic>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image><Image url="@../img/shelf.png" /></image>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Label prefWidth="229.0" styleClass="sim-help-label"
+               text="To add an object, drag and drop it into the viewport." />
+    </VBox>
+</ScrollPane>
             </content>
                              </Tab>
          

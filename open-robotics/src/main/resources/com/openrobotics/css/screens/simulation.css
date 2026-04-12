@@ -35,12 +35,9 @@
     -fx-background-color: #B8B4A6;
     -fx-border-color: #4D4B45;
     -fx-border-width: 2px;
-    -fx-pref-width: 100px;
-    -fx-pref-height: 100px;
-    -fx-min-width: 100px;
-    -fx-min-height: 100px;
-    -fx-max-width: 100px;
-    -fx-max-height: 100px;
+    -fx-pref-height: 80px;       /* was 100px — slightly shorter works better in a list */
+    -fx-min-height: 80px;
+    -fx-max-height: 80px;
     -fx-cursor: hand;
     -fx-alignment: CENTER;
     -fx-text-fill: #2A2926;
@@ -252,4 +249,15 @@
 
 .text-area .content {
     -fx-background-color: #32312D;
+}
+
+/* Scrollable object list in Add Object tab */
+.sidebar-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.sidebar-scroll > .viewport {
+    -fx-background-color: #8D8A7F;
 }
