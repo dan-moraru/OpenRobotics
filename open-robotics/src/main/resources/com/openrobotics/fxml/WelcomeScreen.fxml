@@ -159,8 +159,15 @@
 
         <Region styleClass="welcome-divider" minHeight="1" maxHeight="1" prefHeight="1"/>
 
-        <!-- CTA bottom right -->
-        <HBox styleClass="welcome-cta-row" alignment="CENTER_RIGHT" spacing="14">
+        <!-- CTA row: authors left, button right -->
+        <HBox styleClass="welcome-cta-row" alignment="CENTER_LEFT" spacing="0">
+            <VBox spacing="3">
+                <Label text="Dan Moraru · Daniel Blackburn · Murad Novruzov · Lounes Azzoun"
+                       styleClass="welcome-authors-label"/>
+                <Label text="Muhammed Sohail · Badr Zeji · Filip Snítil · Behnam Yosufi"
+                       styleClass="welcome-authors-label"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
             <Button text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
         </HBox>
 

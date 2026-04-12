@@ -190,6 +190,11 @@
     -fx-border-width: 1 0 0 0;
 }
 
+.welcome-authors-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
 .welcome-cta-row .button {
     -fx-font-size: 12px;
     -fx-padding: 11 24 11 24;
