@@ -29,6 +29,7 @@ import javafx.application.Platform;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -996,8 +997,54 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         propertiesPanel.getChildren().add(posBox);
 
         if (entity instanceof Robot robot) {
-            Label robotProps = new Label("Battery: " + robot.getBattery() + " | State: " + robot.getState());
-            propertiesPanel.getChildren().add(robotProps);
+            // Navigation algorithm dropdown
+            HBox algoBox = new HBox(8);
+            algoBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            ComboBox<String> algoCombo = new ComboBox<>(
+                    FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR", "RANDOM"));
+            algoCombo.setPrefWidth(120);
+            // Determine current algorithm from the robot's nav strategy
+            String currentAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
+            if (!algoCombo.getItems().contains(currentAlgo)) {
+                currentAlgo = "GREEDY";
+            }
+            algoCombo.setValue(currentAlgo);
+            algoCombo.setOnAction(ev -> {
+                String selected = algoCombo.getValue();
+                long seed = engine != null ? engine.getSeed() : 42;
+                switch (selected) {
+                    case "GREEDY"   -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
+                    case "BUG"      -> robot.setNav(new com.openrobotics.robot.navigation.BugNavigationStrategy(seed));
+                    case "RTA_STAR" -> robot.setNav(new com.openrobotics.robot.navigation.RtaStarNavigationStrategy(seed));
+                    case "RANDOM"   -> robot.setNav(new com.openrobotics.robot.navigation.RandomNavigation());
+                    default         -> robot.setNav(new com.openrobotics.robot.navigation.GreedyNavigationStrategy(seed));
+                }
+                log("Set " + robot.getName() + " algorithm to " + selected);
+            });
+            algoBox.getChildren().addAll(new Label("Algorithm:"), algoCombo);
+            propertiesPanel.getChildren().add(algoBox);
+
+            // Battery level spinner
+            HBox batteryBox = new HBox(8);
+            batteryBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            float maxBattery = robot.getConfig().batteryCapacity;
+            Spinner<Double> batterySpinner = new Spinner<>(
+                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0, maxBattery, robot.getBattery(), 1.0));
+            batterySpinner.setPrefWidth(90);
+            batterySpinner.setEditable(true);
+            batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    robot.setBattery(newVal.floatValue());
+                    drawViewport();
+                }
+            });
+            batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
+            propertiesPanel.getChildren().add(batteryBox);
+
+            // Read-only state display
+            Label stateLabel = new Label("State: " + robot.getState());
+            stateLabel.setStyle("-fx-text-fill: #666;");
+            propertiesPanel.getChildren().add(stateLabel);
         } else if (entity instanceof Station) {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
@@ -1176,6 +1223,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             playBtn.setStyle("-fx-background-color: #2E9E5B;");
             pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+
+            // Auto-generate tasks from map racks/stations if dispatcher is empty
+            if (engine.getDispatcher().getAllTasks().isEmpty() && engine.getMap() != null) {
+                List<Task> generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
+                        engine.getMap(), 50, engine.getSeed());
+                if (!generated.isEmpty()) {
+                    engine.getDispatcher().addTasks(generated);
+                    log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
+                } else {
+                    log("\u26a0 No tasks could be generated. Ensure the map has at least one rack and one delivery station.");
+                }
+            }
 
             // Logging simulation run start event
             SimulationRunRecordBuilder simRunRecordBuilder = new SimulationRunRecordBuilder(engine);

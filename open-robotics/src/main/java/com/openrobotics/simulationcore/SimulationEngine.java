@@ -197,13 +197,14 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                // normalize config strategy name and wire nav with seed
+                // normalize config strategy name and wire nav with seed (default to greedy)
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
                 switch (algo) {
                     case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
                     case BUG -> robot.setNav(new BugNavigationStrategy(this.seed));
                     case RTA_STAR -> robot.setNav(new RtaStarNavigationStrategy(this.seed));
-                    default -> {}
+                    case RANDOM -> robot.setNav(new com.openrobotics.robot.navigation.RandomNavigation());
+                    default -> robot.setNav(new GreedyNavigationStrategy(this.seed));
                 }
                 // do same with sensor strategy
                 SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
