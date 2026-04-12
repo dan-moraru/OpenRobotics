@@ -10,6 +10,8 @@ import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * Utility class that centralises all screen/dialog transitions.
@@ -117,7 +119,8 @@ public final class ScreenNavigator {
             if (url == null) {
                 throw new IllegalArgumentException("FXML resource not found: " + fxmlPath);
             }
-            FXMLLoader loader = new FXMLLoader(url);
+            ResourceBundle bundle = resolveBundleForFxml(fxmlPath);
+            FXMLLoader loader = bundle != null ? new FXMLLoader(url, bundle) : new FXMLLoader(url);
             Parent root = loader.load();
             if (primaryStage == null) {
                 throw new IllegalStateException("Primary stage not set. Call ScreenNavigator.setPrimaryStage first.");
@@ -192,6 +195,23 @@ public final class ScreenNavigator {
     /** Implemented by the exit-confirm dialog controller. */
     public interface ExitConfirmResultHolder {
         boolean isConfirmed();
+    }
+
+    /**
+     * Derives a ResourceBundle base name from an FXML resource path and attempts
+     * to load it. Returns {@code null} when no matching bundle exists.
+     */
+    private static ResourceBundle resolveBundleForFxml(String fxmlPath) {
+        if (fxmlPath == null) return null;
+        String baseName = fxmlPath
+                .replaceFirst("^/", "")
+                .replaceFirst("\\.fxml$", "")
+                .replace('/', '.');
+        try {
+            return ResourceBundle.getBundle(baseName);
+        } catch (MissingResourceException ignored) {
+            return null;
+        }
     }
 }
 
