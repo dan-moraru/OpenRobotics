@@ -110,6 +110,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── CONSOLE ─────────────────────────────────────────────────────────
     @FXML private TextArea consoleArea;
 
+    // - DATABASE LOGGING
+    @FXML private TextArea databaseArea;
+
     // ── TAB STRIP ─────────────────────────────────────────────────────────
     @FXML private Button editorTabBtn;
     @FXML private Button resultsTabBtn;
@@ -1194,6 +1197,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             startLoop();
             log("Simulation started.");
+            queryLogs(); //TODO REMOVE
             // Update RAM display
             updateRamLabel();
         }
@@ -1501,6 +1505,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void log(String message) {
         System.out.println("[SimulationController] " + message);
         if (consoleArea != null) consoleArea.appendText(message + "\n");
+    }
+
+    /**
+     * Database Logging in second console
+     */
+    public void queryLogs() {
+        if (databaseArea != null) databaseArea.appendText("hello testing");
     }
 
     // ------------------------------------------------------------------ //
