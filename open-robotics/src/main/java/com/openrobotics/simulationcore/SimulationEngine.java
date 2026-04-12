@@ -547,6 +547,12 @@ public class SimulationEngine {
             return false;
         }
 
+        // Check if all robots have died
+        if (allRobotsDead()) {
+            this.running = false;
+            return false;
+        }
+
         // Any tick that executes work/sandbox progression is considered running.
         this.running = true;
 
@@ -581,6 +587,19 @@ public class SimulationEngine {
             this.running = false;
         }
 
+        return true;
+    }
+
+    /**
+     * Checks if all robots in the simulation have reached a BATTERY_DEAD state
+     * @return true if all robots are in the BATTER_DEAD state, false otherwise
+     */
+    private boolean allRobotsDead() {
+        for (Robot robot : robots) {
+            if (robot.getState() != RobotState.BATTER_DEAD) {
+                return false;
+            }
+        }
         return true;
     }
 
