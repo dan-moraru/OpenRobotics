@@ -33,9 +33,13 @@
 
     <!-- Description body -->
     <VBox styleClass="dialog-body object-desc-dialog-body" spacing="8" VBox.vgrow="ALWAYS">
+        <Label fx:id="objectTypeLabel"
+               text=""
+               styleClass="dialog-body-text" />
         <Label fx:id="objectDescLabel"
                text="Select an object type to add to your simulation. Each object type has specific properties and behaviors."
                styleClass="dialog-body-text" />
+        <VBox fx:id="propsOverview" spacing="4" />
     </VBox>
 
     <HBox styleClass="dialog-footer object-desc-dialog-footer" spacing="12" alignment="CENTER">

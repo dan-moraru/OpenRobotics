@@ -205,12 +205,14 @@
                                                                 </ImageView>
                                                             </graphic>
                                                         </Button>
+                                                        <Button fx:id="intersectionObjectTile" managed="false" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #CDCBC3;" styleClass="object-tile" text="╋" userData="INTERSECTION" visible="false" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                                                     </children>
                                                     <columnConstraints>
                                                         <ColumnConstraints/>
                                                         <ColumnConstraints/>
                                                     </columnConstraints>
                                                     <rowConstraints>
+                                                        <RowConstraints/>
                                                         <RowConstraints/>
                                                         <RowConstraints/>
                                                         <RowConstraints/>
