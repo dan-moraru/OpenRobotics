@@ -205,6 +205,23 @@
                                                         </graphic>
                                                     </Button>
 
+                                                    <Button fx:id="intersectionObjectTile" managed="false" visible="false"
+                                                            onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
+                                                            styleClass="object-tile" userData="INTERSECTION" maxWidth="Infinity"
+                                                            style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #CDCBC3;">
+                                                        <graphic>
+                                                            <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
+                                                                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                                                                    <image><Image url="@../img/intersection.png"/></image>
+                                                                </ImageView>
+                                                                <VBox spacing="2">
+                                                                    <Label text="Intersection" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
+                                                                    <Label text="Traffic rules crossing point" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                </VBox>
+                                                            </HBox>
+                                                        </graphic>
+                                                    </Button>
+
                                                 </VBox>
                                             </ScrollPane>
                                         </VBox>
