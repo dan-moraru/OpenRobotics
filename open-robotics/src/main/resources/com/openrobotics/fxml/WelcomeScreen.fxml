@@ -15,16 +15,13 @@
     <VBox styleClass="welcome-shell" spacing="0" StackPane.alignment="CENTER">
 
         <!-- TOP BAR -->
-        <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+        <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="0">
             <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                <HBox.margin><Insets left="12" right="12"/></HBox.margin>
                 <image>
                     <Image url="@../img/logo_color.png" backgroundLoading="true"/>
                 </image>
             </ImageView>
-            <VBox spacing="2">
-                <Label text="OpenRobotics" styleClass="app-title"/>
-                <Label text="Warehouse Simulation Platform" styleClass="version-label"/>
-            </VBox>
             <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                 <menus>
                     <Menu text="File">

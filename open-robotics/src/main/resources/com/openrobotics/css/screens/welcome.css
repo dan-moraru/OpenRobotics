@@ -190,6 +190,11 @@
     -fx-border-width: 1 0 0 0;
 }
 
+.welcome-cta-row .button {
+    -fx-font-size: 12px;
+    -fx-padding: 11 24 11 24;
+}
+
 /* Panel divider */
 .welcome-panel-divider {
     -fx-background-color: #8D8A7F;
