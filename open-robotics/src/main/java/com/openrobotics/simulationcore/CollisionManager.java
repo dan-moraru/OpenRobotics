@@ -51,10 +51,10 @@ public class CollisionManager {
     }
 
     /**
-     * Helper to determine if a tile allows multiple robots (e.g., a Drop-off point).
+     * Helper to determine if a tile allows multiple robots (e.g., a station tile).
      */
     private boolean allowsOverlap(Tile tile) {
-        return tile.isDeliveryStation();
+        return tile.allowsRobotOverlap();
     }
 
     public MoveIntention[] resolveConflicts(MoveIntention[] intentions) {

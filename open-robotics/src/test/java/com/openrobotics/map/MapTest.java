@@ -171,6 +171,28 @@ public class MapTest {
     }
 
     /**
+     * Adding a delivery station marks its tile as overlap-allowed.
+     */
+    @Test
+    public void testAddDeliveryStationMarksTile() {
+        map.addEntity(new DeliveryStation("DS1", new Vector2D(2, 2)));
+
+        assertTrue(map.getTile(2, 2).isDeliveryStation());
+        assertTrue(map.getTile(2, 2).allowsRobotOverlap());
+    }
+
+    /**
+     * Adding a charging station marks its tile as overlap-allowed.
+     */
+    @Test
+    public void testAddChargingStationMarksTile() {
+        map.addEntity(new ChargingStation("CS1", new Vector2D(3, 3)));
+
+        assertTrue(map.getTile(3, 3).isChargingStation());
+        assertTrue(map.getTile(3, 3).allowsRobotOverlap());
+    }
+
+    /**
      * removeEntity() should return true for an entity that was present.
      */
     @Test
@@ -180,6 +202,32 @@ public class MapTest {
 
         assertTrue(map.removeEntity(entity));
         assertFalse(map.getEntities().contains(entity));
+    }
+
+    /**
+     * Removing the last delivery station clears the delivery-tile marker.
+     */
+    @Test
+    public void testRemoveDeliveryStationClearsTileMarker() {
+        DeliveryStation station = new DeliveryStation("DS1", new Vector2D(2, 2));
+        map.addEntity(station);
+
+        assertTrue(map.removeEntity(station));
+        assertFalse(map.getTile(2, 2).isDeliveryStation());
+        assertFalse(map.getTile(2, 2).allowsRobotOverlap());
+    }
+
+    /**
+     * Removing the last charging station clears the charging-tile marker.
+     */
+    @Test
+    public void testRemoveChargingStationClearsTileMarker() {
+        ChargingStation station = new ChargingStation("CS1", new Vector2D(3, 3));
+        map.addEntity(station);
+
+        assertTrue(map.removeEntity(station));
+        assertFalse(map.getTile(3, 3).isChargingStation());
+        assertFalse(map.getTile(3, 3).allowsRobotOverlap());
     }
 
     /**

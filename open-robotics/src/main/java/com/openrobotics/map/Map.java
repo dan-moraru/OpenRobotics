@@ -9,6 +9,7 @@ import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 
@@ -66,10 +67,17 @@ public class Map {
 
     public void addEntity(MapEntity entity) {
         entities.add(entity);
+        if (entity instanceof DeliveryStation || entity instanceof ChargingStation) {
+            updateStationOverlapFlags(entity.getPosition());
+        }
     }
 
     public boolean removeEntity(MapEntity entity) {
-        return entities.remove(entity);
+        boolean removed = entities.remove(entity);
+        if (removed && (entity instanceof DeliveryStation || entity instanceof ChargingStation)) {
+            updateStationOverlapFlags(entity.getPosition());
+        }
+        return removed;
     }
 
     // get all entities at a given position
@@ -163,5 +171,19 @@ public class Map {
             }
         }
         return false;
+    }
+
+    private void updateStationOverlapFlags(Vector2D pos) {
+        Tile tile = getTile(pos.getX(), pos.getY());
+        if (tile == null) {
+            return;
+        }
+
+        boolean hasDeliveryStation = entities.stream()
+                .anyMatch(entity -> entity instanceof DeliveryStation && entity.getPosition().equals(pos));
+        boolean hasChargingStation = entities.stream()
+                .anyMatch(entity -> entity instanceof ChargingStation && entity.getPosition().equals(pos));
+        tile.setDeliveryStation(hasDeliveryStation);
+        tile.setChargingStation(hasChargingStation);
     }
 }

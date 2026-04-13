@@ -276,8 +276,34 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickAllowsOverlapOnDeliveryStation() {
-        map.getTile(1, 0).setDeliveryStation(true);
         map.addEntity(new DeliveryStation("Delivery", new Vector2D(1, 0)));
+
+        ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
+        staying.setState(RobotState.IDLE);
+        staying.setNextMove(new MoveIntention(map.getTile(1, 0), map.getTile(1, 0), staying));
+
+        ScriptedRobot moving = new ScriptedRobot("Moving", new Vector2D(0, 0));
+        moving.setState(RobotState.MOVING);
+        moving.setNextMove(new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), moving));
+
+        map.addEntity(staying);
+        map.addEntity(moving);
+
+        SimulationEngine eng = buildEngine(new Robot[]{ staying, moving });
+        AppState.setEngine(eng);
+
+        eng.tick();
+
+        assertEquals(new Vector2D(1, 0), staying.getPosition());
+        assertEquals(new Vector2D(1, 0), moving.getPosition());
+    }
+
+    /**
+     * Charging stations also allow a robot to enter even if another robot is already there.
+     */
+    @Test
+    public void testTickAllowsOverlapOnChargingStation() {
+        map.addEntity(new ChargingStation("Charging", new Vector2D(1, 0)));
 
         ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
         staying.setState(RobotState.IDLE);

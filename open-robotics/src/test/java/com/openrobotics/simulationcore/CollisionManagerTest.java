@@ -6,6 +6,7 @@ import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.Robot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -459,7 +460,28 @@ public class CollisionManagerTest {
     @Test
     public void testDeliveryStationAllowsIncomingMoveToOccupiedTile() {
         Map map = new Map(3, 1);
-        map.getTile(1, 0).setDeliveryStation(true);
+        map.addEntity(new DeliveryStation("delivery", new Vector2D(1, 0)));
+
+        Robot staying = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "stay", new Vector2D(1, 0));
+        Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                "move", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(map, new MoveIntention[]{
+                new MoveIntention(map.getTile(1, 0), map.getTile(1, 0), staying),
+                new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), moving)
+        });
+
+        assertEquals(2, result.length);
+    }
+
+    /**
+     * Charging stations also allow overlap when a robot is already on the tile.
+     */
+    @Test
+    public void testChargingStationAllowsIncomingMoveToOccupiedTile() {
+        Map map = new Map(3, 1);
+        map.addEntity(new com.openrobotics.map.entities.station.ChargingStation("charging", new Vector2D(1, 0)));
 
         Robot staying = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
                 "stay", new Vector2D(1, 0));
