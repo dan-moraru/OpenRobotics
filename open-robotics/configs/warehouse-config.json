@@ -4,10 +4,16 @@
     "runName" : "Warehouse Beta",
     "tickMs" : 100,
     "maxTicks" : 5000,
-    "seed" : 67890
+    "seed" : 67890,
+    "batteryCapacity" : 100.0,
+    "lowBatteryThreshold" : 20.0,
+    "chargePerTick" : 5.0,
+    "energyPerMove" : 1.0,
+    "loadingTicks" : 1,
+    "unloadingTicks" : 1
   },
   "map" : {
-    "mapId": "46867af5-f112-4f06-b22b-610706264844",
+    "mapId" : "46867af5-f112-4f06-b22b-610706264844",
     "width" : 12,
     "height" : 12,
     "tiles" : [ {
@@ -72,7 +78,9 @@
         "x" : 4,
         "y" : 4
       },
-      "type" : null
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null
     }, {
       "id" : "10000000-0000-0000-0000-000000000002",
       "name" : "Rack-A2",
@@ -80,31 +88,21 @@
         "x" : 7,
         "y" : 4
       },
-      "type" : null
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null
     } ],
     "obstacles" : [ {
       "id" : "20000000-0000-0000-0000-000000000001",
       "name" : "Obstacle-01",
       "position" : {
-        "x" : 5,
+        "x" : 6,
         "y" : 9
       },
       "type" : null
     } ]
   },
   "tasks" : [ {
-    "id" : 201,
-    "pickupLocation" : {
-      "x" : 4,
-      "y" : 4
-    },
-    "dropoffLocation" : {
-      "x" : 11,
-      "y" : 0
-    },
-    "priority" : 3,
-    "status" : "PENDING"
-  }, {
     "id" : 202,
     "pickupLocation" : {
       "x" : 7,
@@ -115,6 +113,18 @@
       "y" : 0
     },
     "priority" : 7,
+    "status" : "PENDING"
+  }, {
+    "id" : 201,
+    "pickupLocation" : {
+      "x" : 4,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 11,
+      "y" : 0
+    },
+    "priority" : 3,
     "status" : "PENDING"
   } ],
   "simulation" : {

@@ -10,6 +10,7 @@ import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Consumer;
 
 /**
  * Utility class that centralises all screen/dialog transitions.
@@ -105,13 +106,20 @@ public final class ScreenNavigator {
      *         (lets callers retrieve the controller for result data)
      */
     public static FXMLLoader openDialog(String fxmlPath) {
-        return openDialog(fxmlPath, "");
+        return openDialog(fxmlPath, "", null);
     }
 
     /**
      * Opens a modal dialog with a custom title.
      */
     public static FXMLLoader openDialog(String fxmlPath, String title) {
+        return openDialog(fxmlPath, title, null);
+    }
+
+    /**
+     * Opens a modal dialog with a custom title and optional controller initializer.
+     */
+    public static FXMLLoader openDialog(String fxmlPath, String title, Consumer<Object> controllerInitializer) {
         try {
             URL url = ScreenNavigator.class.getResource(fxmlPath);
             if (url == null) {
@@ -133,6 +141,9 @@ public final class ScreenNavigator {
             Object controller = loader.getController();
             if (controller instanceof DialogController dc) {
                 dc.setDialogStage(dialogStage);
+            }
+            if (controllerInitializer != null) {
+                controllerInitializer.accept(controller);
             }
 
             Scene scene = new Scene(root, Color.TRANSPARENT);
@@ -194,4 +205,3 @@ public final class ScreenNavigator {
         boolean isConfirmed();
     }
 }
-

@@ -10,8 +10,8 @@ import java.util.Objects;
 public class Task implements Comparable<Task> {
     private final long id; // unique id
     private long artificialId; // temporary fix for disconnect between database and application task ids
-    private final Vector2D pickupLocation;
-    private final Vector2D dropoffLocation;
+    private Vector2D pickupLocation;
+    private Vector2D dropoffLocation;
     private int priority; // higher = more urgent
     private TaskStatus status; // PENDING, IN_PROGRESS, COMPLETED, FAILED
 
@@ -40,6 +40,8 @@ public class Task implements Comparable<Task> {
     public void setPriority(int priority) { this.priority = priority; }
     public void setStatus(TaskStatus status) { this.status = status; }
     public void setArtificialId(long artificialId) { this.artificialId = artificialId; }
+    public void setPickupLocation(Vector2D pickupLocation) {this.pickupLocation = pickupLocation; }
+    public void setDropoffLocation(Vector2D dropoffLocation) {this.dropoffLocation = dropoffLocation; }
 
     @Override
     public String toString() {

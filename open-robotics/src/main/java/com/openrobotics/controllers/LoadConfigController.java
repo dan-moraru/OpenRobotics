@@ -29,6 +29,7 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
     /** Key used to persist recent paths in Java Preferences. */
     private static final String PREFS_KEY = "recentConfigPaths";
     private static final int    MAX_RECENT = 8;
+    private static final String BROWSE_SENTINEL = "Browse...";
 
     // ------------------------------------------------------------------ //
     //  DialogController
@@ -45,13 +46,25 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
 
     @FXML
     private void initialize() {
-        configFileCombo.getItems().addAll(loadRecentPaths());
         configFileCombo.valueProperty().addListener((obs, o, n) -> {
-            if (n != null) {
-                selectedFile = new File(n);
-                selectedPathLabel.setText(n);
+            if (n == null) return;
+            if (BROWSE_SENTINEL.equals(n)) {
+                javafx.application.Platform.runLater(() -> {
+                    configFileCombo.getSelectionModel().select(o);
+                    onBrowse();
+                });
+                return;
             }
+            selectedFile = new File(n);
+            selectedPathLabel.setText(n);
         });
+        configFileCombo.getItems().addAll(loadRecentPaths());
+        configFileCombo.getItems().add(BROWSE_SENTINEL);
+    }
+
+    private void ensureBrowseSentinelLast() {
+        configFileCombo.getItems().remove(BROWSE_SENTINEL);
+        configFileCombo.getItems().add(BROWSE_SENTINEL);
     }
 
     // ------------------------------------------------------------------ //
@@ -78,10 +91,11 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
             selectedPathLabel.setText(result.getAbsolutePath());
             if (!configFileCombo.getItems().contains(result.getAbsolutePath())) {
                 configFileCombo.getItems().add(0, result.getAbsolutePath());
-                while (configFileCombo.getItems().size() > MAX_RECENT) {
-                    configFileCombo.getItems().remove(configFileCombo.getItems().size() - 1);
+                while (configFileCombo.getItems().size() > MAX_RECENT + 1) {
+                    configFileCombo.getItems().remove(configFileCombo.getItems().size() - 2);
                 }
             }
+            ensureBrowseSentinelLast();
             configFileCombo.getSelectionModel().select(result.getAbsolutePath());
         }
     }

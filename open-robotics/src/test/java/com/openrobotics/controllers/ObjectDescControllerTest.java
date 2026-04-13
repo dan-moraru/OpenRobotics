@@ -68,6 +68,17 @@ public class ObjectDescControllerTest extends ApplicationTest {
     }
 
     @Test
+    void set_object_type_populates_intersection_content() {
+        interact(() -> controller.setObjectType("INTERSECTION"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals("Traffic Intersection", objectNameLabel.getText());
+        assertEquals("Traffic Control – Intersection Marker", objectTypeLabel.getText());
+        assertTrue(objectDescLabel.getText().contains("traversable floor tile"));
+        assertEquals(2, propsOverview.getChildren().size());
+    }
+
+    @Test
     void add_sets_flag_and_closes_dialog() {
         interact(() -> controller.setObjectType("WALL"));
         invokePrivate("onAdd");

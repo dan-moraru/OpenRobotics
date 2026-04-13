@@ -872,6 +872,76 @@ public class SimulationEngineTest {
         }
     }
 
+    @Test
+    public void testToggleTrafficRuleIntersectionPersistsToSavedConfig() throws IOException {
+        SimulationEngine eng = new SimulationEngine(
+                map, new Robot[]{}, dispatcher, new TrafficRulesPolicy(new HashSet<>()));
+
+        assertTrue(eng.usesTrafficRulesPolicy());
+        assertTrue(eng.toggleTrafficRuleIntersection(2, 3));
+        assertTrue(eng.hasTrafficRuleIntersection(2, 3));
+
+        Path tmp = Files.createTempFile("sim-tr-toggle-", ".json");
+        try {
+            eng.configSaving(tmp.toString());
+            SimulationConfigDTO dto = ConfigLoader.load(tmp.toString(), SimulationConfigDTO.class);
+
+            assertNotNull(dto.coordination);
+            assertEquals("TRAFFIC_RULES", dto.coordination.type);
+            assertNotNull(dto.coordination.intersections);
+            assertEquals(1, dto.coordination.intersections.size());
+            assertEquals(2, dto.coordination.intersections.get(0).x);
+            assertEquals(3, dto.coordination.intersections.get(0).y);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    @Test
+    public void testToggleTrafficRuleIntersectionTwiceRemovesMarker() throws IOException {
+        SimulationEngine eng = new SimulationEngine(
+                map, new Robot[]{}, dispatcher, new TrafficRulesPolicy(new HashSet<>()));
+
+        assertTrue(eng.toggleTrafficRuleIntersection(4, 4));
+        assertTrue(eng.toggleTrafficRuleIntersection(4, 4));
+        assertFalse(eng.hasTrafficRuleIntersection(4, 4));
+        assertTrue(eng.getTrafficRuleIntersections().isEmpty());
+
+        Path tmp = Files.createTempFile("sim-tr-toggle-remove-", ".json");
+        try {
+            eng.configSaving(tmp.toString());
+            SimulationConfigDTO dto = ConfigLoader.load(tmp.toString(), SimulationConfigDTO.class);
+
+            assertNotNull(dto.coordination);
+            assertEquals("TRAFFIC_RULES", dto.coordination.type);
+            assertNotNull(dto.coordination.intersections);
+            assertTrue(dto.coordination.intersections.isEmpty());
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    @Test
+    public void testToggleTrafficRuleIntersectionIgnoredForNonTrafficRulesPolicy() throws IOException {
+        SimulationEngine eng = buildEngine(new Robot[]{});
+
+        assertFalse(eng.usesTrafficRulesPolicy());
+        assertFalse(eng.toggleTrafficRuleIntersection(1, 1));
+        assertFalse(eng.hasTrafficRuleIntersection(1, 1));
+        assertTrue(eng.getTrafficRuleIntersections().isEmpty());
+
+        Path tmp = Files.createTempFile("sim-noop-toggle-", ".json");
+        try {
+            eng.configSaving(tmp.toString());
+            SimulationConfigDTO dto = ConfigLoader.load(tmp.toString(), SimulationConfigDTO.class);
+
+            assertTrue(dto.coordination == null || dto.coordination.type == null,
+                    "No traffic-rules coordination should be written when toggle is ignored");
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
     /**
      * {@code configSaving()} with the no-op (lambda) policy writes a coordination
      * section that has neither "RESERVATION_K" nor "TRAFFIC_RULES" as its type —

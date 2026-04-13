@@ -1,0 +1,231 @@
+{
+  "config" : {
+    "runId" : "70f9e1d7-a1f5-49ee-bb3a-e231c8e96b05",
+    "runName" : "Warehouse Beta - Multi-Aisle",
+    "tickMs" : 100,
+    "maxTicks" : 10000,
+    "seed" : 12345,
+    "batteryCapacity" : 100.0,
+    "lowBatteryThreshold" : 20.0,
+    "chargePerTick" : 5.0,
+    "energyPerMove" : 1.0,
+    "loadingTicks" : 1,
+    "unloadingTicks" : 1
+  },
+  "map" : {
+    "mapId" : "e8b76c63-4505-499e-8070-4eb32d17b96e",
+    "width" : 12,
+    "height" : 10,
+    "tiles" : [ ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "11111111-1111-4111-a111-111111111111",
+      "name" : "Bot-Greedy",
+      "position" : {
+        "x" : 1,
+        "y" : 2
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    }, {
+      "id" : "22222222-2222-4222-a222-222222222222",
+      "name" : "Bot-Bug",
+      "position" : {
+        "x" : 2,
+        "y" : 2
+      },
+      "type" : null,
+      "battery" : 85.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "BUG",
+      "sensorStrategy" : "RANGE",
+      "stuckTicks" : 0
+    }, {
+      "id" : "33333333-3333-4333-a333-333333333333",
+      "name" : "Bot-Star",
+      "position" : {
+        "x" : 3,
+        "y" : 2
+      },
+      "type" : null,
+      "battery" : 60.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "RTA_STAR",
+      "sensorStrategy" : "RANGE",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ {
+      "id" : "cccccccc-cccc-4ccc-accc-cccccccccccc",
+      "name" : "Main-Charger",
+      "position" : {
+        "x" : 1,
+        "y" : 1
+      },
+      "type" : "CHARGING"
+    }, {
+      "id" : "dddddddd-dddd-4ddd-addd-ddddddddddd1",
+      "name" : "Delivery-Port-A",
+      "position" : {
+        "x" : 10,
+        "y" : 3
+      },
+      "type" : "DELIVERY"
+    }, {
+      "id" : "dddddddd-dddd-4ddd-addd-ddddddddddd2",
+      "name" : "Delivery-Port-B",
+      "position" : {
+        "x" : 10,
+        "y" : 2
+      },
+      "type" : "DELIVERY"
+    } ],
+    "racks" : [ {
+      "id" : "1111aaaa-1111-4111-a111-111111111111",
+      "name" : "Rack-01",
+      "position" : {
+        "x" : 6,
+        "y" : 8
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null
+    }, {
+      "id" : "2222aaaa-2222-4222-a222-222222222222",
+      "name" : "Rack-02",
+      "position" : {
+        "x" : 6,
+        "y" : 5
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null
+    }, {
+      "id" : "3333aaaa-3333-4333-a333-333333333333",
+      "name" : "Rack-03",
+      "position" : {
+        "x" : 6,
+        "y" : 4
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null
+    } ],
+    "obstacles" : [ {
+      "id" : "f0000000-0000-4000-a000-000000000001",
+      "name" : "Shelf-L1",
+      "position" : {
+        "x" : 4,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000002",
+      "name" : "Shelf-L2",
+      "position" : {
+        "x" : 4,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000003",
+      "name" : "Shelf-L3",
+      "position" : {
+        "x" : 4,
+        "y" : 5
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000004",
+      "name" : "Shelf-L4",
+      "position" : {
+        "x" : 4,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000005",
+      "name" : "Shelf-R1",
+      "position" : {
+        "x" : 7,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000006",
+      "name" : "Shelf-R2",
+      "position" : {
+        "x" : 7,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000007",
+      "name" : "Shelf-R3",
+      "position" : {
+        "x" : 7,
+        "y" : 5
+      },
+      "type" : null
+    }, {
+      "id" : "f0000000-0000-4000-a000-000000000008",
+      "name" : "Shelf-R4",
+      "position" : {
+        "x" : 7,
+        "y" : 6
+      },
+      "type" : null
+    } ]
+  },
+  "tasks" : [ {
+    "id" : 201,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 8
+    },
+    "dropoffLocation" : {
+      "x" : 10,
+      "y" : 3
+    },
+    "priority" : 10,
+    "status" : "PENDING"
+  }, {
+    "id" : 202,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 8
+    },
+    "dropoffLocation" : {
+      "x" : 10,
+      "y" : 2
+    },
+    "priority" : 5,
+    "status" : "PENDING"
+  }, {
+    "id" : 203,
+    "pickupLocation" : {
+      "x" : 6,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 10,
+      "y" : 3
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  } ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : true,
+    "speedMultiplier" : 1.0
+  },
+  "coordination" : {
+    "type" : "RESERVATION_K",
+    "k" : 1,
+    "intersections" : null
+  }
+}

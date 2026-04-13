@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/** storage rack; robots pick up boxes from an adjacent tile, never from the rack tile itself */
 public class Rack extends MapEntity {
     private int boxCount;
     private List<UUID> validDropoffIds;
@@ -24,14 +25,14 @@ public class Rack extends MapEntity {
     }
 
     public int getBoxCount() { return boxCount; }
-    public void setBoxCount(int boxCount) { this.boxCount = Math.max(1, boxCount); }
+    public void setBoxCount(int boxCount) {
+        // a rack always has at least 1 box; 0 would mean nothing to pick up
+        this.boxCount = Math.max(1, boxCount);
+    }
 
     public List<UUID> getValidDropoffIds() { return validDropoffIds; }
     public void setValidDropoffIds(List<UUID> validDropoffIds) {
         this.validDropoffIds = validDropoffIds != null ? validDropoffIds : new ArrayList<>();
     }
 
-    public void take(Object box) {
-        // will be implemented when task/box handling is fleshed out
-    }
 }

@@ -1,7 +1,14 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
+import com.openrobotics.map.Map;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.simulationcore.CoordinationPolicy;
+import com.openrobotics.simulationcore.Dispatcher;
+import com.openrobotics.simulationcore.ReservationKPolicy;
 import com.openrobotics.util.ScreenNavigator;
+import com.openrobotics.simulationcore.SimulationEngine;
+import com.openrobotics.simulationcore.TrafficRulesPolicy;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -34,6 +41,20 @@ public class SimulationControllerTest extends ApplicationTest {
     private void assertConsoleEventuallyEmpty() throws TimeoutException {
         WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () ->
                 lookup("#consoleArea").queryAs(TextArea.class).getText().isEmpty());
+    }
+
+    private SimulationEngine buildEngine(CoordinationPolicy policy) {
+        return new SimulationEngine(new Map(6, 6), new Robot[]{}, new Dispatcher(), policy);
+    }
+
+    private void reloadSimulationWithEngine(SimulationEngine engine) {
+        interact(() -> {
+            AppState.clear();
+            AppState.setCanvasDimensions(30, 30);
+            AppState.setEngine(engine);
+            ScreenNavigator.goToSimulation();
+        });
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @Override
@@ -124,5 +145,32 @@ public class SimulationControllerTest extends ApplicationTest {
     void tick_label_shows_TICK_0_after_restart() {
         Label tickLabel = lookup("#tickDisplayLabel").queryAs(Label.class);
         assertEquals("TICK 0", tickLabel.getText());
+    }
+
+    @Test
+    void intersection_tile_visible_for_traffic_rules_engine() {
+        reloadSimulationWithEngine(buildEngine(new TrafficRulesPolicy(new java.util.HashSet<>())));
+
+        Button intersectionButton = lookup("#intersectionObjectTile").queryAs(Button.class);
+        assertTrue(intersectionButton.isVisible());
+        assertTrue(intersectionButton.isManaged());
+    }
+
+    @Test
+    void intersection_tile_hidden_for_reservation_policy_engine() {
+        reloadSimulationWithEngine(buildEngine(new ReservationKPolicy(3)));
+
+        Button intersectionButton = lookup("#intersectionObjectTile").queryAs(Button.class);
+        assertFalse(intersectionButton.isVisible());
+        assertFalse(intersectionButton.isManaged());
+    }
+
+    @Test
+    void intersection_tile_hidden_for_no_op_engine() {
+        reloadSimulationWithEngine(buildEngine(CoordinationPolicy.noOp()));
+
+        Button intersectionButton = lookup("#intersectionObjectTile").queryAs(Button.class);
+        assertFalse(intersectionButton.isVisible());
+        assertFalse(intersectionButton.isManaged());
     }
 }

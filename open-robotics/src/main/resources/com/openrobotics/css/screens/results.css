@@ -66,13 +66,13 @@
 }
 
 .mask-legend-tile-yellow {
-    -fx-background-color: #D4860A;
+    -fx-background-color: #e89003;
     -fx-min-height: 30px;
     -fx-background-radius: 4;
 }
 
 .mask-legend-tile-cyan {
-    -fx-background-color: #6E9BAA;
+    -fx-background-color: #fffaa2;
     -fx-min-height: 30px;
     -fx-background-radius: 4;
 }
