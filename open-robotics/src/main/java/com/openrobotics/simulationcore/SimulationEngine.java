@@ -703,6 +703,22 @@ public class SimulationEngine {
         return tickCounter;
     }
 
+    /**
+     * A run is finished when the clock has started, every robot is idle, and
+     * the dispatcher has no more queued tasks. tickCounter==0 is never
+     * finished so Play on a fresh engine is always allowed.
+     */
+    public boolean isFinished() {
+        if (tickCounter <= 0) return false;
+        if (dispatcher == null || !dispatcher.getAllQueuedTasks().isEmpty()) return false;
+        if (robots == null) return true;
+        for (Robot r : robots) {
+            if (r == null) continue;
+            if (r.getState() != RobotState.IDLE) return false;
+        }
+        return true;
+    }
+
     public int getMaxTicks() {
         return maxTicks;
     }
