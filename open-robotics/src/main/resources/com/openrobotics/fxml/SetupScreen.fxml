@@ -101,9 +101,13 @@
                             <!-- Max Tasks -->
                             <VBox styleClass="setup-prop-group">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                    <Label text="Max Tasks" styleClass="prop-label-bold"/>
+                                    <Label text="Number of Tasks" styleClass="prop-label-bold"/>
                                     <TextField fx:id="maxTasksField" text="10"
-                                               HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                               HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                                        <tooltip>
+                                            <Tooltip text="Number of tasks randomly generated when the simulation starts. Racks that use Manual Dropoff Assignment override this for their own boxes."/>
+                                        </tooltip>
+                                    </TextField>
                                     <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks"/>
                                 </HBox>
                                 <Label text="Total number of pickup-to-dropoff tasks generated for the run."
