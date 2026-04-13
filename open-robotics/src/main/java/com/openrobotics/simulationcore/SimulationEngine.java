@@ -583,6 +583,13 @@ public class SimulationEngine {
             this.running = false;
         }
 
+        // Check if all robots have died
+        if (allRobotsDead()) {
+            this.running = false;
+            simulationError = SimulationError.ALL_ROBOTS_DEAD;
+            return false;
+        }
+
         return true;
     }
 

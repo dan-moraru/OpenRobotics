@@ -11,6 +11,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -33,10 +36,9 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
 
     private static final String PREFS_KEY  = "recentSaveDirs";
     private static final int    MAX_RECENT = 8;
-    private static final String DEFAULT_DIR =
-            System.getProperty("user.home") + File.separator + ".open-robotics"
-                    + File.separator + "configs";
+    private static final String DEFAULT_DIR = System.getProperty("user.home") + File.separator + ".open-robotics" + File.separator + "configs";
     private static final String BROWSE_SENTINEL = "Browse...";
+    private static final String CONFIG_DIR = "./configs";
 
     // ------------------------------------------------------------------ //
     //  DialogController
@@ -160,6 +162,18 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             engine.configSaving(fullPath);
             saveRecentDir(selectedDirectory.getAbsolutePath());
             resultFilePath = fullPath;
+
+            // Automatically save a copy to the configs directory for the list
+            File configsDir = new File(CONFIG_DIR);
+            if (!configsDir.exists()) {
+                configsDir.mkdirs();
+            }
+            File configsFile = new File(configsDir, fileName);
+            File sourceFile = new File(fullPath);
+            if (sourceFile.exists() && !sourceFile.equals(configsFile)) {
+                Files.copy(sourceFile.toPath(), configsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
             close();
         } catch (Exception ex) {
             selectedDirLabel.setText("Save failed: " + ex.getMessage());

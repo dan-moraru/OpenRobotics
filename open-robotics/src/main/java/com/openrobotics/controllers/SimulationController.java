@@ -417,6 +417,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             AppState.setEngine(engine);
         }
 
+        // Restore simulation tick from AppState (persists across tab switches)
+        localTick = AppState.getSimulationTick();
+
         // Update RAM display
         updateRamLabel();
 
@@ -1690,6 +1693,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         onStop();
         localTick = 0;
+        AppState.setSimulationTick(0);
         // Reload from the editor baseline snapshot (continuously updated on every editor action).
         // This restores the most recent editor state, not the original config file.
         String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
@@ -1708,8 +1712,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine = reloaded;
             AppState.setEngine(engine);
-        } else {
-            // TODO: make sure template map resets here
         }
 
         // If no engine is loaded, restart still resets the UI state safely.
@@ -1820,6 +1822,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return;
         }
         localTick++;
+
+        AppState.setSimulationTick(localTick);
 
         populateOutliner();
 
@@ -1987,6 +1991,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         running = false;
         paused = false;
         localTick = 0;
+        AppState.setSimulationTick(0);
         selectedEntity = null;
         undoStack.clear();
         redoStack.clear();
