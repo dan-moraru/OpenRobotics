@@ -365,7 +365,6 @@
                                                 </HBox>
                                                 <TextArea fx:id="logArea" editable="false" promptText="&gt;"
                                                           wrapText="true" VBox.vgrow="ALWAYS"/>
-                                                <Region VBox.vgrow="ALWAYS"/>
                                             </children>
                                         </VBox>
                                     </items>
