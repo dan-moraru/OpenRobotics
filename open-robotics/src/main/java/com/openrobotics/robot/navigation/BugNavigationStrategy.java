@@ -12,7 +12,7 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
 
-// bug2 navigation: greedy goal-seeking with left-hand boundary following on obstacles
+/** bug2 navigation; alternates between greedy goal-seeking and left-hand boundary following when an obstacle is encountered */
 public class BugNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id (same pattern as greedy)
