@@ -4,9 +4,7 @@ import com.openrobotics.map.Vector2D;
 
 import java.util.Objects;
 
-/**
- * Represents tasks that will be assigned to robots during the simulation of a warehouses workload
- */
+/** a task assigned to a robot; pairs a rack pickup location with a delivery station dropoff */
 public class Task implements Comparable<Task> {
     private final long id; // unique id
     private long artificialId; // temporary fix for disconnect between database and application task ids
@@ -23,7 +21,6 @@ public class Task implements Comparable<Task> {
         this.status = TaskStatus.PENDING;
     }
 
-    // Getters
     public long getId() { return id; }
     public long getArtificialId() { return artificialId; }
     public Vector2D getPickupLocation() { return pickupLocation; }
@@ -31,17 +28,13 @@ public class Task implements Comparable<Task> {
     public int getPriority() { return priority; }
     public TaskStatus getStatus() { return status; }
 
-    // Setters
-    /**
-     * Avoid mutating priority while this task is stored in sorted collections,
-     * as it can invalidate ordering assumptions.
-     */
+    /** avoid mutating priority while this task is in a sorted collection; it can invalidate ordering assumptions */
     @Deprecated
     public void setPriority(int priority) { this.priority = priority; }
     public void setStatus(TaskStatus status) { this.status = status; }
     public void setArtificialId(long artificialId) { this.artificialId = artificialId; }
-    public void setPickupLocation(Vector2D pickupLocation) {this.pickupLocation = pickupLocation; }
-    public void setDropoffLocation(Vector2D dropoffLocation) {this.dropoffLocation = dropoffLocation; }
+    public void setPickupLocation(Vector2D pickupLocation) { this.pickupLocation = pickupLocation; }
+    public void setDropoffLocation(Vector2D dropoffLocation) { this.dropoffLocation = dropoffLocation; }
 
     @Override
     public String toString() {
@@ -63,6 +56,7 @@ public class Task implements Comparable<Task> {
         return Objects.hash(id);
     }
 
+    /** higher priority first; ties broken by ascending task id */
     @Override
     public int compareTo(Task task) {
         int byPriority = Integer.compare(task.priority, this.priority);

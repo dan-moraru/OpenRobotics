@@ -1,5 +1,6 @@
 package com.openrobotics.task;
 
+import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Rack;
@@ -7,12 +8,13 @@ import com.openrobotics.map.entities.station.DeliveryStation;
 
 import java.util.*;
 
+/** generates Task objects by pairing rack pickup positions with delivery station dropoff positions */
 public class TaskGenerator {
-    private final com.openrobotics.map.Map map;
+    private final Map map;
     private final Random random;
     private int nextTaskId = 1;
 
-    public TaskGenerator(com.openrobotics.map.Map map, long seed) {
+    public TaskGenerator(Map map, long seed) {
         this.map = map;
         this.random = new Random(seed);
     }
@@ -25,7 +27,6 @@ public class TaskGenerator {
     public List<Task> generateTasks(int maxCount) {
         List<Task> tasks = new ArrayList<>();
 
-        // Collect all delivery stations indexed by UUID
         java.util.Map<UUID, DeliveryStation> stationById = new LinkedHashMap<>();
         List<DeliveryStation> allStations = new ArrayList<>();
         for (MapEntity e : map.getEntities()) {
@@ -37,7 +38,6 @@ public class TaskGenerator {
 
         if (allStations.isEmpty()) return tasks;
 
-        // Collect racks
         List<Rack> racks = new ArrayList<>();
         for (MapEntity e : map.getEntities()) {
             if (e instanceof Rack r) racks.add(r);
@@ -81,7 +81,8 @@ public class TaskGenerator {
         return tasks;
     }
 
-    public static List<Task> generateRandomTasks(com.openrobotics.map.Map map, int count, long seed) {
+    /** convenience factory; constructs a TaskGenerator with the given seed and generates up to {@code count} tasks */
+    public static List<Task> generateRandomTasks(Map map, int count, long seed) {
         return new TaskGenerator(map, seed).generateTasks(count);
     }
 }
