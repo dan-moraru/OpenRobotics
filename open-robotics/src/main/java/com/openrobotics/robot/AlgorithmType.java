@@ -1,10 +1,10 @@
 package com.openrobotics.robot;
 
-// maps config strategy names ("GREEDY" or "GREEDYNAVIGATIONSTRATEGY") to enums
+/** algorithm type enum; maps config strategy name strings to enum values */
 public enum AlgorithmType {
     GREEDY, BUG, RTA_STAR, RANDOM, NONE;
 
-    // maps known config aliases to enum values, case-insensitive
+    /** returns the AlgorithmType for {@code name}, case-insensitive; returns NONE if unrecognized */
     public static AlgorithmType fromConfigString(String name) {
         if (name == null) return NONE;
         String upper = name.toUpperCase().trim();

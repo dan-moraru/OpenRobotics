@@ -27,8 +27,7 @@ import java.util.UUID;
 
 import static com.openrobotics.robot.RobotState.IDLE;
 
-// robot entity — extends mapentity with robot-specific state (uml 3.3.4)
-// inherits uuid, name, position, update() hook
+/** robot entity; extends MapEntity with state machine, navigation, sensor, and lifetime stats (uml 3.3.4) */
 public class Robot extends MapEntity {
     private float battery;
     private NavigationStrategy nav;
@@ -37,7 +36,6 @@ public class Robot extends MapEntity {
     private Task currentTask;
     private int stuckTicks;
 
-    // movement fields
     private Vector2D previousPosition; // saved before move for stuck detection
     private boolean hasPickedUp; // false = going to pickup, true = going to dropoff
     private Vector2D chargerTarget; // overrides task target when low battery
@@ -58,14 +56,12 @@ public class Robot extends MapEntity {
 
     private RobotConfig config;
 
-    // takes Vector2D position, delegates to MapEntity via super()
     public Robot(String name, Vector2D position) {
         super(name, position);
         this.config = RobotConfig.defaults();
         initMovementFields();
     }
 
-    // constructor for loading robots
     public Robot(UUID id, String name, Vector2D position) {
         super(id, name, position);
         this.config = RobotConfig.defaults();
@@ -95,7 +91,6 @@ public class Robot extends MapEntity {
         this.totalEnergyConsumed = 0;
     }
 
-    // getters for all fields
     public float getBattery() { return battery; }
     public NavigationStrategy getNav() { return nav; }
     public SensorStrategy getSensor() { return sensor; }
@@ -112,7 +107,6 @@ public class Robot extends MapEntity {
     public Vector2D getRerouteAvoidTile() { return rerouteAvoidTile; }
     public Vector2D getLastRequestedNextTile() { return lastRequestedNextTile; }
 
-    // lifetime stats getters
     public int getTotalDistanceMoved() { return totalDistanceMoved; }
     public int getTasksCompleted() { return tasksCompleted; }
     public int getTotalIdleTicks() { return totalIdleTicks; }
@@ -125,7 +119,6 @@ public class Robot extends MapEntity {
         this.config = config != null ? config : RobotConfig.defaults();
     }
 
-    // setters for mutable robot state
     public void setBattery(float battery) { this.battery = battery; }
     public void setNav(NavigationStrategy nav) { this.nav = nav; }
     public void setSensor(SensorStrategy sensor) { this.sensor = sensor; }
@@ -139,6 +132,7 @@ public class Robot extends MapEntity {
     }
     public void setStuckTicks(int stuckTicks) { this.stuckTicks = stuckTicks; }
 
+    /** initiates a reroute attempt for a deadlocked robot; marks the blocked tile and resets nav state; returns true if the attempt was valid */
     public boolean startDeadlockRerouteAttempt() {
         // A reroute only makes sense if the robot actually tried to enter a different tile.
         if (!canStartDeadlockRerouteAttempt()) {
@@ -153,6 +147,7 @@ public class Robot extends MapEntity {
         return true;
     }
 
+    /** resets the robot to idle and clears all task and nav state; called when the engine gives up on the current task due to deadlock */
     public void recoverFromDeadlock() {
         // Recovery returns the robot to a clean idle state for the next assignment attempt.
         if (nav != null) {
@@ -169,8 +164,7 @@ public class Robot extends MapEntity {
         state = IDLE;
     }
 
-    // returns the current navigation target based on priority:
-    // charger (if set) > pickup (if not picked up) > dropoff
+    /** navigation target for this tick; charger overrides task target when battery is low */
     public Vector2D getTarget() {
         if (chargerTarget != null) return chargerTarget;
         if (currentTask == null) return null;
@@ -178,7 +172,7 @@ public class Robot extends MapEntity {
         return currentTask.getDropoffLocation();
     }
 
-    // returns a move intention, called once per tick before collision resolution
+    /** returns the robot's move intention for this tick; runs sensor scan and saves position before delegating to nav strategy */
     public MoveIntention getNextMove(Map map) {
         // Update data sensor first
         if (this.sensor != null) {
@@ -244,11 +238,10 @@ public class Robot extends MapEntity {
             return rememberRequestedMove(nav.getNextMove(this, map));
         }
 
-        // no nav or no target. stay in place
         return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
     }
 
-    // dispatcher checks this to find robots that can accept tasks
+    /** true if the robot is idle with no current task; used by the Dispatcher to find available robots */
     public boolean isAvailable() {
         return state == IDLE && currentTask == null;
     }
@@ -399,7 +392,6 @@ public class Robot extends MapEntity {
             : getPosition().equals(target);
     }
 
-    // readable debug output
     @Override
     public String toString() {
         return "Robot{name=" + getName() + ", pos=" + getPosition()
@@ -432,6 +424,7 @@ public class Robot extends MapEntity {
         lastRequestedNextTile = null;
     }
 
+    /** true if this robot qualifies to begin a deadlock reroute attempt */
     public boolean canStartDeadlockRerouteAttempt() {
         if (currentTask == null || rerouteAttemptedForCurrentTask || nav == null || lastRequestedNextTile == null) {
             return false;
