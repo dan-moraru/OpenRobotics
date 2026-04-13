@@ -3,10 +3,8 @@ package com.openrobotics.robot.sensors;
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
 
-/**
- * SensorStrategy Interface, allows different types of strategies to scan for sensors
- */
+/** strategy interface for sensor scanning; implementations determine scan range and detection logic */
 public interface SensorStrategy {
-    // Get the scan from a robot and the map
+    /** scans the environment around the robot and returns all detected entities */
     Sensor scan(Robot robot, Map map);
 }
