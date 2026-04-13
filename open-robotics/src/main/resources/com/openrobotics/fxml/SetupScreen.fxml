@@ -15,16 +15,15 @@
     <top>
         <VBox spacing="0">
             <!-- Top bar -->
-            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="0">
+            <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="12">
                 <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
-                    <HBox.margin><Insets left="12" right="10"/></HBox.margin>
                     <image>
                         <Image url="@../img/logo_black.png" backgroundLoading="true"/>
                     </image>
                 </ImageView>
                 <VBox spacing="1">
-                    <HBox.margin><Insets right="14"/></HBox.margin>
                     <Label text="OpenRobotics" styleClass="app-title"/>
+                    <Label text="v1.0.0" styleClass="version-label"/>
                 </VBox>
                 <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                     <menus>
