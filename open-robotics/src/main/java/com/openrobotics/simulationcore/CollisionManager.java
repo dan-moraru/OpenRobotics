@@ -93,10 +93,14 @@ public class CollisionManager {
         // ===== Step 2: same-target conflicts =====
         Set<UUID> blockedRobots = new HashSet<>();
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
+        Map<String, List<MoveIntention>> occupiedAtStart = new HashMap<>();
 
         for (MoveIntention intention : candidates) {
             byDestination
                     .computeIfAbsent(tileKey(intention.getToTile()), k -> new ArrayList<>())
+                    .add(intention);
+            occupiedAtStart
+                    .computeIfAbsent(tileKey(intention.getFromTile()), k -> new ArrayList<>())
                     .add(intention);
         }
 
@@ -154,7 +158,29 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 3: swap conflicts =====
+        // ===== Step 3: starting-tile occupancy conflicts =====
+        // A robot's starting tile remains reserved for the whole tick on normal floor tiles,
+        // even if that robot is also moving away this tick. This prevents same-direction
+        // "follow-through" where robots appear to pass through each other.
+        for (MoveIntention intention : candidates) {
+            UUID robotId = intention.getRobot().getId();
+            if (blockedRobots.contains(robotId) || !isActualMove(intention) || allowsOverlap(intention.getToTile())) {
+                continue;
+            }
+
+            List<MoveIntention> occupants = occupiedAtStart.get(tileKey(intention.getToTile()));
+            if (occupants == null) {
+                continue;
+            }
+
+            boolean occupiedByOtherRobot = occupants.stream()
+                    .anyMatch(occupant -> !occupant.getRobot().getId().equals(robotId));
+            if (occupiedByOtherRobot) {
+                blockedRobots.add(robotId);
+            }
+        }
+
+        // ===== Step 4: swap conflicts =====
         // We keep this mostly the same, but we could also allow swaps
         // if the tiles involved allow overlap.
         for (int i = 0; i < candidates.length; i++) {
@@ -198,7 +224,7 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 4: return approved intentions =====
+        // ===== Step 5: return approved intentions =====
         List<MoveIntention> approved = new ArrayList<>();
         for (MoveIntention intention : candidates) {
             if (!blockedRobots.contains(intention.getRobot().getId())) {
