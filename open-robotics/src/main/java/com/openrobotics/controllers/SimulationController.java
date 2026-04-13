@@ -125,6 +125,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
     @FXML private Button      speed3Btn;
+    @FXML private Button      speed10Btn;
     @FXML private Button      playBtn;
     @FXML private Button      pauseBtn;
     @FXML private ProgressBar simProgressBar;
@@ -1765,6 +1766,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
     @FXML private void onSpeed2() { setSpeed(2); log("Speed set to ×2."); }
     @FXML private void onSpeed3() { setSpeed(3); log("Speed set to ×3."); }
+    @FXML private void onSpeed10() { setSpeed(10); log("Speed set to ×10."); }
 
     private void setSpeed(int factor) {
         speedFactor = factor;

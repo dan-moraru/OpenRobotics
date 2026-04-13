@@ -295,6 +295,8 @@
                                                 text="x2"/>
                                         <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn"
                                                 text="x3"/>
+                                        <Button fx:id="speed10Btn" onAction="#onSpeed10" styleClass="speed-btn"
+                                                text="x10"/>
                                         <Label styleClass="viewport-subtle-label" text="View">
                                             <HBox.margin>
                                                 <Insets left="6"/>
