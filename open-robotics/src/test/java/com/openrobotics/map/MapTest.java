@@ -3,6 +3,8 @@ package com.openrobotics.map;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -130,6 +132,18 @@ public class MapTest {
     }
 
     /**
+     * A tile containing a dead robot is not a valid move target.
+     */
+    @Test
+    public void testInvalidMoveDeadRobotTile() {
+        Robot deadRobot = new Robot("Dead", new Vector2D(3, 3));
+        deadRobot.setState(RobotState.BATTERY_DEAD);
+        map.addEntity(deadRobot);
+
+        assertFalse(map.isValidMove(3, 3));
+    }
+
+    /**
      * Out-of-bounds coordinates are never valid moves.
      */
     @Test
@@ -157,6 +171,28 @@ public class MapTest {
     }
 
     /**
+     * Adding a delivery station marks its tile as overlap-allowed.
+     */
+    @Test
+    public void testAddDeliveryStationMarksTile() {
+        map.addEntity(new DeliveryStation("DS1", new Vector2D(2, 2)));
+
+        assertTrue(map.getTile(2, 2).isDeliveryStation());
+        assertTrue(map.getTile(2, 2).allowsRobotOverlap());
+    }
+
+    /**
+     * Adding a charging station marks its tile as overlap-allowed.
+     */
+    @Test
+    public void testAddChargingStationMarksTile() {
+        map.addEntity(new ChargingStation("CS1", new Vector2D(3, 3)));
+
+        assertTrue(map.getTile(3, 3).isChargingStation());
+        assertTrue(map.getTile(3, 3).allowsRobotOverlap());
+    }
+
+    /**
      * removeEntity() should return true for an entity that was present.
      */
     @Test
@@ -166,6 +202,32 @@ public class MapTest {
 
         assertTrue(map.removeEntity(entity));
         assertFalse(map.getEntities().contains(entity));
+    }
+
+    /**
+     * Removing the last delivery station clears the delivery-tile marker.
+     */
+    @Test
+    public void testRemoveDeliveryStationClearsTileMarker() {
+        DeliveryStation station = new DeliveryStation("DS1", new Vector2D(2, 2));
+        map.addEntity(station);
+
+        assertTrue(map.removeEntity(station));
+        assertFalse(map.getTile(2, 2).isDeliveryStation());
+        assertFalse(map.getTile(2, 2).allowsRobotOverlap());
+    }
+
+    /**
+     * Removing the last charging station clears the charging-tile marker.
+     */
+    @Test
+    public void testRemoveChargingStationClearsTileMarker() {
+        ChargingStation station = new ChargingStation("CS1", new Vector2D(3, 3));
+        map.addEntity(station);
+
+        assertTrue(map.removeEntity(station));
+        assertFalse(map.getTile(3, 3).isChargingStation());
+        assertFalse(map.getTile(3, 3).allowsRobotOverlap());
     }
 
     /**
@@ -243,6 +305,18 @@ public class MapTest {
     @Test
     public void testEmptyTileIsTraversable() {
         assertTrue(map.isTraversable(new Vector2D(5, 5)));
+    }
+
+    /**
+     * Dead robots act as hard blockers for traversability checks.
+     */
+    @Test
+    public void testDeadRobotTileIsNotTraversable() {
+        Robot deadRobot = new Robot("Dead", new Vector2D(4, 4));
+        deadRobot.setState(RobotState.BATTERY_DEAD);
+        map.addEntity(deadRobot);
+
+        assertFalse(map.isTraversable(new Vector2D(4, 4)));
     }
 
     /**

@@ -511,7 +511,7 @@ class ExportResultsControllerTest extends ApplicationTest {
         }
 
         @Override
-        public List<Task> getAllTasks() {
+        public List<Task> getAllQueuedTasks() {
             return tasks;
         }
 

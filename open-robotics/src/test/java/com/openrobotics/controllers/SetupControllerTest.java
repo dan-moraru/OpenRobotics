@@ -22,12 +22,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -379,7 +377,7 @@ public class SetupControllerTest extends ApplicationTest {
         invokePrivate("generateFixedTasks", new Class<?>[]{Map.class, long.class, int.class, Dispatcher.class}, map, 1L, 3, dispatcher);
 
         assertEquals(3, dispatcher.getPendingTaskCount());
-        for (Task task : dispatcher.getAllTasks()) {
+        for (Task task : dispatcher.getAllQueuedTasks()) {
             assertEquals(new Vector2D(1, 1), task.getPickupLocation());
             assertEquals(new Vector2D(3, 1), task.getDropoffLocation());
         }
@@ -394,8 +392,8 @@ public class SetupControllerTest extends ApplicationTest {
         invokePrivate("generateFixedTasks", new Class<?>[]{Map.class, long.class, int.class, Dispatcher.class}, map, 2L, 4, dispatcher);
 
         assertEquals(4, dispatcher.getPendingTaskCount());
-        assertTrue(dispatcher.getAllTasks().stream().allMatch(task -> task.getDropoffLocation().equals(new Vector2D(2, 2))));
-        assertTrue(dispatcher.getAllTasks().stream().noneMatch(task -> task.getPickupLocation().equals(new Vector2D(2, 2))));
+        assertTrue(dispatcher.getAllQueuedTasks().stream().allMatch(task -> task.getDropoffLocation().equals(new Vector2D(2, 2))));
+        assertTrue(dispatcher.getAllQueuedTasks().stream().noneMatch(task -> task.getPickupLocation().equals(new Vector2D(2, 2))));
     }
 
     @Test

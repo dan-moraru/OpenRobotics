@@ -16,6 +16,7 @@ import java.util.*;
  * The Dispatcher manages a queue of tasks for robots to complete ordered by priority
  */
 public class Dispatcher {
+    private final List<Task> lifetimeTasks; // stores all tasks ever added to this dispatcher
     private final PriorityQueue<Task> taskQueue;
     private int totalTasksAdded;
 
@@ -23,6 +24,7 @@ public class Dispatcher {
      * Creates a priority queue for tasks
      */
     public Dispatcher() {
+        this.lifetimeTasks = new ArrayList<>();
         this.taskQueue = new PriorityQueue<>();
         this.totalTasksAdded = 0;
     }
@@ -33,6 +35,7 @@ public class Dispatcher {
      */
     public void addTask(Task task) {
         enqueueTask(task, true);
+        lifetimeTasks.add(task);
     }
 
     private void enqueueTask(Task task, boolean countTowardsTotal) {
@@ -154,10 +157,18 @@ public class Dispatcher {
      * Returns a list of all the tasks in the task queue
      * @return a list containing all the tasks in the task queue
      */
-    public List<Task> getAllTasks() {
+    public List<Task> getAllQueuedTasks() {
         List<Task> tasks = new ArrayList<>(taskQueue);
         tasks.sort(Task::compareTo);
         return tasks;
+    }
+
+    /**
+     * Returns a list of all tasks ever added to this dispatcher, including completed tasks.
+     * @return a list of all tasks ever added to this dispatcher
+     */
+    public List<Task> getLifetimeTasks() {
+        return new ArrayList<>(lifetimeTasks);
     }
 
     /**

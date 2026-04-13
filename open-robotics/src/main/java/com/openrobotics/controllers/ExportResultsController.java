@@ -176,7 +176,7 @@ public class ExportResultsController implements ScreenNavigator.DialogController
 
         dto.completedTasks = sumTasks;
         dto.pendingTasks   = engine.getDispatcher() != null
-                ? engine.getDispatcher().getAllTasks().size() : 0;
+                ? engine.getDispatcher().getAllQueuedTasks().size() : 0;
         dto.totalTasks     = Math.max(dto.completedTasks + dto.pendingTasks,
                 engine.getDispatcher() != null
                         ? engine.getDispatcher().getTotalTasksAdded() : 0);

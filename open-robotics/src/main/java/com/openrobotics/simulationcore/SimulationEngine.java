@@ -423,7 +423,7 @@ public class SimulationEngine {
         // Tasks Section
         dto.tasks = new ArrayList<>();
         if (this.dispatcher != null) {
-            for (Task task : this.dispatcher.getAllTasks()) {
+            for (Task task : this.dispatcher.getAllQueuedTasks()) {
                 SimulationConfigDTO.TaskDTO tDto = new SimulationConfigDTO.TaskDTO();
                 tDto.id = task.getId();
                 tDto.pickupLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getPickupLocation().getX(), (int)task.getPickupLocation().getY());
@@ -563,7 +563,7 @@ public class SimulationEngine {
         MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(map, intentions);
 
         // Resolving conflicts/collisions and finalizing move intentions for all robots
-        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(map, coordinatedIntentions);
 
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
@@ -573,6 +573,9 @@ public class SimulationEngine {
 
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
+
+        // Checks if any robots are dead and requeues their assigned task if so
+        requeueDeadRobotsTasks();
 
         // Recovery runs after state updates
         recoverDeadlockedRobots();
@@ -596,13 +599,13 @@ public class SimulationEngine {
 
     /**
      * Checks if all robots in the simulation have reached a BATTERY_DEAD state
-     * @return true if all robots are in the BATTER_DEAD state, false otherwise
+     * @return true if all robots are in the BATTERY_DEAD state, false otherwise
      */
     private boolean allRobotsDead() {
         if (robots.length == 0) return false; // no robots were loaded in the sim engine
 
         for (Robot robot : robots) {
-            if (robot.getState() != RobotState.BATTER_DEAD) {
+            if (robot.getState() != RobotState.BATTERY_DEAD) {
                 return false;
             }
         }
@@ -611,19 +614,21 @@ public class SimulationEngine {
 
     /**
      * Indicates if the warehouse workload has been completed.
-     * @return true if there are no pending tasks AND all robots are idle or dead or charging.
+     * @return true if all tasks have been completed
      */
     private boolean workloadComplete() {
-            if (dispatcher.hasPendingTasks()) {
-                return false;
-            }
+        // Checking to see if tasks were ever added to the dispatcher
+        if (dispatcher.getLifetimeTasks().isEmpty()) {
+                return true; // no tasks were ever added to the dispatcher
+        }
 
-            for (Robot robot : robots) {
-                if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
-                    return false;
-                }
+        for (Task task : dispatcher.getLifetimeTasks()) {
+            if (task.getStatus() != TaskStatus.COMPLETED) {
+                return false; // found a task that is not completed, so workload is not complete
             }
-            return true;
+        }
+
+        return true; // all tasks are completed
     }
 
     /**
@@ -639,6 +644,19 @@ public class SimulationEngine {
         }
 
         return intentions;
+    }
+
+    /**
+     * Checks for any robots that have reached the BATTERY_DEAD state and requeues their
+     * assigned task if they have one
+     */
+    private void requeueDeadRobotsTasks() {
+        for (Robot robot : robots) {
+            if (robot.getState() == RobotState.BATTERY_DEAD && robot.getCurrentTask() != null) {
+                dispatcher.requeueTask(robot.getCurrentTask());
+                robot.setCurrentTask(null);
+            }
+        }
     }
 
     /**
@@ -673,7 +691,7 @@ public class SimulationEngine {
 
             // Skipping recovery for robots with depleted batteries
             // TODO: Consider a method for handling dead robots
-            if (robot.getState() == RobotState.BATTER_DEAD) {
+            if (robot.getState() == RobotState.BATTERY_DEAD) {
                 continue; // Let battery recovery handle this robot, don't interfere with task recovery
             }
 
