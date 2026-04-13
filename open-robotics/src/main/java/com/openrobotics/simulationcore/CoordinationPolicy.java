@@ -6,6 +6,7 @@ import com.openrobotics.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 
+/** coordination policy interface; implementations filter or delay move intentions each tick */
 public interface CoordinationPolicy {
     CoordinationPolicy NO_OP = (map, intentions) -> copyNonNull(intentions);
 

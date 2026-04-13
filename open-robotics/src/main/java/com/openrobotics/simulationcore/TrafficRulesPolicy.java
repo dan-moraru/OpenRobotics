@@ -1,10 +1,15 @@
 package com.openrobotics.simulationcore;
+
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.robot.Robot;
 
 import java.util.*;
 
+/**
+ * traffic-rules coordination policy; grants exclusive access to marked intersection tiles one robot at a time,
+ * using a priority queue ordered by wait time and load status
+ */
 public class TrafficRulesPolicy implements CoordinationPolicy {
     private final Set<Tile> intersections;
     private final Set<String> intersectionKeys;

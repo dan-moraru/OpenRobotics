@@ -7,8 +7,10 @@ import com.openrobotics.robot.Robot;
 
 import java.util.*;
 
-// a robot must hold locks for the next k tiles on its path before it can move.
-// As the robot progresses, tiles it already reached are released.
+/**
+ * reservation-k coordination policy; a robot must hold locks for the next k tiles on its path before it can move.
+ * as the robot progresses, tiles it already reached are released.
+ */
 public class ReservationKPolicy implements CoordinationPolicy {
     private final int k;
 
