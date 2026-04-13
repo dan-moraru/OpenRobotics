@@ -185,6 +185,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private final List<Object> outlinerBacking = new ArrayList<>();
     private MapEntity selectedEntity = null;
+    private Rack pickingRack = null;
+    private int  pickingSlot = -1;
     private Vector2D selectedIntersection = null;
     private MapEntity draggingOnCanvas = null;
     // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
@@ -640,6 +642,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 gc.setFont(Font.font(fontSize));
                 gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
             }
+
+            if (pickingRack != null && entity instanceof DeliveryStation) {
+                gc.setStroke(OBJECT_SELECTION_COLOR);
+                gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
+                gc.strokeRect(sx + 1, sy + 1, tileSize - 2, tileSize - 2);
+            }
         }
     }
 
@@ -1009,6 +1017,27 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         lastMouseY = e.getY();
         viewportMouseX = e.getX();
         viewportMouseY = e.getY();
+
+        if (pickingRack != null && e.getButton() == MouseButton.PRIMARY) {
+            MapEntity hit = entityAtScreenPos(e.getX(), e.getY());
+            if (hit instanceof DeliveryStation ds) {
+                if (pickingSlot >= 0 && pickingSlot < pickingRack.getValidDropoffIds().size()) {
+                    pickingRack.getValidDropoffIds().set(pickingSlot, ds.getId());
+                    log("Assigned " + ds.getName() + " to slot " + pickingSlot
+                            + " of rack " + pickingRack.getName() + ".");
+                    Rack rackRef = pickingRack;
+                    cancelDropoffPicking();
+                    if (selectedEntity == rackRef) showPropertiesFor(rackRef);
+                    persistEditorChanges();
+                } else {
+                    cancelDropoffPicking();
+                }
+            } else {
+                cancelDropoffPicking();
+                log("Dropoff assignment cancelled.");
+            }
+            return;
+        }
 
         if (e.getButton() == MouseButton.PRIMARY) {
             Vector2D intersectionHit = intersectionAtScreenPos(e.getX(), e.getY());
@@ -1412,10 +1441,141 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         } else if (entity instanceof Station) {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
-        } else if (entity instanceof Rack) {
-            Label rackProps = new Label("Rack configuration");
-            propertiesPanel.getChildren().add(rackProps);
+        } else if (entity instanceof Rack rack) {
+            // ── Number of boxes ──
+            HBox boxCountBox = new HBox(8);
+            boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            Spinner<Integer> boxCountSpinner = new Spinner<>(
+                    new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+            boxCountSpinner.setPrefWidth(80);
+            boxCountSpinner.setEditable(true);
+            boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || oldV == null || newV.equals(oldV)) return;
+                if (guardEditor("change box count")) {
+                    boxCountSpinner.getValueFactory().setValue(oldV);
+                    return;
+                }
+                rack.setBoxCount(newV);
+                persistEditorChanges();
+            });
+            boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+            propertiesPanel.getChildren().add(boxCountBox);
+
+            // ── Manual assignment checkbox ──
+            HBox manualBox = new HBox(8);
+            manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
+            manualCheck.setSelected(rack.isManualDropoffAssignment());
+            VBox dropoffArrayBox = new VBox(4);
+            dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
+            dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
+            manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                if (guardEditor("toggle manual assignment")) {
+                    manualCheck.setSelected(oldV);
+                    return;
+                }
+                rack.setManualDropoffAssignment(newV);
+                dropoffArrayBox.setVisible(newV);
+                dropoffArrayBox.setManaged(newV);
+                renderRackDropoffArray(rack, dropoffArrayBox);
+                persistEditorChanges();
+            });
+            manualBox.getChildren().add(manualCheck);
+            propertiesPanel.getChildren().add(manualBox);
+
+            // ── Dropoff array (shown only when manual is on) ──
+            renderRackDropoffArray(rack, dropoffArrayBox);
+            propertiesPanel.getChildren().add(dropoffArrayBox);
         }
+    }
+
+    private void renderRackDropoffArray(Rack rack, VBox container) {
+        container.getChildren().clear();
+
+        // Header
+        HBox header = new HBox(6);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label headerLabel = new Label("Valid Dropoff Points");
+        headerLabel.setStyle("-fx-font-weight: bold;");
+        Tooltip headerTip = new Tooltip(
+            "Boxes are distributed across the valid dropoff points using round-robin. " +
+            "Null slots are ignored. At least one non-null slot is required to play.");
+        Tooltip.install(headerLabel, headerTip);
+        Button addBtn = new Button("+");
+        addBtn.setOnAction(ev -> {
+            if (guardEditor("add dropoff slot")) return;
+            rack.getValidDropoffIds().add(null);
+            renderRackDropoffArray(rack, container);
+            persistEditorChanges();
+        });
+        header.getChildren().addAll(headerLabel, addBtn);
+        container.getChildren().add(header);
+
+        // Build station lookup
+        java.util.Map<java.util.UUID, DeliveryStation> stationById = new java.util.HashMap<>();
+        if (engine != null && engine.getMap() != null) {
+            for (MapEntity e : engine.getMap().getEntities()) {
+                if (e instanceof DeliveryStation ds) stationById.put(ds.getId(), ds);
+            }
+        }
+
+        List<java.util.UUID> ids = rack.getValidDropoffIds();
+        for (int i = 0; i < ids.size(); i++) {
+            final int slotIndex = i;
+            java.util.UUID id = ids.get(i);
+            HBox row = new HBox(6);
+            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            Label idxLabel = new Label("[" + i + "]");
+            idxLabel.setStyle("-fx-text-fill: #666;");
+
+            String display;
+            if (id == null) {
+                display = "(unset)";
+            } else {
+                DeliveryStation ds = stationById.get(id);
+                display = ds == null ? "(deleted station)"
+                        : ds.getName() + " (" + (int)ds.getPosition().getX()
+                          + ", " + (int)ds.getPosition().getY() + ")";
+            }
+            Label displayLabel = new Label(display);
+            if (id == null || stationById.get(id) == null) {
+                displayLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #999;");
+            }
+
+            Button assignBtn = new Button("Assign");
+            assignBtn.setOnAction(ev -> beginDropoffPicking(rack, slotIndex));
+
+            Button removeBtn = new Button("\u2715");
+            removeBtn.setOnAction(ev -> {
+                if (guardEditor("remove dropoff slot")) return;
+                rack.getValidDropoffIds().remove(slotIndex);
+                renderRackDropoffArray(rack, container);
+                persistEditorChanges();
+            });
+
+            row.getChildren().addAll(idxLabel, displayLabel, assignBtn, removeBtn);
+            container.getChildren().add(row);
+        }
+    }
+
+    private void beginDropoffPicking(Rack rack, int slotIndex) {
+        this.pickingRack = rack;
+        this.pickingSlot = slotIndex;
+        if (tipLabel != null) {
+            tipLabel.setText("TIP: Click a delivery station to assign it to slot #"
+                + slotIndex + ". Click elsewhere to cancel.");
+        }
+        viewportStack.setCursor(javafx.scene.Cursor.CROSSHAIR);
+        drawViewport();
+    }
+
+    private void cancelDropoffPicking() {
+        this.pickingRack = null;
+        this.pickingSlot = -1;
+        if (tipLabel != null) tipLabel.setText("");
+        viewportStack.setCursor(javafx.scene.Cursor.DEFAULT);
+        drawViewport();
     }
 
     private void showIntersectionProperties(Vector2D intersection) {
@@ -1619,6 +1779,43 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             playBtn.setStyle("-fx-background-color: #2E9E5B;");
             pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+
+            // ── Validate manual-mode racks before generating tasks ──
+            if (engine.getMap() != null) {
+                java.util.Set<java.util.UUID> stationIds = new java.util.HashSet<>();
+                for (MapEntity me : engine.getMap().getEntities()) {
+                    if (me instanceof DeliveryStation ds) stationIds.add(ds.getId());
+                }
+                List<String> offenders = new ArrayList<>();
+                for (MapEntity me : engine.getMap().getEntities()) {
+                    if (me instanceof Rack r && r.isManualDropoffAssignment()) {
+                        boolean hasValid = r.getValidDropoffIds().stream()
+                            .anyMatch(uid -> uid != null && stationIds.contains(uid));
+                        if (!hasValid) offenders.add(r.getName());
+                    }
+                }
+                if (!offenders.isEmpty()) {
+                    running = false;
+                    paused = false;
+                    if (playBtn  != null) playBtn.setStyle("");
+                    if (pauseBtn != null) pauseBtn.setStyle("");
+                    if (simStatusLabel != null) {
+                        simStatusLabel.setText("STOPPED");
+                        simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
+                    }
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.ERROR);
+                    alert.setTitle("Cannot start simulation");
+                    alert.setHeaderText("Manual-mode racks have no valid dropoff points");
+                    alert.setContentText(
+                        "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
+                        + String.join("\n  \u2022 ", offenders)
+                        + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
+                    alert.showAndWait();
+                    log("\u26a0 Play aborted: " + offenders.size() + " rack(s) have an empty manual dropoff pool.");
+                    return;
+                }
+            }
 
             // Auto-generate tasks from map racks/stations if dispatcher is empty
             if (engine.getDispatcher().getAllQueuedTasks().isEmpty() && engine.getMap() != null) {
