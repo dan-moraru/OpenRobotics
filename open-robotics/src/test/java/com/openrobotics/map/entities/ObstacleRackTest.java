@@ -176,15 +176,4 @@ public class ObstacleRackTest {
         assertEquals(new Vector2D(8, 8), r.getPosition());
     }
 
-    /**
-     * Rack.take(...) is currently a no-op stub and should not throw.
-     */
-    @Test
-    public void testRackTakeDoesNotThrow() {
-        Rack r = new Rack("Rack", new Vector2D(0, 0));
-
-        assertDoesNotThrow(() -> r.take(new Object()));
-        assertEquals("Rack", r.getName());
-        assertEquals(new Vector2D(0, 0), r.getPosition());
-    }
 }

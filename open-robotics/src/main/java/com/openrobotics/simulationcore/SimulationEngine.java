@@ -757,6 +757,20 @@ public class SimulationEngine {
         return coordinationPolicy != null ? coordinationPolicy : CoordinationPolicy.noOp();
     }
 
+    private TrafficRulesPolicy buildTrafficRulesPolicy(Set<Vector2D> intersectionPositions) {
+        Set<Tile> tiles = new HashSet<>();
+        if (map != null && intersectionPositions != null) {
+            for (Vector2D position : intersectionPositions) {
+                if (position == null) continue;
+                Tile tile = map.getTile(position.getX(), position.getY());
+                if (tile != null) {
+                    tiles.add(tile);
+                }
+            }
+        }
+        return new TrafficRulesPolicy(tiles);
+    }
+
     public RobotConfig getRobotConfig() { return robotConfig; }
 
     /** Replaces the robot physics config and propagates it to all loaded robots. */
@@ -804,6 +818,58 @@ public class SimulationEngine {
      */
     public String getCoordinationPolicy() {
         return coordinationPolicy != null ? coordinationPolicy.getClass().getName() : null;
+    }
+
+    /**
+     * Returns whether the active coordination policy is traffic-rules based.
+     */
+    public boolean usesTrafficRulesPolicy() {
+        return coordinationPolicy instanceof TrafficRulesPolicy;
+    }
+
+    /**
+     * Returns a copy of the configured traffic-rules intersection positions.
+     */
+    public Set<Vector2D> getTrafficRuleIntersections() {
+        if (!(coordinationPolicy instanceof TrafficRulesPolicy policy)) {
+            return Collections.emptySet();
+        }
+
+        Set<Vector2D> intersections = new HashSet<>();
+        for (Tile tile : policy.getIntersectionTiles()) {
+            if (tile != null) {
+                intersections.add(new Vector2D(tile.getX(), tile.getY()));
+            }
+        }
+        return Collections.unmodifiableSet(intersections);
+    }
+
+    /**
+     * Returns whether the provided tile is configured as a traffic-rules intersection.
+     */
+    public boolean hasTrafficRuleIntersection(int x, int y) {
+        return getTrafficRuleIntersections().contains(new Vector2D(x, y));
+    }
+
+    /**
+     * Toggles the provided tile in the traffic-rules intersection set.
+     *
+     * @return {@code true} when the active policy supports traffic-rule intersections
+     *         and the coordinate exists on the map; {@code false} otherwise
+     */
+    public boolean toggleTrafficRuleIntersection(int x, int y) {
+        if (!usesTrafficRulesPolicy() || map == null || map.getTile(x, y) == null) {
+            return false;
+        }
+
+        Set<Vector2D> intersections = new HashSet<>(getTrafficRuleIntersections());
+        Vector2D target = new Vector2D(x, y);
+        if (!intersections.add(target)) {
+            intersections.remove(target);
+        }
+
+        coordinationPolicy = buildTrafficRulesPolicy(intersections);
+        return true;
     }
 
     /**

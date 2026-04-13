@@ -40,7 +40,7 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
     /**
      * Populates all labels with data for the given object type.
      *
-     * @param type one of: ROBOT, CHARGER, STATION, DOCK, WALL
+     * @param type one of: ROBOT, CHARGER, STATION, DOCK, WALL, INTERSECTION
      */
     public void setObjectType(String type) {
         this.objectType = type;
@@ -94,6 +94,17 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
                 objectDescLabel.setText(
                         "A static obstacle that blocks robot movement. Robots must navigate " +
                         "around walls. Used to define aisle structure.");
+            }
+            case "INTERSECTION" -> {
+                objectIconLabel.setText("╋");
+                objectNameLabel.setText("Traffic Intersection");
+                objectTypeLabel.setText("Traffic Control – Intersection Marker");
+                objectDescLabel.setText(
+                        "Marks a traversable floor tile as a traffic-rules intersection. " +
+                        "Robots must coordinate entry through this tile when Traffic Rules " +
+                        "coordination is active.");
+                addPropRow("Placement", "Traversable floor tiles only");
+                addPropRow("Edit mode", "Drop again to remove");
             }
             default -> {
                 objectIconLabel.setText("?");
@@ -153,4 +164,3 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         propsOverview.getChildren().add(row);
     }
 }
-

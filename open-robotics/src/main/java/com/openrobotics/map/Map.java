@@ -10,7 +10,7 @@ import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 
-// warehouse grid (uml 3.3.3)
+/** warehouse grid; owns all tiles and entities, and provides spatial queries (uml 3.3.3) */
 public class Map {
     private UUID mapid; // unique identifier for database storage
     private final int width;  // number of columns (x-axis)
@@ -47,7 +47,7 @@ public class Map {
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
-    // get tile at (x, y); callers pass natural (x, y) order
+    /** returns the tile at grid position (x, y), or null if out of bounds */
     // internally we flip to grid[y][x] because the array is row-major
     public Tile getTile(int x, int y) {
         if (x < 0 || x >= width || y < 0 || y >= height) {
@@ -56,18 +56,16 @@ public class Map {
         return grid[y][x];
     }
 
-    // check if a move to (x, y) is valid: in bounds and not occupied
+    /** true if (x, y) is in bounds and the tile is not currently occupied by a robot */
     public boolean isValidMove(int x, int y) {
         Tile tile = getTile(x, y);
         return tile != null && !tile.isOccupied();
     }
 
-    // add a map entity to the entity list
     public void addEntity(MapEntity entity) {
         entities.add(entity);
     }
 
-    // remove a map entity from the entity list
     public boolean removeEntity(MapEntity entity) {
         return entities.remove(entity);
     }
@@ -87,17 +85,17 @@ public class Map {
         return Collections.unmodifiableList(entities);
     }
 
-    // returns all traversable cardinal neighbors of pos (semantic alias of getNeighbors)
+    /** semantic alias for getNeighbors(); prefer this name in task/dispatcher contexts */
     public List<Vector2D> getTraversableAdjacentTiles(Vector2D pos) {
         return getNeighbors(pos);
     }
 
-    // returns true if at least one traversable cardinal neighbor exists at pos
+    /** true if pos has at least one traversable cardinal neighbor */
     public boolean hasTraversableAdjacentTile(Vector2D pos) {
         return !getTraversableAdjacentTiles(pos).isEmpty();
     }
 
-    // returns true if a rack entity occupies the given position
+    /** true if a Rack entity occupies the given position */
     public boolean isRackAt(Vector2D pos) {
         for (MapEntity entity : entities) {
             if (entity instanceof Rack && entity.getPosition().equals(pos)) {
@@ -107,10 +105,7 @@ public class Map {
         return false;
     }
 
-    // checks bounds and blocking entities only, not tile.isOccupied()
-    // Obstacles and Racks are both non-traversable: robots must navigate around them
-    // and interact with adjacent tiles instead of walking through them.
-    // robot-robot conflicts are handled by collisionmanager
+    /** true if pos is in bounds and holds no Rack or Obstacle; ignores tile occupancy — robot conflicts are handled by CollisionManager */
     public boolean isTraversable(Vector2D pos) {
         Tile tile = getTile(pos.getX(), pos.getY());
         if (tile == null) return false;
@@ -126,7 +121,7 @@ public class Map {
         return true;
     }
 
-    // returns traversable neighbors in direction enum order for determinism
+    /** traversable cardinal neighbors of pos in Direction-enum order for determinism */
     public List<Vector2D> getNeighbors(Vector2D pos) {
         List<Vector2D> neighbors = new ArrayList<>();
         for (Direction dir : Direction.values()) {
@@ -138,7 +133,7 @@ public class Map {
         return neighbors;
     }
 
-    // finds nearest charging station by manhattan distance, null if none
+    /** nearest ChargingStation to {@code from} by manhattan distance; null if none exist */
     public Vector2D findNearestChargingStation(Vector2D from) {
         Vector2D nearest = null;
         int bestDist = Integer.MAX_VALUE;

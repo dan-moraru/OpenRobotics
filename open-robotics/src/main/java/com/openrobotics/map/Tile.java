@@ -1,6 +1,6 @@
 package com.openrobotics.map;
 
-// simple tile in the warehouse map grid
+/** single grid cell in the warehouse map; tracks occupancy and delivery station status */
 public class Tile {
     private final int x;
     private final int y;
@@ -28,7 +28,7 @@ public class Tile {
     public void incrementVisitCount() { visitCount++; }
     public void resetVisitCount() { visitCount = 0; }
 
-    // convenience method returning position as vector2d
+    /** current position as a new Vector2D; allocates a new object on every call */
     public Vector2D getPosition() {
         return new Vector2D(x, y);
     }

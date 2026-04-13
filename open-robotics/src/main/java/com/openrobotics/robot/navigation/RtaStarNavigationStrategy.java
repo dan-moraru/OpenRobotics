@@ -11,8 +11,7 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
 
-// real-time a* (korf 1990): local decisions like greedy but learns a heuristic table
-// so revisiting tiles produces better decisions, converging to shorter paths over time
+/** real-time A* navigation; learns heuristic values during exploration and penalizes sensor-detected obstacles */
 public class RtaStarNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id (same pattern as greedy/bug)
