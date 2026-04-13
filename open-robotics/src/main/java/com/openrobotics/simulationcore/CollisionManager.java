@@ -7,7 +7,10 @@ import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
@@ -55,6 +58,10 @@ public class CollisionManager {
     }
 
     public MoveIntention[] resolveConflicts(MoveIntention[] intentions) {
+        return resolveConflicts(null, intentions);
+    }
+
+    public MoveIntention[] resolveConflicts(com.openrobotics.map.Map map, MoveIntention[] intentions) {
         if (intentions == null || intentions.length == 0) {
             return new MoveIntention[0];
         }
@@ -69,6 +76,20 @@ public class CollisionManager {
         MoveIntention[] candidates = uniqueByRobot.values().toArray(new MoveIntention[0]);
         Arrays.sort(candidates, Comparator.comparing(i -> i.getRobot().getId().toString()));
 
+        Set<String> deadRobotTiles = new HashSet<>();
+        if (map != null) {
+            for (MapEntity entity : map.getEntities()) {
+                if (entity instanceof Robot robot && robot.getState() == RobotState.BATTER_DEAD) {
+                    deadRobotTiles.add(entity.getPosition().getX() + "," + entity.getPosition().getY());
+                }
+            }
+        }
+        for (MoveIntention intention : candidates) {
+            if (intention.getRobot().getState() == RobotState.BATTER_DEAD) {
+                deadRobotTiles.add(tileKey(intention.getFromTile()));
+            }
+        }
+
         // ===== Step 2: same-target conflicts =====
         Set<UUID> blockedRobots = new HashSet<>();
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
@@ -81,6 +102,16 @@ public class CollisionManager {
 
         for (Map.Entry<String, List<MoveIntention>> entry : byDestination.entrySet()) {
             List<MoveIntention> group = entry.getValue();
+            String destinationKey = entry.getKey();
+
+            if (deadRobotTiles.contains(destinationKey)) {
+                for (MoveIntention intention : group) {
+                    if (intention.getRobot().getState() != RobotState.BATTER_DEAD) {
+                        blockedRobots.add(intention.getRobot().getId());
+                    }
+                }
+                continue;
+            }
 
             if (group.size() <= 1) continue;
 

@@ -390,6 +390,29 @@ public class CollisionManagerTest {
     }
 
     /**
+     * Dead-robot tiles reject incoming moves even on tiles that would otherwise allow overlap.
+     */
+    @Test
+    public void testDeadRobotTileBlocksIncomingMoves() {
+        Map map = new Map(3, 1);
+        map.getTile(1, 0).setDeliveryStation(true);
+
+        Robot dead = new Robot(UUID.fromString("00000000-0000-0000-0000-0000000000ff"),
+                "dead", new Vector2D(1, 0));
+        dead.setState(com.openrobotics.robot.RobotState.BATTER_DEAD);
+        map.addEntity(dead);
+
+        Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "move", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(map, new MoveIntention[]{
+                move(moving, 0, 0, 1, 0)
+        });
+
+        assertEquals(0, result.length);
+    }
+
+    /**
      * A stay intention does not participate in swap conflicts because it is not an actual move.
      */
     @Test

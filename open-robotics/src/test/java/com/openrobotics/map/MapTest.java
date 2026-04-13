@@ -3,6 +3,8 @@ package com.openrobotics.map;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -130,6 +132,18 @@ public class MapTest {
     }
 
     /**
+     * A tile containing a dead robot is not a valid move target.
+     */
+    @Test
+    public void testInvalidMoveDeadRobotTile() {
+        Robot deadRobot = new Robot("Dead", new Vector2D(3, 3));
+        deadRobot.setState(RobotState.BATTER_DEAD);
+        map.addEntity(deadRobot);
+
+        assertFalse(map.isValidMove(3, 3));
+    }
+
+    /**
      * Out-of-bounds coordinates are never valid moves.
      */
     @Test
@@ -243,6 +257,18 @@ public class MapTest {
     @Test
     public void testEmptyTileIsTraversable() {
         assertTrue(map.isTraversable(new Vector2D(5, 5)));
+    }
+
+    /**
+     * Dead robots act as hard blockers for traversability checks.
+     */
+    @Test
+    public void testDeadRobotTileIsNotTraversable() {
+        Robot deadRobot = new Robot("Dead", new Vector2D(4, 4));
+        deadRobot.setState(RobotState.BATTER_DEAD);
+        map.addEntity(deadRobot);
+
+        assertFalse(map.isTraversable(new Vector2D(4, 4)));
     }
 
     /**

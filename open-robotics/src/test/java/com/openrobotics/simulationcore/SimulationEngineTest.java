@@ -223,6 +223,30 @@ public class SimulationEngineTest {
     }
 
     /**
+     * A live robot cannot move into a tile currently occupied by a dead robot.
+     */
+    @Test
+    public void testTickBlocksMoveIntoDeadRobotTile() {
+        ScriptedRobot liveRobot = new ScriptedRobot("Live", new Vector2D(0, 0));
+        liveRobot.setState(RobotState.MOVING);
+        liveRobot.setNextMove(new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), liveRobot));
+
+        Robot deadRobot = makeRobot("Dead", 1, 0);
+        deadRobot.setState(RobotState.BATTER_DEAD);
+
+        map.addEntity(liveRobot);
+        map.addEntity(deadRobot);
+
+        SimulationEngine eng = buildEngine(new Robot[]{ liveRobot, deadRobot });
+        AppState.setEngine(eng);
+
+        eng.tick();
+
+        assertEquals(new Vector2D(0, 0), liveRobot.getPosition());
+        assertEquals(new Vector2D(1, 0), deadRobot.getPosition());
+    }
+
+    /**
      * Running 5 consecutive ticks on an active simulation produces a counter of 5.
      */
     @Test

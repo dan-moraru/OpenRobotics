@@ -563,7 +563,7 @@ public class SimulationEngine {
         MoveIntention[] coordinatedIntentions = coordinationPolicy.apply(map, intentions);
 
         // Resolving conflicts/collisions and finalizing move intentions for all robots
-        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(coordinatedIntentions);
+        MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(map, coordinatedIntentions);
 
         // Commiting move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);

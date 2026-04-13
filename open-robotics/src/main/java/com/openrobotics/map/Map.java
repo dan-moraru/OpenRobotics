@@ -9,6 +9,8 @@ import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 /** warehouse grid; owns all tiles and entities, and provides spatial queries (uml 3.3.3) */
 public class Map {
@@ -56,10 +58,10 @@ public class Map {
         return grid[y][x];
     }
 
-    /** true if (x, y) is in bounds and the tile is not currently occupied by a robot */
+    /** true if (x, y) is in bounds and the tile is not currently occupied or blocked by a dead robot */
     public boolean isValidMove(int x, int y) {
         Tile tile = getTile(x, y);
-        return tile != null && !tile.isOccupied();
+        return tile != null && !tile.isOccupied() && !hasDeadRobotAt(tile.getPosition());
     }
 
     public void addEntity(MapEntity entity) {
@@ -105,7 +107,7 @@ public class Map {
         return false;
     }
 
-    /** true if pos is in bounds and holds no Rack or Obstacle; ignores tile occupancy — robot conflicts are handled by CollisionManager */
+    /** true if pos is in bounds and holds no Rack, Obstacle, or dead robot; live robot conflicts are handled by CollisionManager */
     public boolean isTraversable(Vector2D pos) {
         Tile tile = getTile(pos.getX(), pos.getY());
         if (tile == null) return false;
@@ -113,7 +115,9 @@ public class Map {
         for (MapEntity entity : entities) {
             if (entity.getPosition().equals(pos)) {
                 // Racks are solid. Robots interact with them from the side.
-                if (entity instanceof Rack || entity instanceof Obstacle) {
+                if (entity instanceof Rack
+                        || entity instanceof Obstacle
+                        || (entity instanceof Robot robot && robot.getState() == RobotState.BATTER_DEAD)) {
                     return false;
                 }
             }
@@ -148,5 +152,16 @@ public class Map {
             }
         }
         return nearest;
+    }
+
+    private boolean hasDeadRobotAt(Vector2D pos) {
+        for (MapEntity entity : entities) {
+            if (entity.getPosition().equals(pos)
+                    && entity instanceof Robot robot
+                    && robot.getState() == RobotState.BATTER_DEAD) {
+                return true;
+            }
+        }
+        return false;
     }
 }
