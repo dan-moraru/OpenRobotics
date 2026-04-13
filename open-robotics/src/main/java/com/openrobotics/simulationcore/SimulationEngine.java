@@ -264,6 +264,7 @@ public class SimulationEngine {
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
+            this.simulationError = SimulationError.NONE;
             // seed already set before robot creation loop
             // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
 
