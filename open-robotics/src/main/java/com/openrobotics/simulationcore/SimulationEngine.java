@@ -530,6 +530,13 @@ public class SimulationEngine {
             throw new IllegalStateException("SimulationEngine not initialized correctly; cannot tick.");
         }
 
+        // guard against ticking when no robots are present to prevent infinite loops in sim engine
+        if (robots.length == 0) {
+            this.running = false;
+            simulationError = SimulationError.NO_ROBOTS_SPAWNED;
+            return false;
+        }
+
         if (tickCounter >= maxTicks) {
             this.running = false;
             return false;
@@ -598,6 +605,8 @@ public class SimulationEngine {
      * @return true if all robots are in the BATTER_DEAD state, false otherwise
      */
     private boolean allRobotsDead() {
+        if (robots.length == 0) return false; // no robots were loaded in the sim engine
+
         for (Robot robot : robots) {
             if (robot.getState() != RobotState.BATTER_DEAD) {
                 return false;
@@ -897,9 +906,28 @@ public class SimulationEngine {
     }
 
     /**
+     * Returns a user-friendly error message based on the current simulation error state.
+     * @return a user-friendly error message if a simulation error is present, or null if no error has occurred.
+     */
+    public String getSimulationErrorMessage() {
+        if (simulationError == null) {
+            return null;
+        }
+
+        switch (simulationError) {
+            case ALL_ROBOTS_DEAD:
+                return "All robots have depleted their batteries. Simulation cannot continue.\nConsider adding more charging stations to the map.";
+            case NO_ROBOTS_SPAWNED:
+                return "No robots were spawned in the simulation. Simulation cannot run.\nPlease add robots to the simulation";
+            default:
+                return "An unknown error has occurred in the simulation.";
+        }
+    }
+
+    /**
      * Updates the runId with a new random UUID. This is used when restarting a simulation.
      */
-    public void updateRunId() {
+    private void updateRunId() {
         this.runId = UUID.randomUUID();
     }
 
@@ -939,5 +967,13 @@ public class SimulationEngine {
                     .map(e -> (Robot) e)
                     .toArray(Robot[]::new);
         }
+    }
+
+    /**
+     * Resets the simulation engine by updating the runId and clearing any simulation errors.
+     */
+    public void reset() {
+        updateRunId();
+        this.simulationError = SimulationError.NONE;
     }
 }

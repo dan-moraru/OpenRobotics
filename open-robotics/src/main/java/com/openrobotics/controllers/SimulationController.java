@@ -22,6 +22,7 @@ import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
 import com.openrobotics.robot.sensors.ProximitySensor;
 import com.openrobotics.simulationcore.SimulationEngine;
+import com.openrobotics.simulationcore.SimulationError;
 import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
@@ -1501,8 +1502,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return;
         }
 
-        // Updating run ID for the new simulation run after restart
-        engine.updateRunId();
+        // Resetting some internal engine state for new simulation run
+        engine.reset();
 
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
         if (simProgressBar != null) simProgressBar.setProgress(0);
@@ -1587,7 +1588,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            handleSimulationComplete();
+            // Checking if simulation stopped due to failure or completion
+            if (engine.getSimulationError() != SimulationError.NONE) {
+                handleSimulationFailure();
+            } else {
+                handleSimulationComplete();
+            }
+
             return;
         }
         localTick++;
@@ -1618,6 +1625,26 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation complete at TICK " + localTick + ".");
+    }
+
+    /**
+     * Handles simulation failure (e.g. all robots died)
+     */
+    private void handleSimulationFailure() {
+        stopLoop();
+        running = false;
+        paused = false;
+        if (simStatusLabel != null) {
+            simStatusLabel.setText("FAILURE");
+            simStatusLabel.setStyle("-fx-text-fill: #599068; -fx-font-weight: bold;");
+        }
+        if (viewportStatusLabel != null) {
+            viewportStatusLabel.setText("Workload failed to complete");
+        }
+        if (playBtn  != null) playBtn.setStyle("");
+        if (pauseBtn != null) pauseBtn.setStyle("");
+        log("Simulation failed: " + engine.getSimulationErrorMessage()); // logging simulation error message
+        log("Simulation failed at TICK " + localTick + ".");
     }
 
     private void startAnimation() {
