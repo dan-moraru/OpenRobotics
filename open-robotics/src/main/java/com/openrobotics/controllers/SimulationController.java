@@ -1582,6 +1582,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
+        if (engine.isFinished()) {
+            log("\u26a0 Simulation already complete. Press Stop to reset before playing again.");
+            if (playBtn != null) playBtn.setDisable(true);
+            return;
+        }
         if (running) {
             if (paused) {
                 paused = false;
@@ -1672,6 +1677,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         running = false;
         paused  = false;
         stopLoop();
+        if (playBtn != null) playBtn.setDisable(false);
         if (simStatusLabel != null) {
             simStatusLabel.setText("STOPPED");
             simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
@@ -1841,6 +1847,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
         if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
+
+            if (engine != null && engine.isFinished()) {
+                running = false;
+                paused = false;
+                stopLoop();
+                if (playBtn != null) playBtn.setDisable(true);
+                if (simStatusLabel != null) {
+                    simStatusLabel.setText("COMPLETE");
+                    simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
+                }
+                log("Simulation complete \u2014 all tasks done and all robots idle. Press Stop to reset.");
+            }
     }
 
     private void handleSimulationComplete() {
