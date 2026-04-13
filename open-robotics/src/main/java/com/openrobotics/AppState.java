@@ -13,6 +13,7 @@ public final class AppState {
     private static String configPath;
     private static int canvasWidthTiles  = 15;
     private static int canvasHeightTiles = 15;
+    private static int simulationTick = 0;
 
     private AppState() {}
 
@@ -30,8 +31,12 @@ public final class AppState {
     /** Legacy single-axis accessor — returns the larger of width/height. */
     public static int  getCanvasTiles()                      { return Math.max(canvasWidthTiles, canvasHeightTiles); }
 
+    public static int  getSimulationTick()                     { return simulationTick; }
+    public static void setSimulationTick(int tick)           { simulationTick = tick; }
+
     public static void clear() {
         engine = null;
         configPath = null;
+        simulationTick = 0;
     }
 }
