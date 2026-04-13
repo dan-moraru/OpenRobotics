@@ -1,6 +1,6 @@
 package com.openrobotics.common;
 
-// movement directions for the grid
+/** movement directions for the grid */
 public enum Direction {
     UP(0, -1),
     DOWN(0, 1),
