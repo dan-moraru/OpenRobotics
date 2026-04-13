@@ -1833,6 +1833,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
     @Override
     public void cleanup() {
+        shutdown();
         stopLoop();
         if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
         if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
@@ -2233,5 +2234,20 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
             ramLabel.setText("RAM: " + usedKb + " KB");
         }
+    }
+
+    /**
+     * Performs necessary cleanup when the application is closing
+     */
+    public void shutdown() {
+        // stop log polling timeline
+        if (logPollingTimeline != null) {
+            logPollingTimeline.stop();
+        }
+
+        // shutdown the executor to stop any ongoing log fetching tasks
+        executor.shutdownNow();
+
+        Logger.flushRobotEvents(); // ensure all logs are flushed before shutdown
     }
 }
