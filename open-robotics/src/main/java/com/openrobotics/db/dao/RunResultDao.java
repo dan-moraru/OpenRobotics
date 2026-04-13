@@ -8,14 +8,15 @@ import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
 
+/** DAO for the run_results table */
 public final class RunResultDao {
 
     private RunResultDao() {}
 
     /**
-     * Inserts a new run result record into the database.
-     * @param r RunResultRecord to insert
-     * @throws SQLException if a database error occurs
+     * inserts a run result record.
+     *
+     * @throws SQLException on database error
      */
     public static void insert(RunResultRecord r) throws SQLException {
         String sql = """
@@ -44,10 +45,9 @@ public final class RunResultDao {
     }
 
     /**
-     * Finds a run result record by run ID.
-     * @param runId ID of the run to find result for
-     * @return Optional containing the run result record if found, otherwise empty
-     * @throws SQLException if a database error occurs
+     * finds a run result record by run ID.
+     *
+     * @throws SQLException on database error
      */
     public static Optional<RunResultRecord> findByRunId(UUID runId) throws SQLException {
         String sql = "SELECT * FROM run_results WHERE run_id = ?";
@@ -61,10 +61,10 @@ public final class RunResultDao {
     }
 
     /**
-     * Deletes a run result record by run ID.
-     * @param runId ID of the run to delete result for
-     * @return true if the run result was deleted, false otherwise
-     * @throws SQLException if a database error occurs
+     * deletes a run result record by run ID.
+     *
+     * @return true if a row was deleted
+     * @throws SQLException on database error
      */
     public static boolean deleteByRunId(UUID runId) throws SQLException {
         String sql = "DELETE FROM run_results WHERE run_id = ?";
@@ -75,12 +75,7 @@ public final class RunResultDao {
         }
     }
 
-    /**
-     * Maps a ResultSet to a RunResultRecord.
-     * @param rs ResultSet to map
-     * @return RunResultRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a RunResultRecord
     private static RunResultRecord map(ResultSet rs) throws SQLException {
         RunResultRecord r = new RunResultRecord();
         r.setRunId(rs.getObject("run_id", UUID.class));
@@ -98,12 +93,7 @@ public final class RunResultDao {
         return r;
     }
 
-    /**
-     * Converts a JSON string to a PGobject.
-     * @param json JSON string to convert
-     * @return PGobject containing the JSON
-     * @throws SQLException if a database error occurs
-     */
+    // wraps a JSON string as a PostgreSQL jsonb value; returns null if json is null
     private static PGobject jsonb(String json) throws SQLException {
         if (json == null) return null;
         PGobject obj = new PGobject();

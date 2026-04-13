@@ -10,15 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/** DAO for the simulation_runs table */
 public final class SimulationRunDao {
 
     private SimulationRunDao() {}
 
     /**
-     * Inserts a new simulation run record into the database.
-     * @param r SimulationRunRecord to insert
-     * @return UUID of the inserted simulation run
-     * @throws SQLException if a database error occurs
+     * inserts a simulation run record; uses {@code r.getId()} if set, otherwise generates a new UUID.
+     *
+     * @return the inserted run's ID
+     * @throws SQLException on database error
      */
     public static UUID insert(SimulationRunRecord r) throws SQLException {
         UUID id = r.getId() != null ? r.getId() : UUID.randomUUID();
@@ -47,10 +48,9 @@ public final class SimulationRunDao {
     }
 
     /**
-     * Finds a simulation run record by its ID.
-     * @param id ID of the simulation run to find
-     * @return Optional containing the simulation run record if found, otherwise empty
-     * @throws SQLException if a database error occurs
+     * finds a simulation run record by ID.
+     *
+     * @throws SQLException on database error
      */
     public static Optional<SimulationRunRecord> findById(UUID id) throws SQLException {
         String sql = "SELECT * FROM simulation_runs WHERE id = ?";
@@ -64,10 +64,9 @@ public final class SimulationRunDao {
     }
 
     /**
-     * Finds all simulation run records by map ID.
-     * @param mapId ID of the map to find runs for
-     * @return List of simulation run records
-     * @throws SQLException if a database error occurs
+     * finds all simulation run records for a given map, ordered by started_at descending.
+     *
+     * @throws SQLException on database error
      */
     public static List<SimulationRunRecord> findByMapId(UUID mapId) throws SQLException {
         String sql = "SELECT * FROM simulation_runs WHERE map_id = ? ORDER BY started_at DESC";
@@ -85,11 +84,9 @@ public final class SimulationRunDao {
     }
 
     /**
-     * Updates the status of a simulation run record.
-     * @param id ID of the simulation run to update
-     * @param status New status of the simulation run
-     * @param finishedAt Timestamp of the finished time of the simulation run
-     * @throws SQLException if a database error occurs
+     * updates the status and finished_at timestamp of a simulation run.
+     *
+     * @throws SQLException on database error
      */
     public static void updateStatus(UUID id, String status, Timestamp finishedAt) throws SQLException {
         String sql = "UPDATE simulation_runs SET status = ?, finished_at = ? WHERE id = ?";
@@ -103,10 +100,10 @@ public final class SimulationRunDao {
     }
 
     /**
-     * Deletes a simulation run record by its ID.
-     * @param id ID of the simulation run to delete
-     * @return true if the simulation run was deleted, false otherwise
-     * @throws SQLException if a database error occurs
+     * deletes a simulation run record by ID.
+     *
+     * @return true if a row was deleted
+     * @throws SQLException on database error
      */
     public static boolean deleteById(UUID id) throws SQLException {
         String sql = "DELETE FROM simulation_runs WHERE id = ?";
@@ -117,12 +114,7 @@ public final class SimulationRunDao {
         }
     }
 
-    /**
-     * Maps a ResultSet to a SimulationRunRecord.
-     * @param rs ResultSet to map
-     * @return SimulationRunRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a SimulationRunRecord
     private static SimulationRunRecord map(ResultSet rs) throws SQLException {
         SimulationRunRecord r = new SimulationRunRecord();
         r.setId(rs.getObject("id", UUID.class));
@@ -139,12 +131,7 @@ public final class SimulationRunDao {
         return r;
     }
 
-    /**
-     * Converts a JSON string to a PGobject.
-     * @param json JSON string to convert
-     * @return PGobject containing the JSON
-     * @throws SQLException if a database error occurs
-     */
+    // wraps a JSON string as a PostgreSQL jsonb value; returns null if json is null
     private static PGobject jsonb(String json) throws SQLException {
         if (json == null) return null;
         PGobject obj = new PGobject();

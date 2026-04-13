@@ -10,18 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Data Access Object for MapRecord operations.
- */
+/** DAO for the maps table */
 public final class MapDao {
 
     private MapDao() {}
 
     /**
-     * Inserts a new map record into the database.
-     * @param r MapRecord to insert
-     * @return UUID of the inserted map
-     * @throws SQLException if a database error occurs
+     * inserts a map record; uses {@code r.getId()} if set, otherwise generates a new UUID.
+     *
+     * @return the inserted map's ID
+     * @throws SQLException on database error
      */
     public static UUID insert(MapRecord r) throws SQLException {
         UUID id = r.getId() != null ? r.getId() : UUID.randomUUID();
@@ -45,10 +43,9 @@ public final class MapDao {
     }
 
     /**
-     * Finds a map record by its ID.
-     * @param id ID of the map to find
-     * @return Optional containing the map record if found, otherwise empty
-     * @throws SQLException if a database error occurs
+     * finds a map record by ID.
+     *
+     * @throws SQLException on database error
      */
     public static Optional<MapRecord> findById(UUID id) throws SQLException {
         String sql = "SELECT * FROM maps WHERE id = ?";
@@ -62,9 +59,9 @@ public final class MapDao {
     }
 
     /**
-     * Finds all map records in the database.
-     * @return List of all map records
-     * @throws SQLException if a database error occurs
+     * returns all map records ordered by created_at descending.
+     *
+     * @throws SQLException on database error
      */
     public static List<MapRecord> findAll() throws SQLException {
         String sql = "SELECT * FROM maps ORDER BY created_at DESC";
@@ -80,10 +77,10 @@ public final class MapDao {
     }
 
     /**
-     * Deletes a map record by its ID.
-     * @param id ID of the map to delete
-     * @return true if the map was deleted, false otherwise
-     * @throws SQLException if a database error occurs
+     * deletes a map record by ID.
+     *
+     * @return true if a row was deleted
+     * @throws SQLException on database error
      */
     public static boolean deleteById(UUID id) throws SQLException {
         String sql = "DELETE FROM maps WHERE id = ?";
@@ -94,12 +91,7 @@ public final class MapDao {
         }
     }
 
-    /**
-     * Maps a ResultSet to a MapRecord.
-     * @param rs ResultSet to map
-     * @return MapRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a MapRecord
     private static MapRecord map(ResultSet rs) throws SQLException {
         MapRecord r = new MapRecord();
         r.setId(rs.getObject("id", UUID.class));
@@ -113,12 +105,7 @@ public final class MapDao {
         return r;
     }
 
-    /**
-     * Converts a JSON string to a PGobject.
-     * @param json JSON string to convert
-     * @return PGobject containing the JSON
-     * @throws SQLException if a database error occurs
-     */
+    // wraps a JSON string as a PostgreSQL jsonb value
     private static PGobject jsonb(String json) throws SQLException {
         PGobject obj = new PGobject();
         obj.setType("jsonb");

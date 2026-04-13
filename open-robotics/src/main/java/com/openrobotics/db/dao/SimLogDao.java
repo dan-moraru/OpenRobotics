@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/** DAO for the sim_logs table */
 public final class SimLogDao {
 
     private SimLogDao() {}
 
     /**
-     * Inserts a new simulation log record into the database.
-     * @param r SimLogRecord to insert
-     * @return ID of the inserted simulation log
-     * @throws SQLException if a database error occurs
+     * inserts a single log record and returns its generated ID.
+     *
+     * @throws SQLException on database error
      */
     public static long insert(SimLogRecord r) throws SQLException {
         String sql = """
@@ -44,9 +44,9 @@ public final class SimLogDao {
     }
 
     /**
-     * Inserts multiple log records in a single batch for better throughput during simulation ticks.
-     * @param records List of SimLogRecord to insert
-     * @throws SQLException if a database error occurs
+     * inserts a batch of log records in a single transaction for better throughput.
+     *
+     * @throws SQLException on database error
      */
     public static void insertBatch(List<SimLogRecord> records) throws SQLException {
         if (records.isEmpty()) return;
@@ -81,10 +81,9 @@ public final class SimLogDao {
     }
 
     /**
-     * Finds all simulation log records by run ID.
-     * @param runId ID of the run to find logs for
-     * @return List of simulation log records
-     * @throws SQLException if a database error occurs
+     * finds all log records for a run, ordered by tick then ID.
+     *
+     * @throws SQLException on database error
      */
     public static List<SimLogRecord> findByRunId(UUID runId) throws SQLException {
         String sql = "SELECT * FROM sim_logs WHERE run_id = ? ORDER BY tick, id";
@@ -92,11 +91,9 @@ public final class SimLogDao {
     }
 
     /**
-     * Finds all simulation log records by run ID and tick.
-     * @param runId ID of the run to find logs for
-     * @param tick Tick to find logs for
-     * @return List of simulation log records
-     * @throws SQLException if a database error occurs
+     * finds all log records for a run at a specific tick, ordered by ID.
+     *
+     * @throws SQLException on database error
      */
     public static List<SimLogRecord> findByRunIdAndTick(UUID runId, int tick) throws SQLException {
         String sql = "SELECT * FROM sim_logs WHERE run_id = ? AND tick = ? ORDER BY id";
@@ -115,10 +112,10 @@ public final class SimLogDao {
     }
 
     /**
-     * Deletes all simulation log records by run ID.
-     * @param runId ID of the run to delete logs for
-     * @return Number of deleted records
-     * @throws SQLException if a database error occurs
+     * deletes all log records for a run.
+     *
+     * @return number of deleted rows
+     * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {
         String sql = "DELETE FROM sim_logs WHERE run_id = ?";
@@ -129,13 +126,7 @@ public final class SimLogDao {
         }
     }
 
-    /**
-     * Executes a query and maps the results to a list of SimLogRecord.
-     * @param sql SQL query to execute
-     * @param runId ID of the run to find logs for
-     * @return List of simulation log records
-     * @throws SQLException if a database error occurs
-     */
+    // executes a run_id-filtered query and collects results
     private static List<SimLogRecord> query(String sql, UUID runId) throws SQLException {
         List<SimLogRecord> list = new ArrayList<>();
         try (Connection c = Database.getConnection();
@@ -150,12 +141,7 @@ public final class SimLogDao {
         return list;
     }
 
-    /**
-     * Maps a ResultSet to a SimLogRecord.
-     * @param rs ResultSet to map
-     * @return SimLogRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a SimLogRecord
     private static SimLogRecord map(ResultSet rs) throws SQLException {
         SimLogRecord r = new SimLogRecord();
         r.setId(rs.getLong("id"));
@@ -169,12 +155,7 @@ public final class SimLogDao {
         return r;
     }
 
-    /**
-     * Converts a JSON string to a PGobject.
-     * @param json JSON string to convert
-     * @return PGobject containing the JSON
-     * @throws SQLException if a database error occurs
-     */
+    // wraps a JSON string as a PostgreSQL jsonb value; returns null if json is null
     private static PGobject jsonb(String json) throws SQLException {
         if (json == null) return null;
         PGobject obj = new PGobject();
