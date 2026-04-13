@@ -35,4 +35,11 @@ public class Rack extends MapEntity {
         this.validDropoffIds = validDropoffIds != null ? validDropoffIds : new ArrayList<>();
     }
 
+    private boolean manualDropoffAssignment = false;
+
+    public boolean isManualDropoffAssignment() { return manualDropoffAssignment; }
+    public void setManualDropoffAssignment(boolean manualDropoffAssignment) {
+        this.manualDropoffAssignment = manualDropoffAssignment;
+    }
+
 }
