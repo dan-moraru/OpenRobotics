@@ -348,7 +348,7 @@
                                                         <Label fx:id="tipLabel" styleClass="sim-tip-label" text=""/>
                                                         <Region HBox.hgrow="ALWAYS"/>
                                                         <Button fx:id="clearConsoleButton" onAction="#onClearConsole"
-                                                                styleClass="console-clear-btn" text="clear"/>
+                                                                styleClass="console-clear-btn" text="Clear"/>
                                                     </children>
                                                 </HBox>
                                                 <TextArea fx:id="consoleArea" editable="false" promptText="&gt;"

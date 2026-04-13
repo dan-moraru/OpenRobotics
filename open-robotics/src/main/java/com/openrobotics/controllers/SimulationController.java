@@ -1769,6 +1769,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         // Reset simulation logs text area
         if (logArea != null) {
+            System.out.println("[SimulationController] Clearing log area on simulation reset.");
             logArea.clear();
         }
     }
@@ -1787,6 +1788,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         log("Step \u2192 TICK " + localTick);
         // Update RAM display
         updateRamLabel();
+
+        Logger.flushRobotEvents(); // ensure all robot events are flushed after stepping
+        fetchLogsAsync(); // fetch logs after stepping to get latest events
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -1821,8 +1825,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             simLoop = null;
         }
 
+        System.out.println("[SimulationController] Flushing logs and fetching remaining logs on stop...");
         Logger.flushRobotEvents(); // ensure all robot events are flushed when stopping
-        fetchLogsAsync(); // fetch any remaining logs on stop
+        fetchLogsSync(); // fetch any remaining logs synchronously on stop
     }
 
     /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
@@ -2093,12 +2098,23 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     /**
+     * Synchronously fetches simulation logs from the database and updates the logs area.
+     */
+    public void fetchLogsSync() {
+        try {
+            List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+            updateLogsArea(logs);
+        } catch (SQLException e) {
+            System.out.println("Error fetching logs from database: " + e.getMessage());
+        }
+    }
+
+    /**
      * Updates the logs area with the provided list of SimLogRecords.
      * @param logs the list of SimLogRecords to display, or null if an error occurred during fetching
      */
     private void updateLogsArea(List<SimLogRecord> logs) {
         if (logs == null || logs.isEmpty()) {
-            System.out.println("[SimulationController] No new logs to display.");
             return;
         }
 
