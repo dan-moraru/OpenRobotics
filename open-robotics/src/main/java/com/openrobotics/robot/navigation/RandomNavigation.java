@@ -8,19 +8,10 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.Random;
 
-/**
- * Represents a random navigation strategy where the robot chooses a random direction to move in
- */
+/** random navigation strategy; used in tests only, not wired in production */
 public class RandomNavigation implements NavigationStrategy {
 
-    /**
-     * Generates a move intention for a given robot based on the RandomNavigation strategy. In this strategy,
-     * the robot chooses a random direction (up, down, left, or right) and makes the intention to move to it
-     * if it is a valid move.
-     * @param robot the robot that a move intention is being generated for
-     * @param map the map of the warehouse environment
-     * @return a MoveIntention representing the choice for the robots next move
-     */
+    /** shuffles all four cardinal directions with fisher-yates, skips any that land on rerouteAvoidTile, and returns the first valid move; falls back to WAIT if all are blocked */
     @Override
     public MoveIntention getNextMove(Robot robot, Map map) {
         Vector2D position = robot.getPosition();
@@ -30,6 +21,7 @@ public class RandomNavigation implements NavigationStrategy {
 
         // Try each direction at most once in random order, then fall back to WAIT.
         Direction[] directions = Direction.values();
+        // unseeded — intentionally non-deterministic; this strategy is test-only
         Random random = new Random();
         for (int i = directions.length - 1; i > 0; i--) {
             int j = random.nextInt(i + 1);

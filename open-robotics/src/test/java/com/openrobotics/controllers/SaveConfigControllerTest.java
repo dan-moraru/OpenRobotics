@@ -16,6 +16,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,8 +42,9 @@ public class SaveConfigControllerTest extends ApplicationTest {
         clearPrefs();
         dialogStage = stage;
         ScreenNavigator.setPrimaryStage(stage);
+        ResourceBundle bundle = ResourceBundle.getBundle("com.openrobotics.fxml.SaveConfigDialog");
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/com/openrobotics/fxml/SaveConfigDialog.fxml"));
+                getClass().getResource("/com/openrobotics/fxml/SaveConfigDialog.fxml"), bundle);
         Parent root = loader.load();
         controller = loader.getController();
         controller.setDialogStage(stage);
@@ -154,6 +156,9 @@ public class SaveConfigControllerTest extends ApplicationTest {
             assertEquals("valid.json", controller.getFileName());
             assertFalse(dialogStage.isShowing());
         } finally {
+            try (var entries = Files.list(dir)) {
+                entries.forEach(p -> { try { Files.deleteIfExists(p); } catch (Exception ignored) {} });
+            } catch (Exception ignored) {}
             Files.deleteIfExists(dir);
         }
     }

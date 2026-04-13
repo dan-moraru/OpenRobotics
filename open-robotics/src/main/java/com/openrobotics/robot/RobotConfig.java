@@ -1,9 +1,6 @@
 package com.openrobotics.robot;
 
-/**
- * Immutable value object holding robot physics constants.
- * Constructed from ConfigSection and passed to each Robot at creation time.
- */
+/** immutable value object holding robot physics constants; passed to each Robot at creation time */
 public class RobotConfig {
     public final float batteryCapacity;
     public final float lowBatteryThreshold;
@@ -23,7 +20,7 @@ public class RobotConfig {
         this.unloadingTicks       = unloadingTicks;
     }
 
-    /** Default config matching previous hardcoded values. */
+    /** default config values matching previous hardcoded constants */
     public static RobotConfig defaults() {
         return new RobotConfig(100.0f, 20.0f, 5.0f, 1.0f, 1, 1);
     }

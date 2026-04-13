@@ -7,9 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Sensor holds the information of the information found from getting a scan from a selected strategy
- */
+/** result of a single sensor scan; exposes detected entities and spatial query methods */
 public class Sensor {
     private final List<MapEntity> detectedEntities;
 
@@ -21,7 +19,7 @@ public class Sensor {
         return detectedEntities;
     }
 
-    // returns true only if an obstacle (not any entity) was detected at pos
+    /** true if an Obstacle entity was detected at the given position */
     public boolean isObstacleDetectedAt(Vector2D pos) {
         for (MapEntity e : detectedEntities) {
             if (e instanceof Obstacle && e.getPosition().equals(pos)) {
@@ -31,7 +29,7 @@ public class Sensor {
         return false;
     }
 
-    // returns the set of positions where an obstacle was detected. convenience for nav strategies
+    /** positions of all detected Obstacle entities; convenience for navigation strategies */
     public Set<Vector2D> getObstaclePositions() {
         Set<Vector2D> positions = new HashSet<>();
         for (MapEntity e : detectedEntities) {
@@ -40,9 +38,11 @@ public class Sensor {
         return positions;
     }
 
-    // returns how many consecutive steps toward (from tile -> toward candidate tile) are free of detected obstacles.
-    // tiles the sensor never scanned are treated as unknown, not clear, so a PROXIMITY robot
-    // (max range 1) always gets maxDist back, while a RANGE robot (max range 5) gets the real value
+    /**
+     * steps from {@code from} toward {@code toward} that are free of detected obstacles.
+     * tiles beyond the sensor's scan range are treated as unknown (not clear) — a PROXIMITY robot
+     * always returns maxDist, while a RANGE robot returns the real value (1–5)
+     */
     public int knownClearanceToward(Vector2D from, Vector2D toward, int maxDist) {
         if (from != null && from.equals(toward)) {
             return 0;

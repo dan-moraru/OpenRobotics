@@ -11,10 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * RangeSensor strategy detects surroundings using a vision based system, similarly to LiDAR or ray-casting.
- * Keeps track of the maximum range, the ray count and step size of the search.
- */
+/** range sensor; casts 15 rays in a 90-degree arc ahead of the robot, stopping each ray at the first Obstacle */
 public class RangeSensor implements SensorStrategy {
     private final double maxRange = 5.0;
     private final int rayCount = 15; // Number of rays (90 degrees / 15 = 1 ray every 6 deg)
