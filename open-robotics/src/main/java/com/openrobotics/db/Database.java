@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Central database access: runs Flyway migrations at startup and provides a shared HikariCP DataSource.
- * Call {@link #init()} once before using the database (from MainApp.java).
+ * central database access point; runs Flyway migrations at startup and provides a shared HikariCP connection pool.
+ * call {@link #init()} once at startup before any DAO calls.
  */
 public final class Database {
 
@@ -32,10 +32,11 @@ public final class Database {
     private Database() {}
 
     /**
-     * Loads config, runs Flyway migrations, and creates the connection pool.
-     * Safe to call multiple times; subsequent calls are no-ops after the first successful init.
-     * @throws IOException if there is an error reading the config file
-     * @throws SQLException if there is an error connecting to the database or running migrations
+     * loads config, runs Flyway migrations, and creates the connection pool.
+     * safe to call multiple times; subsequent calls are no-ops after the first successful init.
+     *
+     * @throws IOException on config read error
+     * @throws SQLException on connection or migration error
      */
     public static synchronized void init() throws IOException {
         if (shutdown) {
