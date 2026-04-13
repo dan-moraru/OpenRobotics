@@ -1847,18 +1847,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
         if (simProgressBar != null) simProgressBar.setProgress(Math.min(1.0, localTick / 1000.0));
-
-            if (engine != null && engine.isFinished()) {
-                running = false;
-                paused = false;
-                stopLoop();
-                if (playBtn != null) playBtn.setDisable(true);
-                if (simStatusLabel != null) {
-                    simStatusLabel.setText("COMPLETE");
-                    simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
-                }
-                log("Simulation complete \u2014 all tasks done and all robots idle. Press Stop to reset.");
-            }
     }
 
     private void handleSimulationComplete() {
@@ -1872,7 +1860,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
-        if (playBtn  != null) playBtn.setStyle("");
+        if (playBtn  != null) { playBtn.setStyle(""); playBtn.setDisable(true); }
         if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation complete at TICK " + localTick + ".");
     }
