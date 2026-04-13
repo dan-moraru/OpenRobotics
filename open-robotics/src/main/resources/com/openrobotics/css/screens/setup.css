@@ -1,7 +1,5 @@
 /* ============================================================
    OpenRobotics – Setup Screen
-   Sidebar property rows, labels, and layout specific to
-   the simulation configuration screen.
    ============================================================ */
 
 /* Sidebars */
@@ -20,33 +18,56 @@
 /* Property rows */
 .prop-row-a {
     -fx-background-color: #8D8A7F;
-    -fx-padding: 3 8 3 8;
-    -fx-min-height: 26px;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
 }
 
 .prop-row-b {
     -fx-background-color: #7a7870;
-    -fx-padding: 3 8 3 8;
-    -fx-min-height: 26px;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
 }
 
 .setup-prop-row-a {
     -fx-background-color: #C2BEAE;
-    -fx-padding: 3 8 3 8;
-    -fx-min-height: 26px;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
 }
 
 .setup-prop-row-b {
     -fx-background-color: #b0ad9e;
-    -fx-padding: 3 8 3 8;
-    -fx-min-height: 26px;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
 }
 
+/* Parameter group — wraps a row + its hint label */
+.setup-prop-group {
+    -fx-spacing: 0;
+}
+
+/* Hint text under each param */
+.setup-param-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 3 8 5 8;
+    -fx-wrap-text: true;
+}
+
+/* Canvas warning label */
+.setup-warn-label {
+    -fx-padding: 4 8 4 8;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+/* Prop labels */
 .prop-label {
     -fx-text-fill: #1a1a18;
     -fx-font-size: 11px;
-    -fx-pref-width: 160px;
-    -fx-min-width: 120px;
+    -fx-pref-width: 130px;
+    -fx-min-width: 100px;
 }
 
 /* Viewport header */
@@ -56,14 +77,10 @@
 
 .viewport-header {
     -fx-background-color: #8D8A7F;
-    -fx-padding: 4 10 4 10;
-    -fx-min-height: 26px;
+    -fx-padding: 5 10 5 10;
+    -fx-min-height: 28px;
     -fx-border-color: #5D5B54;
     -fx-border-width: 0 0 1 0;
-}
-
-.viewport-header > .center {
-    -fx-alignment: center;
 }
 
 .viewport-header .label {
@@ -86,5 +103,57 @@
 
 .canvas-size-separator {
     -fx-font-size: 11px;
-    -fx-padding: 0 2 0 2;
+    -fx-padding: 0 4 0 4;
+}
+
+/* Saved Configs section */
+.setup-configs-header {
+    -fx-background-color: #B8B4A6;
+    -fx-padding: 6 8 6 8;
+    -fx-min-height: 30px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.setup-configs-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2A2926;
+}
+
+.setup-configs-list {
+    -fx-background-color: #CDCBC3;
+    -fx-border-color: transparent;
+}
+
+.setup-configs-list .list-cell {
+    -fx-background-color: #CDCBC3;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 5 8 5 8;
+}
+
+.setup-configs-list .list-cell:hover {
+    -fx-background-color: #B8B4A6;
+}
+
+.setup-configs-list .list-cell:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+}
+
+/* Bottom bar */
+.setup-bottom-bar {
+    -fx-background-color: #B8B4A6;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 44px;
+}
+
+/* Status label — red when error */
+.setup-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-weight: bold;
 }
