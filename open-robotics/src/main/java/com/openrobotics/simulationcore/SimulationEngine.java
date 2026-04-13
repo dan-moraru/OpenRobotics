@@ -574,6 +574,9 @@ public class SimulationEngine {
         // run per-robot state machine (charging, loading, unloading, energy)
         updateAllRobots();
 
+        // Checks if any robots are dead and requeues their assigned task if so
+        requeueDeadRobotsTasks();
+
         // Recovery runs after state updates
         recoverDeadlockedRobots();
 
@@ -611,19 +614,21 @@ public class SimulationEngine {
 
     /**
      * Indicates if the warehouse workload has been completed.
-     * @return true if there are no pending tasks AND all robots are idle or dead or charging.
+     * @return true if all tasks have been completed
      */
     private boolean workloadComplete() {
-            if (dispatcher.hasPendingTasks()) {
-                return false;
-            }
+        // Checking to see if tasks were ever added to the dispatcher
+        if (dispatcher.getLifetimeTasks().isEmpty()) {
+                return true; // no tasks were ever added to the dispatcher
+        }
 
-            for (Robot robot : robots) {
-                if (robot.getCurrentTask() != null || robot.getState() != RobotState.IDLE) {
-                    return false;
-                }
+        for (Task task : dispatcher.getLifetimeTasks()) {
+            if (task.getStatus() != TaskStatus.COMPLETED) {
+                return false; // found a task that is not completed, so workload is not complete
             }
-            return true;
+        }
+
+        return true; // all tasks are completed
     }
 
     /**
@@ -639,6 +644,19 @@ public class SimulationEngine {
         }
 
         return intentions;
+    }
+
+    /**
+     * Checks for any robots that have reached the BATTERY_DEAD state and requeues their
+     * assigned task if they have one
+     */
+    private void requeueDeadRobotsTasks() {
+        for (Robot robot : robots) {
+            if (robot.getState() == RobotState.BATTERY_DEAD && robot.getCurrentTask() != null) {
+                dispatcher.requeueTask(robot.getCurrentTask());
+                robot.setCurrentTask(null);
+            }
+        }
     }
 
     /**
