@@ -6,14 +6,11 @@ import com.openrobotics.simulationcore.SimulationEngine;
 import java.sql.Timestamp;
 import java.time.Instant;
 
+/** builds SimulationRunRecord instances for simulation lifecycle events */
 public class SimulationRunRecordBuilder {
     private SimulationRunRecord record;
 
-    /**
-     * Creates a new SimulationRunRecord and initializes the record with the given simulation engine
-     * for general simulation information.
-     * @param engine The simulation engine to initialize the record with.
-     */
+    /** initializes a SimulationRunRecord from the engine's run ID, map, robot count, and coordination policy */
     public SimulationRunRecordBuilder(SimulationEngine engine) {
         this.record = new SimulationRunRecord();
         record.setId(engine.getRunId());
@@ -22,21 +19,15 @@ public class SimulationRunRecordBuilder {
         record.setCoordinationPolicy(engine.getCoordinationPolicy());
     }
 
-    /**
-     * Builds a SimulationRunRecord for the start of a simulation run by setting the started at timestamp and status to 'RUNNING'.
-     * @return a SimulationRunRecord for the start of a simulation run
-     */
-    // TODO: Set all simulation run fields appropriately (probably do this in the constructor)
+    // TODO: set all simulation run fields appropriately (probably do this in the constructor)
+    /** builds the simulation start record; sets startedAt to now and status to RUNNING */
     public SimulationRunRecord buildSimulationStartRecord() {
         record.setStartedAt(Timestamp.from(Instant.now()));
         record.setStatus("RUNNING");
         return record;
     }
 
-    /**
-     * Builds a SimulationRunRecord for the completion of a simulation run by setting the finished at timestamp and status to 'COMPLETED'.
-     * @return a SimulationRunRecord for the completion of a simulation run
-     */
+    /** builds the simulation complete record; sets finishedAt to now and status to COMPLETED */
     public SimulationRunRecord buildSimulationCompleteRecord() {
         record.setFinishedAt(Timestamp.from(Instant.now()));
         record.setStatus("COMPLETED");

@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/** DAO for the run_workload_tasks table */
 public final class WorkloadTaskDao {
 
     private WorkloadTaskDao() {}
 
     /**
-     * Inserts a new workload task record into the database.
-     * @param r WorkloadTaskRecord to insert
-     * @return ID of the inserted workload task
-     * @throws SQLException if a database error occurs
+     * inserts a workload task record and returns its generated ID.
+     *
+     * @throws SQLException on database error
      */
     public static long insert(WorkloadTaskRecord r) throws SQLException {
         String sql = """
@@ -52,10 +52,9 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * Finds all workload task records by run ID.
-     * @param runId ID of the run to find tasks for
-     * @return List of workload task records
-     * @throws SQLException if a database error occurs
+     * finds all workload task records for a given run, ordered by ID.
+     *
+     * @throws SQLException on database error
      */
     public static List<WorkloadTaskRecord> findByRunId(UUID runId) throws SQLException {
         String sql = "SELECT * FROM run_workload_tasks WHERE run_id = ? ORDER BY id";
@@ -73,11 +72,9 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * Updates the status of a workload task record.
-     * @param id ID of the task to update
-     * @param status New status of the task
-     * @param completedTick Tick when the task was completed
-     * @throws SQLException if a database error occurs
+     * updates status and completed_tick for a task.
+     *
+     * @throws SQLException on database error
      */
     public static void markCompleted(long id, String status, Integer completedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET status = ?, completed_tick = ? WHERE id = ?";
@@ -91,11 +88,9 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * Assigns a workload task to a robot.
-     * @param id ID of the task to assign
-     * @param robotId ID of the robot to assign the task to
-     * @param assignedTick Tick when the task was assigned to the robot
-     * @throws SQLException if a database error occurs
+     * assigns a task to a robot; also sets status to IN_PROGRESS.
+     *
+     * @throws SQLException on database error
      */
     public static void assignToRobot(long id, UUID robotId, int assignedTick) throws SQLException {
         String sql = "UPDATE run_workload_tasks SET assigned_robot_id = ?, assigned_tick = ?, status = 'IN_PROGRESS' WHERE id = ?";
@@ -109,10 +104,10 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * Deletes all workload task records by run ID.
-     * @param runId ID of the run to delete tasks for
-     * @return Number of deleted records
-     * @throws SQLException if a database error occurs
+     * deletes all workload task records for a given run.
+     *
+     * @return number of deleted rows
+     * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {
         String sql = "DELETE FROM run_workload_tasks WHERE run_id = ?";
@@ -123,12 +118,7 @@ public final class WorkloadTaskDao {
         }
     }
 
-    /**
-     * Maps a ResultSet to a WorkloadTaskRecord.
-     * @param rs ResultSet to map
-     * @return WorkloadTaskRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a WorkloadTaskRecord
     private static WorkloadTaskRecord map(ResultSet rs) throws SQLException {
         WorkloadTaskRecord r = new WorkloadTaskRecord();
         r.setId(rs.getLong("id"));
@@ -148,12 +138,7 @@ public final class WorkloadTaskDao {
         return r;
     }
 
-    /**
-     * Converts a JSON string to a PGobject.
-     * @param json JSON string to convert
-     * @return PGobject containing the JSON
-     * @throws SQLException if a database error occurs
-     */
+    // wraps a JSON string as a PostgreSQL jsonb value; returns null if json is null
     private static PGobject jsonb(String json) throws SQLException {
         if (json == null) return null;
         PGobject obj = new PGobject();

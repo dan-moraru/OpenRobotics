@@ -1,9 +1,8 @@
 package com.openrobotics.db.model;
 
-import com.openrobotics.task.Task;
-
 import java.util.UUID;
 
+/** database record for the run_workload_tasks table */
 public class WorkloadTaskRecord {
 
     private Long id;
@@ -23,227 +22,45 @@ public class WorkloadTaskRecord {
 
     public WorkloadTaskRecord() {}
 
-    /**
-     * Gets the ID of the workload task record.
-     * @return ID of the workload task record
-     */
-    public Long getId() {
-        return id; 
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    /**
-     * Sets the ID of the workload task record.
-     * @param id ID of the workload task record
-     */
-    public void setId(Long id) {
-        this.id = id; 
-    }
+    public UUID getRunId() { return runId; }
+    public void setRunId(UUID runId) { this.runId = runId; }
 
-    /**
-     * Gets the ID of the run of the workload task record.
-     * @return ID of the run of the workload task record
-     */
-    public UUID getRunId() {
-        return runId; 
-    }
+    public String getTaskType() { return taskType; }
+    public void setTaskType(String taskType) { this.taskType = taskType; }
 
-    /**
-     * Sets the ID of the run of the workload task record.
-     * @param runId ID of the run of the workload task record
-     */
-    public void setRunId(UUID runId) {
-        this.runId = runId; 
-    }
+    public Integer getPriority() { return priority; }
+    public void setPriority(Integer priority) { this.priority = priority; }
 
-    /**
-     * Gets the task type of the workload task record.
-     * @return Task type of the workload task record
-     */
-    public String getTaskType() {
-        return taskType; 
-    }
+    public Integer getCreatedTick() { return createdTick; }
+    public void setCreatedTick(Integer createdTick) { this.createdTick = createdTick; }
 
-    /**
-     * Sets the task type of the workload task record.
-     * @param taskType Task type of the workload task record
-     */
-    public void setTaskType(String taskType) {
-        this.taskType = taskType; 
-    }
+    public Integer getAssignedTick() { return assignedTick; }
+    public void setAssignedTick(Integer assignedTick) { this.assignedTick = assignedTick; }
 
-    /**
-     * Gets the priority of the workload task record.
-     * @return Priority of the workload task record
-     */
-    public Integer getPriority() {
-        return priority; 
-    }
+    public Integer getCompletedTick() { return completedTick; }
+    public void setCompletedTick(Integer completedTick) { this.completedTick = completedTick; }
 
-    /**
-     * Sets the priority of the workload task record.
-     * @param priority Priority of the workload task record
-     */
-    public void setPriority(Integer priority) {
-        this.priority = priority; 
-    }
+    public Integer getPickupX() { return pickupX; }
+    public void setPickupX(Integer pickupX) { this.pickupX = pickupX; }
 
-    /**
-     * Gets the created tick of the workload task record.
-     * @return Created tick of the workload task record
-     */ 
-    public Integer getCreatedTick() {
-        return createdTick; 
-    }
+    public Integer getPickupY() { return pickupY; }
+    public void setPickupY(Integer pickupY) { this.pickupY = pickupY; }
 
-    /**
-     * Sets the created tick of the workload task record.
-     * @param createdTick Created tick of the workload task record
-     */
-    public void setCreatedTick(Integer createdTick) {
-        this.createdTick = createdTick; 
-    }
+    public Integer getDropoffX() { return dropoffX; }
+    public void setDropoffX(Integer dropoffX) { this.dropoffX = dropoffX; }
 
-    /**
-     * Gets the assigned tick of the workload task record.
-     * @return Assigned tick of the workload task record
-     */
-    public Integer getAssignedTick() {
-        return assignedTick; 
-    }
+    public Integer getDropoffY() { return dropoffY; }
+    public void setDropoffY(Integer dropoffY) { this.dropoffY = dropoffY; }
 
-    /**
-     * Sets the assigned tick of the workload task record.
-     * @param assignedTick Assigned tick of the workload task record
-     */
-    public void setAssignedTick(Integer assignedTick) {
-        this.assignedTick = assignedTick; 
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    /**
-     * Gets the completed tick of the workload task record.
-     * @return Completed tick of the workload task record
-     */
-    public Integer getCompletedTick() { 
-        return completedTick; 
-    }
+    public UUID getAssignedRobotId() { return assignedRobotId; }
+    public void setAssignedRobotId(UUID assignedRobotId) { this.assignedRobotId = assignedRobotId; }
 
-    /**
-     * Sets the completed tick of the workload task record.
-     * @param completedTick Completed tick of the workload task record
-     */
-    public void setCompletedTick(Integer completedTick) {
-        this.completedTick = completedTick; 
-    }
-
-    /**
-     * Gets the pickup X coordinate of the workload task record.
-     * @return Pickup X coordinate of the workload task record
-     */
-    public Integer getPickupX() {
-        return pickupX; 
-    }
-
-    /**
-     * Sets the pickup X coordinate of the workload task record.
-     * @param pickupX Pickup X coordinate of the workload task record
-     */
-    public void setPickupX(Integer pickupX) { 
-        this.pickupX = pickupX; 
-    }
-
-    /**
-     * Gets the pickup Y coordinate of the workload task record.
-     * @return Pickup Y coordinate of the workload task record
-     */
-    public Integer getPickupY() {
-        return pickupY; 
-    }
-
-    /**
-     * Sets the pickup Y coordinate of the workload task record.
-     * @param pickupY Pickup Y coordinate of the workload task record
-     */
-    public void setPickupY(Integer pickupY) {
-        this.pickupY = pickupY; 
-    }
-
-    /**
-     * Gets the dropoff X coordinate of the workload task record.
-     * @return Dropoff X coordinate of the workload task record
-     */ 
-    public Integer getDropoffX() {
-        return dropoffX; 
-    }
-
-    /**
-     * Sets the dropoff X coordinate of the workload task record.
-     * @param dropoffX Dropoff X coordinate of the workload task record
-     */
-    public void setDropoffX(Integer dropoffX) {
-        this.dropoffX = dropoffX; 
-    }
-
-    /**
-     * Gets the dropoff Y coordinate of the workload task record.
-     * @return Dropoff Y coordinate of the workload task record
-     */
-    public Integer getDropoffY() {
-        return dropoffY; 
-    }
-
-    /**
-     * Sets the dropoff Y coordinate of the workload task record.
-     * @param dropoffY Dropoff Y coordinate of the workload task record
-     */
-    public void setDropoffY(Integer dropoffY) {
-        this.dropoffY = dropoffY; 
-    }
-
-    /**
-     * Gets the status of the workload task record.
-     * @return Status of the workload task record
-     */
-    public String getStatus() {
-        return status; 
-    }
-
-    /**
-     * Sets the status of the workload task record.
-     * @param status Status of the workload task record
-     */
-    public void setStatus(String status) {
-        this.status = status; 
-    }
-
-    /**
-     * Gets the ID of the assigned robot of the workload task record.
-     * @return ID of the assigned robot of the workload task record
-     */
-    public UUID getAssignedRobotId() {
-        return assignedRobotId; 
-    }
-
-    /**
-     * Sets the ID of the assigned robot of the workload task record.
-     * @param assignedRobotId ID of the assigned robot of the workload task record
-     */
-    public void setAssignedRobotId(UUID assignedRobotId) {
-        this.assignedRobotId = assignedRobotId; 
-    }
-
-    /**
-     * Gets the details of the workload task record.
-     * @return Details of the workload task record
-     */
-    public String getDetails() {
-        return details; 
-    }
-
-    /**
-     * Sets the details of the workload task record.
-     * @param details Details of the workload task record
-     */
-    public void setDetails(String details) { 
-        this.details = details; 
-    }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 }

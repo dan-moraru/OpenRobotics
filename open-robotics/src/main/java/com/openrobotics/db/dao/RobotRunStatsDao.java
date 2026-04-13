@@ -9,15 +9,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/** DAO for the robot_run_stats table */
 public final class RobotRunStatsDao {
 
     private RobotRunStatsDao() {}
 
     /**
-     * Upserts robot stats: inserts a new row or updates the existing one for (run_id, robot_id).
-     * @param r RobotRunStatsRecord to upsert
-     * @return ID of the upserted robot stats
-     * @throws SQLException if a database error occurs
+     * inserts or updates robot stats for a (run_id, robot_id) pair.
+     *
+     * @return the row ID of the upserted record
+     * @throws SQLException on database error
      */
     public static long upsert(RobotRunStatsRecord r) throws SQLException {
         String sql = """
@@ -60,10 +61,9 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * Finds all robot run stats records by run ID.
-     * @param runId ID of the run to find stats for
-     * @return List of robot run stats records
-     * @throws SQLException if a database error occurs
+     * finds all robot stats records for a given run.
+     *
+     * @throws SQLException on database error
      */
     public static List<RobotRunStatsRecord> findByRunId(UUID runId) throws SQLException {
         String sql = "SELECT * FROM robot_run_stats WHERE run_id = ? ORDER BY robot_id";
@@ -81,11 +81,9 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * Finds a robot run stats record by run ID and robot ID.
-     * @param runId ID of the run to find stats for
-     * @param robotId ID of the robot to find stats for
-     * @return Optional containing the robot run stats record if found, otherwise empty
-     * @throws SQLException if a database error occurs
+     * finds a robot stats record by run ID and robot ID.
+     *
+     * @throws SQLException on database error
      */
     public static Optional<RobotRunStatsRecord> findByRunIdAndRobotId(UUID runId, UUID robotId) throws SQLException {
         String sql = "SELECT * FROM robot_run_stats WHERE run_id = ? AND robot_id = ?";
@@ -100,10 +98,10 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * Deletes all robot run stats records by run ID.
-     * @param runId ID of the run to delete stats for
-     * @return Number of deleted records
-     * @throws SQLException if a database error occurs
+     * deletes all robot stats records for a given run.
+     *
+     * @return number of deleted rows
+     * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {
         String sql = "DELETE FROM robot_run_stats WHERE run_id = ?";
@@ -114,12 +112,7 @@ public final class RobotRunStatsDao {
         }
     }
 
-    /**
-     * Maps a ResultSet to a RobotRunStatsRecord.
-     * @param rs ResultSet to map
-     * @return RobotRunStatsRecord mapped from the ResultSet
-     * @throws SQLException if a database error occurs
-     */
+    // maps a ResultSet row to a RobotRunStatsRecord
     private static RobotRunStatsRecord map(ResultSet rs) throws SQLException {
         RobotRunStatsRecord r = new RobotRunStatsRecord();
         r.setId(rs.getLong("id"));

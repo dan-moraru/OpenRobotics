@@ -3,6 +3,7 @@ package com.openrobotics.db.recordbuilders;
 import com.openrobotics.db.model.MapRecord;
 import com.openrobotics.map.Map;
 
+/** builds MapRecord instances from Map objects for database persistence */
 public class MapRecordBuilder {
     private MapRecord record;
 
@@ -13,13 +14,10 @@ public class MapRecordBuilder {
         record.setWidth(map.getWidth());
         record.setHeight(map.getHeight());
 
-        // Placeholder for now to avoid issues with not null constraint.
-        // TODO: Rename tile_data to entities_list or something similar
-        // TODO: Serialize the map's entities into a JSON string and store it in this field
+        // placeholder to satisfy not-null constraint; TODO: serialize map entities to JSON
         record.setTileData("{}");
 
-        /* TODO: Implement code to allow for differentiation between preset maps and user-created maps
-            and set this field accordingly */
+        // TODO: differentiate preset maps from user-created maps and set accordingly
         record.setPreset(false);
     }
 

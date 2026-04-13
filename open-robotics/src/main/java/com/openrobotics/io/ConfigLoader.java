@@ -9,18 +9,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Utility class for parsing JSON files using Jackson library.
- * Loads config files as JSON to set up the simulation objects.
- * Saves the simulation state and all objects into a new JSON file.
- */
+/** loads and saves simulation config files as JSON; path and class validation guard against path traversal and unsafe deserialization */
 public class ConfigLoader {
 
-    // Jackson API object translator
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String BASE_DIR_PROPERTY = "openrobotics.config.baseDir";
 
-    private ConfigLoader() {} // Prevent instantiation
+    private ConfigLoader() {}
 
     private static List<Path> allowedBaseDirs() throws IOException {
         List<Path> bases = new ArrayList<>();
@@ -54,7 +49,7 @@ public class ConfigLoader {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz must not be null");
         }
-        // Restrict deserialization targets to application DTO/model packages.
+        // restrict deserialization targets to openrobotics DTO/model packages
         String className = clazz.getName();
         if (!className.startsWith("com.openrobotics.io.")
             && !className.startsWith("com.openrobotics.db.model.")) {
@@ -62,7 +57,12 @@ public class ConfigLoader {
         }
     }
 
-    // Loads JSON file
+    /**
+     * loads and deserializes a JSON file at {@code path} into an instance of {@code clazz}.
+     * path must resolve under an allowed base directory; clazz must be in an openrobotics DTO/model package.
+     *
+     * @throws SecurityException if path or clazz fails validation
+     */
     public static <T> T load(String path, Class<T> clazz) throws IOException {
         validateTargetClass(clazz);
         File file = validatePath(path);
@@ -70,7 +70,12 @@ public class ConfigLoader {
         return mapper.treeToValue(root, clazz);
     }
 
-    // Saves JSON file
+    /**
+     * serializes {@code obj} as pretty-printed JSON and writes it to {@code path}.
+     * path must resolve under an allowed base directory.
+     *
+     * @throws SecurityException if path fails validation
+     */
     public static void save(String path, Object obj) throws IOException {
         if (obj == null) {
             throw new IllegalArgumentException("obj must not be null");

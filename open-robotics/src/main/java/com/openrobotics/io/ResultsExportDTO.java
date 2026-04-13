@@ -2,9 +2,7 @@ package com.openrobotics.io;
 
 import java.util.List;
 
-/**
- * Data transfer object for serializing post-simulation results to JSON.
- */
+/** data transfer object for serializing post-simulation results to JSON */
 public class ResultsExportDTO {
 
     public String runName;
