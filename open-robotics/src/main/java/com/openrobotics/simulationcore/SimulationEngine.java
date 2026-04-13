@@ -263,6 +263,7 @@ public class SimulationEngine {
                 }
                 rack.setValidDropoffIds(ids);
             }
+            rack.setManualDropoffAssignment(eDto.manualDropoffAssignment);
             this.map.addEntity(rack);
         }
     }
@@ -347,6 +348,7 @@ public class SimulationEngine {
                 rDto.position = new SimulationConfigDTO.Vector2DDTO(
                     (int)rack.getPosition().getX(), (int)rack.getPosition().getY());
                 rDto.boxCount = rack.getBoxCount();
+                rDto.manualDropoffAssignment = rack.isManualDropoffAssignment();
                 if (!rack.getValidDropoffIds().isEmpty()) {
                     rDto.validDropoffIds = rack.getValidDropoffIds().stream()
                         .map(UUID::toString).collect(java.util.stream.Collectors.toList());

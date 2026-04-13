@@ -84,6 +84,7 @@ public class SimulationConfigDTO {
     public static class RackDTO extends MapEntityDTO {
         public int boxCount = 1;
         public List<String> validDropoffIds; // UUID strings, null = all stations valid
+        public boolean manualDropoffAssignment = false;
     }
 
     public static class RobotDTO extends MapEntityDTO {
