@@ -905,7 +905,8 @@ public class SimulationEngine {
      */
     public String getSimulationErrorMessage() {
         if (simulationError == null) {
-            return null;
+            System.out.println("[Error] Simulation error state should not be null.");
+            return "An unknown error has occurred in the simulation.";
         }
 
         switch (simulationError) {
