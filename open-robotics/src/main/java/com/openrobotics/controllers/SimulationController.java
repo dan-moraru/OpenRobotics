@@ -49,7 +49,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -1539,7 +1538,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (engine.getDispatcher() != null) {
-            for (Task task : engine.getDispatcher().getAllTasks()) {
+            for (Task task : engine.getDispatcher().getLifetimeTasks()) {
                 String icon = "\u2b07 ";
                 String entry = icon + "Task #" + task.getId() + " " + task.getStatus()
                         + " (" + task.getPickupLocation() + " → " + task.getDropoffLocation() + ")";
@@ -1616,7 +1615,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
 
             // Auto-generate tasks from map racks/stations if dispatcher is empty
-            if (engine.getDispatcher().getAllTasks().isEmpty() && engine.getMap() != null) {
+            if (engine.getDispatcher().getAllQueuedTasks().isEmpty() && engine.getMap() != null) {
                 List<Task> generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
                         engine.getMap(), 50, engine.getSeed());
                 if (!generated.isEmpty()) {
@@ -1633,7 +1632,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, record);
 
             // Logging task creation events for existing tasks in dispatcher at simulation start
-            List<Task> existingTasks = engine.getDispatcher().getAllTasks();
+            List<Task> existingTasks = engine.getDispatcher().getAllQueuedTasks();
 
             for (Task task : existingTasks) {
                 WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
@@ -2090,7 +2089,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void syncTaskPositions(com.openrobotics.map.Vector2D oldPos, com.openrobotics.map.Vector2D newPos) {
         if (engine == null || engine.getDispatcher() == null) return;
         int updated = 0;
-        for (Task task : engine.getDispatcher().getAllTasks()) {
+        for (Task task : engine.getDispatcher().getAllQueuedTasks()) {
             boolean changed = false;
             if (task.getPickupLocation().equals(oldPos)) {
                 task.setPickupLocation(newPos);

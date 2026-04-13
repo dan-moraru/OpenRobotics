@@ -79,13 +79,13 @@ public class CollisionManager {
         Set<String> deadRobotTiles = new HashSet<>();
         if (map != null) {
             for (MapEntity entity : map.getEntities()) {
-                if (entity instanceof Robot robot && robot.getState() == RobotState.BATTER_DEAD) {
+                if (entity instanceof Robot robot && robot.getState() == RobotState.BATTERY_DEAD) {
                     deadRobotTiles.add(entity.getPosition().getX() + "," + entity.getPosition().getY());
                 }
             }
         }
         for (MoveIntention intention : candidates) {
-            if (intention.getRobot().getState() == RobotState.BATTER_DEAD) {
+            if (intention.getRobot().getState() == RobotState.BATTERY_DEAD) {
                 deadRobotTiles.add(tileKey(intention.getFromTile()));
             }
         }
@@ -110,7 +110,7 @@ public class CollisionManager {
 
             if (deadRobotTiles.contains(destinationKey)) {
                 for (MoveIntention intention : group) {
-                    if (intention.getRobot().getState() != RobotState.BATTER_DEAD) {
+                    if (intention.getRobot().getState() != RobotState.BATTERY_DEAD) {
                         blockedRobots.add(intention.getRobot().getId());
                     }
                 }

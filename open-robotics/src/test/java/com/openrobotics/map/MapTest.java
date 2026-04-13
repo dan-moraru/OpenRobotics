@@ -137,7 +137,7 @@ public class MapTest {
     @Test
     public void testInvalidMoveDeadRobotTile() {
         Robot deadRobot = new Robot("Dead", new Vector2D(3, 3));
-        deadRobot.setState(RobotState.BATTER_DEAD);
+        deadRobot.setState(RobotState.BATTERY_DEAD);
         map.addEntity(deadRobot);
 
         assertFalse(map.isValidMove(3, 3));
@@ -313,7 +313,7 @@ public class MapTest {
     @Test
     public void testDeadRobotTileIsNotTraversable() {
         Robot deadRobot = new Robot("Dead", new Vector2D(4, 4));
-        deadRobot.setState(RobotState.BATTER_DEAD);
+        deadRobot.setState(RobotState.BATTERY_DEAD);
         map.addEntity(deadRobot);
 
         assertFalse(map.isTraversable(new Vector2D(4, 4)));

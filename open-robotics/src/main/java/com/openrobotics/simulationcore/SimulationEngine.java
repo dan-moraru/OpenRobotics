@@ -423,7 +423,7 @@ public class SimulationEngine {
         // Tasks Section
         dto.tasks = new ArrayList<>();
         if (this.dispatcher != null) {
-            for (Task task : this.dispatcher.getAllTasks()) {
+            for (Task task : this.dispatcher.getAllQueuedTasks()) {
                 SimulationConfigDTO.TaskDTO tDto = new SimulationConfigDTO.TaskDTO();
                 tDto.id = task.getId();
                 tDto.pickupLocation = new SimulationConfigDTO.Vector2DDTO((int)task.getPickupLocation().getX(), (int)task.getPickupLocation().getY());
@@ -596,13 +596,13 @@ public class SimulationEngine {
 
     /**
      * Checks if all robots in the simulation have reached a BATTERY_DEAD state
-     * @return true if all robots are in the BATTER_DEAD state, false otherwise
+     * @return true if all robots are in the BATTERY_DEAD state, false otherwise
      */
     private boolean allRobotsDead() {
         if (robots.length == 0) return false; // no robots were loaded in the sim engine
 
         for (Robot robot : robots) {
-            if (robot.getState() != RobotState.BATTER_DEAD) {
+            if (robot.getState() != RobotState.BATTERY_DEAD) {
                 return false;
             }
         }
@@ -673,7 +673,7 @@ public class SimulationEngine {
 
             // Skipping recovery for robots with depleted batteries
             // TODO: Consider a method for handling dead robots
-            if (robot.getState() == RobotState.BATTER_DEAD) {
+            if (robot.getState() == RobotState.BATTERY_DEAD) {
                 continue; // Let battery recovery handle this robot, don't interfere with task recovery
             }
 

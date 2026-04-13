@@ -441,7 +441,7 @@ public class CollisionManagerTest {
 
         Robot dead = new Robot(UUID.fromString("00000000-0000-0000-0000-0000000000ff"),
                 "dead", new Vector2D(1, 0));
-        dead.setState(com.openrobotics.robot.RobotState.BATTER_DEAD);
+        dead.setState(com.openrobotics.robot.RobotState.BATTERY_DEAD);
         map.addEntity(dead);
 
         Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),

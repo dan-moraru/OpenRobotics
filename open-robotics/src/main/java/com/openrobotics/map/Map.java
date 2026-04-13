@@ -125,7 +125,7 @@ public class Map {
                 // Racks are solid. Robots interact with them from the side.
                 if (entity instanceof Rack
                         || entity instanceof Obstacle
-                        || (entity instanceof Robot robot && robot.getState() == RobotState.BATTER_DEAD)) {
+                        || (entity instanceof Robot robot && robot.getState() == RobotState.BATTERY_DEAD)) {
                     return false;
                 }
             }
@@ -166,7 +166,7 @@ public class Map {
         for (MapEntity entity : entities) {
             if (entity.getPosition().equals(pos)
                     && entity instanceof Robot robot
-                    && robot.getState() == RobotState.BATTER_DEAD) {
+                    && robot.getState() == RobotState.BATTERY_DEAD) {
                 return true;
             }
         }

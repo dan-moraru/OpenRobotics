@@ -16,7 +16,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 
 import java.util.List;
 
@@ -231,7 +230,7 @@ public class ResultsController {
         int completedTasks = 0;
         int pendingTasks = 0;
         if (engine.getDispatcher() != null) {
-            List<Task> allTasks = engine.getDispatcher().getAllTasks();
+            List<Task> allTasks = engine.getDispatcher().getAllQueuedTasks();
             pendingTasks = (int) allTasks.stream()
                     .filter(task -> task.getStatus() != TaskStatus.COMPLETED)
                     .count();

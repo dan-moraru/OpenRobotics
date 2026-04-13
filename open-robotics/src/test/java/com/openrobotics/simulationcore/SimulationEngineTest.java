@@ -232,7 +232,7 @@ public class SimulationEngineTest {
         liveRobot.setNextMove(new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), liveRobot));
 
         Robot deadRobot = makeRobot("Dead", 1, 0);
-        deadRobot.setState(RobotState.BATTER_DEAD);
+        deadRobot.setState(RobotState.BATTERY_DEAD);
 
         map.addEntity(liveRobot);
         map.addEntity(deadRobot);

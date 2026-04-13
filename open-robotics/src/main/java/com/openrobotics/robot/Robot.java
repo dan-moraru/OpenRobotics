@@ -332,7 +332,7 @@ public class Robot extends MapEntity {
 
                 // check if robots battery has died
                 if (battery <= 0) {
-                    state = RobotState.BATTER_DEAD;
+                    state = RobotState.BATTERY_DEAD;
 
                     // Logging battery death event
                     SimLogRecordBuilder batterDeathRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
