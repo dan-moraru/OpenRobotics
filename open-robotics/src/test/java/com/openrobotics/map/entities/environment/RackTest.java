@@ -2,6 +2,10 @@ package com.openrobotics.map.entities.environment;
 
 import com.openrobotics.map.Vector2D;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class RackTest {
@@ -25,11 +29,11 @@ class RackTest {
     @Test
     void togglingManualOffPreservesValidDropoffIds() {
         Rack rack = new Rack("r1", new Vector2D(0, 0));
-        java.util.UUID a = java.util.UUID.randomUUID();
+        UUID a = UUID.randomUUID();
         rack.getValidDropoffIds().add(a);
         rack.setManualDropoffAssignment(true);
         rack.setManualDropoffAssignment(false);
-        assertEquals(java.util.List.of(a), rack.getValidDropoffIds(),
+        assertEquals(List.of(a), rack.getValidDropoffIds(),
                 "Toggling manual mode must not clear the existing pool");
     }
 
