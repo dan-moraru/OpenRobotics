@@ -66,7 +66,6 @@
 .prop-label {
     -fx-text-fill: #1a1a18;
     -fx-font-size: 11px;
-    -fx-pref-width: 130px;
     -fx-min-width: 100px;
 }
 

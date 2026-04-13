@@ -17,11 +17,15 @@
             <!-- Top bar -->
             <HBox styleClass="top-bar-sim" alignment="CENTER_LEFT" spacing="0">
                 <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
-                    <HBox.margin><Insets left="12" right="12"/></HBox.margin>
+                    <HBox.margin><Insets left="12" right="10"/></HBox.margin>
                     <image>
                         <Image url="@../img/logo_black.png" backgroundLoading="true"/>
                     </image>
                 </ImageView>
+                <VBox spacing="1">
+                    <HBox.margin><Insets right="14"/></HBox.margin>
+                    <Label text="OpenRobotics" styleClass="app-title"/>
+                </VBox>
                 <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
                     <menus>
                         <Menu text="File">
@@ -58,9 +62,9 @@
                         <!-- Map -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetMap"/>
                                 <Label text="Map" styleClass="prop-label"/>
                                 <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetMap"/>
                             </HBox>
                             <Label text="Select a preset warehouse layout or generate a random one."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -68,18 +72,18 @@
 
                         <!-- Map Seed (hidden unless random_map) -->
                         <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                            <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed"/>
                             <Label text="Map Seed" styleClass="prop-label"/>
                             <TextField fx:id="randomSeedField" promptText="auto"
                                        HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed"/>
                         </HBox>
 
                         <!-- Coordination Policy -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy"/>
                                 <Label text="Coordination Policy" styleClass="prop-label"/>
                                 <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy"/>
                             </HBox>
                             <Label text="How robots avoid conflicts. NONE = no coordination, TRAFFIC_RULES = intersection rules, RESERVATION_K = path reservation."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -88,10 +92,10 @@
                         <!-- Reservation K -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK"/>
                                 <Label text="Reservation K" styleClass="prop-label"/>
                                 <Spinner fx:id="reservationKSpinner"
                                          editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetReservationK"/>
                             </HBox>
                             <Label text="Number of ticks ahead each robot reserves its path. Only active with RESERVATION_K policy."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -100,10 +104,10 @@
                         <!-- Max Tasks -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks"/>
                                 <Label text="Max Tasks" styleClass="prop-label"/>
                                 <TextField fx:id="maxTasksField" text="10"
                                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTasks"/>
                             </HBox>
                             <Label text="Total number of pickup-to-dropoff tasks generated for the run."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -112,10 +116,10 @@
                         <!-- Workload Seed -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed"/>
                                 <Label text="Workload Seed" styleClass="prop-label"/>
                                 <TextField fx:id="workloadSeedField" text="42"
                                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetWorkloadSeed"/>
                             </HBox>
                             <Label text="Random seed for task generation. Same seed always produces the same task set."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -124,10 +128,10 @@
                         <!-- Max Ticks -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks"/>
                                 <Label text="Max Ticks" styleClass="prop-label"/>
                                 <TextField fx:id="maxTicksField" text="30000"
                                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetMaxTicks"/>
                             </HBox>
                             <Label text="Simulation stops automatically after this many ticks."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -136,10 +140,10 @@
                         <!-- Run Name -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetRunName"/>
                                 <Label text="Run Name" styleClass="prop-label"/>
                                 <TextField fx:id="runNameField" text="experiment_1"
                                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetRunName"/>
                             </HBox>
                             <Label text="Label for this run, used in results and database records."
                                    styleClass="setup-param-hint" wrapText="true"/>
@@ -148,11 +152,11 @@
                         <!-- Canvas Size -->
                         <VBox styleClass="setup-prop-group">
                             <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
-                                <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles"/>
                                 <Label text="Canvas Size" styleClass="prop-label"/>
                                 <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="54"/>
                                 <Label text="×" styleClass="canvas-size-separator"/>
                                 <Spinner fx:id="canvasHeightSpinner" editable="true" prefWidth="54"/>
+                                <Button text="↺" styleClass="button-reset" onAction="#onResetCanvasTiles"/>
                             </HBox>
                             <Label text="Width × Height of the simulation grid in tiles."
                                    styleClass="setup-param-hint" wrapText="true"/>
