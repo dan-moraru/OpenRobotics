@@ -19,39 +19,39 @@
       stylesheets="@../css/theme.css">
 
     <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12">
-        <Label text="%dialog.title" styleClass="dialog-title-label" />
+        <Label text="SAVE CONFIGURATION" styleClass="dialog-title-label" />
     </HBox>
 
     <VBox styleClass="dialog-body" spacing="12">
-        <Label text="%dialog.selectDirectory"
+        <Label text="Select save directory:"
                styleClass="dialog-body-label" />
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Button accessibleText="%dialog.resetDirectoryAccessibleText" text="↺" styleClass="button-reset"
+            <Button accessibleText="Reset directory to default" text="↺" styleClass="button-reset"
                     prefWidth="36" onAction="#onResetDirectory">
                 <tooltip>
-                    <Tooltip text="%dialog.resetTooltip" />
+                    <Tooltip text="Reset directory to default" />
                 </tooltip>
             </Button>
-            <ComboBox fx:id="directoryCombo" accessibleText="%dialog.directoryComboAccessibleText"
-                      promptText="%dialog.directoryPrompt"
+            <ComboBox fx:id="directoryCombo" accessibleText="Directory selector"
+                      promptText="Select directory..."
                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
         <Label fx:id="selectedDirLabel"
                styleClass="dialog-dim-label" />
-        <Button text="%dialog.browseButton"
-                accessibleText="%dialog.browseAccessibleText"
+        <Button text="Browse..."
+                accessibleText="Browse for configuration file"
                 styleClass="dialog-browse-btn"
                 onAction="#onBrowse" />
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Label text="%dialog.fileNameLabel" styleClass="dialog-field-label" labelFor="$fileNameField" />
-            <TextField fx:id="fileNameField" text="%dialog.defaultFileName"
-                       accessibleHelp="%dialog.fileNameHelp"
+            <Label text="File name:" styleClass="dialog-field-label" labelFor="$fileNameField" />
+            <TextField fx:id="fileNameField" text="config"
+                       accessibleHelp="Enter a name for the configuration file"
                        HBox.hgrow="ALWAYS" maxWidth="Infinity" />
         </HBox>
     </VBox>
 
     <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER">
-        <Button text="%dialog.saveButton" styleClass="btn-primary" prefWidth="150" onAction="#onSave" />
-        <Button text="%dialog.cancelButton" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
+        <Button text="SAVE" styleClass="btn-primary" prefWidth="150" onAction="#onSave" />
+        <Button text="CANCEL" styleClass="btn-neutral" prefWidth="150" onAction="#onCancel" />
     </HBox>
 </VBox>

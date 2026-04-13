@@ -63,6 +63,8 @@
                             <menus>
                                 <Menu text="File">
                                     <items>
+                                    <MenuItem onAction="#onSaveConfig" text="Save..." />
+                                    <MenuItem onAction="#onLoadConfig" text="Load..." />
                                         <MenuItem onAction="#onMenuWelcome" text="Welcome Screen"/>
                                         <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results"/>
                                         <MenuItem onAction="#onExit" text="Exit"/>

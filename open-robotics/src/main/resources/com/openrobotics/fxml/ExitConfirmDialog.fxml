@@ -10,19 +10,19 @@
       stylesheets="@../css/theme.css">
 
     <HBox styleClass="dialog-title-bar" alignment="CENTER_LEFT" spacing="12">
-        <Label text="%exit.confirmation.title" styleClass="dialog-title-label" />
+        <Label text="EXIT CONFIRMATION" styleClass="dialog-title-label" />
     </HBox>
 
     <VBox styleClass="dialog-body" spacing="12">
-        <Label text="%exit.confirmation.message"
+        <Label text="Are you sure you want to quit?"
                styleClass="dialog-body-label"
                wrapText="true" />
-        <Label text="%exit.confirmation.unsavedWarning"
+        <Label text="As of the current version, unsaved data will not be preserved."
                styleClass="dialog-warning-label" />
     </VBox>
 
     <HBox styleClass="dialog-footer" spacing="12" alignment="CENTER">
-        <Button text="%exit.confirmation.return" styleClass="btn-neutral" prefWidth="150" onAction="#onReturn" />
-        <Button text="%exit.confirmation.quit" styleClass="btn-danger" prefWidth="150" onAction="#onQuit" />
+        <Button text="RETURN" styleClass="btn-neutral" prefWidth="150" onAction="#onReturn" />
+        <Button text="QUIT" styleClass="btn-danger" prefWidth="150" onAction="#onQuit" />
     </HBox>
 </VBox>

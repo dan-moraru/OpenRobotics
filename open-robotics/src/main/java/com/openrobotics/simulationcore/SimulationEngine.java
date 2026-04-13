@@ -18,11 +18,9 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
-import com.openrobotics.robot.navigation.BugNavigationStrategy;
 import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
-import com.openrobotics.robot.navigation.RtaStarNavigationStrategy;
-import com.openrobotics.robot.sensors.ProximitySensor;
-import com.openrobotics.robot.sensors.RangeSensor;
+import com.openrobotics.robot.navigation.NavigationStrategy;
+import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.*;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -182,21 +180,10 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                // normalize config strategy name and wire nav with seed
                 AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
-                switch (algo) {
-                    case GREEDY -> robot.setNav(new GreedyNavigationStrategy(this.seed));
-                    case BUG -> robot.setNav(new BugNavigationStrategy(this.seed));
-                    case RTA_STAR -> robot.setNav(new RtaStarNavigationStrategy(this.seed));
-                    default -> {}
-                }
-                // do same with sensor strategy
+                robot.setNav(NavigationStrategy.create(algo, this.seed));
                 SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
-                switch (sensorType) {
-                    case PROXIMITY -> robot.setSensor(new ProximitySensor());
-                    case RANGE -> robot.setSensor(new RangeSensor());
-                    default -> robot.setSensor(new ProximitySensor());
-                }
+                robot.setSensor(SensorStrategy.create(sensorType));
                 this.map.addEntity(robot);
             }  // closes for loop
         }  

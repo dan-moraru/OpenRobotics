@@ -36,6 +36,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     private static final String DEFAULT_DIR =
             System.getProperty("user.home") + File.separator + ".open-robotics"
                     + File.separator + "configs";
+    private static final String BROWSE_SENTINEL = "Browse...";
 
     // ------------------------------------------------------------------ //
     //  DialogController
@@ -58,14 +59,23 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     @FXML
     private void initialize() {
         directoryCombo.valueProperty().addListener((obs, o, n) -> {
-            if (n != null) {
-                selectedDirectory = new File(n);
-                selectedDirLabel.setText(n);
+            if (n == null) return;
+            if (BROWSE_SENTINEL.equals(n)) {
+                // Defer so the popup closes before opening the native chooser,
+                // then restore the prior selection (or clear it) before browsing.
+                javafx.application.Platform.runLater(() -> {
+                    directoryCombo.getSelectionModel().select(o);
+                    onBrowse();
+                });
+                return;
             }
+            selectedDirectory = new File(n);
+            selectedDirLabel.setText(n);
         });
 
         directoryCombo.getItems().addAll(loadRecentDirs());
-        if (!directoryCombo.getItems().isEmpty()) {
+        directoryCombo.getItems().add(BROWSE_SENTINEL);
+        if (directoryCombo.getItems().size() > 1) {
             directoryCombo.getSelectionModel().selectFirst();
             selectedDirLabel.setText(directoryCombo.getSelectionModel().getSelectedItem());
         } else if (selectedDirLabel != null) {
@@ -87,6 +97,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         if (!directoryCombo.getItems().contains(DEFAULT_DIR)) {
             directoryCombo.getItems().add(0, DEFAULT_DIR);
         }
+        ensureBrowseSentinelLast();
         directoryCombo.getSelectionModel().select(DEFAULT_DIR);
     }
 
@@ -101,8 +112,14 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             if (!directoryCombo.getItems().contains(result.getAbsolutePath())) {
                 directoryCombo.getItems().add(0, result.getAbsolutePath());
             }
+            ensureBrowseSentinelLast();
             directoryCombo.getSelectionModel().select(result.getAbsolutePath());
         }
+    }
+
+    private void ensureBrowseSentinelLast() {
+        directoryCombo.getItems().remove(BROWSE_SENTINEL);
+        directoryCombo.getItems().add(BROWSE_SENTINEL);
     }
 
     @FXML
