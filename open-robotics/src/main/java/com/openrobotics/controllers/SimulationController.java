@@ -2077,7 +2077,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             @Override
             protected Object call() {
                 try {
-                    return SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+                    long start = System.currentTimeMillis();
+                    List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+                    System.out.println("[SimulationController] Fetched " + logs.size() + " log(s) asynchronously in " + (System.currentTimeMillis() - start) + " ms.");
+                    return logs;
                 } catch (SQLException e) {
                     System.out.println("Error fetching logs from database: " + e.getMessage());
                     return null;
@@ -2087,7 +2090,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         task.setOnSucceeded(e -> {
             List<SimLogRecord> logs = (List<SimLogRecord>) task.getValue();
+            long start = System.currentTimeMillis();
             updateLogsArea(logs); // safe: runs on UI thread
+            System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
         });
 
         task.setOnFailed(e -> {
@@ -2102,8 +2107,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      */
     public void fetchLogsSync() {
         try {
+            long start = System.currentTimeMillis();
             List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+            System.out.println("[SimulationController] Fetched " + logs.size() + " log(s) synchronously in " + (System.currentTimeMillis() - start) + " ms.");
+
+            start = System.currentTimeMillis();
             updateLogsArea(logs);
+            System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
         } catch (SQLException e) {
             System.out.println("Error fetching logs from database: " + e.getMessage());
         }
@@ -2114,14 +2124,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      * @param logs the list of SimLogRecords to display, or null if an error occurred during fetching
      */
     private void updateLogsArea(List<SimLogRecord> logs) {
-        if (logs == null || logs.isEmpty()) {
-            return;
-        }
+        if (logs == null || logs.isEmpty()) return;
+
+        StringBuilder sb = new StringBuilder(logs.size() * 80);
 
         for (SimLogRecord log : logs) {
-            logArea.appendText(log.toString() + "\n");
+            sb.append(log.toString()).append("\n");
             lastSeenLogId = log.getId();
         }
+
+        logArea.appendText(sb.toString());
     }
 
     // ------------------------------------------------------------------ //

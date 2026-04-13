@@ -25,13 +25,15 @@ public class Logger {
         Thread worker = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(5000); // flush every 5 seconds
+                    Thread.sleep(1000); // flush every 1 second
 
                     List<SimLogRecord> batch = new ArrayList<>();
                     robotEventQueue.drainTo(batch);
 
                     if (!batch.isEmpty()) {
+                        long start = System.currentTimeMillis();
                         SimLogDao.insertBatch(batch);
+                        System.out.println("[Logger] Flushed " + batch.size() + " robot events in " + (System.currentTimeMillis() - start) + " ms");
                     }
 
                 } catch (Exception e) {
