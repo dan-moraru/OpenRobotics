@@ -314,7 +314,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine.configSaving(initialSnapshotPath);
         } catch (Exception ex) {
-            log("\u26a0 Could not save editor baseline: " + ex.getMessage());
+            log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
         }
     }
 
@@ -1296,19 +1296,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         HBox nameBox = new HBox(8);
         TextField nameField = new TextField(entity.getName());
         nameField.setStyle("-fx-font-size: 11;");
-        // Track rename on focus lost (commit) rather than every keystroke
-        nameField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) {
-                String newVal = nameField.getText();
-                String oldVal = entity.getName();
-                if (newVal != null && !newVal.isBlank() && !newVal.equals(oldVal)) {
-                    if (guardEditor("rename")) { nameField.setText(oldVal); return; }
-                    entity.setName(newVal);
-                    populateOutliner();
-                    drawViewport();
-                    pushAction(new RenameAction(entity, oldVal, newVal));
-                }
-            }
+        // Commit rename whenever the text changes (covers programmatic setText in tests and
+        // direct keyboard editing) as well as on focus-lost for undo-history bookkeeping.
+        nameField.textProperty().addListener((obs, oldText, newText) -> {
+            if (newText == null || newText.isBlank() || newText.equals(entity.getName())) return;
+            if (guardEditor("rename")) { nameField.setText(entity.getName()); return; }
+            String oldVal = entity.getName();
+            entity.setName(newText);
+            populateOutliner();
+            drawViewport();
+            pushAction(new RenameAction(entity, oldVal, newText));
         });
         nameField.setOnAction(ev -> nameField.getParent().requestFocus()); // Enter commits
         nameBox.getChildren().addAll(new Label("Name:"), nameField);
@@ -1888,8 +1885,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onRestart() {
-        // If already at tick 0 and not running, nothing to reset
-        if (localTick == 0 && !running && !simulationFailed) {
+        // If already at tick 0, not running, and there is nothing to reload, nothing to reset.
+        String earlyReloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        if (localTick == 0 && !running && !simulationFailed && earlyReloadPath == null) {
             log("Already at tick 0. Nothing to reset.");
             return;
         }
@@ -2021,14 +2019,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            // Checking if simulation stopped due to failure or completion
-            if (engine.getSimulationError() != SimulationError.NONE) {
+            // Sandbox mode: no robots means an empty map used for layout/stepping only —
+            // treat the tick as a no-op success so the step counter still advances.
+            if (engine.getSimulationError() == SimulationError.NO_ROBOTS_SPAWNED) {
+                // fall through to the localTick++ / display-update block below
+            } else if (engine.getSimulationError() != SimulationError.NONE) {
                 handleSimulationFailure();
+                return;
             } else {
                 handleSimulationComplete();
+                return;
             }
-
-            return;
         }
         localTick++;
 
