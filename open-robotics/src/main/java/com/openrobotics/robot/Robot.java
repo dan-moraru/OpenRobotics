@@ -211,9 +211,18 @@ public class Robot extends MapEntity {
                 chargerTarget = null; // clear override
 
                 // Logging charging start event
-                SimLogRecordBuilder chargingStartRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
-                SimLogRecord record = chargingStartRecordBuilder.buildChargeStartRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
-                Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    java.util.Map<String, Float> details = new HashMap<>();
+                    details.put("batteryLevel", battery);
+                    String json = mapper.writeValueAsString(details);
+
+                    SimLogRecordBuilder chargingStartRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                    SimLogRecord record = chargingStartRecordBuilder.buildChargeStartRecord(json);
+                    Logger.logRobotEvent(RobotEvent.CHARGE_START, record);
+                } catch (Exception e) {
+                    System.out.println("Error serializing charge start details for logging: " + e.getMessage());
+                }
 
                 return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
             }
@@ -274,10 +283,20 @@ public class Robot extends MapEntity {
                     state = (currentTask != null) ? RobotState.MOVING : RobotState.IDLE;
 
                     // Logging charging end event
-                    SimLogRecordBuilder chargingEndRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
-                    SimLogRecord record = chargingEndRecordBuilder.buildChargeEndRecord("{'batteryLevel': " + "'" + battery + "'" + "}");
-                    Logger.logRobotEvent(RobotEvent.CHARGE_END, record);
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        java.util.Map<String, Float> details = new HashMap<>();
+                        details.put("batteryLevel", battery);
+                        String json = mapper.writeValueAsString(details);
+
+                        SimLogRecordBuilder chargingEndRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());
+                        SimLogRecord record = chargingEndRecordBuilder.buildChargeEndRecord(json);
+                        Logger.logRobotEvent(RobotEvent.CHARGE_END, record);
+                    } catch (Exception e) {
+                        System.out.println("Error serializing charge end details for logging: " + e.getMessage());
+                    }
                 }
+
                 break;
 
             case LOADING:
@@ -358,7 +377,7 @@ public class Robot extends MapEntity {
                     stuckTicks++;
                 }
 
-                if (currentTask != null) {
+                if (currentTask != null && chargerTarget == null) {
                     Vector2D target = getTarget();
                     boolean arrived = isAtTarget(map, target);
                     if (arrived) {

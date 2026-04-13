@@ -71,6 +71,10 @@ public class Logger {
         if (mode == LoggerMode.NO_OP) {
             return -1; // no-op mode, do not log anything
         }
+        if (mode == null) {
+            System.err.println("Failed to log task event of type: " + eventType);
+            return -1;
+        }
 
         try {
             switch (eventType) {

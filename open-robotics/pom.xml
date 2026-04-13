@@ -16,6 +16,10 @@
         <sonar.maven.plugin.version>5.5.0.6356</sonar.maven.plugin.version>
         <pitest.version>1.22.0</pitest.version>
         <pitest.junit5.plugin.version>1.2.3</pitest.junit5.plugin.version>
+        <flyway.version>10.17.0</flyway.version>
+        <flyway.url>${env.DB_URL}</flyway.url>
+        <flyway.user>${env.DB_USER}</flyway.user>
+        <flyway.password>${env.DB_PASSWORD}</flyway.password>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -131,6 +135,27 @@
                 <version>3.11.0</version>
                 <configuration>
                     <release>21</release>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-database-postgresql</artifactId>
+                        <version>${flyway.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <url>${flyway.url}</url>
+                    <user>${flyway.user}</user>
+                    <password>${flyway.password}</password>
+                    <locations>
+                        <location>filesystem:src/main/resources/db/migration</location>
+                    </locations>
                 </configuration>
             </plugin>
 

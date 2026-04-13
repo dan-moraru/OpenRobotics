@@ -213,11 +213,15 @@ public class TaskTest {
     }
 
     /**
-     * Tasks with equal priority values must compare as equal.
+     * Tasks with equal priority values are ordered by ascending id as a tie-breaker.
      */
     @Test
     public void testCompareToEqualPriority() {
-        assertEquals(0, makeTask(1, 5).compareTo(makeTask(2, 5)));
+        assertTrue(makeTask(1, 5).compareTo(makeTask(2, 5)) < 0,
+                "Lower id should come first when priorities are equal");
+        assertTrue(makeTask(2, 5).compareTo(makeTask(1, 5)) > 0);
+        assertEquals(0, makeTask(3, 5).compareTo(makeTask(3, 5)),
+                "Same id and priority must compare as equal");
     }
 
     /**

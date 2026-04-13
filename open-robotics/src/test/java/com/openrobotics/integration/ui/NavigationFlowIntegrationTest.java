@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -41,15 +44,14 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
     }
 
     @Test
-    void welcomeToSetupToSimulationFlowWorks() {
-        clickOn(startSetupButton());
-        WaitForAsyncUtils.waitForFxEvents();
+    void welcomeToSetupToSimulationFlowWorks() throws TimeoutException {
+        fireButton("#welcomeStartSetupButton");
 
         ComboBox<?> mapCombo = lookup("#mapCombo").queryAs(ComboBox.class);
-        assertEquals("baseline_small", mapCombo.getValue());
+        assertEquals("empty", mapCombo.getValue());
 
-        clickOn(simulationStartButton());
-        WaitForAsyncUtils.waitForFxEvents();
+        fireButton("#setupNextButton");
+        waitForSimulationScreen();
 
         TextArea console = lookup("#consoleArea").queryAs(TextArea.class);
         assertTrue(console.getText().contains("Loaded simulation with"));
@@ -57,20 +59,20 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
     }
 
     @Test
-    void simulationResultsAndBackToEditorFlowWorks() {
-        clickOn(startSetupButton());
-        WaitForAsyncUtils.waitForFxEvents();
-        clickOn(simulationStartButton());
-        WaitForAsyncUtils.waitForFxEvents();
+    void simulationResultsAndBackToEditorFlowWorks() throws TimeoutException {
+        fireButton("#welcomeStartSetupButton");
+        fireButton("#setupNextButton");
+        waitForSimulationScreen();
 
-        clickOn("RESULTS");
-        WaitForAsyncUtils.waitForFxEvents();
+        fireButton("#resultsTabBtn");
+        waitForResultsScreen();
 
         assertEquals(1, lookup("#robotStatsTable").queryAs(TableView.class).getItems().size());
         assertTrue(lookup("#statTotalTasks").queryAs(Label.class).getText().contains("1"));
 
-        clickOn("RETURN TO EDITOR");
+        fireButton("#returnToEditorButton");
         WaitForAsyncUtils.waitForFxEvents();
+        waitForSimulationScreen();
 
         assertEquals("TICK 0", lookup("#tickDisplayLabel").queryAs(Label.class).getText());
     }
@@ -96,12 +98,19 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         AppState.setConfigPath("ui-integration.json");
     }
 
-    private Button startSetupButton() {
-        return lookup((Button b) ->
-                b.getText() != null && b.getText().contains("START SETUP")).queryAs(Button.class);
+    /** Fires the action without relying on synthetic mouse events (more reliable on CI / headless). */
+    private void fireButton(String query) {
+        interact(() -> lookup(query).queryAs(Button.class).fire());
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
-    private Button simulationStartButton() {
-        return lookup((Button b) -> "START SIMULATION".equals(b.getText())).queryAs(Button.class);
+    private void waitForSimulationScreen() throws TimeoutException {
+        WaitForAsyncUtils.waitFor(15, TimeUnit.SECONDS,
+                () -> lookup("#consoleArea").tryQuery().isPresent());
+    }
+
+    private void waitForResultsScreen() throws TimeoutException {
+        WaitForAsyncUtils.waitFor(15, TimeUnit.SECONDS,
+                () -> lookup("#robotStatsTable").tryQuery().isPresent());
     }
 }

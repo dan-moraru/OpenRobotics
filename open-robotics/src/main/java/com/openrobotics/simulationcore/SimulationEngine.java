@@ -535,10 +535,9 @@ public class SimulationEngine {
             return false;
         }
 
-        // Checking if the warehouse workload has been completed.
         // "No configured tasks" is treated as sandbox mode: ticks still run.
-        // spawnSourceExhausted bypasses the > 0 guard: if no pickups will ever exist, terminate.
-        if (workloadComplete()) {
+        // Only short-circuit when a workload was actually configured and is now finished.
+        if (dispatcher.getTotalTasksAdded() > 0 && workloadComplete()) {
             this.running = false;
 
             // Logging simulation run completion event
@@ -598,6 +597,7 @@ public class SimulationEngine {
      * @return true if all robots are in the BATTER_DEAD state, false otherwise
      */
     private boolean allRobotsDead() {
+        if (robots.length == 0) return false;
         for (Robot robot : robots) {
             if (robot.getState() != RobotState.BATTER_DEAD) {
                 return false;
