@@ -5,18 +5,11 @@ import com.openrobotics.logging.eventtypes.RobotEvent;
 
 import java.util.UUID;
 
+/** builds SimLogRecord instances for each robot event type */
 public class SimLogRecordBuilder {
     private SimLogRecord record;
 
-    /**
-     * Creates a new SimLogRecord and initializes the record with the given simulation run ID,
-     * tick, robot ID, and robot position (x, y) for general simulation log information.
-     * @param simulationRunId the UUID of the simulation run
-     * @param tick the tick of the simulation log record
-     * @param robotId the ID of the robot associated with the simulation log record
-     * @param x the x coordinate of the robot's position for the simulation log record
-     * @param y the y coordinate of the robot's position for the simulation log record
-     */
+    /** initializes a SimLogRecord with the run ID, tick, robot ID, and position */
     public SimLogRecordBuilder(UUID simulationRunId, int tick, UUID robotId, int x, int y) {
         this.record = new SimLogRecord();
         record.setRunId(simulationRunId);
@@ -26,20 +19,16 @@ public class SimLogRecordBuilder {
         record.setY(y);
     }
 
-    /**
-     * Sets the event type of the simulation log record to MOVE_EXECUTED.
-     * @return the built SimLogRecord for a move execution event
-     */
+    /** builds a MOVE_EXECUTED log record */
     public SimLogRecord buildMoveExecutionRecord() {
         record.setEventType(RobotEvent.MOVE_EXECUTED.toString());
         return record;
     }
 
     /**
-     * Sets the event type of the simulation log record to COLLISION and
-     * sets the details of the collision event.
-     * @param details the details of the collision event to be included in the simulation log record
-     * @return the built SimLogRecord for a collision event with the provided details
+     * builds a COLLISION log record.
+     *
+     * @param details collision details JSON
      */
     public SimLogRecord buildCollisionRecord(String details) {
         record.setEventType(RobotEvent.COLLISION.toString());
@@ -48,10 +37,9 @@ public class SimLogRecordBuilder {
     }
 
     /**
-     * Sets the event type of the simulation log record to NEAR_MISS and
-     * sets the details of the near miss event.
-     * @param details the details of the near miss event to be included in the simulation log record
-     * @return the built SimLogRecord for a near miss event with the provided details
+     * builds a NEAR_MISS log record.
+     *
+     * @param details near miss details JSON
      */
     public SimLogRecord buildNearMissRecord(String details) {
         record.setEventType(RobotEvent.NEAR_MISS.toString());
@@ -59,20 +47,16 @@ public class SimLogRecordBuilder {
         return record;
     }
 
-    /**
-     * Sets the event type of the simulation log record to BATTERY_DEATH.
-     * @return the built SimLogRecord for a battery death event
-     */
-     public SimLogRecord buildBatteryDeathRecord() {
+    /** builds a BATTERY_DEATH log record */
+    public SimLogRecord buildBatteryDeathRecord() {
         record.setEventType(RobotEvent.BATTERY_DEATH.toString());
         return record;
     }
 
     /**
-     * Sets the event type of the simulation log record to CHARGE_START.
-     * @param details the details of the charge start event to be included in the simulation log record.
-     *                Structure: {'batteryLevel': int}
-     * @return the built SimLogRecord for a charge start event
+     * builds a CHARGE_START log record.
+     *
+     * @param details JSON with structure: {'batteryLevel': int}
      */
     public SimLogRecord buildChargeStartRecord(String details) {
         record.setDetails(details);
@@ -81,10 +65,9 @@ public class SimLogRecordBuilder {
     }
 
     /**
-     * Sets the event type of the simulation log record to CHARGE_END.
-     * @param details the details of the charge end event to be included in the simulation log record.
-     *                Structure: {'batteryLevel': int}
-     * @return the built SimLogRecord for a charge end event
+     * builds a CHARGE_END log record.
+     *
+     * @param details JSON with structure: {'batteryLevel': int}
      */
     public SimLogRecord buildChargeEndRecord(String details) {
         record.setDetails(details);
@@ -93,10 +76,9 @@ public class SimLogRecordBuilder {
     }
 
     /**
-     * Sets the event type of the simulation log record to DEADLOCK_DETECTED.
-     * @param details the details of the deadlock detection event to be included in the simulation log record.
-     *                Structure: {'stuckTicks': int}
-     * @return the built SimLogRecord for a deadlock detection event
+     * builds a DEADLOCK_DETECTED log record.
+     *
+     * @param details JSON with structure: {'stuckTicks': int}
      */
     public SimLogRecord buildDeadlockDetectionRecord(String details) {
         record.setDetails(details);
@@ -105,10 +87,9 @@ public class SimLogRecordBuilder {
     }
 
     /**
-     * Sets the event type of the simulation log record to DEADLOCK_RESOLVED.
-     * @param details the details of the deadlock resolution event to be included in the simulation log record.
-     *                Structure: {'resolutionMethod': String}
-     * @return the built SimLogRecord for a deadlock resolution event
+     * builds a DEADLOCK_RESOLVED log record.
+     *
+     * @param details JSON with structure: {'resolutionMethod': String}
      */
     public SimLogRecord buildDeadlockResolutionRecord(String details) {
         record.setDetails(details);

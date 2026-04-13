@@ -5,14 +5,11 @@ import com.openrobotics.task.Task;
 
 import java.util.UUID;
 
+/** builds WorkloadTaskRecord instances for task lifecycle events */
 public class WorkloadTaskRecordBuilder {
     private WorkloadTaskRecord record;
 
-    /**
-     * Creates a new WorkloadTaskRecordBuilder and initializes the record with the given task
-     * for general task information.
-     * @param task Task to initialize the record with.
-     */
+    /** initializes a WorkloadTaskRecord from the given task, pre-filling type, priority, locations, and status */
     public WorkloadTaskRecordBuilder(UUID simulationRunId, Task task) {
         this.record = new WorkloadTaskRecord();
         record.setId(task.getArtificialId());
@@ -26,34 +23,20 @@ public class WorkloadTaskRecordBuilder {
         record.setStatus(task.getStatus().name());
     }
 
-    /**
-     * Builds a WorkloadTaskRecord for a task creation event by setting the created tick field.
-     * @param creationTick the tick number that the task was created on
-     * @return a WorkloadTaskRecord for a task creation event
-     */
+    /** builds the task creation record; sets createdTick */
     public WorkloadTaskRecord buildTaskCreationRecord(int creationTick) {
         record.setCreatedTick(creationTick);
         return record;
     }
 
-    /**
-     * Builds a WorkloadTaskRecord for a task assignment event by setting the assigned tick and
-     * assigned robot ID fields.
-     * @param assignedTick the tick number that the task was assigned on
-     * @param assignedRobotId the ID of the robot that the task was assigned to
-     * @return a WorkloadTaskRecord for a task assignment event
-     */
+    /** builds the task assignment record; sets assignedTick and assignedRobotId */
     public WorkloadTaskRecord buildTaskAssignmentRecord(int assignedTick, UUID assignedRobotId) {
         record.setAssignedTick(assignedTick);
         record.setAssignedRobotId(assignedRobotId);
         return record;
     }
 
-    /**
-     * Builds a WorkloadTaskRecord for a task completion event by setting the completed tick field.
-     * @param completedTick the tick number that the task was completed on
-     * @return a WorkloadTaskRecord for a task completion event
-     */
+    /** builds the task completion record; sets completedTick and status to COMPLETED */
     public WorkloadTaskRecord buildTaskCompletionRecord(int completedTick) {
         record.setCompletedTick(completedTick);
         record.setStatus("COMPLETED");
