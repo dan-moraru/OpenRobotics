@@ -150,6 +150,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Simulation state ──────────────────────────────────────────────────
     private boolean running = false;
     private boolean paused  = false;
+    private boolean simulationFailed = false;
     // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
     // Restart always reloads from this, not from AppState.getConfigPath().
     private String initialSnapshotPath = null;
@@ -288,13 +289,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     /** Returns true if editor mutations (add/move/delete/rename/property changes) are blocked. */
     private boolean isEditorLocked() {
-        return running || localTick > 0;
+        return running || localTick > 0 || simulationFailed;
     }
 
     /** Logs an error and returns true if the editor is locked. Use as a guard at the top of mutating methods. */
     private boolean guardEditor(String actionName) {
         if (isEditorLocked()) {
-            log("\u26a0 Cannot " + actionName + " while the simulation is running or has advanced past tick 0. Reset first.");
+            log("\u26a0 Cannot " + actionName + " while the simulation is running, has advanced past tick 0, or has failed. Please reset first.");
             return true;
         }
         return false;
@@ -1601,6 +1602,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (initialSnapshotPath == null && engine != null) {
                 saveEditorBaseline();
             }
+
+
+
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
@@ -1682,7 +1686,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onRestart() {
         // If already at tick 0 and not running, nothing to reset
-        if (localTick == 0 && !running) {
+        if (localTick == 0 && !running && !simulationFailed) {
             log("Already at tick 0. Nothing to reset.");
             return;
         }
@@ -1693,6 +1697,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         onStop();
         localTick = 0;
+        simulationFailed = false;
         AppState.setSimulationTick(0);
         // Reload from the editor baseline snapshot (continuously updated on every editor action).
         // This restores the most recent editor state, not the original config file.
@@ -1860,6 +1865,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         stopLoop();
         running = false;
         paused = false;
+        simulationFailed = true;
         if (simStatusLabel != null) {
             simStatusLabel.setText("FAILURE");
             simStatusLabel.setStyle("-fx-text-fill: #599068; -fx-font-weight: bold;");
