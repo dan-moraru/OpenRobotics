@@ -12,27 +12,19 @@ import com.openrobotics.task.TaskStatus;
 
 import java.util.*;
 
-/**
- * The Dispatcher manages a queue of tasks for robots to complete ordered by priority
- */
+/** manages a priority queue of tasks and assigns them to available robots each tick */
 public class Dispatcher {
     private final List<Task> lifetimeTasks; // stores all tasks ever added to this dispatcher
     private final PriorityQueue<Task> taskQueue;
     private int totalTasksAdded;
 
-    /**
-     * Creates a priority queue for tasks
-     */
     public Dispatcher() {
         this.lifetimeTasks = new ArrayList<>();
         this.taskQueue = new PriorityQueue<>();
         this.totalTasksAdded = 0;
     }
 
-    /**
-     * Adds a task to the pending queue if it is not null and not already present
-     * @param task the task being added to the task queue
-     */
+    /** adds a task to the pending queue if it is not null and not already present */
     public void addTask(Task task) {
         enqueueTask(task, true);
         lifetimeTasks.add(task);
@@ -45,7 +37,6 @@ public class Dispatcher {
             throw new IllegalStateException("Task is already in the task queue");
         }
 
-        // Set task status as pending and add to queue
         task.setStatus(TaskStatus.PENDING);
         taskQueue.add(task);
         if (countTowardsTotal) {
@@ -53,16 +44,12 @@ public class Dispatcher {
         }
     }
 
-    /**
-     * Adds tasks to the task queue in bulk
-     * @param tasks a list of tasks being added to the task queue
-     */
+    /** adds tasks to the queue in bulk */
     public void addTasks(List<Task> tasks) {
         if (tasks == null) {
             throw new IllegalArgumentException("Tasks list cannot be null");
         }
 
-        // Adding tasks to task queue
         for (int i = 0; i < tasks.size(); i++) {
             Task task = tasks.get(i);
             if (task == null) {
@@ -73,10 +60,9 @@ public class Dispatcher {
     }
 
     /**
-     * Assigns at most one task per available robot
-     * Logs task assignment events
-     * @param robots a list of all the robots in the warehouse
-     * @return the number of successful assignments performed
+     * assigns at most one pending task per available robot; logs each assignment.
+     *
+     * @return number of assignments made this call
      */
     public int assignTasks(Robot[] robots) {
         if (robots == null) {
@@ -88,34 +74,28 @@ public class Dispatcher {
         int currentTick = AppState.getEngine().getTickCounter(); // getting the current simulation tick from global app state
         int assignmentCount = 0;
 
-        // Assigning tasks to available robots
         for (Robot robot : robots) {
             if (robot == null) {
-                continue; // skip null robots
+                continue;
             }
 
-            // Checking if there are no more tasks left to assign
             if (taskQueue.isEmpty()) {
                 break;
             }
 
-            if (robot.isAvailable()) { // robot is available for task assignment
-                // Assign a task to the robot
+            if (robot.isAvailable()) {
                 Task task = taskQueue.peek();
                 if (task == null) {
                     break;
                 }
                 try {
                     robot.setCurrentTask(task);
-
-                    // Update robot state and task status
                     robot.setState(RobotState.MOVING);
                     task.setStatus(TaskStatus.IN_PROGRESS);
 
                     taskQueue.poll();
                     assignmentCount++;
 
-                    // Logging task assignment event
                     WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), task);
                     WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
                     Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
@@ -129,44 +109,26 @@ public class Dispatcher {
         return assignmentCount;
     }
 
-    /**
-     * Requeues a task (for future deadlock/failure recovery)
-     * @param task the task to be requeued
-     */
+    /** requeues a task without incrementing the total count; used for deadlock recovery */
     public void requeueTask(Task task) {
         enqueueTask(task, false);
     }
 
-    /**
-     * Returns true if the task queue is not empty
-     * @return true if the task queue is not empty
-     */
     public boolean hasPendingTasks() {
         return !taskQueue.isEmpty();
     }
 
-    /**
-     * Returns the number of pending tasks in the task queue
-     * @return the number of tasks in the task queue
-     */
     public int getPendingTaskCount() {
         return taskQueue.size();
     }
 
-    /**
-     * Returns a list of all the tasks in the task queue
-     * @return a list containing all the tasks in the task queue
-     */
     public List<Task> getAllQueuedTasks() {
         List<Task> tasks = new ArrayList<>(taskQueue);
         tasks.sort(Task::compareTo);
         return tasks;
     }
 
-    /**
-     * Returns a list of all tasks ever added to this dispatcher, including completed tasks.
-     * @return a list of all tasks ever added to this dispatcher
-     */
+    /** returns all tasks ever added to this dispatcher, including completed ones */
     public List<Task> getLifetimeTasks() {
         return new ArrayList<>(lifetimeTasks);
     }

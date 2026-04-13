@@ -14,8 +14,8 @@ import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
+/** detects and resolves same-target and swap conflicts among move intentions each tick */
 public class CollisionManager {
-
     // legal checks:
     // - no null intention/from/to
     // - robot id must be present
@@ -50,9 +50,7 @@ public class CollisionManager {
         return tile.getX() + "," + tile.getY();
     }
 
-    /**
-     * Helper to determine if a tile allows multiple robots (e.g., a station tile).
-     */
+    // returns true for tiles where multiple robots may occupy simultaneously
     private boolean allowsOverlap(Tile tile) {
         return tile.allowsRobotOverlap();
     }
@@ -66,7 +64,7 @@ public class CollisionManager {
             return new MoveIntention[0];
         }
 
-        // ===== Step 1: keep one legal intention per robot =====
+        // step 1: keep one legal intention per robot
         Map<UUID, MoveIntention> uniqueByRobot = new HashMap<>();
         for (MoveIntention intention : intentions) {
             if (!isLegalIntention(intention)) continue;
@@ -90,7 +88,7 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 2: same-target conflicts =====
+        // step 2: same-target conflicts
         Set<UUID> blockedRobots = new HashSet<>();
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
         Map<String, List<MoveIntention>> occupiedAtStart = new HashMap<>();
@@ -119,15 +117,12 @@ public class CollisionManager {
 
             if (group.size() <= 1) continue;
 
-            // NEW LOGIC: Check if the destination tile is a delivery point
+            // delivery point: all robots in this group may enter simultaneously
             Tile targetTile = group.get(0).getToTile();
             if (allowsOverlap(targetTile)) {
-                // If it's a delivery point, everyone in this group is allowed to stay/enter.
-                // We do NOT add anyone to blockedRobots.
                 continue;
             }
 
-            // Standard conflict logic for normal tiles: pick one winner
             MoveIntention winner = group.stream()
                     .min(Comparator.comparing(i -> i.getRobot().getId().toString()))
                     .get();
@@ -140,15 +135,12 @@ public class CollisionManager {
                 }
             }
 
-            // Logging robot collision events
             try {
-                // Serialize the list of all colliding robot IDs to JSON for logging
                 ObjectMapper mapper = new ObjectMapper();
                 Map<String, UUID[]> data = new HashMap<>();
                 data.put("allCollidingRobots", group.stream().map(i -> i.getRobot().getId()).toArray(UUID[]::new));
                 String json = mapper.writeValueAsString(data);
 
-                // Build and log the collision record with the JSON data
                 SimulationEngine engine = AppState.getEngine(); // getting the simulation engine from global state
                 SimLogRecordBuilder recordBuilder = new SimLogRecordBuilder(engine.getRunId(), engine.getTickCounter(), winnerId, targetTile.getX(), targetTile.getY());
                 SimLogRecord record = recordBuilder.buildCollisionRecord(json);
@@ -158,10 +150,8 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 3: starting-tile occupancy conflicts =====
-        // A robot's starting tile remains reserved for the whole tick on normal floor tiles,
-        // even if that robot is also moving away this tick. This prevents same-direction
-        // "follow-through" where robots appear to pass through each other.
+        // step 3: starting-tile occupancy; a robot's origin tile stays reserved for the whole tick
+        // to prevent follow-through where robots appear to pass through each other
         for (MoveIntention intention : candidates) {
             UUID robotId = intention.getRobot().getId();
             if (blockedRobots.contains(robotId) || !isActualMove(intention) || allowsOverlap(intention.getToTile())) {
@@ -180,9 +170,7 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 4: swap conflicts =====
-        // We keep this mostly the same, but we could also allow swaps
-        // if the tiles involved allow overlap.
+        // step 4: swap conflicts
         for (int i = 0; i < candidates.length; i++) {
             MoveIntention a = candidates[i];
             UUID aId = a.getRobot().getId();
@@ -207,7 +195,6 @@ public class CollisionManager {
                         blockedRobots.add(bId);
                     }
 
-                    // Logging robot near miss events for swaps
                     try {
                         ObjectMapper mapper = new ObjectMapper();
                         Map<String, UUID> data = new HashMap<>();
@@ -224,7 +211,7 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 5: return approved intentions =====
+        // step 5: return approved intentions
         List<MoveIntention> approved = new ArrayList<>();
         for (MoveIntention intention : candidates) {
             if (!blockedRobots.contains(intention.getRobot().getId())) {
