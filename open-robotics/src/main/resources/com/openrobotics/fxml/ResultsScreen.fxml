@@ -181,7 +181,7 @@
                 <!-- Bottom action bar -->
                 <HBox alignment="CENTER_LEFT" spacing="10" styleClass="results-actions-bar">
                     <Button onAction="#onNewExperiment" text="NEW SIMULATION" />
-                    <Button onAction="#onViewHistory" styleClass="button-neutral" text="RETURN TO EDITOR" />
+                    <Button fx:id="returnToEditorButton" onAction="#onViewHistory" styleClass="button-neutral" text="RETURN TO EDITOR" />
                     <Region HBox.hgrow="ALWAYS" />
                     <Button onAction="#onExport" styleClass="button-confirm" text="EXPORT RESULTS" />
                 </HBox>

@@ -6,7 +6,6 @@
 <!-- Exit Confirm – dialog bg #5D5B54, title bar #706E65, QUIT dark-red, RETURN dark #32312D -->
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.openrobotics.controllers.ExitConfirmController"
-      resources="com.openrobotics.fxml.ExitConfirmDialog"
       styleClass="dialog-root" prefWidth="380" spacing="0"
       stylesheets="@../css/theme.css">
 
