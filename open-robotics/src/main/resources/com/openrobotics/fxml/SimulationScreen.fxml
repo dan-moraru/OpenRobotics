@@ -360,10 +360,10 @@
                                             <children>
                                                 <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                                     <children>
-                                                        <Label text="Logs"/>
+                                                        <Label text="Simulation Logs"/>
                                                     </children>
                                                 </HBox>
-                                                <TextArea fx:id="databaseArea" editable="false" promptText="&gt;"
+                                                <TextArea fx:id="logArea" editable="false" promptText="&gt;"
                                                           wrapText="true" VBox.vgrow="ALWAYS"/>
                                                 <Region VBox.vgrow="ALWAYS"/>
                                             </children>

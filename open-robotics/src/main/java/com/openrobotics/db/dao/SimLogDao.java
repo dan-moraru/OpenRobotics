@@ -91,6 +91,29 @@ public final class SimLogDao {
     }
 
     /**
+     * finds all log records for a run greater than the given log id, ordered by tick then ID.
+     *
+     * @param lastSeenId the last log ID that was seen by the caller; only logs with a greater ID will be returned
+     * @throws SQLException on database error
+     */
+    public static List<SimLogRecord> findLatestLogs(UUID runId, long lastSeenId) throws SQLException {
+        String sql = "SELECT * FROM sim_logs WHERE run_id = ? AND id > ? ORDER BY tick, id";
+
+        List<SimLogRecord> list = new ArrayList<>();
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setObject(1, runId);
+            ps.setLong(2, lastSeenId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
      * finds all log records for a run at a specific tick, ordered by ID.
      *
      * @throws SQLException on database error

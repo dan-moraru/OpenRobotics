@@ -2,7 +2,9 @@ package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
 import com.openrobotics.db.dao.MapDao;
+import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.model.MapRecord;
+import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.db.recordbuilders.MapRecordBuilder;
@@ -49,7 +51,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
+import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -115,7 +120,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button    clearConsoleButton;
 
     // - DATABASE LOGGING
-    @FXML private TextArea databaseArea;
+    @FXML private TextArea logArea;
 
     // ── TAB STRIP ─────────────────────────────────────────────────────────
     @FXML private Button editorTabBtn;
@@ -206,6 +211,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Undo / Redo ─────────────────────────────────────────────────────
     private final java.util.Deque<EditorAction> undoStack = new java.util.ArrayDeque<>();
     private final java.util.Deque<EditorAction> redoStack = new java.util.ArrayDeque<>();
+
+    // Used for updating simulation logs
+    private Timeline logPollingTimeline;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private long lastSeenLogId = 0;
 
     /** Sealed interface for reversible editor actions. */
     private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction {
@@ -323,6 +333,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void initialize() {
+        // Set up periodic log polling (every 5 seconds) to fetch new logs from the database and update the logArea.
+        logPollingTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> fetchLogsAsync())
+        );
+        logPollingTimeline.setCycleCount(Timeline.INDEFINITE);
+
         if (intersectionObjectTile != null) {
             intersectionObjectTile.managedProperty().bind(intersectionObjectTile.visibleProperty());
             intersectionObjectTile.setVisible(false);
@@ -1582,6 +1598,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
+
+        logPollingTimeline.play(); // start regular polling
+
         if (running) {
             if (paused) {
                 paused = false;
@@ -1644,7 +1663,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             startLoop();
             log("Simulation started.");
-            queryLogs(); //TODO REMOVE
             // Update RAM display
             updateRamLabel();
         }
@@ -1652,6 +1670,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onPause() {
+        logPollingTimeline.stop(); // stop regular polling for sim logs
+
         if (running && !paused) {
             paused = true;
             stopLoop();
@@ -1698,6 +1718,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         onStop();
         localTick = 0;
         simulationFailed = false;
+        lastSeenLogId = 0;
         AppState.setSimulationTick(0);
         // Reload from the editor baseline snapshot (continuously updated on every editor action).
         // This restores the most recent editor state, not the original config file.
@@ -1745,6 +1766,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         updateRamLabel();
         populateOutliner();
         drawViewport();
+
+        // Reset simulation logs text area
+        if (logArea != null) {
+            logArea.clear();
+        }
     }
 
     @FXML
@@ -1788,10 +1814,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void stopLoop() {
+        logPollingTimeline.stop(); // stop regular polling for sim logs
+
         if (simLoop != null) {
             simLoop.stop();
             simLoop = null;
         }
+
+        Logger.flushRobotEvents(); // ensure all robot events are flushed when stopping
+        fetchLogsAsync(); // fetch any remaining logs on stop
     }
 
     /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
@@ -2033,10 +2064,48 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     /**
-     * Database Logging in second console
+     * Asynchronously fetches simulation logs from the database using a background thread to
+     * avoid blocking/glitching the UI
      */
-    public void queryLogs() {
-        if (databaseArea != null) databaseArea.appendText("hello testing");
+    public void fetchLogsAsync() {
+        javafx.concurrent.Task<Object> task = new javafx.concurrent.Task() {
+            @Override
+            protected Object call() {
+                try {
+                    return SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+                } catch (SQLException e) {
+                    System.out.println("Error fetching logs from database: " + e.getMessage());
+                    return null;
+                }
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            List<SimLogRecord> logs = (List<SimLogRecord>) task.getValue();
+            updateLogsArea(logs); // safe: runs on UI thread
+        });
+
+        task.setOnFailed(e -> {
+            task.getException().printStackTrace();
+        });
+
+        executor.submit(task); // runs the task on a background thread
+    }
+
+    /**
+     * Updates the logs area with the provided list of SimLogRecords.
+     * @param logs the list of SimLogRecords to display, or null if an error occurred during fetching
+     */
+    private void updateLogsArea(List<SimLogRecord> logs) {
+        if (logs == null || logs.isEmpty()) {
+            System.out.println("[SimulationController] No new logs to display.");
+            return;
+        }
+
+        for (SimLogRecord log : logs) {
+            logArea.appendText(log.toString() + "\n");
+            lastSeenLogId = log.getId();
+        }
     }
 
     // ------------------------------------------------------------------ //
