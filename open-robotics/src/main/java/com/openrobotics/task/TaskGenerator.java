@@ -49,20 +49,30 @@ public class TaskGenerator {
 
         outer:
         for (Rack rack : racks) {
-            // Resolve valid dropoff stations for this rack
+            // Resolve dropoff stations based on assignment mode.
             List<DeliveryStation> validStations;
-            if (rack.getValidDropoffIds() == null || rack.getValidDropoffIds().isEmpty()) {
+            boolean roundRobin;
+            if (!rack.isManualDropoffAssignment()) {
+                // Random mode: ignore validDropoffIds, use all stations.
                 validStations = new ArrayList<>(allStations);
+                roundRobin = false;
             } else {
+                // Manual mode: build pool from non-null, resolvable UUIDs only.
                 validStations = new ArrayList<>();
-                for (UUID id : rack.getValidDropoffIds()) {
-                    DeliveryStation ds = stationById.get(id);
+                for (UUID uuid : rack.getValidDropoffIds()) {
+                    if (uuid == null) continue;
+                    DeliveryStation ds = stationById.get(uuid);
                     if (ds != null) validStations.add(ds);
                 }
-                if (validStations.isEmpty()) validStations = new ArrayList<>(allStations);
+                roundRobin = true;
+                if (validStations.isEmpty()) {
+                    // Play-time validation (Task 10) prevents this in production.
+                    // Defensive skip: don't generate tasks for a broken rack.
+                    continue;
+                }
             }
 
-            // skip racks with no accessible adjacent tile (e.g. surrounded by walls)
+            // skip racks with no accessible adjacent tile
             if (!map.hasTraversableAdjacentTile(rack.getPosition())) {
                 continue;
             }
@@ -70,7 +80,9 @@ public class TaskGenerator {
             // generate up to boxCount tasks from this rack
             for (int i = 0; i < rack.getBoxCount(); i++) {
                 if (tasks.size() >= maxCount) break outer;
-                DeliveryStation station = validStations.get(random.nextInt(validStations.size()));
+                DeliveryStation station = roundRobin
+                        ? validStations.get(i % validStations.size())
+                        : validStations.get(random.nextInt(validStations.size()));
                 int priority = random.nextInt(3) + 1;
                 tasks.add(new Task(nextTaskId++,
                     new Vector2D(rack.getPosition().getX(), rack.getPosition().getY()),
