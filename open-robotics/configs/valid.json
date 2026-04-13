@@ -1,0 +1,58 @@
+{
+  "config" : {
+    "runId" : "4301e0ff-f6be-4ff8-8e71-d36a4bab6c7d",
+    "runName" : "default_run",
+    "tickMs" : 100,
+    "maxTicks" : 5000,
+    "seed" : 42,
+    "batteryCapacity" : 100.0,
+    "lowBatteryThreshold" : 20.0,
+    "chargePerTick" : 5.0,
+    "energyPerMove" : 1.0,
+    "loadingTicks" : 1,
+    "unloadingTicks" : 1
+  },
+  "map" : {
+    "mapId" : "6b037dd7-95b9-4a8e-a2d7-b5f622d67142",
+    "width" : 8,
+    "height" : 8,
+    "tiles" : [ ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "c67f1cd6-4019-4f1d-9ff2-2575a9a86bb1",
+      "name" : "R1",
+      "position" : {
+        "x" : 1,
+        "y" : 1
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ ],
+    "racks" : [ ],
+    "obstacles" : [ ]
+  },
+  "tasks" : [ {
+    "id" : 1,
+    "pickupLocation" : {
+      "x" : 1,
+      "y" : 1
+    },
+    "dropoffLocation" : {
+      "x" : 2,
+      "y" : 2
+    },
+    "priority" : 1,
+    "status" : "PENDING"
+  } ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : false,
+    "speedMultiplier" : 1.0
+  }
+}
