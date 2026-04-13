@@ -199,7 +199,7 @@ public class DispatcherTest {
     }
 
     /**
-     * getAllTasks() returns a snapshot of the current queue.
+     * getAllQueuedTasks() returns a snapshot of the current queue.
      */
     @Test
     public void testGetAllTasksReturnsAllEnqueued() {
@@ -208,14 +208,14 @@ public class DispatcherTest {
         dispatcher.addTask(t1);
         dispatcher.addTask(t2);
 
-        List<Task> all = dispatcher.getAllTasks();
+        List<Task> all = dispatcher.getAllQueuedTasks();
         assertEquals(2, all.size());
         assertTrue(all.contains(t1));
         assertTrue(all.contains(t2));
     }
 
     /**
-     * getAllTasks() should return tasks in dispatcher priority order.
+     * getAllQueuedTasks() should return tasks in dispatcher priority order.
      */
     @Test
     public void testGetAllTasksReturnsPrioritySortedSnapshot() {
@@ -226,18 +226,18 @@ public class DispatcherTest {
         dispatcher.addTask(high);
         dispatcher.addTask(medium);
 
-        List<Task> all = dispatcher.getAllTasks();
+        List<Task> all = dispatcher.getAllQueuedTasks();
 
         assertEquals(List.of(high, medium, low), all);
     }
 
     /**
-     * getAllTasks() returns a defensive copy; modifying it doesn't affect the dispatcher.
+     * getAllQueuedTasks() returns a defensive copy; modifying it doesn't affect the dispatcher.
      */
     @Test
     public void testGetAllTasksDefensiveCopy() {
         dispatcher.addTask(makeTask(1, 0));
-        List<Task> snapshot = dispatcher.getAllTasks();
+        List<Task> snapshot = dispatcher.getAllQueuedTasks();
         snapshot.clear();
         assertEquals(1, dispatcher.getPendingTaskCount(),
                 "Clearing the snapshot must not affect the internal queue");

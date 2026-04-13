@@ -9,6 +9,9 @@ import com.openrobotics.common.Direction;
 import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.map.entities.station.DeliveryStation;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 /** warehouse grid; owns all tiles and entities, and provides spatial queries (uml 3.3.3) */
 public class Map {
@@ -56,18 +59,25 @@ public class Map {
         return grid[y][x];
     }
 
-    /** true if (x, y) is in bounds and the tile is not currently occupied by a robot */
+    /** true if (x, y) is in bounds and the tile is not currently occupied or blocked by a dead robot */
     public boolean isValidMove(int x, int y) {
         Tile tile = getTile(x, y);
-        return tile != null && !tile.isOccupied();
+        return tile != null && !tile.isOccupied() && !hasDeadRobotAt(tile.getPosition());
     }
 
     public void addEntity(MapEntity entity) {
         entities.add(entity);
+        if (entity instanceof DeliveryStation || entity instanceof ChargingStation) {
+            updateStationOverlapFlags(entity.getPosition());
+        }
     }
 
     public boolean removeEntity(MapEntity entity) {
-        return entities.remove(entity);
+        boolean removed = entities.remove(entity);
+        if (removed && (entity instanceof DeliveryStation || entity instanceof ChargingStation)) {
+            updateStationOverlapFlags(entity.getPosition());
+        }
+        return removed;
     }
 
     // get all entities at a given position
@@ -105,7 +115,7 @@ public class Map {
         return false;
     }
 
-    /** true if pos is in bounds and holds no Rack or Obstacle; ignores tile occupancy — robot conflicts are handled by CollisionManager */
+    /** true if pos is in bounds and holds no Rack, Obstacle, or dead robot; live robot conflicts are handled by CollisionManager */
     public boolean isTraversable(Vector2D pos) {
         Tile tile = getTile(pos.getX(), pos.getY());
         if (tile == null) return false;
@@ -113,7 +123,9 @@ public class Map {
         for (MapEntity entity : entities) {
             if (entity.getPosition().equals(pos)) {
                 // Racks are solid. Robots interact with them from the side.
-                if (entity instanceof Rack || entity instanceof Obstacle) {
+                if (entity instanceof Rack
+                        || entity instanceof Obstacle
+                        || (entity instanceof Robot robot && robot.getState() == RobotState.BATTERY_DEAD)) {
                     return false;
                 }
             }
@@ -148,5 +160,30 @@ public class Map {
             }
         }
         return nearest;
+    }
+
+    private boolean hasDeadRobotAt(Vector2D pos) {
+        for (MapEntity entity : entities) {
+            if (entity.getPosition().equals(pos)
+                    && entity instanceof Robot robot
+                    && robot.getState() == RobotState.BATTERY_DEAD) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateStationOverlapFlags(Vector2D pos) {
+        Tile tile = getTile(pos.getX(), pos.getY());
+        if (tile == null) {
+            return;
+        }
+
+        boolean hasDeliveryStation = entities.stream()
+                .anyMatch(entity -> entity instanceof DeliveryStation && entity.getPosition().equals(pos));
+        boolean hasChargingStation = entities.stream()
+                .anyMatch(entity -> entity instanceof ChargingStation && entity.getPosition().equals(pos));
+        tile.setDeliveryStation(hasDeliveryStation);
+        tile.setChargingStation(hasChargingStation);
     }
 }

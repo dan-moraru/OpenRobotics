@@ -6,6 +6,7 @@ import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.Robot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -306,6 +307,47 @@ public class CollisionManagerTest {
     }
 
     /**
+     * A follower cannot enter another robot's starting tile in the same tick on normal floor tiles.
+     */
+    @Test
+    public void testSameDirectionFollowThroughIsBlocked() {
+        Robot leader = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "leader", new Vector2D(1, 0));
+        Robot follower = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                "follower", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(new MoveIntention[]{
+                move(leader, 1, 0, 2, 0),
+                move(follower, 0, 0, 1, 0)
+        });
+
+        assertEquals(1, result.length);
+        assertSame(leader, result[0].getRobot());
+    }
+
+    /**
+     * In a same-direction chain, only the front robot may advance into a free tile.
+     */
+    @Test
+    public void testOnlyFrontRobotMovesInSameDirectionChain() {
+        Robot front = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "front", new Vector2D(2, 0));
+        Robot middle = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                "middle", new Vector2D(1, 0));
+        Robot rear = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000003"),
+                "rear", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(new MoveIntention[]{
+                move(front, 2, 0, 3, 0),
+                move(middle, 1, 0, 2, 0),
+                move(rear, 0, 0, 1, 0)
+        });
+
+        assertEquals(1, result.length);
+        assertSame(front, result[0].getRobot());
+    }
+
+    /**
      * Stay intentions from multiple robots are never in conflict and all pass through.
      */
     @Test
@@ -387,6 +429,71 @@ public class CollisionManagerTest {
 
         assertEquals(1, result.length);
         assertSame(staying, result[0].getRobot());
+    }
+
+    /**
+     * Dead-robot tiles reject incoming moves even on tiles that would otherwise allow overlap.
+     */
+    @Test
+    public void testDeadRobotTileBlocksIncomingMoves() {
+        Map map = new Map(3, 1);
+        map.getTile(1, 0).setDeliveryStation(true);
+
+        Robot dead = new Robot(UUID.fromString("00000000-0000-0000-0000-0000000000ff"),
+                "dead", new Vector2D(1, 0));
+        dead.setState(com.openrobotics.robot.RobotState.BATTERY_DEAD);
+        map.addEntity(dead);
+
+        Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "move", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(map, new MoveIntention[]{
+                move(moving, 0, 0, 1, 0)
+        });
+
+        assertEquals(0, result.length);
+    }
+
+    /**
+     * Delivery stations still allow overlap when a robot is already on the tile.
+     */
+    @Test
+    public void testDeliveryStationAllowsIncomingMoveToOccupiedTile() {
+        Map map = new Map(3, 1);
+        map.addEntity(new DeliveryStation("delivery", new Vector2D(1, 0)));
+
+        Robot staying = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "stay", new Vector2D(1, 0));
+        Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                "move", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(map, new MoveIntention[]{
+                new MoveIntention(map.getTile(1, 0), map.getTile(1, 0), staying),
+                new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), moving)
+        });
+
+        assertEquals(2, result.length);
+    }
+
+    /**
+     * Charging stations also allow overlap when a robot is already on the tile.
+     */
+    @Test
+    public void testChargingStationAllowsIncomingMoveToOccupiedTile() {
+        Map map = new Map(3, 1);
+        map.addEntity(new com.openrobotics.map.entities.station.ChargingStation("charging", new Vector2D(1, 0)));
+
+        Robot staying = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                "stay", new Vector2D(1, 0));
+        Robot moving = new Robot(UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                "move", new Vector2D(0, 0));
+
+        MoveIntention[] result = manager.resolveConflicts(map, new MoveIntention[]{
+                new MoveIntention(map.getTile(1, 0), map.getTile(1, 0), staying),
+                new MoveIntention(map.getTile(0, 0), map.getTile(1, 0), moving)
+        });
+
+        assertEquals(2, result.length);
     }
 
     /**

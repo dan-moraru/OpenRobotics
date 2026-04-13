@@ -7,7 +7,10 @@ import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
+import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
@@ -48,13 +51,17 @@ public class CollisionManager {
     }
 
     /**
-     * Helper to determine if a tile allows multiple robots (e.g., a Drop-off point).
+     * Helper to determine if a tile allows multiple robots (e.g., a station tile).
      */
     private boolean allowsOverlap(Tile tile) {
-        return tile.isDeliveryStation();
+        return tile.allowsRobotOverlap();
     }
 
     public MoveIntention[] resolveConflicts(MoveIntention[] intentions) {
+        return resolveConflicts(null, intentions);
+    }
+
+    public MoveIntention[] resolveConflicts(com.openrobotics.map.Map map, MoveIntention[] intentions) {
         if (intentions == null || intentions.length == 0) {
             return new MoveIntention[0];
         }
@@ -69,18 +76,46 @@ public class CollisionManager {
         MoveIntention[] candidates = uniqueByRobot.values().toArray(new MoveIntention[0]);
         Arrays.sort(candidates, Comparator.comparing(i -> i.getRobot().getId().toString()));
 
+        Set<String> deadRobotTiles = new HashSet<>();
+        if (map != null) {
+            for (MapEntity entity : map.getEntities()) {
+                if (entity instanceof Robot robot && robot.getState() == RobotState.BATTERY_DEAD) {
+                    deadRobotTiles.add(entity.getPosition().getX() + "," + entity.getPosition().getY());
+                }
+            }
+        }
+        for (MoveIntention intention : candidates) {
+            if (intention.getRobot().getState() == RobotState.BATTERY_DEAD) {
+                deadRobotTiles.add(tileKey(intention.getFromTile()));
+            }
+        }
+
         // ===== Step 2: same-target conflicts =====
         Set<UUID> blockedRobots = new HashSet<>();
         Map<String, List<MoveIntention>> byDestination = new HashMap<>();
+        Map<String, List<MoveIntention>> occupiedAtStart = new HashMap<>();
 
         for (MoveIntention intention : candidates) {
             byDestination
                     .computeIfAbsent(tileKey(intention.getToTile()), k -> new ArrayList<>())
                     .add(intention);
+            occupiedAtStart
+                    .computeIfAbsent(tileKey(intention.getFromTile()), k -> new ArrayList<>())
+                    .add(intention);
         }
 
         for (Map.Entry<String, List<MoveIntention>> entry : byDestination.entrySet()) {
             List<MoveIntention> group = entry.getValue();
+            String destinationKey = entry.getKey();
+
+            if (deadRobotTiles.contains(destinationKey)) {
+                for (MoveIntention intention : group) {
+                    if (intention.getRobot().getState() != RobotState.BATTERY_DEAD) {
+                        blockedRobots.add(intention.getRobot().getId());
+                    }
+                }
+                continue;
+            }
 
             if (group.size() <= 1) continue;
 
@@ -123,7 +158,29 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 3: swap conflicts =====
+        // ===== Step 3: starting-tile occupancy conflicts =====
+        // A robot's starting tile remains reserved for the whole tick on normal floor tiles,
+        // even if that robot is also moving away this tick. This prevents same-direction
+        // "follow-through" where robots appear to pass through each other.
+        for (MoveIntention intention : candidates) {
+            UUID robotId = intention.getRobot().getId();
+            if (blockedRobots.contains(robotId) || !isActualMove(intention) || allowsOverlap(intention.getToTile())) {
+                continue;
+            }
+
+            List<MoveIntention> occupants = occupiedAtStart.get(tileKey(intention.getToTile()));
+            if (occupants == null) {
+                continue;
+            }
+
+            boolean occupiedByOtherRobot = occupants.stream()
+                    .anyMatch(occupant -> !occupant.getRobot().getId().equals(robotId));
+            if (occupiedByOtherRobot) {
+                blockedRobots.add(robotId);
+            }
+        }
+
+        // ===== Step 4: swap conflicts =====
         // We keep this mostly the same, but we could also allow swaps
         // if the tiles involved allow overlap.
         for (int i = 0; i < candidates.length; i++) {
@@ -167,7 +224,7 @@ public class CollisionManager {
             }
         }
 
-        // ===== Step 4: return approved intentions =====
+        // ===== Step 5: return approved intentions =====
         List<MoveIntention> approved = new ArrayList<>();
         for (MoveIntention intention : candidates) {
             if (!blockedRobots.contains(intention.getRobot().getId())) {

@@ -5,7 +5,6 @@ import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
-import com.openrobotics.map.entities.environment.Obstacle;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 import com.openrobotics.robot.navigation.NavigationStrategy;
@@ -110,7 +109,7 @@ class SimulationEngineDeadlockRecoveryTest {
         assertFalse(recoveredBot.hasRerouteAttemptedForCurrentTask());
         assertNull(recoveredBot.getRerouteAvoidTile());
         assertEquals(1, dispatcher.getPendingTaskCount());
-        assertEquals(TaskStatus.PENDING, dispatcher.getAllTasks().get(0).getStatus());
+        assertEquals(TaskStatus.PENDING, dispatcher.getAllQueuedTasks().get(0).getStatus());
         assertEquals(2, policy.clearCalls);
         assertEquals(2, nav.resetCalls);
     }
