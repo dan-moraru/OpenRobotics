@@ -97,10 +97,9 @@
                             </VBox>
                         </HBox>
 
-                <!-- CTA -->
-                <HBox styleClass="welcome-cta-row" alignment="CENTER_LEFT" spacing="14">
-                    <Button fx:id="welcomeStartSetupButton" text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
-                </HBox>
+                    </VBox>
+
+                </VBox>
 
             </VBox>
 
