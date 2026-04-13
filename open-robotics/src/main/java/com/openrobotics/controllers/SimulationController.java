@@ -1708,8 +1708,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine = reloaded;
             AppState.setEngine(engine);
-        } else {
-            // TODO: make sure template map resets here
         }
 
         // If no engine is loaded, restart still resets the UI state safely.
