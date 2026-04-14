@@ -218,7 +218,10 @@ public class SimulationControllerTest extends ApplicationTest {
         invokeOnFx("selectEntity", new Class<?>[]{MapEntity.class}, fixture.rack);
 
         TextField nameField = textFieldWithValue("rack_1");
+        interact(nameField::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
         interact(() -> nameField.setText("renamed_rack"));
+        interact(() -> nameField.getParent().requestFocus());
         WaitForAsyncUtils.waitForFxEvents();
 
         assertEquals("renamed_rack", fixture.rack.getName());
@@ -369,7 +372,7 @@ public class SimulationControllerTest extends ApplicationTest {
         fireButton("playBtn");
         invokeOnFx("onStop", new Class<?>[0]);
 
-        assertTrue(consoleText().contains("Could not snapshot initial state: snapshot failed"));
+        assertTrue(consoleText().contains("Could not save editor baseline: snapshot failed"));
         assertTrue(consoleText().contains("Simulation started."));
     }
 
@@ -459,6 +462,8 @@ public class SimulationControllerTest extends ApplicationTest {
         SimulationEngine engine = emptyEngine();
         loadScreenWith(engine, malformed.toString(), 30, 30);
         Label simStatus = installOptionalStatusLabel();
+
+        invokeOnFx("onNextFrame", new Class<?>[0]);
 
         fireButtonByText("↺");
 
@@ -603,7 +608,12 @@ public class SimulationControllerTest extends ApplicationTest {
     }
 
     private SimulationEngine emptyEngine() {
-        return new SimulationEngine(new Map(3, 3), new Robot[0], new Dispatcher(), CoordinationPolicy.noOp());
+        Map map = new Map(3, 3);
+        Robot robot = new Robot("idle_bot", new Vector2D(0, 0));
+        robot.setNav(new GreedyNavigationStrategy(1L));
+        robot.setSensor(new ProximitySensor());
+        map.addEntity(robot);
+        return new SimulationEngine(map, new Robot[]{robot}, new Dispatcher(), CoordinationPolicy.noOp());
     }
 
     private MapEntity createdEntity(String type, int x, int y) {
@@ -788,7 +798,7 @@ public class SimulationControllerTest extends ApplicationTest {
 
     private static class CompletingEngine extends SimulationEngine {
         CompletingEngine() {
-            super(new Map(2, 2), new Robot[0], new Dispatcher(), CoordinationPolicy.noOp());
+            super(new Map(2, 2), new Robot[]{new Robot("bot", new Vector2D(0, 0))}, new Dispatcher(), CoordinationPolicy.noOp());
         }
 
         @Override
@@ -799,7 +809,7 @@ public class SimulationControllerTest extends ApplicationTest {
 
     private static class UnsavableEngine extends SimulationEngine {
         UnsavableEngine() {
-            super(new Map(2, 2), new Robot[0], new Dispatcher(), CoordinationPolicy.noOp());
+            super(new Map(2, 2), new Robot[]{new Robot("bot", new Vector2D(0, 0))}, new Dispatcher(), CoordinationPolicy.noOp());
         }
 
         @Override

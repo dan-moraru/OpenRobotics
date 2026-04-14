@@ -18,30 +18,18 @@ import com.openrobotics.map.entities.environment.Rack;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.*;
-import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
 import com.openrobotics.robot.navigation.NavigationStrategy;
 import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import java.util.*;
 
-/**
- * The SimulationEngine is the core component responsible for advancing the
- * simulation. It coordinates the progression of discrete simulation steps
- * ("ticks") and manages interactions between robots within the environment.
- * The engine maintains an internal tick counter that represents the number
- * of simulation steps that have been executed.
- */
+/** tick-based simulation engine; coordinates robot movement, task dispatch, collision resolution, and deadlock recovery */
 public class SimulationEngine {
-    private UUID runId; // unique identifier for the simulation run, useful for logging and tracking
+    private UUID runId;
     private static final int DEADLOCK_RECOVERY_THRESHOLD = 5;
     private int tickCounter;
-    private boolean running; // tracks if the simulation is still running
+    private boolean running;
     private Map map;
     private Robot[] robots;
     private CollisionManager collisionManager;
@@ -51,55 +39,28 @@ public class SimulationEngine {
 
     private RobotConfig robotConfig = RobotConfig.defaults();
 
-    // Added these for config file loading/saving
     private String runName;
     private int tickMs;
     private int maxTicks;
     private long seed;
     private boolean initialized;
-
-    // Add a private variable to store initialization errors
     private String initError;
 
-    /**
-     * Constructs a new simulation engine instance
-     * @param map the map representing the warehouse environment
-     * @param robots the robots
-     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
-     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
-     */
+    /** constructs an engine with default run name, tickMs=100, maxTicks=5000, seed=42 */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
         this(map, robots, dispatcher, coordinationPolicy, "default_run", 100, 5000, 42);
     }
 
-    /**
-     * Constructs a new simulation engine instance with full configuration
-     * @param map the map representing the warehouse environment
-     * @param robots the robots
-     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
-     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
-     * @param runName the name of the simulation run
-     * @param tickMs milliseconds per tick
-     * @param maxTicks maximum number of ticks before simulation stops
-     * @param seed random seed for navigation strategies
-     */
+    /** constructs an engine with explicit run config; delegates to the 9-param constructor with maxTasks=10 */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
         this(map, robots, dispatcher, coordinationPolicy, runName, tickMs, maxTicks, seed, 10);
     }
 
     /**
-     * Constructs a new simulation engine instance with full configuration including workload parameters.
+     * primary constructor; all other constructors delegate here.
      *
-     * @param map the map representing the warehouse environment
-     * @param robots the robots
-     * @param dispatcher the task dispatcher loaded with tasks ready to be dispatched to robots
-     * @param coordinationPolicy the set coordination policy between robots that is followed when moving around the map
-     * @param runName the name of the simulation run
-     * @param tickMs milliseconds per tick
-     * @param maxTicks maximum number of ticks before simulation stops
-     * @param seed random seed for navigation strategies
-     * @param maxTasks absolute cap on total tasks to generate (applies to both modes)
+     * @param maxTasks absolute cap on total tasks generated (applies to both static and dynamic workload modes)
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed, int maxTasks) {
@@ -120,15 +81,11 @@ public class SimulationEngine {
         this.initialized = map != null && robots != null && dispatcher != null;
     }
 
-    /**
-     * Constructs a new simulation engine instance based on the config file
-     * @param configFilePath the path to the config JSON file
-     */
+    /** constructs an engine by loading state from a JSON config file; use {@link #getInitError()} to check for load failures */
     public SimulationEngine(String configFilePath) {
         if (configFilePath != null) {
             configInitialization(configFilePath);
         } else {
-            // Default initialization if no file is provided
             this.tickCounter = 0;
             this.running = false;
             this.initialized = false;
@@ -136,27 +93,18 @@ public class SimulationEngine {
         }
     }
 
-    /**
-     * Initializes the simulation based on the JSON config file.
-     * Does this by parsing the JSON file to the DTO classes, and from the DTO classes, we correctly set up the core simulation classes.
-     * @param path the JSON config file path
-     */
+    // parses the JSON config file into DTOs and wires up all simulation state from them
     private void configInitialization(String path) {
         try {
             this.initError = null;
             this.initialized = false;
             this.coordinationPolicy = CoordinationPolicy.noOp();
 
-            // Load the DTO
             SimulationConfigDTO dto = ConfigLoader.load(path, SimulationConfigDTO.class);
 
-            // initialize collision manager
             this.collisionManager = new CollisionManager();
-
-            // Initialize the Map
             this.map = new Map(dto.map.mapId, dto.map.width, dto.map.height);
 
-            // Update tile occupancy from the JSON
             if (dto.map.tiles != null) {
                 for (SimulationConfigDTO.TileDTO tileDto : dto.map.tiles) {
                     Tile tile = this.map.getTile(tileDto.x, tileDto.y);
@@ -169,8 +117,6 @@ public class SimulationEngine {
             // seed must be set before robot creation for strategy wiring
             this.seed = dto.config.seed;
 
-            // Initialize Entities (Robots, Stations, Obstacles, etc.)
-            // robots
             if (dto.entities != null && dto.entities.robots != null) {
                 for (SimulationConfigDTO.RobotDTO rDto : dto.entities.robots) {
                     Vector2D pos = new Vector2D(rDto.position.x, rDto.position.y);
@@ -180,28 +126,26 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
-                robot.setNav(NavigationStrategy.create(algo, this.seed));
-                SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
-                robot.setSensor(SensorStrategy.create(sensorType));
-                this.map.addEntity(robot);
-            }  // closes for loop
-        }  
+                    AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
+                    robot.setNav(NavigationStrategy.create(algo, this.seed));
+                    SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
+                    robot.setSensor(SensorStrategy.create(sensorType));
+                    this.map.addEntity(robot);
+                }
+            }
 
-            // Build RobotConfig from loaded config section
             this.robotConfig = new RobotConfig(
-                dto.config.batteryCapacity     > 0 ? dto.config.batteryCapacity     : 100.0f,
+                dto.config.batteryCapacity > 0 ? dto.config.batteryCapacity : 100.0f,
                 dto.config.lowBatteryThreshold > 0 ? dto.config.lowBatteryThreshold : 20.0f,
-                dto.config.chargePerTick       > 0 ? dto.config.chargePerTick       : 5.0f,
-                dto.config.energyPerMove       > 0 ? dto.config.energyPerMove       : 1.0f,
-                dto.config.loadingTicks        > 0 ? dto.config.loadingTicks        : 1,
-                dto.config.unloadingTicks      > 0 ? dto.config.unloadingTicks      : 1
+                dto.config.chargePerTick > 0 ? dto.config.chargePerTick : 5.0f,
+                dto.config.energyPerMove > 0 ? dto.config.energyPerMove : 1.0f,
+                dto.config.loadingTicks > 0 ? dto.config.loadingTicks : 1,
+                dto.config.unloadingTicks > 0 ? dto.config.unloadingTicks : 1
             );
             for (MapEntity e : this.map.getEntities()) {
                 if (e instanceof Robot r) r.setConfig(this.robotConfig);
             }
 
-            // Save all entities from file into single array for simulation field
             this.robots = this.map.getEntities().stream().filter(e -> e instanceof Robot).map(e -> (Robot) e).toArray(Robot[]::new);
 
             // typed entity loading to preserve instanceof checks
@@ -209,7 +153,6 @@ public class SimulationEngine {
             addRacksToMap(dto.entities.racks);
             addObstaclesToMap(dto.entities.obstacles);
 
-            // Initialize Dispatcher and Tasks
             this.dispatcher = new Dispatcher();
             if (dto.tasks != null) {
                 // accumulate first so we can validate before adding to dispatcher
@@ -236,7 +179,6 @@ public class SimulationEngine {
                 }
             }
 
-            // Setup Coordination Policy
             if (dto.coordination != null) {
                 if ("RESERVATION_K".equals(dto.coordination.type)) {
                     if (dto.coordination.k != null) {
@@ -257,7 +199,6 @@ public class SimulationEngine {
                 }
             }
 
-            // Set simulation state
             this.tickCounter = dto.simulation.tick;
             this.running = dto.simulation.isRunning;
             this.runId = dto.config.runId;
@@ -265,10 +206,6 @@ public class SimulationEngine {
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
             this.simulationError = SimulationError.NONE;
-            // seed already set before robot creation loop
-            // this.speedMultiplier = dto.simulation.speedMultiplier; // not yet I believe
-
-            // CollisionManager is always needed for tick()
             this.collisionManager = new CollisionManager();
             this.initialized = this.map != null && this.robots != null && this.dispatcher != null && this.collisionManager != null;
 
@@ -339,9 +276,10 @@ public class SimulationEngine {
     }
 
     /**
-     * Saves the simulation state into a new JSON config file
-     * Does this by retrieving core simulation classes current state (fields, metadata, etc) and saves it to the DTO classes which are easily translated back to JSON format.
-     * @param path the new JSON config file path
+     * saves the current simulation state to a JSON config file.
+     *
+     * @param path destination file path
+     * @throws IOException if the map is not initialized or the file cannot be written
      */
     public void configSaving(String path) throws IOException {
         if (map == null) {
@@ -356,12 +294,12 @@ public class SimulationEngine {
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
         dto.config.seed = this.seed;
-        dto.config.batteryCapacity     = robotConfig.batteryCapacity;
+        dto.config.batteryCapacity = robotConfig.batteryCapacity;
         dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
-        dto.config.chargePerTick       = robotConfig.chargePerTick;
-        dto.config.energyPerMove       = robotConfig.energyPerMove;
-        dto.config.loadingTicks        = robotConfig.loadingTicks;
-        dto.config.unloadingTicks      = robotConfig.unloadingTicks;
+        dto.config.chargePerTick = robotConfig.chargePerTick;
+        dto.config.energyPerMove = robotConfig.energyPerMove;
+        dto.config.loadingTicks = robotConfig.loadingTicks;
+        dto.config.unloadingTicks = robotConfig.unloadingTicks;
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
@@ -460,9 +398,7 @@ public class SimulationEngine {
     }
 
 
-    /**
-     * Helper function to map robot to DTO when saving the simulation state
-     */
+    // maps a Robot to its DTO for config serialization
     private SimulationConfigDTO.RobotDTO mapToRobotDTO(Robot robot) {
         SimulationConfigDTO.RobotDTO rDto = new SimulationConfigDTO.RobotDTO();
         rDto.id = robot.getId();
@@ -478,19 +414,7 @@ public class SimulationEngine {
         return rDto;
     }
 
-    private String navigationStrategyKey(Robot robot) {
-        if (robot == null || robot.getNav() == null) {
-            return "NONE";
-        }
-        if (robot.getNav() instanceof GreedyNavigationStrategy) {
-            return AlgorithmType.GREEDY.name();
-        }
-        return "NONE";
-    }
-
-    /**
-     * Helper function to map MapEntities to DTO when saving the simulation state
-     */
+    // maps a MapEntity to its DTO for config serialization
     private SimulationConfigDTO.MapEntityDTO mapToEntityDTO(MapEntity entity) {
         SimulationConfigDTO.MapEntityDTO eDto = new SimulationConfigDTO.MapEntityDTO();
         eDto.id = entity.getId();
@@ -502,16 +426,10 @@ public class SimulationEngine {
     }
 
     /**
-     * Runs a tick of the simulation
+     * advances the simulation by one tick: dispatches tasks, collects intentions, applies coordination policy,
+     * resolves conflicts, commits moves, runs robot state machines, and handles deadlock recovery.
      *
-     * <p>During each tick, the engine:
-     * <ul>
-     * <li>Collects movement intentions from all robots</li>
-     * <li>Resolves conflicts and collisions using the {@link CollisionManager}</li>
-     * <li>Commits the approved movements by updating the position state of each robot</li>
-     * </ul>
-     * </p>
-     * @return true if the simulation is still running after this tick, false if the simulation has stopped (workload complete or was already stopped).
+     * @return true if the simulation is still running; false when workload is complete, tick limit reached, or all robots dead
      */
     public boolean tick() {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
@@ -535,7 +453,6 @@ public class SimulationEngine {
         if (dispatcher.getTotalTasksAdded() > 0 && workloadComplete()) {
             this.running = false;
 
-            // Logging simulation run completion event
             SimulationRunRecordBuilder recordBuilder = new SimulationRunRecordBuilder(this);
             SimulationRunRecord record = recordBuilder.buildSimulationCompleteRecord();
             Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, record);
@@ -543,7 +460,6 @@ public class SimulationEngine {
             return false;
         }
 
-        // Check if all robots have died
         if (allRobotsDead()) {
             this.running = false;
             simulationError = SimulationError.ALL_ROBOTS_DEAD;
@@ -565,7 +481,7 @@ public class SimulationEngine {
         // Resolving conflicts/collisions and finalizing move intentions for all robots
         MoveIntention[] finalMoveIntentions = collisionManager.resolveConflicts(map, coordinatedIntentions);
 
-        // Commiting move intentions by updating all robot states
+        // committing move intentions by updating all robot states
         updateRobotStates(finalMoveIntentions);
 
         // Track robot visits on tiles for heatmap
@@ -587,7 +503,6 @@ public class SimulationEngine {
             this.running = false;
         }
 
-        // Check if all robots have died
         if (allRobotsDead()) {
             this.running = false;
             simulationError = SimulationError.ALL_ROBOTS_DEAD;
@@ -597,10 +512,7 @@ public class SimulationEngine {
         return true;
     }
 
-    /**
-     * Checks if all robots in the simulation have reached a BATTERY_DEAD state
-     * @return true if all robots are in the BATTERY_DEAD state, false otherwise
-     */
+    // returns true when every robot is in BATTERY_DEAD state; false if no robots are loaded
     private boolean allRobotsDead() {
         if (robots.length == 0) return false; // no robots were loaded in the sim engine
 
@@ -612,10 +524,7 @@ public class SimulationEngine {
         return true;
     }
 
-    /**
-     * Indicates if the warehouse workload has been completed.
-     * @return true if all tasks have been completed
-     */
+    // returns true when all tasks in the lifetime list have COMPLETED status
     private boolean workloadComplete() {
         // Checking to see if tasks were ever added to the dispatcher
         if (dispatcher.getLifetimeTasks().isEmpty()) {
@@ -631,14 +540,10 @@ public class SimulationEngine {
         return true; // all tasks are completed
     }
 
-    /**
-     * Collects move intentions for all robots in the simulation
-     * @return an array of MoveIntentions, one for each robot in the simulation
-     */
+    // collects one MoveIntention per robot for this tick
     private MoveIntention[] collectIntentions() {
         MoveIntention[] intentions = new MoveIntention[robots.length];
 
-        // Collection MoveIntentions for each robot
         for (int i = 0; i < robots.length; i++) {
             intentions[i] = robots[i].getNextMove(map);
         }
@@ -646,10 +551,7 @@ public class SimulationEngine {
         return intentions;
     }
 
-    /**
-     * Checks for any robots that have reached the BATTERY_DEAD state and requeues their
-     * assigned task if they have one
-     */
+    // requeues the task of any robot that just died so it can be reassigned
     private void requeueDeadRobotsTasks() {
         for (Robot robot : robots) {
             if (robot.getState() == RobotState.BATTERY_DEAD && robot.getCurrentTask() != null) {
@@ -659,10 +561,7 @@ public class SimulationEngine {
         }
     }
 
-    /**
-     * Updates states for all robots based on commited move intentions
-     * @param intentions an array of finalized MoveIntentions that are ready to be commited for every robot
-     */
+    // applies approved move intentions by updating each robot's position
     private void updateRobotStates(MoveIntention[] intentions) {
         // Move robots to their "to" tile when present.
         for (MoveIntention intention : intentions) {
@@ -699,9 +598,7 @@ public class SimulationEngine {
                 continue;
             }
 
-            // Logging robot deadlock detection event
             try {
-                // Serialize the number of stuck ticks of the robot
                 ObjectMapper mapper = new ObjectMapper();
                 java.util.Map<String, Integer> data = new HashMap<>();
                 data.put("stuckTicks", robot.getStuckTicks());
@@ -727,7 +624,6 @@ public class SimulationEngine {
             if (task != null) {
                 dispatcher.requeueTask(task);
 
-                // Logging robot deadlock recovery event via task requeue
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     java.util.Map<String, String> data = new HashMap<>();
@@ -748,24 +644,14 @@ public class SimulationEngine {
         }
     }
 
-    /**
-     * Increments the tick counter for the simulation engine
-     */
     private void incrementTickCounter() {
         tickCounter++;
     }
 
-    /**
-     * Tracks robot visits on tiles for heatmap visualization.
-     * Only robots that are actively moving contribute to visit counts —
-     * idle, charging, loading, or unloading robots are excluded so they
-     * do not inflate the count on a single tile.
-     */
+    // increments visit counts only for MOVING robots; other states would inflate the count on a single tile
     private void trackVisits() {
         if (robots == null || map == null) return;
         for (Robot robot : robots) {
-            // Only count visits when the robot is actively navigating;
-            // idle/charging/loading/unloading states would inflate a single tile.
             if (robot.getState() != RobotState.MOVING) continue;
             Tile tile = map.getTile(robot.getPosition().getX(), robot.getPosition().getY());
             if (tile != null) {
@@ -802,7 +688,6 @@ public class SimulationEngine {
         }
     }
 
-    // Getters
     public UUID getRunId() {
         return runId;
     }
@@ -833,10 +718,7 @@ public class SimulationEngine {
 
     public long getSeed() { return seed; }
 
-    /**
-     * Gets the name of the coordination policy class being used in this simulation.
-     * @return the name of the coordination policy class, or null if no policy is set
-     */
+    /** returns the fully-qualified class name of the active coordination policy, or null if none is set */
     public String getCoordinationPolicy() {
         return coordinationPolicy != null ? coordinationPolicy.getClass().getName() : null;
     }
@@ -893,26 +775,15 @@ public class SimulationEngine {
         return true;
     }
 
-    /**
-     * Returns the dispatcher for task management.
-     * @return the dispatcher
-     */
     public Dispatcher getDispatcher() {
         return dispatcher;
     }
 
-    /**
-     * Returns the initialization error message, if any.
-     * @return the initialization error message or null if no error occurred.
-     */
+    /** returns the initialization error message, or null if config loading succeeded */
     public String getInitError() {
         return initError;
     }
 
-    /**
-     * Returns the current simulation error state, if any.
-     * @return the current simulation error state
-     */
     public SimulationError getSimulationError() {
         return simulationError;
     }
@@ -937,9 +808,7 @@ public class SimulationEngine {
         }
     }
 
-    /**
-     * Updates the runId with a new random UUID. This is used when restarting a simulation.
-     */
+    // generates a new runId; called on reset so logging for each run is isolated
     private void updateRunId() {
         this.runId = UUID.randomUUID();
     }

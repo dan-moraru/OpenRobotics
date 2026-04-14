@@ -28,6 +28,24 @@
     -fx-min-height: 30px;
 }
 
+/* Bold label for primary params */
+.prop-label-bold {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-min-width: 100px;
+}
+
+/* Sidebar spacer — matches tab row height */
+.setup-sidebar-spacer {
+    -fx-background-color: #C2BEAE;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+    -fx-pref-height: 28px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 1 0 0;
+}
+
 .setup-prop-row-a {
     -fx-background-color: #C2BEAE;
     -fx-padding: 4 8 4 8;
@@ -38,6 +56,13 @@
     -fx-background-color: #b0ad9e;
     -fx-padding: 4 8 4 8;
     -fx-min-height: 30px;
+}
+
+.setup-tab-row {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 4 0 0 4;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 0 0;
 }
 
 /* Parameter group — wraps a row + its hint label */

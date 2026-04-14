@@ -1,6 +1,12 @@
 package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
+import com.openrobotics.map.MapEntity;
+import com.openrobotics.map.Tile;
+import com.openrobotics.map.entities.environment.Obstacle;
+import com.openrobotics.map.entities.environment.Rack;
+import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.task.Task;
@@ -16,7 +22,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
-
 import java.util.List;
 
 /**
@@ -341,7 +346,7 @@ public class ResultsController {
         int maxVisits = 0;
         for (int y = 0; y < mapH; y++) {
             for (int x = 0; x < mapW; x++) {
-                com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
+                Tile tile = engine.getMap().getTile(x, y);
                 if (tile != null) {
                     int visits = tile.getVisitCount();
                     if (visits > maxVisits) {
@@ -359,7 +364,7 @@ public class ResultsController {
         // Draw heatmap tiles
         for (int y = 0; y < mapH; y++) {
             for (int x = 0; x < mapW; x++) {
-                com.openrobotics.map.Tile tile = engine.getMap().getTile(x, y);
+                Tile tile = engine.getMap().getTile(x, y);
                 if (tile != null) {
                     int visits = tile.getVisitCount();
                     javafx.scene.paint.Color color;
@@ -387,32 +392,19 @@ public class ResultsController {
             drawEntitiesOverlay(gc, engine, tileSize, offsetX, offsetY);
         }
 
-        // Draw grid lines if enabled
-        if (maskOpt1Check != null && maskOpt1Check.isSelected()) {
-            gc.setStroke(javafx.scene.paint.Color.web("#B0ADA5"));
-            gc.setLineWidth(0.5);
-            for (int x = 0; x <= mapW; x++) {
-                gc.strokeLine(offsetX + x * tileSize, offsetY, offsetX + x * tileSize, offsetY + mapH * tileSize);
-            }
-            for (int y = 0; y <= mapH; y++) {
-                gc.strokeLine(offsetX, offsetY + y * tileSize, offsetX + mapW * tileSize, offsetY + y * tileSize);
-            }
-        }
-
         // Map boundary
         gc.setStroke(javafx.scene.paint.Color.web("#5D5B54"));
         gc.setLineWidth(1.5);
         gc.strokeRect(offsetX, offsetY, mapW * tileSize, mapH * tileSize);
     }
 
-    private void drawEntitiesOverlay(GraphicsContext gc, SimulationEngine engine,
-                                     double tileSize, double offsetX, double offsetY) {
+    private void drawEntitiesOverlay(GraphicsContext gc, SimulationEngine engine, double tileSize, double offsetX, double offsetY) {
         if (engine.getMap() == null) return;
 
         // Draw obstacles (dark filled rectangles)
         gc.setFill(javafx.scene.paint.Color.web("#2A2926"));
-        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
-            if (entity instanceof com.openrobotics.map.entities.environment.Obstacle) {
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof Obstacle) {
                 double px = offsetX + entity.getPosition().getX() * tileSize + 1;
                 double py = offsetY + entity.getPosition().getY() * tileSize + 1;
                 gc.fillRect(px, py, tileSize - 2, tileSize - 2);
@@ -421,8 +413,8 @@ public class ResultsController {
 
         // Draw charging stations (yellow/amber rectangles)
         gc.setFill(javafx.scene.paint.Color.web("#8C7B38"));
-        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
-            if (entity instanceof com.openrobotics.map.entities.station.ChargingStation) {
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof ChargingStation) {
                 double px = offsetX + entity.getPosition().getX() * tileSize + 1;
                 double py = offsetY + entity.getPosition().getY() * tileSize + 1;
                 gc.fillRect(px, py, tileSize - 2, tileSize - 2);
@@ -431,8 +423,8 @@ public class ResultsController {
 
         // Draw delivery stations (blue-ish rectangles)
         gc.setFill(javafx.scene.paint.Color.web("#3A5A8C"));
-        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
-            if (entity instanceof com.openrobotics.map.entities.station.DeliveryStation) {
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof DeliveryStation) {
                 double px = offsetX + entity.getPosition().getX() * tileSize + 1;
                 double py = offsetY + entity.getPosition().getY() * tileSize + 1;
                 gc.fillRect(px, py, tileSize - 2, tileSize - 2);
@@ -441,8 +433,8 @@ public class ResultsController {
 
         // Draw racks (medium grey rectangles)
         gc.setFill(javafx.scene.paint.Color.web("#6E6B65"));
-        for (com.openrobotics.map.MapEntity entity : engine.getMap().getEntities()) {
-            if (entity instanceof com.openrobotics.map.entities.environment.Rack) {
+        for (MapEntity entity : engine.getMap().getEntities()) {
+            if (entity instanceof Rack) {
                 double px = offsetX + entity.getPosition().getX() * tileSize + 1;
                 double py = offsetY + entity.getPosition().getY() * tileSize + 1;
                 gc.fillRect(px, py, tileSize - 2, tileSize - 2);
@@ -455,7 +447,7 @@ public class ResultsController {
             for (Robot robot : robots) {
                 double px = offsetX + robot.getPosition().getX() * tileSize + tileSize / 2;
                 double py = offsetY + robot.getPosition().getY() * tileSize + tileSize / 2;
-                double radius = Math.max(3, tileSize / 4);
+                double radius = Math.max(3, tileSize / 4); // Circle
 
                 // Color by robot state
                 switch (robot.getState()) {

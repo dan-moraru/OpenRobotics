@@ -211,15 +211,18 @@ public class SimulationEngineTest {
     /**
      * With no configured tasks, the engine treats this as sandbox mode:
      * {@code tick()} still advances time and leaves {@code running = false}.
+     * At least one robot is required for tick() to proceed past the no-robots guard.
      */
     @Test
     public void testTickStopsWhenWorkloadComplete() {
-        int before = engine.getTickCounter();
-        engine.tick();
+        Robot r = makeRobot("R1", 5, 5);
+        SimulationEngine eng = buildEngine(new Robot[]{ r });
+        int before = eng.getTickCounter();
+        eng.tick();
 
-        assertEquals(before + 1, engine.getTickCounter(),
+        assertEquals(before + 1, eng.getTickCounter(),
                 "tick() should increment in no-workload sandbox mode");
-        assertFalse(engine.getIsRunning());
+        assertFalse(eng.getIsRunning());
     }
 
     /**
@@ -405,14 +408,16 @@ public class SimulationEngineTest {
     }
 
     /**
-     * An engine with an empty robot array and pending tasks is valid:
-     * no assignment occurs, no exception is thrown, and time advances.
+     * An engine with an empty robot array and pending tasks does not throw,
+     * but returns {@code false} immediately due to the NO_ROBOTS_SPAWNED guard.
+     * The tick counter stays at 0 because no work is performed.
      */
     @Test
     public void testTickWithNoRobotsAndPendingTasksThrows() {
         dispatcher.addTask(makeTask(1, 0, 0, 1, 1));
         assertDoesNotThrow(() -> engine.tick());
-        assertEquals(1, engine.getTickCounter());
+        assertEquals(0, engine.getTickCounter());
+        assertEquals(SimulationError.NO_ROBOTS_SPAWNED, engine.getSimulationError());
     }
 
     /**

@@ -1102,6 +1102,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             com.openrobotics.map.Vector2D endPos = draggingOnCanvas.getPosition();
             if (dragStartPosition != null && !dragStartPosition.equals(endPos)) {
                 pushAction(new MoveAction(draggingOnCanvas, dragStartPosition, endPos));
+                // Sync tasks to reflect the entity's new position
+                syncTaskPositions(dragStartPosition, endPos);
             }
             log("Moved " + draggingOnCanvas.getName()
                 + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
@@ -1316,12 +1318,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (guardEditor("move")) { xSpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
-            com.openrobotics.map.Vector2D from = new com.openrobotics.map.Vector2D(oldVal, targetY);
+            com.openrobotics.map.Vector2D oldPos = new com.openrobotics.map.Vector2D(oldVal, targetY);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                com.openrobotics.map.Vector2D to = new com.openrobotics.map.Vector2D(targetX, targetY);
-                entity.setPosition(to);
+                com.openrobotics.map.Vector2D newPos = new com.openrobotics.map.Vector2D(targetX, targetY);
+                entity.setPosition(newPos);
+                syncTaskPositions(oldPos, newPos);
+                persistEditorChanges();
                 drawViewport();
-                pushAction(new MoveAction(entity, from, to));
             } else {
                 xSpinner.getValueFactory().setValue(oldVal);
                 log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
@@ -1332,12 +1335,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (guardEditor("move")) { ySpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
-            com.openrobotics.map.Vector2D from = new com.openrobotics.map.Vector2D(targetX, oldVal);
+            com.openrobotics.map.Vector2D oldPos = new com.openrobotics.map.Vector2D(targetX, oldVal);
             if (canPlaceEntityAt(entity, targetX, targetY, entity)) {
-                com.openrobotics.map.Vector2D to = new com.openrobotics.map.Vector2D(targetX, targetY);
-                entity.setPosition(to);
+                com.openrobotics.map.Vector2D newPos = new com.openrobotics.map.Vector2D(targetX, targetY);
+                entity.setPosition(newPos);
+                syncTaskPositions(oldPos, newPos);
+                persistEditorChanges();
                 drawViewport();
-                pushAction(new MoveAction(entity, from, to));
             } else {
                 ySpinner.getValueFactory().setValue(oldVal);
                 log("Move blocked at tile (" + targetX + ", " + targetY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
@@ -2186,7 +2190,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      * to use {@code newPos} instead. Called whenever an entity is moved in the editor
      * so that tasks remain aligned with the actual rack/station positions on the map.
      */
-    private void syncTaskPositions(com.openrobotics.map.Vector2D oldPos, com.openrobotics.map.Vector2D newPos) {
+    private void syncTaskPositions(Vector2D oldPos, Vector2D newPos) {
         if (engine == null || engine.getDispatcher() == null) return;
         int updated = 0;
         for (Task task : engine.getDispatcher().getAllQueuedTasks()) {
