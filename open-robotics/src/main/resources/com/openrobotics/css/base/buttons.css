@@ -255,14 +255,20 @@
 .console-clear-btn {
     -fx-background-color: transparent;
     -fx-cursor: hand;
-    -fx-text-fill: #7a1f1b;
-    -fx-font-size: 13px;
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
     -fx-padding: 2 6 2 6;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
 }
 
 .console-clear-btn:hover {
-    -fx-background-color: transparent;
-    -fx-text-fill: #ca332d;
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+    -fx-border-color: #5D5B54;
 }
 
 /* Dialog utility buttons */
