@@ -348,7 +348,7 @@
                                                         <Label fx:id="tipLabel" styleClass="sim-tip-label" text=""/>
                                                         <Region HBox.hgrow="ALWAYS"/>
                                                         <Button fx:id="clearConsoleButton" onAction="#onClearConsole"
-                                                                styleClass="console-clear-btn" text="clear"/>
+                                                                styleClass="console-clear-btn" text="Clear"/>
                                                     </children>
                                                 </HBox>
                                                 <TextArea fx:id="consoleArea" editable="false" promptText="&gt;"
@@ -360,12 +360,11 @@
                                             <children>
                                                 <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                                     <children>
-                                                        <Label text="Logs"/>
+                                                        <Label text="Database Simulation Logs"/>
                                                     </children>
                                                 </HBox>
-                                                <TextArea fx:id="databaseArea" editable="false" promptText="&gt;"
+                                                <TextArea fx:id="logArea" editable="false" promptText="&gt;"
                                                           wrapText="true" VBox.vgrow="ALWAYS"/>
-                                                <Region VBox.vgrow="ALWAYS"/>
                                             </children>
                                         </VBox>
                                     </items>

@@ -56,6 +56,10 @@ public final class ScreenNavigator {
         return primaryStage;
     }
 
+    public static Object getCurrentController() {
+        return currentController;
+    }
+
     // ------------------------------------------------------------------ //
     //  Full-screen navigation
     // ------------------------------------------------------------------ //

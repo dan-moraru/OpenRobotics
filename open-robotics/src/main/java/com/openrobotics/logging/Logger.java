@@ -25,13 +25,15 @@ public class Logger {
         Thread worker = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(5000); // flush every 5 seconds
+                    Thread.sleep(1000); // flush every 1 second
 
                     List<SimLogRecord> batch = new ArrayList<>();
-                    robotEventQueue.drainTo(batch, 100); // flush up to 100 events at a time
+                    robotEventQueue.drainTo(batch);
 
                     if (!batch.isEmpty()) {
+                        long start = System.currentTimeMillis();
                         SimLogDao.insertBatch(batch);
+                        System.out.println("[Logger] Flushed " + batch.size() + " robot events in " + (System.currentTimeMillis() - start) + " ms");
                     }
 
                 } catch (Exception e) {
@@ -121,5 +123,22 @@ public class Logger {
         }
 
         robotEventQueue.offer(record);
+    }
+
+    /**
+     * flushes all pending robot events in the queue immediately;
+     * can be called at the end of a simulation run to ensure all events are persisted before shutdown.
+     */
+    public static void flushRobotEvents() {
+        List<SimLogRecord> batch = new ArrayList<>();
+        robotEventQueue.drainTo(batch);
+
+        if (!batch.isEmpty()) {
+            try {
+                SimLogDao.insertBatch(batch);
+            } catch (Exception e) {
+                System.err.println("Failed to flush robot events: " + e.getMessage());
+            }
+        }
     }
 }

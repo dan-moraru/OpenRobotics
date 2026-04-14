@@ -1,6 +1,6 @@
 {
   "config" : {
-    "runId" : "2f6f08dc-5962-4b36-ad11-af8718e8b9e5",
+    "runId" : "880dc38a-6b22-49a9-b5d0-12a21e6f1e7b",
     "runName" : "Warehouse Beta",
     "tickMs" : 100,
     "maxTicks" : 5000,
@@ -10,7 +10,9 @@
     "chargePerTick" : 5.0,
     "energyPerMove" : 1.0,
     "loadingTicks" : 1,
-    "unloadingTicks" : 1
+    "unloadingTicks" : 1,
+    "maxTasks" : 10,
+    "manualTaskAssignment" : false
   },
   "map" : {
     "mapId" : "46867af5-f112-4f06-b22b-610706264844",
@@ -53,32 +55,6 @@
       "navigationStrategy" : "BUG",
       "sensorStrategy" : "PROXIMITY",
       "stuckTicks" : 0
-    }, {
-      "id" : "4c8c5082-07fd-4807-99e6-3f525672efc4",
-      "name" : "robot_1",
-      "position" : {
-        "x" : 1,
-        "y" : 7
-      },
-      "type" : null,
-      "battery" : 100.0,
-      "state" : "IDLE",
-      "navigationStrategy" : "GREEDY",
-      "sensorStrategy" : "PROXIMITY",
-      "stuckTicks" : 0
-    }, {
-      "id" : "2edf90d7-a92d-4af1-8161-0a74d195b8d4",
-      "name" : "robot_2",
-      "position" : {
-        "x" : 3,
-        "y" : 7
-      },
-      "type" : null,
-      "battery" : 100.0,
-      "state" : "IDLE",
-      "navigationStrategy" : "GREEDY",
-      "sensorStrategy" : "PROXIMITY",
-      "stuckTicks" : 0
     } ],
     "stations" : [ {
       "id" : "00000000-0000-0000-0000-000000000002",
@@ -96,21 +72,13 @@
         "y" : 0
       },
       "type" : "DELIVERY"
-    }, {
-      "id" : "8a0fa6b6-ef8b-4dee-a0e5-e12ace46b49f",
-      "name" : "charger_1",
-      "position" : {
-        "x" : 1,
-        "y" : 4
-      },
-      "type" : "CHARGING"
     } ],
     "racks" : [ {
       "id" : "10000000-0000-0000-0000-000000000001",
       "name" : "Rack-A1",
       "position" : {
-        "x" : 7,
-        "y" : 1
+        "x" : 4,
+        "y" : 4
       },
       "type" : null,
       "boxCount" : 1,
@@ -133,7 +101,47 @@
       "name" : "Obstacle-01",
       "position" : {
         "x" : 6,
-        "y" : 9
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "5c7598a0-c055-4df7-9da1-dd14aaa9cc2b",
+      "name" : "wall_1",
+      "position" : {
+        "x" : 6,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "9730adad-c4ed-4714-8aff-baedfbb38d32",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "cb05e955-4a38-42cf-b859-6b00c731f8d9",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "162ae3a6-0b20-45b2-b1db-01337ef0b3ae",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "306d1534-aa87-40a8-b9cd-783c3ec10039",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 5
       },
       "type" : null
     } ]

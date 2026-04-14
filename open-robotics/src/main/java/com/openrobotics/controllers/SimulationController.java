@@ -2,7 +2,9 @@ package com.openrobotics.controllers;
 
 import com.openrobotics.AppState;
 import com.openrobotics.db.dao.MapDao;
+import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.model.MapRecord;
+import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.db.recordbuilders.MapRecordBuilder;
@@ -50,6 +52,8 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Controller for {@code SimulationScreen.fxml}.
@@ -115,7 +119,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button    clearConsoleButton;
 
     // - DATABASE LOGGING
-    @FXML private TextArea databaseArea;
+    @FXML private TextArea logArea;
 
     // ── TAB STRIP ─────────────────────────────────────────────────────────
     @FXML private Button editorTabBtn;
@@ -208,6 +212,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // ── Undo / Redo ─────────────────────────────────────────────────────
     private final java.util.Deque<EditorAction> undoStack = new java.util.ArrayDeque<>();
     private final java.util.Deque<EditorAction> redoStack = new java.util.ArrayDeque<>();
+
+    // Used for updating simulation logs
+    private Timeline logPollingTimeline;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private long lastSeenLogId = 0;
 
     /** Sealed interface for reversible editor actions. */
     private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction {
@@ -328,6 +337,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void initialize() {
+        // Set up periodic log polling (every 5 seconds) to fetch new logs from the database and update the logArea.
+        logPollingTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> fetchLogsAsync())
+        );
+        logPollingTimeline.setCycleCount(Timeline.INDEFINITE);
+
         if (intersectionObjectTile != null) {
             intersectionObjectTile.managedProperty().bind(intersectionObjectTile.visibleProperty());
             intersectionObjectTile.setVisible(false);
@@ -1152,7 +1167,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
             dragStartPosition = null;
-            dragStartPosition = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
 
@@ -1399,7 +1413,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             HBox algoBox = new HBox(8);
             algoBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             ComboBox<String> algoCombo = new ComboBox<>(
-                    FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR", "RANDOM"));
+                    FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR"));
             algoCombo.setPrefWidth(120);
             // Determine current algorithm from the robot's nav strategy
             String detectedAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
@@ -1794,6 +1808,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (playBtn != null) playBtn.setDisable(true);
             return;
         }
+
+        logPollingTimeline.play(); // start regular polling
+
         if (running) {
             if (paused) {
                 paused = false;
@@ -1901,7 +1918,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             startLoop();
             log("Simulation started.");
-            queryLogs(); //TODO REMOVE
             // Update RAM display
             updateRamLabel();
         }
@@ -1909,6 +1925,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onPause() {
+        logPollingTimeline.stop(); // stop regular polling for sim logs
+
         if (running && !paused) {
             paused = true;
             stopLoop();
@@ -1959,6 +1977,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         onStop();
         localTick = 0;
         simulationFailed = false;
+        lastSeenLogId = 0;
         AppState.setSimulationTick(0);
         // Reload from the editor baseline snapshot (continuously updated on every editor action).
         // This restores the most recent editor state, not the original config file.
@@ -2006,6 +2025,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         updateRamLabel();
         populateOutliner();
         drawViewport();
+
+        // Reset simulation logs text area
+        if (logArea != null) {
+            System.out.println("[SimulationController] Clearing log area on simulation reset.");
+            logArea.clear();
+        }
     }
 
     @FXML
@@ -2022,6 +2047,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         log("Step \u2192 TICK " + localTick);
         // Update RAM display
         updateRamLabel();
+
+        Logger.flushRobotEvents(); // ensure all robot events are flushed after stepping
+        fetchLogsAsync(); // fetch logs after stepping to get latest events
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -2049,15 +2077,22 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void stopLoop() {
+        logPollingTimeline.stop(); // stop regular polling for sim logs
+
         if (simLoop != null) {
             simLoop.stop();
             simLoop = null;
         }
+
+        System.out.println("[SimulationController] Flushing logs and fetching remaining logs on stop...");
+        Logger.flushRobotEvents(); // ensure all robot events are flushed when stopping
+        fetchLogsSync(); // fetch any remaining logs synchronously on stop
     }
 
     /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
     @Override
     public void cleanup() {
+        shutdown();
         stopLoop();
         if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
         if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
@@ -2297,10 +2332,73 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     /**
-     * Database Logging in second console
+     * Asynchronously fetches simulation logs from the database using a background thread to
+     * avoid blocking/glitching the UI
      */
-    public void queryLogs() {
-        if (databaseArea != null) databaseArea.appendText("hello testing");
+    public void fetchLogsAsync() {
+        if (engine == null) return;
+        javafx.concurrent.Task<Object> task = new javafx.concurrent.Task() {
+            @Override
+            protected Object call() {
+                try {
+                    long start = System.currentTimeMillis();
+                    List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+                    System.out.println("[SimulationController] Fetched " + logs.size() + " log(s) asynchronously in " + (System.currentTimeMillis() - start) + " ms.");
+                    return logs;
+                } catch (Exception e) {
+                    System.out.println("Error fetching logs from database: " + e.getMessage());
+                    return null;
+                }
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            List<SimLogRecord> logs = (List<SimLogRecord>) task.getValue();
+            long start = System.currentTimeMillis();
+            updateLogsArea(logs); // safe: runs on UI thread
+            System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
+        });
+
+        task.setOnFailed(e -> {
+            task.getException().printStackTrace();
+        });
+
+        executor.submit(task); // runs the task on a background thread
+    }
+
+    /**
+     * Synchronously fetches simulation logs from the database and updates the logs area.
+     */
+    public void fetchLogsSync() {
+        if (engine == null) return;
+        try {
+            long start = System.currentTimeMillis();
+            List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
+            System.out.println("[SimulationController] Fetched " + logs.size() + " log(s) synchronously in " + (System.currentTimeMillis() - start) + " ms.");
+
+            start = System.currentTimeMillis();
+            updateLogsArea(logs);
+            System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
+        } catch (Exception e) {
+            System.out.println("Error fetching logs from database: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Updates the logs area with the provided list of SimLogRecords.
+     * @param logs the list of SimLogRecords to display, or null if an error occurred during fetching
+     */
+    private void updateLogsArea(List<SimLogRecord> logs) {
+        if (logs == null || logs.isEmpty()) return;
+
+        StringBuilder sb = new StringBuilder(logs.size() * 80);
+
+        for (SimLogRecord log : logs) {
+            sb.append(log.toString()).append("\n");
+            lastSeenLogId = log.getId();
+        }
+
+        logArea.appendText(sb.toString());
     }
 
     // ------------------------------------------------------------------ //
@@ -2400,5 +2498,20 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
             ramLabel.setText("RAM: " + usedKb + " KB");
         }
+    }
+
+    /**
+     * Performs necessary cleanup when the application is closing
+     */
+    public void shutdown() {
+        // stop log polling timeline
+        if (logPollingTimeline != null) {
+            logPollingTimeline.stop();
+        }
+
+        // shutdown the executor to stop any ongoing log fetching tasks
+        executor.shutdownNow();
+
+        Logger.flushRobotEvents(); // ensure all logs are flushed before shutdown
     }
 }
