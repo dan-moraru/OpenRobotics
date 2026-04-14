@@ -30,8 +30,21 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * End-to-end UI navigation integration tests across welcome, setup, simulation, and results
+ * screens.
+ *
+ * <p>This suite seeds deterministic application state, launches from the welcome view, and asserts
+ * that primary navigation actions preserve expected screen content and simulation summary data.</p>
+ */
 public class NavigationFlowIntegrationTest extends ApplicationTest {
 
+    /**
+     * Boots the UI flow at the welcome screen after seeding AppState.
+     *
+     * @param stage JavaFX stage provided by TestFX
+     * @throws Exception if FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         seedAppState();
@@ -43,6 +56,14 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Verifies the main onboarding path from Welcome → Setup → Simulation.
+     *
+     * <p>Asserts setup defaults and confirms simulation screen initialization output after starting
+     * from setup.</p>
+     *
+     * @throws TimeoutException if simulation screen does not appear in time
+     */
     @Test
     void welcomeToSetupToSimulationFlowWorks() throws TimeoutException {
         fireButton("#welcomeStartSetupButton");
@@ -58,6 +79,14 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         assertEquals("TICK 0", lookup("#tickDisplayLabel").queryAs(Label.class).getText());
     }
 
+    /**
+     * Verifies navigation from Simulation → Results → back to Simulation editor.
+     *
+     * <p>Asserts results-table content before returning, then checks simulation tick label after
+     * navigating back.</p>
+     *
+     * @throws TimeoutException if target screens do not appear in time
+     */
     @Test
     void simulationResultsAndBackToEditorFlowWorks() throws TimeoutException {
         fireButton("#welcomeStartSetupButton");
@@ -77,6 +106,9 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         assertEquals("TICK 0", lookup("#tickDisplayLabel").queryAs(Label.class).getText());
     }
 
+    /**
+     * Seeds a minimal deterministic simulation state used by navigation-flow assertions.
+     */
     private void seedAppState() {
         Map map = new Map(5, 3);
         Robot robot = new Robot("UiBot", new Vector2D(0, 0));
@@ -104,11 +136,21 @@ public class NavigationFlowIntegrationTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Waits until simulation screen controls are present.
+     *
+     * @throws TimeoutException if simulation screen is not visible within timeout
+     */
     private void waitForSimulationScreen() throws TimeoutException {
         WaitForAsyncUtils.waitFor(15, TimeUnit.SECONDS,
                 () -> lookup("#consoleArea").tryQuery().isPresent());
     }
 
+    /**
+     * Waits until results screen controls are present.
+     *
+     * @throws TimeoutException if results screen is not visible within timeout
+     */
     private void waitForResultsScreen() throws TimeoutException {
         WaitForAsyncUtils.waitFor(15, TimeUnit.SECONDS,
                 () -> lookup("#robotStatsTable").tryQuery().isPresent());
