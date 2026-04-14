@@ -662,6 +662,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
             }
 
+            // Green outline for the currently selected entity
+            if (entity == selectedEntity) {
+                gc.setStroke(Color.web("#1a743f"));
+                gc.setLineWidth(Math.max(2.5, tileSize * 0.09));
+                double inset = Math.max(1.5, tileSize * 0.04);
+                gc.strokeRect(sx + inset, sy + inset, tileSize - 2 * inset, tileSize - 2 * inset);
+            }
+
             if (pickingRack != null && entity instanceof DeliveryStation) {
                 gc.setStroke(OBJECT_SELECTION_COLOR);
                 gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
@@ -898,10 +906,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         content.putString(type);
         db.setContent(content);
 
-        if (source.getGraphic() != null) {
+        // Snapshot only the icon (ImageView) inside the button graphic — not the full
+        // button including the description label.
+        javafx.scene.Node graphic = source.getGraphic();
+        javafx.scene.image.ImageView iconView = null;
+        if (graphic instanceof javafx.scene.layout.HBox hbox) {
+            for (javafx.scene.Node child : hbox.getChildren()) {
+                if (child instanceof javafx.scene.image.ImageView iv) {
+                    iconView = iv;
+                    break;
+                }
+            }
+        } else if (graphic instanceof javafx.scene.image.ImageView iv) {
+            iconView = iv;
+        }
+        javafx.scene.Node snapTarget = iconView != null ? iconView : graphic;
+        if (snapTarget != null) {
             javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
             params.setFill(javafx.scene.paint.Color.TRANSPARENT);
-            javafx.scene.image.WritableImage snap = source.getGraphic().snapshot(params, null);
+            javafx.scene.image.WritableImage snap = snapTarget.snapshot(params, null);
             db.setDragView(snap, snap.getWidth() / 2, snap.getHeight() / 2);
         }
 
@@ -1819,8 +1842,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     simStatusLabel.setText("RUNNING");
                     simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
                 }
-                playBtn.setStyle("-fx-background-color: #2E9E5B;");
-                pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+                playBtn.setStyle("-fx-background-color: #1a743f;");
+                pauseBtn.setStyle("-fx-background-color: #c9605a;");
                 startLoop();
                 log("Simulation resumed.");
                 // Update RAM display
@@ -1842,8 +1865,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
 
-            playBtn.setStyle("-fx-background-color: #2E9E5B;");
-            pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+            playBtn.setStyle("-fx-background-color: #1a743f;");
+            pauseBtn.setStyle("-fx-background-color: #c9605a;");
 
             // ── Validate manual-mode racks before generating tasks ──
             if (engine.getMap() != null) {
@@ -1935,8 +1958,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setText("PAUSED");
                 simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
             }
-            playBtn.setStyle("-fx-background-color: #90EE90;");
-            pauseBtn.setStyle("-fx-background-color: #C23B42;");
+            playBtn.setStyle("-fx-background-color: #599068;");
+            pauseBtn.setStyle("-fx-background-color: #C0392B;");
             log("Simulation paused.");
             // Update RAM display
             updateRamLabel();

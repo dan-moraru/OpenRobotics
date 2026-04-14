@@ -40,12 +40,16 @@
     -fx-text-fill: #2A2926;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-padding: 6 16 5 16;
-    -fx-background-radius: 4 4 0 0;
+    -fx-padding: 5 16 5 16;
+    -fx-background-radius: 4;
     -fx-cursor: hand;
-    -fx-border-color: #2A2926;
+    -fx-border-color: #5D5B54;
     -fx-border-width: 1;
-    -fx-border-radius: 4 4 0 0;
+    -fx-border-radius: 4;
+}
+
+.tab-btn-active:hover {
+    -fx-background-color: #D8D5CC;
 }
 
 .tab-btn {
@@ -53,10 +57,12 @@
     -fx-text-fill: #C2BEAE;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-padding: 4 14 4 14;
-    -fx-background-radius: 0;
+    -fx-padding: 5 16 5 16;
+    -fx-background-radius: 4;
     -fx-cursor: hand;
-    -fx-border-color: transparent;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
 }
 
 .tab-btn:hover {
