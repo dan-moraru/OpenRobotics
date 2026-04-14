@@ -169,7 +169,7 @@
                        styleClass="welcome-authors-label"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
+            <Button fx:id="welcomeStartSetupButton" text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
         </HBox>
 
     </VBox>
