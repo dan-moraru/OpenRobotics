@@ -14,8 +14,21 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Integration test for temporal spacing behavior under {@link ReservationKPolicy}.
+ *
+ * <p>This scenario validates that a trailing robot yields to a lead robot in a one-tile corridor
+ * when the lead robot has reserved a forward window of tiles.</p>
+ */
 public class ReservationKIntegrationTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Verifies Reservation-K enforces a wait for the trailing robot until the lead robot advances
+     * beyond the reserved horizon.
+     *
+     * <p>The test uses deterministic UUID ordering because policy internals process robots in UUID
+     * order; random IDs would make movement ordering and assertions flaky.</p>
+     */
     @Test
     void reservationKMakesTrailingRobotWaitForLeadRobotsWindow() {
         Map map = new Map(5, 1);
