@@ -1,0 +1,26 @@
+module com.openrobotics {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires transitive javafx.graphics;
+    requires javafx.base;
+    requires com.fasterxml.jackson.databind;
+    requires com.zaxxer.hikari;
+    requires flyway.core;
+    requires javafx.swing;
+    requires java.sql;
+    requires org.postgresql.jdbc;
+    requires java.prefs;
+    requires java.desktop;
+
+    opens com.openrobotics to javafx.fxml;
+    opens com.openrobotics.controllers to javafx.fxml;
+    opens com.openrobotics.io to com.fasterxml.jackson.databind; // Jackson needs reflective access to deserialize DTOs
+    opens com.openrobotics.task to com.fasterxml.jackson.databind;
+    opens com.openrobotics.simulationcore;
+    opens com.openrobotics.util;
+
+    exports com.openrobotics;
+    exports com.openrobotics.controllers;
+    exports com.openrobotics.util;
+}
+

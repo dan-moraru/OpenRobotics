@@ -1,32 +1,85 @@
 # OpenRobotics
-Humanoid Robot Warehouse Simulator
+Multi-Robot Warehouse Simulation Platform
 
-Check Repo Project for Kanban Board
+Check the repo's Project tab for the Kanban board.
 
 ## Description
 
+OpenRobotics is a JavaFX-based warehouse simulation platform where multiple autonomous robots navigate a configurable warehouse environment to complete pickup and delivery tasks. The simulation supports multiple navigation algorithms (Greedy, Bug, RTA*), coordination policies (Traffic Rules, Reservation-K), real-time 2D visualization, a heatmap overlay, and a results screen with per-robot statistics logged to a remote PostgreSQL database.
+
+## Features
+
+- 4 screens: Welcome, Setup, Simulation Editor, Results
+- Config file loading and saving (JSON)
+- Template maps and random map generation
+- Drag-and-drop entity placement in the editor
+- Navigation algorithms: Greedy, Bug, RTA*
+- Coordination policies: None, Traffic Rules, Reservation-K
+- Proximity and range sensors per robot
+- Deadlock detection and recovery
+- Heatmap visualization
+- Per-robot statistics: distance, energy, tasks completed, idle ticks
+- Results export and database logging (PostgreSQL via Supabase)
+
 ## Dev Install
-1. Make sure to have `Java SDK 21` OR higher
-2. Clone [repo](https://github.com/dan-moraru/OpenRobotics) 
-3. Launch with IDE (let it download dependencies if smart enough)
-4. Open terminal and run `cd open-robotics`
-5. Run `mvn clean javafx:run` OR use the `IDE's integrated Maven tool window` to run
+
+1. Make sure you have `Java SDK 21` or higher
+2. Clone the [repo](https://github.com/dan-moraru/OpenRobotics)
+3. Set up the database config file (see Database Setup below)
+4. Open a terminal and run `cd open-robotics`
+5. Run `mvn clean javafx:run` or use the IDE's integrated Maven tool window
+
+### Database Setup
+
+The app connects to a remote PostgreSQL database hosted on Supabase for logging simulation results. Create the file `open-robotics/application.config` with the following content (fill in your credentials):
+
+```
+DB_URL=jdbc:postgresql://<host>:5432/postgres?sslmode=require
+DB_USER=<user>
+DB_PASSWORD=<password>
+```
+
+This file is gitignored and must be created locally. Without it, the app will still run but database logging will be unavailable.
 
 ## Dev Usage
-Make sure to have `Java SDK 21` OR higher
 
-Make sure to be in directory `open-robotics` to run these commands:
+Make sure you are in the `open-robotics` directory before running these commands:
 
 - Run program: `mvn clean javafx:run`
 - Run all tests: `mvn test`
-- Build program to JAR: `mvn package`
-- Clean old artifacts: `mvn clean compile`
+- Run mutation tests: `mvn test -Pmutation`
+- Build program to JAR: `mvn package -DskipTests`
+- Compile only: `mvn compile`
+- Clean old artifacts: `mvn clean`
 - Show dependencies: `mvn dependency:tree`
-- Compile program: `mvn compile`
 
-You can also run these commands using the `IDE's integrated Maven tool window`
+You can also run any of these through the IDE's integrated Maven tool window.
+
+## Project Structure
+
+```
+open-robotics/
+├── src/main/java/com/openrobotics/
+│   ├── MainApp.java                  # Entry point
+│   ├── controllers/                  # FXML screen controllers
+│   ├── db/                           # DAO layer, models, record builders
+│   ├── io/                           # Config file loading and saving
+│   ├── logging/                      # Logger and event types
+│   ├── map/                          # Map, Tile, Vector2D, entities
+│   ├── robot/                        # Robot, navigation, sensors
+│   ├── simulationcore/               # Engine, dispatcher, policies
+│   ├── task/                         # Task, TaskGenerator, TaskStatus
+│   └── util/                         # ScreenNavigator, IconLoader, etc.
+├── src/main/resources/com/openrobotics/
+│   ├── css/theme.css                 # Global stylesheet
+│   ├── fxml/                         # Screen and dialog FXML files
+│   └── img/                          # Logo and entity icons
+├── src/main/resources/db/migration/  # Flyway SQL migration scripts
+└── pom.xml
+```
 
 ## Authors
+
 - Dan Moraru, 261227203
 - Badr Zejli, 261239011
 - Filip Snítil, 261139844

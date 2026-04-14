@@ -1,37 +1,70 @@
 package com.openrobotics;
 
+import com.openrobotics.controllers.SimulationController;
+import com.openrobotics.db.Database;
+import com.openrobotics.util.ScreenNavigator;
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
+/**
+ * Application entry point.
+ *
+ * <p>Initialises the primary {@link Stage}, registers it with
+ * {@link ScreenNavigator}, and navigates to the Welcome screen.
+ * All subsequent screen transitions are handled by {@link ScreenNavigator}.
+ */
 public class MainApp extends Application {
+    private SimulationController controller;
+
     @Override
-    public void start(Stage stage) {
-        // Can create different types of scaffolding (hbox, vbox, etc)
-        Pane root = new Pane();
+    public void init() {
+        // Database initialization
+        try {
+            Database.init();
+            System.out.println("Database initialized successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to initialize database: " + e.getMessage());
+        }
+    }
 
-        Robot myRobot = new Robot("BOT-001", 100, 150);
+    @Override
+    public void start(Stage primaryStage) throws IOException {
+        primaryStage.setTitle("OpenRobotics \u2013 Warehouse Simulation Platform");
+        primaryStage.setMinWidth(960);
+        primaryStage.setMinHeight(640);
+        primaryStage.setWidth(1920);
+        primaryStage.setHeight(1080);
 
-        // Rectangle represents a robot
-        Rectangle robotView = new Rectangle(50, 50, Color.BLUE);
-        robotView.setX(myRobot.getX());
-        robotView.setY(myRobot.getY());
+        ScreenNavigator.setPrimaryStage(primaryStage);
+        ScreenNavigator.goToWelcome();
+    }
 
-        // Give IDs or classes/labels (not sure) for organization and instrumental testing
-        robotView.setId("robotShape");
+    @Override
+    public void stop() {
+        // Clean up resources
+        try {
+            Database.shutdown();
+            System.out.println("Database connection closed successfully.");
+        } catch (Exception e) {
+            System.err.println("Database shutdown failure: " + e.getMessage());
+        }
 
-        Text label = new Text(myRobot.getX(), myRobot.getY() - 10, "ID: " + myRobot.getId());
+        // Shutdown sim controller threads
+        Object controller = ScreenNavigator.getCurrentController();
 
-        // Must always assign children objects to their parent/root groups/objects!
-        root.getChildren().addAll(robotView, label);
+        if (controller instanceof SimulationController simController) {
+            simController.shutdown();
+        }
 
-        Scene scene = new Scene(root, 800, 600);
-        stage.setTitle("Warehouse Simulation Test");
-        stage.setScene(scene);
-        stage.show();
+        System.out.println("Shutdown complete.");
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

@@ -1,0 +1,16 @@
+/* ============================================================
+   OpenRobotics – Theme Entry Point
+   Imports all partial stylesheets in dependency order.
+   FXML files reference only this file via @../css/theme.css
+   ============================================================ */
+
+@import "base/variables.css";
+@import "base/typography.css";
+@import "base/buttons.css";
+@import "base/inputs.css";
+@import "base/layout.css";
+@import "base/dialogs.css";
+@import "screens/welcome.css";
+@import "screens/setup.css";
+@import "screens/simulation.css";
+@import "screens/results.css";

@@ -1,0 +1,336 @@
+/* ============================================================
+   OpenRobotics – Simulation Screen
+   Viewport, sidebar, console, object tiles, properties panel,
+   playback controls, and top bar overrides for the sim screen.
+   ============================================================ */
+
+/* Root and main split */
+.sim-root {
+    -fx-background-color: #C2BEAE;
+}
+
+.sim-main-split {
+    -fx-background-color: #C2BEAE;
+    -fx-box-border: transparent;
+    -fx-padding: 0;
+}
+
+.sim-main-split > .split-pane-divider,
+.sim-vsplit > .split-pane-divider {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+/* Sidebar */
+.sidebar-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.object-grid {
+    -fx-padding: 6;
+    -fx-background-color: #8D8A7F;
+}
+
+.object-tile {
+    -fx-background-color: #B8B4A6;
+    -fx-border-color: #4D4B45;
+    -fx-border-width: 2px;
+    -fx-pref-height: 56px;
+    -fx-min-height: 56px;
+    -fx-max-height: 56px;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-text-fill: #2A2926;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.object-tile:hover {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #2A2926;
+}
+
+.object-tile:pressed {
+    -fx-background-color: #A9A494;
+    -fx-border-color: #1A1A18;
+}
+
+/* Sidebar tab pane */
+.sidebar-tab-pane {
+    -fx-background-color: #8D8A7F;
+    -fx-tab-min-height: 28px;
+    -fx-tab-max-height: 28px;
+    -fx-control-inner-background: #8D8A7F;
+    -fx-base: #8D8A7F;
+    -fx-body-color: #8D8A7F;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.sidebar-tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: #706E65;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane > .tab-content-area > .tab-content {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 0;
+}
+
+.sidebar-tab-pane .tab-header-area {
+    -fx-background-color: #706E65;
+    -fx-padding: 2 4 0 4;
+}
+
+.sidebar-tab-pane .headers-region {
+    -fx-spacing: 4px;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #6F6D65;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 4 12 4 12;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 1 0 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #1A1A18;
+}
+
+/* Help labels */
+.sim-help-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-wrap-text: true;
+}
+
+/* Properties panel */
+.properties-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 4 8 4 8;
+    -fx-border-color: #3D3C39;
+    -fx-border-width: 1 0 0 0;
+}
+
+.properties-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+.properties-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+}
+
+.properties-panel {
+    -fx-background-color: #8D8A7F;
+}
+
+.prop-desc-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 4 8 6 8;
+    -fx-wrap-text: true;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Top bar stat labels – fixed width prevents layout wiggle when text changes */
+.sim-stat-label {
+    -fx-text-fill: #3D3C39;
+    -fx-font-size: 11px;
+    -fx-min-width: 120px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.sim-stat-spacer {
+    -fx-min-width: 12px;
+}
+
+/* Viewport labels */
+.viewport-icon-label {
+    -fx-text-fill: #5D5B54;
+    -fx-font-size: 18px;
+}
+
+.viewport-subtle-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5D5B54;
+}
+
+.viewport-title-label,
+.viewport-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+/* ── SHORTCUT OVERLAY ───────────────────────────────────────────────── */
+
+/* Floating "?" button anchored to bottom-right of the viewport */
+.viewport-info-btn {
+    -fx-background-color: rgba(93, 91, 84, 0.75);
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12px;
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.viewport-info-btn:hover {
+    -fx-background-color: rgba(93, 91, 84, 1.0);
+}
+
+/* Overlay container — floats above canvas, anchored bottom-right */
+.shortcut-overlay {
+    -fx-background-color: #3D3C39;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0, 0, 2);
+}
+
+/* Header bar with title and close button */
+.shortcut-overlay-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 6 8 6 10;
+    -fx-background-radius: 6 6 0 0;
+}
+
+.shortcut-overlay-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Shortcut rows — alternating backgrounds for readability */
+.shortcut-overlay-body {
+    -fx-padding: 4 0 4 0;
+}
+
+.shortcut-row-a {
+    -fx-background-color: #3D3C39;
+    -fx-padding: 4 10 4 10;
+}
+
+.shortcut-row-b {
+    -fx-background-color: #464540;
+    -fx-padding: 4 10 4 10;
+}
+
+/* Key badge — fixed width so descriptions align */
+.shortcut-key {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+    -fx-min-width: 60px;
+}
+
+/* Description text next to each key */
+.shortcut-desc {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
+/* Tick overlay */
+.tick-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1a1a18;
+}
+
+.tick-overlay {
+    -fx-background-color: rgba(194, 190, 174, 0.92);
+    -fx-padding: 2 8 2 8;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+}
+
+/* Tip label */
+.sim-tip-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+}
+
+.console-header .sim-tip-label {
+    -fx-font-weight: normal;
+}
+
+/* Console */
+.console-shell {
+    -fx-min-height: 0;
+    -fx-pref-height: 120px;
+}
+
+.console-bg {
+    -fx-background-color: #32312D;
+}
+
+.console-header {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 3 8 3 8;
+    -fx-min-height: 22px;
+}
+
+.console-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.text-area {
+    -fx-background-color: #32312D;
+    -fx-text-fill: #C2BEAE;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+
+.text-area .content {
+    -fx-background-color: #32312D;
+}
+
+/* Scrollable object list in Add Object tab */
+.sidebar-scroll {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.sidebar-scroll > .viewport {
+    -fx-background-color: #8D8A7F;
+}

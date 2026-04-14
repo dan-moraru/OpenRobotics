@@ -1,0 +1,207 @@
+/* ============================================================
+   OpenRobotics – Setup Screen
+   Follows visual layout order: sidebar → tab row → property
+   rows → viewport → saved configs → bottom bar
+   ============================================================ */
+
+
+/* ── 1. SIDEBAR ─────────────────────────────────────────────── */
+
+/* Left sidebar panel on the Setup screen */
+.sidebar-setup {
+    -fx-background-color: #C2BEAE;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 0 0;
+}
+
+/* Spacer has no border — keeps the top area clean above sidebar content */
+.setup-sidebar-spacer {
+    -fx-background-color: #C2BEAE;
+    -fx-min-height: 28px;
+    -fx-max-height: 28px;
+    -fx-pref-height: 28px;
+}
+
+/* ── 2. TAB ROW ─────────────────────────────────────────────── */
+
+/* Row of tab buttons above the viewport header */
+.setup-tab-row {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 4 0 0 4;
+}
+
+/* ── 3. PROPERTY ROWS & LABELS ──────────────────────────────── */
+
+/* Alternating row backgrounds inside the property panel */
+.setup-prop-row-a {
+    -fx-background-color: #C2BEAE;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
+}
+
+.setup-prop-row-b {
+    -fx-background-color: #b0ad9e;
+    -fx-padding: 4 8 4 8;
+    -fx-min-height: 30px;
+}
+
+/* Wraps a property row + its hint label. Background set here so the hint
+   inherits it automatically, keeping both visually tied to the same row. */
+.setup-prop-group-a {
+    -fx-background-color: #C2BEAE;
+    -fx-spacing: 0;
+}
+
+.setup-prop-group-b {
+    -fx-background-color: #b0ad9e;
+    -fx-spacing: 0;
+}
+
+/* Standard label in a property row */
+.prop-label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-min-width: 100px;
+}
+
+/* Bold variant for primary / required parameters */
+.prop-label-bold {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-min-width: 100px;
+}
+
+/* Hint text below each property row — no background, inherits from prop-group */
+.setup-param-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5D5B54;
+    -fx-padding: 3 8 5 8;
+    -fx-wrap-text: true;
+}
+
+/* Warning shown when canvas dimensions are out of acceptable range */
+.setup-warn-label {
+    -fx-padding: 4 8 4 8;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+/* Small "×" separator between canvas width and height inputs */
+.canvas-size-separator {
+    -fx-font-size: 11px;
+    -fx-padding: 0 4 0 4;
+}
+
+/* Scrollable wrapper that holds the full config panel */
+.config-panel {
+    -fx-padding: 0 0 20 0;
+}
+
+
+/* ── 4. VIEWPORT ────────────────────────────────────────────── */
+
+/* Outer pane that contains the map preview */
+.viewport-pane {
+    -fx-background-color: #CDCBC3;
+}
+
+/* Header bar below the tab row (shows viewport title and mode label) */
+.viewport-header {
+    -fx-background-color: #8D8A7F;
+    -fx-padding: 5 10 5 10;
+    -fx-min-height: 28px;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 0 0 1 0;
+}
+
+.viewport-header .label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+/* "2D Viewport" title label in the viewport header */
+.viewport-title-label {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* Subtle secondary label (e.g. "Preview") on the right of the header */
+.viewport-subtle-label {
+    -fx-text-fill: #3a3935;
+    -fx-font-size: 10px;
+}
+
+/* Label shown when the viewport preview is unavailable */
+.viewport-disabled-label {
+    -fx-text-fill: #8D8A7F;
+    -fx-font-size: 11px;
+}
+
+/* Canvas area where the map thumbnail is drawn */
+.viewport-preview {
+    -fx-background-color: #CECCC4;
+}
+
+
+/* ── 5. SAVED CONFIGS LIST ──────────────────────────────────── */
+
+/* Header bar of the saved configurations section */
+.setup-configs-header {
+    -fx-background-color: #B8B4A6;
+    -fx-padding: 6 8 6 8;
+    -fx-min-height: 30px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Title label inside the configs header */
+.setup-configs-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2A2926;
+}
+
+/* ListView that renders saved configuration entries */
+.setup-configs-list {
+    -fx-background-color: #CDCBC3;
+    -fx-border-color: transparent;
+}
+
+.setup-configs-list .list-cell {
+    -fx-background-color: #CDCBC3;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+    -fx-padding: 5 8 5 8;
+}
+
+.setup-configs-list .list-cell:hover {
+    -fx-background-color: #B8B4A6;
+}
+
+.setup-configs-list .list-cell:selected {
+    -fx-background-color: #8D8A7F;
+    -fx-text-fill: #1a1a18;
+}
+
+
+/* ── 6. BOTTOM BAR ──────────────────────────────────────────── */
+
+/* Footer bar containing the Start Simulation button and status */
+.setup-bottom-bar {
+    -fx-background-color: #B8B4A6;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 44px;
+}
+
+/* Status/error label shown in the bottom bar */
+.setup-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7a1f1b;
+    -fx-font-weight: bold;
+}

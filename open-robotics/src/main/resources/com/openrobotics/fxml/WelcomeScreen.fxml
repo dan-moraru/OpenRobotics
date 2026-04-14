@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.openrobotics.controllers.WelcomeController"
+           fx:id="rootPane"
+           styleClass="welcome-root"
+           stylesheets="@../css/theme.css">
+
+    <VBox styleClass="welcome-shell" spacing="0" StackPane.alignment="CENTER">
+
+        <!-- TOP BAR -->
+        <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="0">
+            <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                <HBox.margin><Insets left="12" right="12"/></HBox.margin>
+                <image>
+                    <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                </image>
+            </ImageView>
+            <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
+                <menus>
+                    <Menu text="File">
+                        <items>
+                            <MenuItem onAction="#onExit" text="Exit"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Help">
+                        <items>
+                            <MenuItem onAction="#onMenuGithub" text="GitHub Page"/>
+                        </items>
+                    </Menu>
+                </menus>
+            </MenuBar>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- HERO ZONE -->
+        <StackPane styleClass="welcome-hero-logo-zone">
+            <ImageView fitHeight="160" fitWidth="160" preserveRatio="true"
+                       opacity="0.06" StackPane.alignment="CENTER">
+                <image>
+                    <Image url="@../img/logo_color.png" backgroundLoading="true"/>
+                </image>
+            </ImageView>
+            <VBox alignment="CENTER" spacing="8">
+                <Label text="OPENROBOTICS" styleClass="welcome-hero-wordmark"/>
+                <Label text="WAREHOUSE SIMULATION PLATFORM" styleClass="welcome-eyebrow"/>
+            </VBox>
+        </StackPane>
+
+        <Region styleClass="welcome-divider" minHeight="1" maxHeight="1" prefHeight="1"/>
+
+        <!-- BODY: two columns -->
+        <HBox spacing="0" VBox.vgrow="ALWAYS">
+
+            <!-- LEFT: description + feature cards -->
+            <VBox styleClass="welcome-left-panel" spacing="0" HBox.hgrow="ALWAYS">
+
+                <VBox styleClass="welcome-hero-copy-zone" spacing="16" VBox.vgrow="ALWAYS">
+                    <Label text="Build, simulate, and compare multi-robot warehouse behavior."
+                           styleClass="welcome-hero-title" wrapText="true"/>
+                    <Label text="Configure realistic task flows, test navigation and coordination strategies, and inspect metrics from repeatable simulation runs."
+                           styleClass="welcome-hero-copy" wrapText="true"/>
+
+                    <!-- Feature cards -->
+                    <VBox styleClass="welcome-features-list" spacing="0">
+
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Drag-and-drop map editor" styleClass="welcome-feature-title"/>
+                                <Label text="Place robots, shelves, chargers, and stations on a live grid canvas."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Configurable simulation engine" styleClass="welcome-feature-title"/>
+                                <Label text="Choose coordination policies, task workloads, and tick limits before each run."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox styleClass="welcome-feature-card" spacing="16" alignment="CENTER_LEFT">
+                            <Region styleClass="welcome-feature-accent"/>
+                            <VBox spacing="4">
+                                <Label text="Results and heatmap analysis" styleClass="welcome-feature-title"/>
+                                <Label text="Inspect per-robot metrics, task completion charts, and travel frequency masks."
+                                       styleClass="welcome-feature-desc" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+
+                    </VBox>
+
+                </VBox>
+
+            </VBox>
+
+            <!-- Vertical divider -->
+            <Region styleClass="welcome-panel-divider" minWidth="1" maxWidth="1"/>
+
+            <!-- RIGHT: how it works steps -->
+            <VBox styleClass="welcome-right-panel" spacing="0" prefWidth="460" minWidth="400" maxWidth="500">
+
+                <Label text="HOW IT WORKS" styleClass="welcome-section-title"
+                       style="-fx-padding: 28 28 16 28;"/>
+
+                <!-- Step 1 -->
+                <VBox styleClass="welcome-step-card">
+                    <HBox spacing="14" alignment="TOP_LEFT">
+                        <Label text="1" styleClass="welcome-step-num"/>
+                        <VBox spacing="4">
+                            <Label text="Configure your warehouse" styleClass="welcome-step-title"/>
+                            <Label text="Select a preset map or build your own. Set the number of robots, assign navigation algorithms, and choose a coordination policy."
+                                   styleClass="welcome-step-desc" wrapText="true"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <Region styleClass="welcome-update-separator" minHeight="1" maxHeight="1" prefHeight="1"/>
+
+                <!-- Step 2 -->
+                <VBox styleClass="welcome-step-card">
+                    <HBox spacing="14" alignment="TOP_LEFT">
+                        <Label text="2" styleClass="welcome-step-num"/>
+                        <VBox spacing="4">
+                            <Label text="Run the simulation" styleClass="welcome-step-title"/>
+                            <Label text="Watch robots navigate in real time. Control playback speed, pause at any tick, and monitor live stats in the console."
+                                   styleClass="welcome-step-desc" wrapText="true"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <Region styleClass="welcome-update-separator" minHeight="1" maxHeight="1" prefHeight="1"/>
+
+                <!-- Step 3 -->
+                <VBox styleClass="welcome-step-card">
+                    <HBox spacing="14" alignment="TOP_LEFT">
+                        <Label text="3" styleClass="welcome-step-num"/>
+                        <VBox spacing="4">
+                            <Label text="Analyze the results" styleClass="welcome-step-title"/>
+                            <Label text="Review task completion rates, collision counts, and heatmaps. Export data for further analysis."
+                                   styleClass="welcome-step-desc" wrapText="true"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+            </VBox>
+
+        </HBox>
+
+        <Region styleClass="welcome-divider" minHeight="1" maxHeight="1" prefHeight="1"/>
+
+        <!-- CTA row: authors left, button right -->
+        <HBox styleClass="welcome-cta-row" alignment="CENTER_LEFT" spacing="0">
+            <VBox spacing="3">
+                <Label text="Dan Moraru · Daniel Blackburn · Murad Novruzov · Lounes Azzoun"
+                       styleClass="welcome-authors-label"/>
+                <Label text="Muhammed Sohail · Badr Zeji · Filip Snítil · Behnam Yosufi"
+                       styleClass="welcome-authors-label"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="welcomeStartSetupButton" text="START SETUP  &#x2192;" styleClass="button-green" onAction="#onStartSetup"/>
+        </HBox>
+
+    </VBox>
+</StackPane>
