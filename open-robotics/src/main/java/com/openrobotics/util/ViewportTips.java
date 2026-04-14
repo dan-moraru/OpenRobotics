@@ -59,7 +59,7 @@ public class ViewportTips {
                 "A fresh selection tip appears below the viewport when nothing is selected"
     ));
 
-    /* Shuffled deck for sequential non-repeating rotation */
+    // shuffled deck for sequential non-repeating rotation
     private static final List<String> deck = new ArrayList<>();
     private static int deckIndex = 0;
     private static final Object lock = new Object();

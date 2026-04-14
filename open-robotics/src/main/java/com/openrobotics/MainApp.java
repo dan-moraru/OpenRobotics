@@ -13,7 +13,7 @@ import java.sql.SQLException;
 
 /** application entry point; initialises the primary stage, connects to the database, and navigates to the welcome screen */
 public class MainApp extends Application {
-    private SimulationController controller; // unused field — candidate for removal
+    private SimulationController controller; 
 
     @Override
     public void init() {

@@ -1,32 +1,21 @@
 package com.openrobotics.util;
 
 import javafx.scene.image.Image;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Utility class for loading and caching object icons.
- * Provides a unified interface for retrieving icons for different entity types.
- * Icons are cached after first load to avoid repeated file I/O.
- */
+/** loads and caches entity icons from resources; all calls happen on the JavaFX thread */
 public class IconLoader {
-    private static final Map<String, Optional<Image>> imageCache = new ConcurrentHashMap<>();
+    private static final Map<String, Optional<Image>> imageCache = new HashMap<>();
 
-    // Standard object types with icon assets
     private static final List<String> SUPPORTED_TYPES = List.of(
             "ROBOT", "CHARGER", "STATION", "DOCK", "WALL", "SHELF",
             "RACK", "OBSTACLE", "DELIVERY", "INTERSECTION"
     );
 
-    /**
-     * Gets or loads an icon for the specified object type.
-     * Icons are cached; subsequent calls return from cache.
-     *
-     * @param type the object type (e.g., "ROBOT", "CHARGER")
-     * @return the icon image, or null if not found
-     */
+    /** returns the cached icon for the given type, loading it on first access; returns null if not found */
     public static Image getIcon(String type) {
         if (type == null) return null;
 
@@ -36,20 +25,14 @@ public class IconLoader {
             .orElse(null);
     }
 
-    /**
-     * Pre-loads all standard icons at startup.
-     * Call this during application initialization to avoid load delays.
-     */
+    /** pre-loads all standard icons to avoid first-use delays */
     public static void preloadAllIcons() {
         for (String type : SUPPORTED_TYPES) {
             getIcon(type);
         }
     }
 
-    /**
-     * Clears the icon cache.
-     * Useful for testing or if icons change at runtime.
-     */
+    /** clears the icon cache; used in tests */
     public static void clearCache() {
         imageCache.clear();
     }
