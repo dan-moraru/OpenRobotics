@@ -854,9 +854,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      */
     @FXML
     private void onObjectTileDragDetected(MouseEvent e) {
-        if (running) { e.consume(); return; }
         Button source = (Button) e.getSource();
-        String type = (String) source.getUserData();
+        if (source == null) {
+            log("⚠ Drag ignored because the Add Object tile source was not available.");
+            e.consume();
+            return;
+        }
+
+        String type = source.getUserData() instanceof String s ? s : null;
+        if (type == null || type.isBlank()) {
+            log("⚠ Drag ignored because the Add Object tile is missing its type metadata.");
+            e.consume();
+            return;
+        }
+
+        if (running) {
+            log("⚠ Drag ignored for " + type + " because the editor is locked. Stop or reset the simulation first.");
+            e.consume();
+            return;
+        }
 
         Dragboard db = source.startDragAndDrop(TransferMode.COPY);
         ClipboardContent content = new ClipboardContent();
@@ -906,6 +922,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         boolean dropCompleted = false;
         dragHighlightTileX = -1;
         dragHighlightTileY = -1;
+        if (!db.hasString()) {
+            log("⚠ Drop ignored because the dragged item did not carry an object type.");
+            e.setDropCompleted(false);
+            e.consume();
+            return;
+        }
+
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
@@ -940,6 +963,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                         }
                     }
                 }
+            } else {
+                log("⚠ Drop ignored because no simulation map is loaded yet.");
             }
         }
         e.setDropCompleted(dropCompleted);
@@ -1030,6 +1055,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     if (selectedEntity == rackRef) showPropertiesFor(rackRef);
                     persistEditorChanges();
                 } else {
+                    log("⚠ Dropoff assignment slot " + pickingSlot + " is no longer valid for rack "
+                            + pickingRack.getName() + ".");
                     cancelDropoffPicking();
                 }
             } else {
@@ -1439,50 +1466,54 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
         } else if (entity instanceof Rack rack) {
-            // ── Number of boxes ──
-            HBox boxCountBox = new HBox(8);
-            boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            Spinner<Integer> boxCountSpinner = new Spinner<>(
-                    new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
-            boxCountSpinner.setPrefWidth(80);
-            boxCountSpinner.setEditable(true);
-            boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
-                if (newV == null || oldV == null || newV.equals(oldV)) return;
-                if (guardEditor("change box count")) {
-                    boxCountSpinner.getValueFactory().setValue(oldV);
-                    return;
-                }
-                rack.setBoxCount(newV);
-                persistEditorChanges();
-            });
-            boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
-            propertiesPanel.getChildren().add(boxCountBox);
+            boolean globalManual = engine != null && engine.isManualTaskAssignment();
 
-            // ── Manual assignment checkbox ──
-            HBox manualBox = new HBox(8);
-            manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
-            manualCheck.setSelected(rack.isManualDropoffAssignment());
-            VBox dropoffArrayBox = new VBox(4);
-            dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
-            dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
-            manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
-                if (guardEditor("toggle manual assignment")) {
-                    manualCheck.setSelected(oldV);
-                    return;
-                }
-                rack.setManualDropoffAssignment(newV);
-                dropoffArrayBox.setVisible(newV);
-                dropoffArrayBox.setManaged(newV);
+            if (globalManual) {
+                // ── Number of boxes (manual mode only) ──
+                HBox boxCountBox = new HBox(8);
+                boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                Spinner<Integer> boxCountSpinner = new Spinner<>(
+                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+                boxCountSpinner.setPrefWidth(80);
+                boxCountSpinner.setEditable(true);
+                boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
+                    if (newV == null || oldV == null || newV.equals(oldV)) return;
+                    if (guardEditor("change box count")) {
+                        boxCountSpinner.getValueFactory().setValue(oldV);
+                        return;
+                    }
+                    rack.setBoxCount(newV);
+                    persistEditorChanges();
+                });
+                boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+                propertiesPanel.getChildren().add(boxCountBox);
+
+                // ── Manual dropoff assignment checkbox (manual mode only) ──
+                HBox manualBox = new HBox(8);
+                manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
+                manualCheck.setSelected(rack.isManualDropoffAssignment());
+                VBox dropoffArrayBox = new VBox(4);
+                dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
+                dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
+                manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                    if (guardEditor("toggle manual assignment")) {
+                        manualCheck.setSelected(oldV);
+                        return;
+                    }
+                    rack.setManualDropoffAssignment(newV);
+                    dropoffArrayBox.setVisible(newV);
+                    dropoffArrayBox.setManaged(newV);
+                    renderRackDropoffArray(rack, dropoffArrayBox);
+                    persistEditorChanges();
+                });
+                manualBox.getChildren().add(manualCheck);
+                propertiesPanel.getChildren().add(manualBox);
+
+                // ── Dropoff array (shown only when manual checkbox is on) ──
                 renderRackDropoffArray(rack, dropoffArrayBox);
-                persistEditorChanges();
-            });
-            manualBox.getChildren().add(manualCheck);
-            propertiesPanel.getChildren().add(manualBox);
-
-            // ── Dropoff array (shown only when manual is on) ──
-            renderRackDropoffArray(rack, dropoffArrayBox);
-            propertiesPanel.getChildren().add(dropoffArrayBox);
+                propertiesPanel.getChildren().add(dropoffArrayBox);
+            }
         }
     }
 
@@ -1642,9 +1673,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onAddObjectClick(MouseEvent e) {
         Button source = (Button) e.getSource();
-        String type = (String) source.getUserData();
+        String type = source.getUserData() instanceof String s ? s : null;
+        if (type == null || type.isBlank()) {
+            log("⚠ Add Object tile click ignored because the tile type is missing.");
+            return;
+        }
 
         if (e.getClickCount() == 2) {
+            log("Opened description for " + type + " from the Add Object panel.");
             ScreenNavigator.openDialog(
                     ScreenNavigator.DIALOG_OBJECT_DESC, type + " – Description");
         } else {
@@ -1661,11 +1697,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void onOutlinerSelect() {
         if (outlinerListView == null) return;
         int idx = outlinerListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= outlinerBacking.size()) return;
+        if (idx < 0 || idx >= outlinerBacking.size()) {
+            log("⚠ Ignored outliner selection because the selected index was out of range.");
+            return;
+        }
 
         Object selected = outlinerBacking.get(idx);
         if (selected instanceof MapEntity mapEntity) {
             selectEntity(mapEntity);
+        } else if (selected instanceof Task task) {
+            log("Selected task #" + task.getId() + " in the outliner. Task entries are read-only here.");
+        } else if (selected != null) {
+            log("⚠ Ignored outliner selection of unsupported entry type: " + selected.getClass().getSimpleName());
         }
     }
 
@@ -1814,10 +1857,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 }
             }
 
-            // Auto-generate tasks from map racks/stations if dispatcher is empty
+            // Generate tasks if the dispatcher is empty.
+            // Automatic mode: exactly engine.getMaxTasks() tasks, random rack+station pairs.
+            // Manual mode: one task per rack box using each rack's configured dropoff pool.
             if (engine.getDispatcher().getAllQueuedTasks().isEmpty() && engine.getMap() != null) {
-                List<Task> generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
-                        engine.getMap(), 50, engine.getSeed());
+                List<Task> generated;
+                if (engine.isManualTaskAssignment()) {
+                    generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
+                            engine.getMap(), Integer.MAX_VALUE, engine.getSeed());
+                } else {
+                    generated = com.openrobotics.task.TaskGenerator.generateAutomaticTasks(
+                            engine.getMap(), engine.getMaxTasks(), engine.getSeed());
+                }
                 if (!generated.isEmpty()) {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
