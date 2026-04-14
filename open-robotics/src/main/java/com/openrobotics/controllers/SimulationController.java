@@ -1950,6 +1950,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animationProgress = 0.0;
         prevRobotPositions.clear();
         selectedEntity = null;
+        undoStack.clear();
+        redoStack.clear();
+        initialSnapshotPath = null;
         onStop();
         localTick = 0;
         simulationFailed = false;
