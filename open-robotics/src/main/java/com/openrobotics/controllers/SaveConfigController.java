@@ -18,12 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/**
- * Controller for {@code SaveConfigDialog.fxml}.
- *
- * <p>Implements {@link ScreenNavigator.DialogController} so the navigator
- * can inject the owning dialog stage for self-close behaviour.
- */
+/** controller for SaveConfigDialog.fxml; lets the user choose a directory and file name, then saves the current config */
 public class SaveConfigController implements ScreenNavigator.DialogController {
 
     @FXML private TextField        fileNameField;
@@ -40,31 +35,22 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     private static final String BROWSE_SENTINEL = "Browse...";
     private static final String CONFIG_DIR = "./configs";
 
-    // ------------------------------------------------------------------ //
-    //  DialogController
-    // ------------------------------------------------------------------ //
-
     @Override
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
     }
 
-    /** Returns the full path (directory + file name) set when the user clicked Save, or null if not saved yet. */
+    /** returns the full path set when the user clicked Save, or null if not yet saved */
     public String getResultFilePath() {
         return resultFilePath;
     }
-
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
 
     @FXML
     private void initialize() {
         directoryCombo.valueProperty().addListener((obs, o, n) -> {
             if (n == null) return;
             if (BROWSE_SENTINEL.equals(n)) {
-                // Defer so the popup closes before opening the native chooser,
-                // then restore the prior selection (or clear it) before browsing.
+                // defer so the popup closes before the native chooser opens; restore prior selection first
                 javafx.application.Platform.runLater(() -> {
                     directoryCombo.getSelectionModel().select(o);
                     onBrowse();
@@ -87,10 +73,6 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         fileNameField.setText("experiment_" +
                 java.time.LocalDate.now().toString() + ".json");
     }
-
-    // ------------------------------------------------------------------ //
-    //  Event Handlers
-    // ------------------------------------------------------------------ //
 
     @FXML
     private void onResetDirectory() {
@@ -163,7 +145,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             saveRecentDir(selectedDirectory.getAbsolutePath());
             resultFilePath = fullPath;
 
-            // Automatically save a copy to the configs directory for the list
+            // automatically save a copy to ./configs so it appears in the load list
             File configsDir = new File(CONFIG_DIR);
             if (!configsDir.exists()) {
                 configsDir.mkdirs();
@@ -186,19 +168,11 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         close();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Result accessors
-    // ------------------------------------------------------------------ //
-
     public File getSelectedDirectory() { return selectedDirectory; }
     public String getFileName() {
         String value = fileNameField == null ? null : fileNameField.getText();
         return value == null ? "" : value.trim();
     }
-
-    // ------------------------------------------------------------------ //
-    //  Helpers
-    // ------------------------------------------------------------------ //
 
     private void close() {
         if (dialogStage != null) dialogStage.close();
@@ -228,4 +202,3 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         }
     }
 }
-

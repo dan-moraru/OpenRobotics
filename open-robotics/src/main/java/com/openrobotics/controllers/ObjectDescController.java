@@ -6,12 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-/**
- * Controller for {@code ObjectDescDialog.fxml}.
- *
- * <p>Shows a description of a placeable simulation object and lets the user
- * add it to the viewport (§4.2 – Specialty Screen 3).
- */
+/** controller for ObjectDescDialog.fxml; shows a description of a placeable object and lets the user add it to the viewport (§4.2) */
 public class ObjectDescController implements ScreenNavigator.DialogController {
 
     @FXML private Label objectIconLabel;
@@ -24,24 +19,12 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
     private String objectType;
     private boolean addRequested = false;
 
-    // ------------------------------------------------------------------ //
-    //  DialogController
-    // ------------------------------------------------------------------ //
-
     @Override
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Data injection (called by SimulationController before showing dialog)
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Populates all labels with data for the given object type.
-     *
-     * @param type one of: ROBOT, CHARGER, STATION, DOCK, WALL, INTERSECTION
-     */
+    /** populates all labels for the given type. @param type one of: ROBOT, CHARGER, STATION, DOCK, WALL, INTERSECTION */
     public void setObjectType(String type) {
         this.objectType = type;
         if (propsOverview != null) {
@@ -115,19 +98,6 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void initialize() {
-        // Content is set via setObjectType(); nothing to do here.
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Event Handlers
-    // ------------------------------------------------------------------ //
-
     @FXML
     private void onAdd() {
         addRequested = true;
@@ -139,17 +109,9 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         close();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Result accessor
-    // ------------------------------------------------------------------ //
-
-    /** Returns {@code true} if the user pressed "Add to Viewport". */
+    /** returns true if the user pressed "Add to Viewport" */
     public boolean isAddRequested() { return addRequested; }
     public String  getObjectType()  { return objectType; }
-
-    // ------------------------------------------------------------------ //
-    //  Helpers
-    // ------------------------------------------------------------------ //
 
     private void close() {
         if (dialogStage != null) dialogStage.close();
