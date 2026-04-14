@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public class SimulationChargingIntegrationTest extends SimulationIntegrationTestSupport {
 
     /**
-     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     * Seeds {@link AppState} with a minimal engine so logging-dependent code paths remain valid
+     * during isolated simulation integration tests.
      */
     private void seedAppState() {
         SimulationEngine dummyEngine = new SimulationEngine(
@@ -36,12 +37,23 @@ public class SimulationChargingIntegrationTest extends SimulationIntegrationTest
         AppState.setEngine(dummyEngine);
     }
 
+    /**
+     * Initializes per-test state and disables logger side effects for deterministic assertions.
+     */
     @BeforeEach
     public void setUp() {
         seedAppState();
         Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
+    /**
+     * Verifies a low-battery robot first diverts to charge, fully recharges, then resumes
+     * progress on its current task.
+     *
+     * <p>The test asserts intermediate charging behavior (position/state/battery deltas), full
+     * recharge transition back to moving state, and eventual departure from the charging tile while
+     * preserving task assignment.</p>
+     */
     @Test
     void lowBatteryRobotDivertsToChargerBeforeResumingTask() {
         Map map = new Map(6, 2);
