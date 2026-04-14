@@ -42,7 +42,9 @@ public class SimulationEngine {
     private String runName;
     private int tickMs;
     private int maxTicks;
+    private int maxTasks;
     private long seed;
+    private boolean manualTaskAssignment = false;
     private boolean initialized;
     private String initError;
 
@@ -77,6 +79,7 @@ public class SimulationEngine {
         this.runName = runName;
         this.tickMs = tickMs;
         this.maxTicks = maxTicks;
+        this.maxTasks = maxTasks;
         this.seed = seed;
         this.initialized = map != null && robots != null && dispatcher != null;
     }
@@ -205,6 +208,8 @@ public class SimulationEngine {
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
+            this.maxTasks = dto.config.maxTasks > 0 ? dto.config.maxTasks : 10;
+            this.manualTaskAssignment = dto.config.manualTaskAssignment;
             this.simulationError = SimulationError.NONE;
             // seed already set before robot creation loop
             this.collisionManager = new CollisionManager();
@@ -296,6 +301,8 @@ public class SimulationEngine {
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
         dto.config.seed = this.seed;
+        dto.config.maxTasks = this.maxTasks;
+        dto.config.manualTaskAssignment = this.manualTaskAssignment;
         dto.config.batteryCapacity     = robotConfig.batteryCapacity;
         dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
         dto.config.chargePerTick       = robotConfig.chargePerTick;
@@ -701,6 +708,13 @@ public class SimulationEngine {
 
     public int getTickCounter() {
         return tickCounter;
+    }
+
+    public int getMaxTasks() { return maxTasks; }
+
+    public boolean isManualTaskAssignment() { return manualTaskAssignment; }
+    public void setManualTaskAssignment(boolean manualTaskAssignment) {
+        this.manualTaskAssignment = manualTaskAssignment;
     }
 
     /**

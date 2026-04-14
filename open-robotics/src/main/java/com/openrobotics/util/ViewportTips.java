@@ -24,22 +24,30 @@ public class ViewportTips {
             "Drag a selected object to a new tile — it snaps automatically",
             "Press Delete or Backspace to remove the selected object",
             "Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes one tile away",
+                "The Outliner filters both map objects and queued tasks",
+                "Task entries in the Outliner are read-only; edit the map object instead",
+                "Double-click an Add Object tile to open its description before placing it",
+                "The Properties panel shows exact tile coordinates and editable robot settings",
             // Drag and drop
             "Drag any tile from the sidebar — the green highlight shows where it will land",
             "Objects can only share a tile if one is a Robot and the other a Station",
             "Chargers and delivery stations can coexist with robots on the same tile",
+                "If a drop is blocked, the console explains which occupancy rule was violated",
+                "When manual dropoff assignment is on, every rack needs at least one live delivery station",
             // Simulation
             "Press ▶ to start — robots will immediately begin picking up tasks",
             "⏸ pauses without losing your tick count; ▶ resumes from the same point",
             "▶▶ steps exactly one tick — useful for tracing robot decisions frame by frame",
             "↺ fully reloads the config from disk and resets the simulation",
             "x1/x2/x3 multiply simulation speed — useful for long workloads",
+                "If the editor is locked, stop or reset the simulation before moving objects",
             // Strategy tips
             "Higher-priority tasks are assigned to robots first",
             "Robots re-route automatically when stuck for several ticks",
             "Reservation-K coordination reduces head-on collisions between robots",
             "Placing chargers near busy corridors reduces robot idle time",
             "More robots increase throughput but also raise collision risk",
+                "Use manual dropoff assignment only when you want fine-grained rack control",
             // Outliner & properties
             "Use the Outliner to find any object by name — type to filter",
             "Select a task in the Outliner to see its pickup, dropoff, and priority",
@@ -47,7 +55,8 @@ public class ViewportTips {
             // UI
             "View → Sidebar collapses the panel — the viewport expands to fill the space",
             "View → Console collapses the log — drag the divider to resize it manually",
-            "The console logs every placement, move, and blocked-tile warning"
+                "The console logs every placement, move, blocked-tile warning, and rejected drag",
+                "A fresh selection tip appears below the viewport when nothing is selected"
     ));
 
     /* Shuffled deck for sequential non-repeating rotation */

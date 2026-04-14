@@ -28,6 +28,9 @@ public class SimulationConfigDTO {
         public float  energyPerMove       = 1.0f;
         public int    loadingTicks        = 1;
         public int    unloadingTicks      = 1;
+        public int    maxTasks            = 10;
+        /** true = tasks come from rack box counts + dropoff pools; false = randomly generated up to maxTasks */
+        public boolean manualTaskAssignment = false;
     }
 
     public static class MapSection {
