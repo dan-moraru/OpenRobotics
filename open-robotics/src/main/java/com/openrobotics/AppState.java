@@ -2,11 +2,7 @@ package com.openrobotics;
 
 import com.openrobotics.simulationcore.SimulationEngine;
 
-/**
- * Lightweight application-level state holder shared across screens.
- * Holds the active {@link SimulationEngine} instance and the path of the
- * last loaded config file so the simulation can be restarted from scratch.
- */
+/** lightweight application-level state holder; shares the active engine and last-loaded config path across screens */
 public final class AppState {
 
     private static SimulationEngine engine;
