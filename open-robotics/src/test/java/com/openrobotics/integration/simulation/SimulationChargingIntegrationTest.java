@@ -8,7 +8,6 @@ import com.openrobotics.map.Map;
 import com.openrobotics.map.entities.station.ChargingStation;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
-import com.openrobotics.simulationcore.CollisionManager;
 import com.openrobotics.simulationcore.CoordinationPolicy;
 import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.SimulationEngine;
