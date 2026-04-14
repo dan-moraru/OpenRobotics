@@ -15,6 +15,8 @@ import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.ReservationKPolicy;
 import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.simulationcore.TrafficRulesPolicy;
+import com.openrobotics.task.Task;
+import com.openrobotics.task.TaskGenerator;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.collections.FXCollections;
@@ -766,7 +768,10 @@ public class SetupController {
             configDir.mkdirs();
         }
 
-        File[] files = configDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+        File[] files = configDir.listFiles((dir, name) -> {
+            String lowerName = name.toLowerCase();
+            return lowerName.endsWith(".json") && !name.startsWith("."); // Hides secret config files
+        });
 
         if (files != null && files.length > 0) {
             for (File file : files) {
@@ -883,10 +888,11 @@ public class SetupController {
         // or loaded from a JSON config file (handled via SimulationEngine(configPath)).
 
         Dispatcher dispatcher = new Dispatcher();
-        // Tasks are generated at play-time (SimulationController.onPlay) once the user
-        // has placed robots/racks on the editor canvas.  SetupController never pre-fills
-        // the dispatcher — automatic mode generates up to maxTasks tasks then; manual mode
-        // generates one task per rack box using each rack's configured dropoff pool.
+        // Generate tasks based on the map's racks and delivery stations.
+        // Tasks are generated here so the engine has the expected workload from the start.
+        if (maxTasks > 0 && map != null) {
+            generateFixedTasks(map, seed, maxTasks, dispatcher);
+        }
 
         String runName = runNameField.getText().trim();
         if (runName.isEmpty()) runName = DEFAULT_RUN_NAME;
@@ -1012,6 +1018,22 @@ public class SetupController {
             }
         }
         return center; // fallback
+    }
+
+    /**
+     * Generates a fixed number of tasks based on the map's racks and delivery stations.
+     * Used by tests to verify task generation logic.
+     *
+     * @param map the map containing racks and delivery stations
+     * @param seed random seed for reproducibility
+     * @param count number of tasks to generate
+     * @param dispatcher the dispatcher to add tasks to
+     */
+    private void generateFixedTasks(com.openrobotics.map.Map map, long seed, int count, Dispatcher dispatcher) {
+        List<Task> tasks = TaskGenerator.generateAutomaticTasks(map, count, seed);
+        for (Task task : tasks) {
+            dispatcher.addTask(task);
+        }
     }
 
     private CoordinationPolicy buildCoordinationPolicy() {

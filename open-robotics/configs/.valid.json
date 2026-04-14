@@ -1,6 +1,6 @@
 {
   "config" : {
-    "runId" : "4301e0ff-f6be-4ff8-8e71-d36a4bab6c7d",
+    "runId" : "1019dee0-655c-4037-80a0-ac9de5a863ba",
     "runName" : "default_run",
     "tickMs" : 100,
     "maxTicks" : 5000,
@@ -10,17 +10,19 @@
     "chargePerTick" : 5.0,
     "energyPerMove" : 1.0,
     "loadingTicks" : 1,
-    "unloadingTicks" : 1
+    "unloadingTicks" : 1,
+    "maxTasks" : 10,
+    "manualTaskAssignment" : false
   },
   "map" : {
-    "mapId" : "6b037dd7-95b9-4a8e-a2d7-b5f622d67142",
+    "mapId" : "c86b171c-ed4e-4dbf-b1ba-7e6a071d04c3",
     "width" : 8,
     "height" : 8,
     "tiles" : [ ]
   },
   "entities" : {
     "robots" : [ {
-      "id" : "c67f1cd6-4019-4f1d-9ff2-2575a9a86bb1",
+      "id" : "2bf79d74-ec4f-4103-930f-7aee839a1d55",
       "name" : "R1",
       "position" : {
         "x" : 1,
