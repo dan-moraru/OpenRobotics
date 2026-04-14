@@ -303,9 +303,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return false;
     }
 
-    /** Saves the current editor state as the baseline for reset. Reuses a single temp file. */
+    /** Saves the current editor state as the baseline for reset. Reuses a single temp file.
+     *  Only snapshots when the simulation has not yet started (tick 0, not running), so that
+     *  mid-run editor actions do not overwrite the clean baseline with a non-zero tick state. */
     private void saveEditorBaseline() {
         if (engine == null) return;
+        if (running || engine.getTickCounter() > 0) return; // never overwrite with mid-run state
         try {
             if (initialSnapshotPath == null) {
                 java.io.File snap = java.io.File.createTempFile("openrobotics_baseline_", ".json");
