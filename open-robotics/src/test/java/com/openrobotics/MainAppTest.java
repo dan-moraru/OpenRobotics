@@ -1,5 +1,7 @@
 package com.openrobotics;
 
+import java.io.IOException;
+
 import com.openrobotics.util.ScreenNavigator;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,11 @@ public class MainAppTest extends ApplicationTest {
     @Override
     public void start(Stage stage) {
         primaryStage = stage;
-        new MainApp().start(stage);
+        try {
+            new MainApp().start(stage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
