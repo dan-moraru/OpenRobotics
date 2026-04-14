@@ -298,10 +298,11 @@
 }
 
 .split-pane-divider {
-    -fx-background-color: #8D8A7F;
-    -fx-pref-width: 2px;
-    -fx-pref-height: 2px;
-    -fx-padding: 0;
+    -fx-background-color: transparent !important;
+    -fx-pref-width: 1px !important;
+    -fx-pref-height: 1px !important;
+    -fx-padding: 0 !important;
+    -fx-background-insets: 0 !important;
 }
 
 /* Separator */

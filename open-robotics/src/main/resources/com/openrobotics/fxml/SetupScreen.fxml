@@ -51,13 +51,13 @@
             <SplitPane orientation="VERTICAL" minWidth="190" prefWidth="240" dividerPositions="0.65">
 
                 <VBox spacing="0">
-                    <!-- Spacer matching tab row height so sidebar starts at viewport level -->
+                    <!-- Spacer matching tab row height so sidebar content starts flush with viewport -->
                     <Region styleClass="setup-sidebar-spacer"/>
                     <ScrollPane fitToWidth="true" styleClass="sidebar-setup" VBox.vgrow="ALWAYS">
                         <VBox fx:id="configPanel" spacing="0" styleClass="outer-bg config-panel">
 
-                            <!-- Map -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Map — row-b -->
+                            <VBox styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Map" styleClass="prop-label-bold"/>
                                     <ComboBox fx:id="mapCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
@@ -67,7 +67,7 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Map Seed (hidden unless random_map) -->
+                            <!-- Map Seed (hidden unless random_map selected) — row-a, no hint needed -->
                             <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                 <Label text="Map Seed" styleClass="prop-label-bold"/>
                                 <TextField fx:id="randomSeedField" promptText="auto"
@@ -75,8 +75,8 @@
                                 <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed"/>
                             </HBox>
 
-                            <!-- Coordination Policy -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Coordination Policy — row-b -->
+                            <VBox styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Coordination Policy" styleClass="prop-label-bold"/>
                                     <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
@@ -86,8 +86,8 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Reservation K -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Reservation K — row-a -->
+                            <VBox styleClass="setup-prop-group-a">
                                 <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Reservation K" styleClass="prop-label-bold"/>
                                     <Spinner fx:id="reservationKSpinner"
@@ -99,7 +99,7 @@
                             </VBox>
 
                             <!-- Task Assignment Mode -->
-                            <VBox styleClass="setup-prop-group">
+                            <VBox styleClass="setup-prop-group-b">
                                 <Label text="Task Assignment" styleClass="prop-label-bold"/>
                                 <HBox spacing="12" alignment="CENTER_LEFT">
                                     <RadioButton fx:id="autoTaskRadio" text="Automatic" selected="true"/>
@@ -110,7 +110,7 @@
                             </VBox>
 
                             <!-- Number of Tasks (hidden in manual mode) -->
-                            <VBox fx:id="maxTasksGroup" styleClass="setup-prop-group">
+                            <VBox fx:id="maxTasksGroup" styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Number of Tasks" styleClass="prop-label-bold"/>
                                     <TextField fx:id="maxTasksField" text="10"
@@ -125,8 +125,8 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Workload Seed -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Workload Seed — row-a -->
+                            <VBox styleClass="setup-prop-group-a">
                                 <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Workload Seed" styleClass="prop-label-bold"/>
                                     <TextField fx:id="workloadSeedField" text="42"
@@ -137,8 +137,8 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Max Ticks -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Max Ticks — row-b -->
+                            <VBox styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Max Ticks" styleClass="prop-label-bold"/>
                                     <TextField fx:id="maxTicksField" text="30000"
@@ -149,8 +149,8 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Run Name -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Run Name — row-a -->
+                            <VBox styleClass="setup-prop-group-a">
                                 <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Run Name" styleClass="prop-label-bold"/>
                                     <TextField fx:id="runNameField" text="experiment_1"
@@ -161,8 +161,8 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Canvas Size -->
-                            <VBox styleClass="setup-prop-group">
+                            <!-- Canvas Size — row-b -->
+                            <VBox styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Canvas Size" styleClass="prop-label-bold"/>
                                     <Spinner fx:id="canvasWidthSpinner" editable="true" prefWidth="54"/>
@@ -174,7 +174,7 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Canvas warning -->
+                            <!-- Canvas warning — shown programmatically when dimensions are invalid -->
                             <Label fx:id="canvasWarnLabel" styleClass="setup-warn-label"
                                    wrapText="true" visible="false" managed="false"/>
 
@@ -198,9 +198,11 @@
             <BorderPane styleClass="viewport-preview">
                 <top>
                     <VBox spacing="0">
+                        <!-- Tab row sits above the viewport header -->
                         <HBox styleClass="setup-tab-row" alignment="CENTER_LEFT">
                             <Button text="EDITOR" styleClass="tab-btn-active" onAction="#onTabEditor"/>
                         </HBox>
+                        <!-- Viewport header bar with title and mode label -->
                         <HBox styleClass="viewport-header" alignment="CENTER_LEFT" spacing="8">
                             <Label text="2D Viewport" styleClass="viewport-title-label"/>
                             <Region HBox.hgrow="ALWAYS"/>
