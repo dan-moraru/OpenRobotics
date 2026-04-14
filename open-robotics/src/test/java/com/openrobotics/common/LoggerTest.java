@@ -1,176 +1,304 @@
 package com.openrobotics.common;
 
-import com.openrobotics.map.Vector2D;
+import com.openrobotics.db.model.SimLogRecord;
+import com.openrobotics.db.model.SimulationRunRecord;
+import com.openrobotics.db.model.WorkloadTaskRecord;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
+import com.openrobotics.logging.eventtypes.RobotEvent;
+import com.openrobotics.logging.eventtypes.SimulationRunEvent;
+import com.openrobotics.logging.eventtypes.TaskEvent;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for {@link Logger}.
- *
- * Verifies that the event list starts empty, that log entries are appended
- * in order, that each entry contains the expected field values, and that
- * {@code getEvents()} returns the live list (not a snapshot).
- */
-//public class LoggerTest {
-//
-//    private Logger logger;
-//
-//    /**
-//     * Creates a fresh Logger before every test.
-//     */
-//    @BeforeEach
-//    public void setUp() {
-//        logger = new Logger();
-//    }
-//
-//    /**
-//     * A new Logger should have no events.
-//     */
-//    @Test
-//    public void testInitiallyEmpty() {
-//        assertTrue(logger.getEvents().isEmpty(), "New Logger must have no events");
-//    }
-//
-//    /**
-//     * After one logEvent() call the list must contain exactly one entry.
-//     */
-//    @Test
-//    public void testSingleEventAdded() {
-//        logger.logEvent(1, 0, "MOVE", new Vector2D(3, 4), "moved right");
-//        assertEquals(1, logger.getEvents().size());
-//    }
-//
-//    /**
-//     * The logged entry must contain the tick number.
-//     */
-//    @Test
-//    public void testEntryContainsTick() {
-//        logger.logEvent(7, 0, "MOVE", new Vector2D(0, 0), "");
-//        assertTrue(logger.getEvents().get(0).contains("7"),
-//                "Log entry must contain the tick value");
-//    }
-//
-//    /**
-//     * The logged entry must contain the robot id.
-//     */
-//    @Test
-//    public void testEntryContainsRobotId() {
-//        logger.logEvent(1, 42, "TASK", new Vector2D(0, 0), "");
-//        assertTrue(logger.getEvents().get(0).contains("42"),
-//                "Log entry must contain the robot id");
-//    }
-//
-//    /**
-//     * The logged entry must contain the event type.
-//     */
-//    @Test
-//    public void testEntryContainsEventType() {
-//        logger.logEvent(1, 0, "CHARGING", new Vector2D(0, 0), "");
-//        assertTrue(logger.getEvents().get(0).contains("CHARGING"),
-//                "Log entry must contain the event type");
-//    }
-//
-//    /**
-//     * The logged entry must include the position string.
-//     */
-//    @Test
-//    public void testEntryContainsPosition() {
-//        logger.logEvent(1, 0, "IDLE", new Vector2D(5, 9), "details");
-//        String entry = logger.getEvents().get(0);
-//        assertTrue(entry.contains("5") && entry.contains("9"),
-//                "Log entry must contain the position coordinates");
-//    }
-//
-//    /**
-//     * The logged entry must include the details string.
-//     */
-//    @Test
-//    public void testEntryContainsDetails() {
-//        logger.logEvent(1, 0, "EVENT", new Vector2D(0, 0), "task_completed");
-//        assertTrue(logger.getEvents().get(0).contains("task_completed"),
-//                "Log entry must contain the details string");
-//    }
-//
-//    /**
-//     * The log entry format should match the current key=value layout exactly.
-//     */
-//    @Test
-//    public void testExactEntryFormat() {
-//        logger.logEvent(12, 7, "MOVE", new Vector2D(3, 4), "ok");
-//
-//        assertEquals("tick=12 robot=7 event=MOVE pos=(3, 4) details=ok", logger.getEvents().get(0));
-//    }
-//
-//    /**
-//     * Multiple logEvent() calls should result in the correct number of entries.
-//     */
-//    @Test
-//    public void testMultipleEventsCount() {
-//        logger.logEvent(1, 0, "A", new Vector2D(0, 0), "");
-//        logger.logEvent(2, 1, "B", new Vector2D(1, 1), "");
-//        logger.logEvent(3, 2, "C", new Vector2D(2, 2), "");
-//        assertEquals(3, logger.getEvents().size());
-//    }
-//
-//    /**
-//     * Events must be stored in the order they were logged.
-//     */
-//    @Test
-//    public void testEventOrder() {
-//        logger.logEvent(1, 0, "FIRST",  new Vector2D(0, 0), "");
-//        logger.logEvent(2, 0, "SECOND", new Vector2D(0, 0), "");
-//        List<String> events = logger.getEvents();
-//        assertTrue(events.get(0).contains("FIRST"),  "First logged event must be at index 0");
-//        assertTrue(events.get(1).contains("SECOND"), "Second logged event must be at index 1");
-//    }
-//
-//    /**
-//     * After obtaining a reference via getEvents(), a subsequent logEvent() must
-//     * be visible through the same reference.
-//     */
-//    @Test
-//    public void testGetEventsIsLiveList() {
-//        List<String> events = logger.getEvents();
-//        logger.logEvent(5, 3, "LIVE", new Vector2D(0, 0), "");
-//        assertEquals(1, events.size(),
-//                "getEvents() should return the live list, not a snapshot");
-//    }
-//
-//    /**
-//     * Mutating the returned list should affect the logger because it exposes the backing list.
-//     */
-//    @Test
-//    public void testGetEventsReturnsMutableBackingList() {
-//        List<String> events = logger.getEvents();
-//
-//        events.add("manually-added");
-//
-//        assertEquals(1, logger.getEvents().size());
-//        assertEquals("manually-added", logger.getEvents().get(0));
-//    }
-//
-//    /**
-//     * Null field values are currently accepted and rendered as the string "null".
-//     */
-//    @Test
-//    public void testNullFieldsAreRenderedAsNullStrings() {
-//        logger.logEvent(1, 2, null, null, null);
-//
-//        assertEquals("tick=1 robot=2 event=null pos=null details=null", logger.getEvents().get(0));
-//    }
-//
-//    /**
-//     * Negative numeric values are stored verbatim in the log entry.
-//     */
-//    @Test
-//    public void testNegativeTickAndRobotIdAreStoredVerbatim() {
-//        logger.logEvent(-5, -9, "EVENT", new Vector2D(0, 0), "details");
-//
-//        assertTrue(logger.getEvents().get(0).contains("tick=-5"));
-//        assertTrue(logger.getEvents().get(0).contains("robot=-9"));
-//    }
-//}
+/** Unit tests for {@link Logger}. */
+class LoggerTest {
+
+    /**
+     * Set the logger mode to DB and clear the robot queue.
+     */
+    @BeforeEach
+    void setUp() {
+        Logger.setMode(LoggerMode.DB);
+        clearRobotQueue();
+    }
+
+    /**
+     * Clear the robot queue and set the logger mode to DB.
+     */
+    @AfterEach
+    void tearDown() {
+        clearRobotQueue();
+        Logger.setMode(LoggerMode.DB);
+    }
+
+    /**
+     * Test that the logger mode is set to NO_OP and the task event returns -1.
+     */
+    @Test
+    void setModeNoOp_taskEventReturnsMinusOne() {
+        Logger.setMode(LoggerMode.NO_OP);
+        long result = Logger.logTaskEvent(TaskEvent.TASK_CREATED, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the logger mode is set to null and the task event returns -1.
+     */
+    @Test
+    void logTaskEventReturnsMinusOneWhenModeIsNull() {
+        Logger.setMode(null);
+        long result = Logger.logTaskEvent(TaskEvent.TASK_CREATED, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the task created event returns -1 when the DAO fails.
+     */
+    @Test
+    void logTaskEventTaskCreatedCatchesDaoFailureAndReturnsMinusOne() {
+        long result = Logger.logTaskEvent(TaskEvent.TASK_CREATED, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the task assigned event returns -1 when the DAO fails.
+     */
+    @Test
+    void logTaskEventTaskAssignedCatchesDaoFailureAndReturnsMinusOne() {
+        long result = Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the task completed event returns -1 when the DAO fails.
+     */
+    @Test
+    void logTaskEventTaskCompletedCatchesDaoFailureAndReturnsMinusOne() {
+        long result = Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the task event returns -1 when the event type is null.
+     */
+    @Test
+    void logTaskEventNullEventTypeIsCaughtAndReturnsMinusOne() {
+        long result = Logger.logTaskEvent(null, createTaskRecord());
+        assertEquals(-1L, result);
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventNoOpReturnsImmediately() {
+        Logger.setMode(LoggerMode.NO_OP);
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, createSimulationRunRecord()));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventRunStartedCatchesDaoFailure() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, createSimulationRunRecord()));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventRunStartedWithNullRecordIsCaught() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, null));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventRunCompletedCatchesDaoFailure() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, createSimulationRunRecord()));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventRunCompletedWithNullRecordIsCaught() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_COMPLETED, null));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventRunFailedPathDoesNotThrow() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(SimulationRunEvent.RUN_FAILED, createSimulationRunRecord()));
+    }
+
+    /**
+     * Test that the simulation run event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logSimulationRunEventNullEventTypeIsCaught() {
+        assertDoesNotThrow(() -> Logger.logSimulationRunEvent(null, createSimulationRunRecord()));
+    }
+
+    /**
+     * Test that the robot event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logRobotEventNoOpDoesNotEnqueue() {
+        Logger.setMode(LoggerMode.NO_OP);
+        Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, createSimLogRecord());
+        assertEquals(0, getRobotQueue().size());
+    }
+
+    /**
+     * Test that the robot event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void logRobotEventDbModeEnqueuesRecord() {
+        SimLogRecord record = createSimLogRecord();
+        Logger.logRobotEvent(RobotEvent.COLLISION, record);
+        assertTrue(getRobotQueue().contains(record));
+    }
+
+    /**
+     * Test that the robot event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void flushRobotEventsWithEmptyQueueDoesNotThrow() {
+        assertDoesNotThrow(Logger::flushRobotEvents);
+        assertEquals(0, getRobotQueue().size());
+    }
+
+    /**
+     * Test that the robot event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void flushRobotEventsWithPendingRecordsDrainsQueue() {
+        Logger.logRobotEvent(RobotEvent.CHARGE_START, createSimLogRecord());
+        assertTrue(getRobotQueue().size() > 0);
+
+        assertDoesNotThrow(Logger::flushRobotEvents);
+        assertEquals(0, getRobotQueue().size());
+    }
+
+    /**
+     * Test that the robot event returns immediately when the logger mode is set to NO_OP.
+     */
+    @Test
+    void backgroundWorkerNonEmptyBatchExceptionIsCaughtAndLogged() {
+        ByteArrayOutputStream errCapture = new ByteArrayOutputStream();
+        PrintStream originalErr = System.err;
+        System.setErr(new PrintStream(errCapture));
+        try {
+            Logger.setMode(LoggerMode.DB);
+            // Enqueue a real record so the worker reaches SimLogDao.insertBatch(batch).
+            Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, createSimLogRecord());
+
+            long deadline = System.currentTimeMillis() + 3000;
+            while (System.currentTimeMillis() < deadline) {
+                if (errCapture.toString().contains("Failed to flush robot event batch:")) {
+                    break;
+                }
+                Thread.sleep(50);
+            }
+
+            assertTrue(
+                errCapture.toString().contains("Failed to flush robot event batch:"),
+                "Expected worker catch block to log batch flush failure"
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Interrupted while waiting for background logger worker");
+        } finally {
+            System.setErr(originalErr);
+        }
+    }
+
+    /**
+     * Test that the constructor is private and can be instantiated reflectively.
+     */
+    @Test
+    void constructorIsPrivateButReflectivelyInstantiable() throws Exception {
+        Constructor<Logger> constructor = Logger.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Logger instance = constructor.newInstance();
+        assertNotNull(instance);
+    }
+
+    /**
+     * Create a workload task record.
+     */
+    private WorkloadTaskRecord createTaskRecord() {
+        WorkloadTaskRecord record = new WorkloadTaskRecord();
+        record.setId(42L);
+        record.setAssignedRobotId(UUID.randomUUID());
+        record.setAssignedTick(8);
+        record.setCompletedTick(10);
+        record.setStatus("COMPLETED");
+        return record;
+    }
+
+    /**
+     * Create a simulation run record.
+     */
+    private SimulationRunRecord createSimulationRunRecord() {
+        SimulationRunRecord record = new SimulationRunRecord();
+        record.setId(UUID.randomUUID());
+        record.setStatus("COMPLETED");
+        record.setFinishedAt(Timestamp.from(Instant.now()));
+        return record;
+    }
+
+    /**
+     * Create a simulation log record.
+     */
+    private SimLogRecord createSimLogRecord() {
+        SimLogRecord record = new SimLogRecord();
+        record.setRunId(UUID.randomUUID());
+        record.setTick(1);
+        record.setRobotId(UUID.randomUUID());
+        record.setEventType("MOVE_EXECUTED");
+        record.setX(2);
+        record.setY(3);
+        record.setDetails("{\"note\":\"test\"}");
+        return record;
+    }
+
+    /**
+     * Get the robot queue.
+     */
+    @SuppressWarnings("unchecked")
+    private BlockingQueue<SimLogRecord> getRobotQueue() {
+        try {
+            Field queueField = Logger.class.getDeclaredField("robotEventQueue");
+            queueField.setAccessible(true);
+            return (BlockingQueue<SimLogRecord>) queueField.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Failed to access logger robot event queue", e);
+        }
+    }
+
+    /**
+     * Clear the robot queue.
+     */
+    private void clearRobotQueue() {
+        getRobotQueue().clear();
+    }
+}
