@@ -24,11 +24,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+/**
+ * Integration test for config round-trip fidelity with Reservation-K coordination.
+ *
+ * <p>This test verifies a save → load → save sequence preserves simulation-level settings,
+ * coordination policy type/parameter, robot strategy metadata, and basic workload presence when
+ * serialized back into DTO form.</p>
+ */
 public class ConfigRoundTripReservationKIntegrationTest extends SimulationIntegrationTestSupport {
 
     @TempDir
     Path tempDir;
 
+    /**
+     * Verifies Reservation-K configuration survives a double serialization cycle.
+     *
+     * <p>Scenario:
+     * <ol>
+     *   <li>Build an in-memory engine with Reservation-K policy, one robot, and one task.</li>
+     *   <li>Save config to disk, reload engine from that file, then save again.</li>
+     *   <li>Load final JSON into DTO and assert key fields remained stable.</li>
+     * </ol>
+     *
+     * @throws Exception if save/load or reflective policy access fails
+     */
     @Test
     void saveLoadSaveRoundTripPreservesReservationKConfiguration() throws Exception {
         Map map = new Map(5, 3);
@@ -92,6 +111,13 @@ public class ConfigRoundTripReservationKIntegrationTest extends SimulationIntegr
         assertEquals(1, loadedEngine.getDispatcher().getPendingTaskCount());
     }
 
+    /**
+     * Reads the engine's private coordination policy field for runtime type assertions.
+     *
+     * @param engine loaded simulation engine instance
+     * @return current coordination policy object
+     * @throws ReflectiveOperationException if reflective lookup/access fails
+     */
     private Object getCoordinationPolicy(SimulationEngine engine) throws ReflectiveOperationException {
         Field field = SimulationEngine.class.getDeclaredField("coordinationPolicy");
         field.setAccessible(true);
