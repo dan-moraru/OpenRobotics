@@ -15,7 +15,6 @@ import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.ReservationKPolicy;
 import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.simulationcore.TrafficRulesPolicy;
-import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.collections.FXCollections;
@@ -27,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -60,6 +60,9 @@ public class SetupController {
     @FXML private Spinner<Integer> reservationKSpinner;
 
     // ── WORKLOAD ────────────────────────────────────────────────────────
+    @FXML private RadioButton      autoTaskRadio;
+    @FXML private RadioButton      manualTaskRadio;
+    @FXML private VBox             maxTasksGroup;
     @FXML private TextField        maxTasksField;
     @FXML private TextField        workloadSeedField;
 
@@ -166,6 +169,17 @@ public class SetupController {
             AppState.setCanvasDimensions(AppState.getCanvasWidthTiles(), n);
             refreshPreview();
             checkCanvasConstraint();
+        });
+
+        // Task assignment mode toggle
+        ToggleGroup taskModeGroup = new ToggleGroup();
+        autoTaskRadio.setToggleGroup(taskModeGroup);
+        manualTaskRadio.setToggleGroup(taskModeGroup);
+        maxTasksGroup.managedProperty().bind(maxTasksGroup.visibleProperty());
+        maxTasksGroup.setVisible(true); // default: automatic
+        taskModeGroup.selectedToggleProperty().addListener((obs, oldT, newT) -> {
+            boolean isManual = newT == manualTaskRadio;
+            maxTasksGroup.setVisible(!isManual);
         });
 
         // Default text fields
@@ -861,13 +875,18 @@ public class SetupController {
         int maxTasks = DEFAULT_MAX_TASKS;
         try { maxTasks = Integer.parseInt(maxTasksField.getText().trim()); } catch (NumberFormatException ignored) { }
 
+        boolean isManualMode = manualTaskRadio != null && manualTaskRadio.isSelected();
+
         CoordinationPolicy policy = buildCoordinationPolicy();
 
         // Robots are not auto-spawned here — they must be placed in the editor
         // or loaded from a JSON config file (handled via SimulationEngine(configPath)).
 
         Dispatcher dispatcher = new Dispatcher();
-        generateFixedTasks(map, seed, maxTasks, dispatcher);
+        // Tasks are generated at play-time (SimulationController.onPlay) once the user
+        // has placed robots/racks on the editor canvas.  SetupController never pre-fills
+        // the dispatcher — automatic mode generates up to maxTasks tasks then; manual mode
+        // generates one task per rack box using each rack's configured dropoff pool.
 
         String runName = runNameField.getText().trim();
         if (runName.isEmpty()) runName = DEFAULT_RUN_NAME;
@@ -876,6 +895,7 @@ public class SetupController {
         try { maxTicks = Integer.parseInt(maxTicksField.getText().trim()); } catch (NumberFormatException ignored) { }
 
         SimulationEngine engine = new SimulationEngine(map, new Robot[0], dispatcher, policy, runName, DEFAULT_TICK_MS, maxTicks, seed, maxTasks);
+        engine.setManualTaskAssignment(isManualMode);
 
         com.openrobotics.robot.RobotConfig robotConfig = new com.openrobotics.robot.RobotConfig(
                 parseOptionalFloatField(batteryCapacityField, DEFAULT_BATTERY_CAPACITY),
@@ -1006,88 +1026,6 @@ public class SetupController {
             case "TRAFFIC_RULES" -> new TrafficRulesPolicy(new HashSet<>());
             default -> CoordinationPolicy.noOp();
         };
-    }
-
-    /**
-     * Generates up to maxTasks pickup-to-dropoff tasks.
-     * Pickup location is the rack tile itself; robots arrive when adjacent.
-     * Racks with no accessible adjacent tile are skipped.
-     * Floor-tile fallback only fires when no racks are present at all.
-     */
-    private void generateFixedTasks(com.openrobotics.map.Map map, long seed, int maxTasks, Dispatcher dispatcher) {
-        List<Vector2D> pickups  = new ArrayList<>();
-        List<Vector2D> dropoffs = new ArrayList<>();
-
-        // track whether racks exist to distinguish "no racks" from "racks but all unreachable"
-        boolean racksPresent = false;
-
-        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
-        for (MapEntity e : map.getEntities()) {
-            if (e instanceof Rack) {
-                racksPresent = true;
-                Vector2D pos = e.getPosition();
-                // use the rack tile directly as pickup; skip if no adjacent tile is reachable
-                if (map.hasTraversableAdjacentTile(pos)) {
-                    pickups.add(pos);
-                }
-                // else: walled-in rack — skip silently
-            } else if (e instanceof DeliveryStation) {
-                Vector2D pos = e.getPosition();
-                if (map.isTraversable(pos)) {
-                    dropoffs.add(pos);
-                } else {
-                    // station tile itself is blocked (unusual) — fall back to adjacent tile
-                    for (int[] d : dirs) {
-                        int nx = pos.getX() + d[0], ny = pos.getY() + d[1];
-                        if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
-                            Vector2D adj = new Vector2D(nx, ny);
-                            if (map.isTraversable(adj)) {
-                                dropoffs.add(adj);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // floor-tile fallback: only when no racks are present on the map at all.
-        // if racks exist but are all unreachable, pickups stays empty and the early
-        // return below fires — do not generate floor-tile pickups in that case.
-        if (pickups.isEmpty() && !racksPresent) {
-            for (int y = 0; y < map.getHeight(); y++)
-                for (int x = 0; x < map.getWidth(); x++) {
-                    Vector2D p = new Vector2D(x, y);
-                    if (map.isTraversable(p) && dropoffs.stream().noneMatch(d -> d.equals(p)))
-                        pickups.add(p);
-                }
-        }
-        // Fallback dropoffs: any traversable non-pickup tile
-        if (dropoffs.isEmpty()) {
-            outer:
-            for (int y = 0; y < map.getHeight(); y++)
-                for (int x = 0; x < map.getWidth(); x++) {
-                    Vector2D p = new Vector2D(x, y);
-                    if (map.isTraversable(p) && pickups.stream().noneMatch(pk -> pk.equals(p))) {
-                        dropoffs.add(p);
-                        break outer;
-                    }
-                }
-        }
-        if (pickups.isEmpty() || dropoffs.isEmpty()) return;
-
-        java.util.Random rng = new java.util.Random(seed);
-        int taskId = 1, placed = 0, attempts = 0;
-        while (placed < maxTasks && attempts < maxTasks * 5) {
-            attempts++;
-            Vector2D pickup  = pickups.get(rng.nextInt(pickups.size()));
-            Vector2D dropoff;
-            do { dropoff = dropoffs.get(rng.nextInt(dropoffs.size())); }
-            while (dropoff.equals(pickup) && dropoffs.size() > 1);
-            dispatcher.addTask(new Task(taskId++, pickup, dropoff, 1));
-            placed++;
-        }
     }
 
     private int parseIntSafe(String text, int fallback) {
