@@ -42,7 +42,9 @@ public class SimulationEngine {
     private String runName;
     private int tickMs;
     private int maxTicks;
+    private int maxTasks;
     private long seed;
+    private boolean manualTaskAssignment = false;
     private boolean initialized;
     private String initError;
 
@@ -77,6 +79,7 @@ public class SimulationEngine {
         this.runName = runName;
         this.tickMs = tickMs;
         this.maxTicks = maxTicks;
+        this.maxTasks = maxTasks;
         this.seed = seed;
         this.initialized = map != null && robots != null && dispatcher != null;
     }
@@ -205,6 +208,8 @@ public class SimulationEngine {
             this.runName = dto.config.runName;
             this.tickMs = dto.config.tickMs;
             this.maxTicks = dto.config.maxTicks;
+            this.maxTasks = dto.config.maxTasks > 0 ? dto.config.maxTasks : 10;
+            this.manualTaskAssignment = dto.config.manualTaskAssignment;
             this.simulationError = SimulationError.NONE;
             this.collisionManager = new CollisionManager();
             this.initialized = this.map != null && this.robots != null && this.dispatcher != null && this.collisionManager != null;
@@ -262,6 +267,7 @@ public class SimulationEngine {
                 }
                 rack.setValidDropoffIds(ids);
             }
+            rack.setManualDropoffAssignment(eDto.manualDropoffAssignment);
             this.map.addEntity(rack);
         }
     }
@@ -294,6 +300,8 @@ public class SimulationEngine {
         dto.config.tickMs = this.tickMs;
         dto.config.maxTicks = this.maxTicks;
         dto.config.seed = this.seed;
+        dto.config.maxTasks = this.maxTasks;
+        dto.config.manualTaskAssignment = this.manualTaskAssignment;
         dto.config.batteryCapacity = robotConfig.batteryCapacity;
         dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
         dto.config.chargePerTick = robotConfig.chargePerTick;
@@ -346,6 +354,7 @@ public class SimulationEngine {
                 rDto.position = new SimulationConfigDTO.Vector2DDTO(
                     (int)rack.getPosition().getX(), (int)rack.getPosition().getY());
                 rDto.boxCount = rack.getBoxCount();
+                rDto.manualDropoffAssignment = rack.isManualDropoffAssignment();
                 if (!rack.getValidDropoffIds().isEmpty()) {
                     rDto.validDropoffIds = rack.getValidDropoffIds().stream()
                         .map(UUID::toString).collect(java.util.stream.Collectors.toList());
@@ -698,6 +707,29 @@ public class SimulationEngine {
 
     public int getTickCounter() {
         return tickCounter;
+    }
+
+    public int getMaxTasks() { return maxTasks; }
+
+    public boolean isManualTaskAssignment() { return manualTaskAssignment; }
+    public void setManualTaskAssignment(boolean manualTaskAssignment) {
+        this.manualTaskAssignment = manualTaskAssignment;
+    }
+
+    /**
+     * A run is finished when the clock has started, every robot is idle, and
+     * the dispatcher has no more queued tasks. tickCounter==0 is never
+     * finished so Play on a fresh engine is always allowed.
+     */
+    public boolean isFinished() {
+        if (tickCounter <= 0) return false;
+        if (dispatcher == null || !dispatcher.getAllQueuedTasks().isEmpty()) return false;
+        if (robots == null) return true;
+        for (Robot r : robots) {
+            if (r == null) continue;
+            if (r.getState() != RobotState.IDLE) return false;
+        }
+        return true;
     }
 
     public int getMaxTicks() {

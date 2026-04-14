@@ -143,7 +143,7 @@ public class SaveConfigControllerTest extends ApplicationTest {
             interact(() -> {
                 combo.getItems().add(dir.toString());
                 combo.getSelectionModel().select(dir.toString());
-                fileNameField.setText("valid.json");
+                fileNameField.setText("..valid.json");
             });
             WaitForAsyncUtils.waitForFxEvents();
 
@@ -151,7 +151,7 @@ public class SaveConfigControllerTest extends ApplicationTest {
             WaitForAsyncUtils.waitForFxEvents();
 
             assertEquals(dir.toFile(), controller.getSelectedDirectory());
-            assertEquals("valid.json", controller.getFileName());
+            assertEquals("..valid.json", controller.getFileName());
             assertFalse(dialogStage.isShowing());
         } finally {
             try (var entries = Files.list(dir)) {

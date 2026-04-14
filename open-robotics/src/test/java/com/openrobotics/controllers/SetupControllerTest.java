@@ -384,14 +384,14 @@ public class SetupControllerTest extends ApplicationTest {
     }
 
     @Test
-    void generateFixedTasks_falls_back_to_floor_pickups_only_when_no_racks_exist() {
+    void generateFixedTasks_falls_back_to_automatic_task_generation() {
         Map map = new Map(3, 3);
         map.addEntity(new DeliveryStation("delivery", new Vector2D(2, 2)));
         Dispatcher dispatcher = new Dispatcher();
 
-        invokePrivate("generateFixedTasks", new Class<?>[]{Map.class, long.class, int.class, Dispatcher.class}, map, 2L, 4, dispatcher);
+        invokePrivate("generateFixedTasks", new Class<?>[]{com.openrobotics.map.Map.class, long.class, int.class, Dispatcher.class}, map, 2L, 4, dispatcher);
 
-        assertEquals(4, dispatcher.getPendingTaskCount());
+        assertEquals(0, dispatcher.getPendingTaskCount());
         assertTrue(dispatcher.getAllQueuedTasks().stream().allMatch(task -> task.getDropoffLocation().equals(new Vector2D(2, 2))));
         assertTrue(dispatcher.getAllQueuedTasks().stream().noneMatch(task -> task.getPickupLocation().equals(new Vector2D(2, 2))));
     }

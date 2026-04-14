@@ -11,6 +11,7 @@ import java.util.UUID;
 public class Rack extends MapEntity {
     private int boxCount;
     private List<UUID> validDropoffIds;
+    private boolean manualDropoffAssignment = false;
 
     public Rack(String name, Vector2D position) {
         super(name, position);
@@ -35,4 +36,8 @@ public class Rack extends MapEntity {
         this.validDropoffIds = validDropoffIds != null ? validDropoffIds : new ArrayList<>();
     }
 
+    public boolean isManualDropoffAssignment() { return manualDropoffAssignment; }
+    public void setManualDropoffAssignment(boolean manualDropoffAssignment) {
+        this.manualDropoffAssignment = manualDropoffAssignment;
+    }
 }

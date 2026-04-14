@@ -1,173 +1,85 @@
-# OpenRobotics - Warehouse Simulation Platform
+# OpenRobotics
+Multi-Robot Warehouse Simulation Platform
 
-A modern JavaFX-based multi-robot warehouse simulation platform with real-time visualization and comprehensive results analysis.
+Check the repo's Project tab for the Kanban board.
 
-## Quick Links
+## Description
 
-- **[QUICKSTART.md](./docs/guides/QUICKSTART.md)** - Get running in 5 minutes
-- **[SETUP_GUIDE.md](./docs/guides/SETUP_GUIDE.md)** - Detailed setup and development guide  
-- **[UI_IMPLEMENTATION.md](./docs/UI_IMPLEMENTATION.md)** - UI architecture overview
+OpenRobotics is a JavaFX-based warehouse simulation platform where multiple autonomous robots navigate a configurable warehouse environment to complete pickup and delivery tasks. The simulation supports multiple navigation algorithms (Greedy, Bug, RTA*), coordination policies (Traffic Rules, Reservation-K), real-time 2D visualization, a heatmap overlay, and a results screen with per-robot statistics logged to a remote PostgreSQL database.
 
-## ✨ Features
+## Features
 
-### User Interface (Sprint 3 - Complete)
-✅ **4 Main Screens**: Welcome, Setup, Simulation, Results  
-✅ **4 Dialog Windows**: Exit confirmation, Load/Save config, Object descriptions  
-✅ **Professional Styling**: Warm, neutral color scheme (#C2BEAE, #8D8A7F, #5D5B54)  
-✅ **Logo Integration**: OpenRobotics branding on all screens  
-✅ **Responsive Layout**: Adapts to window resizing  
-✅ **Navigation System**: Seamless screen transitions via ScreenNavigator  
-✅ **CSS Framework**: 800+ lines of organized styling  
+- 4 screens: Welcome, Setup, Simulation Editor, Results
+- Config file loading and saving (JSON)
+- Template maps and random map generation
+- Drag-and-drop entity placement in the editor
+- Navigation algorithms: Greedy, Bug, RTA*
+- Coordination policies: None, Traffic Rules, Reservation-K
+- Proximity and range sensors per robot
+- Deadlock detection and recovery
+- Heatmap visualization
+- Per-robot statistics: distance, energy, tasks completed, idle ticks
+- Results export and database logging (PostgreSQL via Supabase)
 
-### Core Functionality
-- Configuration management (load/save configs)
-- Real-time 2D simulation visualization
-- Object placement and properties editing
-- Playback controls (play, pause, step, restart, speed)
-- Results analysis with charts and statistics
+## Dev Install
 
-## 🚀 Quick Start
+1. Make sure you have `Java SDK 21` or higher
+2. Clone the [repo](https://github.com/dan-moraru/OpenRobotics)
+3. Set up the database config file (see Database Setup below)
+4. Open a terminal and run `cd open-robotics`
+5. Run `mvn clean javafx:run` or use the IDE's integrated Maven tool window
 
-### Prerequisites
-- Java 21 or later (`java -version`)
-- Maven 3.8 or later (`mvn -version`)
-- (Optional) JavaFX Scene Builder for visual editing
+### Database Setup
 
-### Installation & Run (Windows)
-```powershell
-cd <PROJECT_ROOT>
+The app connects to a remote PostgreSQL database hosted on Supabase for logging simulation results. Create the file `open-robotics/application.config` with the following content (fill in your credentials):
 
-# Option 1: Using verification script (recommended)
-.\verify.ps1      # Check everything is set up
-.\build.ps1       # Build and run
-
-# Option 2: Using Maven directly
-cd open-robotics
-mvn clean compile javafx:run
-
-# Option 3: Using Maven from the repo root
-mvn -f open-robotics/pom.xml clean compile javafx:run
+```
+DB_URL=jdbc:postgresql://<host>:5432/postgres?sslmode=require
+DB_USER=<user>
+DB_PASSWORD=<password>
 ```
 
-### Installation & Run (Mac/Linux)
-```bash
-cd <PROJECT_ROOT>/open-robotics
-mvn clean compile javafx:run
-```
+This file is gitignored and must be created locally. Without it, the app will still run but database logging will be unavailable.
 
-## 📋 Project Structure
+## Dev Usage
+
+Make sure you are in the `open-robotics` directory before running these commands:
+
+- Run program: `mvn clean javafx:run`
+- Run all tests: `mvn test`
+- Run mutation tests: `mvn test -Pmutation`
+- Build program to JAR: `mvn package -DskipTests`
+- Compile only: `mvn compile`
+- Clean old artifacts: `mvn clean`
+- Show dependencies: `mvn dependency:tree`
+
+You can also run any of these through the IDE's integrated Maven tool window.
+
+## Project Structure
 
 ```
 open-robotics/
-├── src/main/
-│   ├── java/com/openrobotics/
-│   │   ├── MainApp.java                    # Entry point
-│   │   ├── Robot.java                      # Simulation logic
-│   │   ├── controllers/                    # 8 FXML controllers
-│   │   ├── model/                          # Data models
-│   │   └── util/ScreenNavigator.java       # Navigation system
-│   └── resources/com/openrobotics/
-│       ├── fxml/                           # 8 FXML screen files
-│       ├── css/theme.css                   # Main stylesheet (800+ lines)
-│       └── img/                            # Logo images
-├── pom.xml                                 # Maven configuration
-└── src/test/java/                          # Unit tests
+├── src/main/java/com/openrobotics/
+│   ├── MainApp.java                  # Entry point
+│   ├── controllers/                  # FXML screen controllers
+│   ├── db/                           # DAO layer, models, record builders
+│   ├── io/                           # Config file loading and saving
+│   ├── logging/                      # Logger and event types
+│   ├── map/                          # Map, Tile, Vector2D, entities
+│   ├── robot/                        # Robot, navigation, sensors
+│   ├── simulationcore/               # Engine, dispatcher, policies
+│   ├── task/                         # Task, TaskGenerator, TaskStatus
+│   └── util/                         # ScreenNavigator, IconLoader, etc.
+├── src/main/resources/com/openrobotics/
+│   ├── css/theme.css                 # Global stylesheet
+│   ├── fxml/                         # Screen and dialog FXML files
+│   └── img/                          # Logo and entity icons
+├── src/main/resources/db/migration/  # Flyway SQL migration scripts
+└── pom.xml
 ```
-
-## 🎨 UI Color Scheme
-
-| Hex | RGB | Usage |
-|-----|-----|-------|
-| `#C2BEAE` | (194,190,174) | Primary light backgrounds |
-| `#CDCBC3` | (205,203,195) | Viewports & secondary backgrounds |
-| `#8D8A7F` | (141,138,127) | Tabs, sidebars, accents |
-| `#5D5B54` | (93,91,84) | Dark panels, object tiles |
-| `#32312D` | (50,49,45) | Console background, dark buttons |
-| `#4D4B45` | (77,75,69) | Simulation/Results header |
-| `#3D3C39` | (61,60,57) | Setup screen header |
-| `#599068` | (89,144,104) | Success/confirm buttons |
-| `#AA8478` | (170,132,120) | Danger/delete buttons |
-
-## 📚 Documentation
-
-### For First-Time Setup
-See [QUICKSTART.md](./docs/guides/QUICKSTART.md) for a 5-minute getting started guide.
-
-### For Development
-See [SETUP_GUIDE.md](./docs/guides/SETUP_GUIDE.md) for detailed setup, IDE configuration, and development instructions.
-
-### For Architecture Details
-See [UI_IMPLEMENTATION.md](./docs/UI_IMPLEMENTATION.md) for CSS classes, navigation flow, and technical decisions.
-
-## 💻 Build & Run Commands
-
-Make sure you're in the `open-robotics` directory:
-
-```bash
-# Development
-mvn clean compile javafx:run          # Run application
-mvn test                              # Run all tests
-mvn compile                           # Compile only
-mvn clean                             # Clean build artifacts
-
-# Distribution
-mvn package                           # Build JAR
-java -jar target/open-robotics-1.0.0.jar  # Run JAR
-```
-
-You can also use the `IDE's integrated Maven tool window` to run these commands.
-
-## 🎯 Screen Navigation
-
-```
-Welcome Screen (changelog)
-    ↓ click
-Setup Screen (configuration)
-    ├─→ Load/Save Dialogs
-    ├─→ Exit Confirm Dialog
-    └─→ Simulation Screen (START button)
-        ├─→ Object Description Dialog
-        ├─→ Results Screen
-        └─→ Exit Confirm Dialog
-```
-
-## 🔌 IDE Setup
-
-### IntelliJ IDEA
-1. File → Open → Select `<PROJECT_ROOT>`
-2. Right-click `MainApp.java` → Run
-3. (Optional) Settings → JavaFX → Set Scene Builder path for visual editing
-
-### VS Code
-1. Open folder: `<PROJECT_ROOT>`
-2. Install "Extension Pack for Java"
-3. Open terminal and run: `cd open-robotics && mvn javafx:run`
-
-## 🛠️ Editing UI with Scene Builder
-
-1. Right-click any `.fxml` file in IDE
-2. Select "Open in Scene Builder"
-3. Drag-drop components visually
-4. Changes auto-sync to XML when you save
-
-## ✅ Verification Checklist
-
-- [ ] Java 21+ installed (`java -version`)
-- [ ] Maven installed (`mvn -version`)
-- [ ] Run `.\verify.ps1` - all checks pass
-- [ ] Application starts (`mvn javafx:run`)
-- [ ] All 4 screens load correctly
-- [ ] Logo displays on screens
-- [ ] Colors match wireframe design
-
-## 📝 Dev Usage
-- `./verify.ps1` (Windows): Validates Java/Maven, key files, and build wiring.
-- `./build.ps1` (Windows): Cleans, compiles, then runs JavaFX app.
-- `./build.sh` (macOS/Linux): Packages and runs app via Maven.
-- `mvn -f open-robotics/pom.xml test`: Runs test suite from repo root.
-- `mvn -f open-robotics/pom.xml clean package -DskipTests`: Fast local packaging.
 
 ## Authors
+
 - Dan Moraru, 261227203
 - Badr Zejli, 261239011
 - Filip Snítil, 261139844

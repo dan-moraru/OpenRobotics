@@ -65,8 +65,9 @@ class TaskGeneratorTest {
         map.addEntity(rack);
         map.addEntity(ds1);
         map.addEntity(ds2);
-        // Only allow ds1 as a valid dropoff
+        // Only allow ds1 as a valid dropoff (manual mode required to honour validDropoffIds)
         rack.setValidDropoffIds(java.util.List.of(ds1.getId()));
+        rack.setManualDropoffAssignment(true);
 
         List<Task> tasks = TaskGenerator.generateRandomTasks(map, 10, 42L);
 

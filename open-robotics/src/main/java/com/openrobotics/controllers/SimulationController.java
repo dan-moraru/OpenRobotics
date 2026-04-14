@@ -190,6 +190,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private final List<Object> outlinerBacking = new ArrayList<>();
     private MapEntity selectedEntity = null;
+    private Rack pickingRack = null;
+    private int  pickingSlot = -1;
     private Vector2D selectedIntersection = null;
     private MapEntity draggingOnCanvas = null;
     // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
@@ -311,9 +313,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return false;
     }
 
-    /** Saves the current editor state as the baseline for reset. Reuses a single temp file. */
+    /** Saves the current editor state as the baseline for reset. Reuses a single temp file.
+     *  Only snapshots when the simulation has not yet started (tick 0, not running), so that
+     *  mid-run editor actions do not overwrite the clean baseline with a non-zero tick state. */
     private void saveEditorBaseline() {
         if (engine == null) return;
+        if (running || engine.getTickCounter() > 0) return; // never overwrite with mid-run state
         try {
             if (initialSnapshotPath == null) {
                 java.io.File snap = java.io.File.createTempFile("openrobotics_baseline_", ".json");
@@ -322,7 +327,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             engine.configSaving(initialSnapshotPath);
         } catch (Exception ex) {
-            log("\u26a0 Could not save editor baseline: " + ex.getMessage());
+            log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
         }
     }
 
@@ -656,6 +661,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 gc.setFont(Font.font(fontSize));
                 gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
             }
+
+            if (pickingRack != null && entity instanceof DeliveryStation) {
+                gc.setStroke(OBJECT_SELECTION_COLOR);
+                gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
+                gc.strokeRect(sx + 1, sy + 1, tileSize - 2, tileSize - 2);
+            }
         }
     }
 
@@ -862,9 +873,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      */
     @FXML
     private void onObjectTileDragDetected(MouseEvent e) {
-        if (running) { e.consume(); return; }
         Button source = (Button) e.getSource();
-        String type = (String) source.getUserData();
+        if (source == null) {
+            log("⚠ Drag ignored because the Add Object tile source was not available.");
+            e.consume();
+            return;
+        }
+
+        String type = source.getUserData() instanceof String s ? s : null;
+        if (type == null || type.isBlank()) {
+            log("⚠ Drag ignored because the Add Object tile is missing its type metadata.");
+            e.consume();
+            return;
+        }
+
+        if (running) {
+            log("⚠ Drag ignored for " + type + " because the editor is locked. Stop or reset the simulation first.");
+            e.consume();
+            return;
+        }
 
         Dragboard db = source.startDragAndDrop(TransferMode.COPY);
         ClipboardContent content = new ClipboardContent();
@@ -914,6 +941,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         boolean dropCompleted = false;
         dragHighlightTileX = -1;
         dragHighlightTileY = -1;
+        if (!db.hasString()) {
+            log("⚠ Drop ignored because the dragged item did not carry an object type.");
+            e.setDropCompleted(false);
+            e.consume();
+            return;
+        }
+
         if (db.hasString()) {
             String type     = db.getString();
             double tileSize = 32 * zoom;
@@ -948,6 +982,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                         }
                     }
                 }
+            } else {
+                log("⚠ Drop ignored because no simulation map is loaded yet.");
             }
         }
         e.setDropCompleted(dropCompleted);
@@ -1025,6 +1061,29 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         lastMouseY = e.getY();
         viewportMouseX = e.getX();
         viewportMouseY = e.getY();
+
+        if (pickingRack != null && e.getButton() == MouseButton.PRIMARY) {
+            MapEntity hit = entityAtScreenPos(e.getX(), e.getY());
+            if (hit instanceof DeliveryStation ds) {
+                if (pickingSlot >= 0 && pickingSlot < pickingRack.getValidDropoffIds().size()) {
+                    pickingRack.getValidDropoffIds().set(pickingSlot, ds.getId());
+                    log("Assigned " + ds.getName() + " to slot " + pickingSlot
+                            + " of rack " + pickingRack.getName() + ".");
+                    Rack rackRef = pickingRack;
+                    cancelDropoffPicking();
+                    if (selectedEntity == rackRef) showPropertiesFor(rackRef);
+                    persistEditorChanges();
+                } else {
+                    log("⚠ Dropoff assignment slot " + pickingSlot + " is no longer valid for rack "
+                            + pickingRack.getName() + ".");
+                    cancelDropoffPicking();
+                }
+            } else {
+                cancelDropoffPicking();
+                log("Dropoff assignment cancelled.");
+            }
+            return;
+        }
 
         if (e.getButton() == MouseButton.PRIMARY) {
             Vector2D intersectionHit = intersectionAtScreenPos(e.getX(), e.getY());
@@ -1108,7 +1167,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("Moved " + draggingOnCanvas.getName()
                 + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
-            dragStartPosition = null;
             dragStartPosition = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
@@ -1285,19 +1343,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         HBox nameBox = new HBox(8);
         TextField nameField = new TextField(entity.getName());
         nameField.setStyle("-fx-font-size: 11;");
-        // Track rename on focus lost (commit) rather than every keystroke
-        nameField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) {
-                String newVal = nameField.getText();
-                String oldVal = entity.getName();
-                if (newVal != null && !newVal.isBlank() && !newVal.equals(oldVal)) {
-                    if (guardEditor("rename")) { nameField.setText(oldVal); return; }
-                    entity.setName(newVal);
-                    populateOutliner();
-                    drawViewport();
-                    pushAction(new RenameAction(entity, oldVal, newVal));
-                }
-            }
+        // Commit rename whenever the text changes (covers programmatic setText in tests and
+        // direct keyboard editing) as well as on focus-lost for undo-history bookkeeping.
+        nameField.textProperty().addListener((obs, oldText, newText) -> {
+            if (newText == null || newText.isBlank() || newText.equals(entity.getName())) return;
+            if (guardEditor("rename")) { nameField.setText(entity.getName()); return; }
+            String oldVal = entity.getName();
+            entity.setName(newText);
+            populateOutliner();
+            drawViewport();
+            pushAction(new RenameAction(entity, oldVal, newText));
         });
         nameField.setOnAction(ev -> nameField.getParent().requestFocus()); // Enter commits
         nameBox.getChildren().addAll(new Label("Name:"), nameField);
@@ -1359,7 +1414,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             HBox algoBox = new HBox(8);
             algoBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             ComboBox<String> algoCombo = new ComboBox<>(
-                    FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR", "RANDOM"));
+                    FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR"));
             algoCombo.setPrefWidth(120);
             // Determine current algorithm from the robot's nav strategy
             String detectedAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
@@ -1432,10 +1487,145 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         } else if (entity instanceof Station) {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
-        } else if (entity instanceof Rack) {
-            Label rackProps = new Label("Rack configuration");
-            propertiesPanel.getChildren().add(rackProps);
+        } else if (entity instanceof Rack rack) {
+            boolean globalManual = engine != null && engine.isManualTaskAssignment();
+
+            if (globalManual) {
+                // ── Number of boxes (manual mode only) ──
+                HBox boxCountBox = new HBox(8);
+                boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                Spinner<Integer> boxCountSpinner = new Spinner<>(
+                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+                boxCountSpinner.setPrefWidth(80);
+                boxCountSpinner.setEditable(true);
+                boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
+                    if (newV == null || oldV == null || newV.equals(oldV)) return;
+                    if (guardEditor("change box count")) {
+                        boxCountSpinner.getValueFactory().setValue(oldV);
+                        return;
+                    }
+                    rack.setBoxCount(newV);
+                    persistEditorChanges();
+                });
+                boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+                propertiesPanel.getChildren().add(boxCountBox);
+
+                // ── Manual dropoff assignment checkbox (manual mode only) ──
+                HBox manualBox = new HBox(8);
+                manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
+                manualCheck.setSelected(rack.isManualDropoffAssignment());
+                VBox dropoffArrayBox = new VBox(4);
+                dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
+                dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
+                manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                    if (guardEditor("toggle manual assignment")) {
+                        manualCheck.setSelected(oldV);
+                        return;
+                    }
+                    rack.setManualDropoffAssignment(newV);
+                    dropoffArrayBox.setVisible(newV);
+                    dropoffArrayBox.setManaged(newV);
+                    renderRackDropoffArray(rack, dropoffArrayBox);
+                    persistEditorChanges();
+                });
+                manualBox.getChildren().add(manualCheck);
+                propertiesPanel.getChildren().add(manualBox);
+
+                // ── Dropoff array (shown only when manual checkbox is on) ──
+                renderRackDropoffArray(rack, dropoffArrayBox);
+                propertiesPanel.getChildren().add(dropoffArrayBox);
+            }
         }
+    }
+
+    private void renderRackDropoffArray(Rack rack, VBox container) {
+        container.getChildren().clear();
+
+        // Header
+        HBox header = new HBox(6);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label headerLabel = new Label("Valid Dropoff Points");
+        headerLabel.setStyle("-fx-font-weight: bold;");
+        Tooltip headerTip = new Tooltip(
+            "Boxes are distributed across the valid dropoff points using round-robin. " +
+            "Null slots are ignored. At least one non-null slot is required to play.");
+        Tooltip.install(headerLabel, headerTip);
+        Button addBtn = new Button("+");
+        addBtn.setOnAction(ev -> {
+            if (guardEditor("add dropoff slot")) return;
+            rack.getValidDropoffIds().add(null);
+            renderRackDropoffArray(rack, container);
+            persistEditorChanges();
+        });
+        header.getChildren().addAll(headerLabel, addBtn);
+        container.getChildren().add(header);
+
+        // Build station lookup
+        java.util.Map<java.util.UUID, DeliveryStation> stationById = new java.util.HashMap<>();
+        if (engine != null && engine.getMap() != null) {
+            for (MapEntity e : engine.getMap().getEntities()) {
+                if (e instanceof DeliveryStation ds) stationById.put(ds.getId(), ds);
+            }
+        }
+
+        List<java.util.UUID> ids = rack.getValidDropoffIds();
+        for (int i = 0; i < ids.size(); i++) {
+            final int slotIndex = i;
+            java.util.UUID id = ids.get(i);
+            HBox row = new HBox(6);
+            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            Label idxLabel = new Label("[" + i + "]");
+            idxLabel.setStyle("-fx-text-fill: #666;");
+
+            String display;
+            if (id == null) {
+                display = "(unset)";
+            } else {
+                DeliveryStation ds = stationById.get(id);
+                display = ds == null ? "(deleted station)"
+                        : ds.getName() + " (" + (int)ds.getPosition().getX()
+                          + ", " + (int)ds.getPosition().getY() + ")";
+            }
+            Label displayLabel = new Label(display);
+            if (id == null || stationById.get(id) == null) {
+                displayLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #999;");
+            }
+
+            Button assignBtn = new Button("Assign");
+            assignBtn.setOnAction(ev -> beginDropoffPicking(rack, slotIndex));
+
+            Button removeBtn = new Button("\u2715");
+            removeBtn.setOnAction(ev -> {
+                if (guardEditor("remove dropoff slot")) return;
+                rack.getValidDropoffIds().remove(slotIndex);
+                renderRackDropoffArray(rack, container);
+                persistEditorChanges();
+            });
+
+            row.getChildren().addAll(idxLabel, displayLabel, assignBtn, removeBtn);
+            container.getChildren().add(row);
+        }
+    }
+
+    private void beginDropoffPicking(Rack rack, int slotIndex) {
+        this.pickingRack = rack;
+        this.pickingSlot = slotIndex;
+        if (tipLabel != null) {
+            tipLabel.setText("TIP: Click a delivery station to assign it to slot #"
+                + slotIndex + ". Click elsewhere to cancel.");
+        }
+        viewportStack.setCursor(javafx.scene.Cursor.CROSSHAIR);
+        drawViewport();
+    }
+
+    private void cancelDropoffPicking() {
+        this.pickingRack = null;
+        this.pickingSlot = -1;
+        if (tipLabel != null) tipLabel.setText("");
+        viewportStack.setCursor(javafx.scene.Cursor.DEFAULT);
+        drawViewport();
     }
 
     private void showIntersectionProperties(Vector2D intersection) {
@@ -1505,9 +1695,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onAddObjectClick(MouseEvent e) {
         Button source = (Button) e.getSource();
-        String type = (String) source.getUserData();
+        String type = source.getUserData() instanceof String s ? s : null;
+        if (type == null || type.isBlank()) {
+            log("⚠ Add Object tile click ignored because the tile type is missing.");
+            return;
+        }
 
         if (e.getClickCount() == 2) {
+            log("Opened description for " + type + " from the Add Object panel.");
             ScreenNavigator.openDialog(
                     ScreenNavigator.DIALOG_OBJECT_DESC, type + " – Description");
         } else {
@@ -1524,11 +1719,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void onOutlinerSelect() {
         if (outlinerListView == null) return;
         int idx = outlinerListView.getSelectionModel().getSelectedIndex();
-        if (idx < 0 || idx >= outlinerBacking.size()) return;
+        if (idx < 0 || idx >= outlinerBacking.size()) {
+            log("⚠ Ignored outliner selection because the selected index was out of range.");
+            return;
+        }
 
         Object selected = outlinerBacking.get(idx);
         if (selected instanceof MapEntity mapEntity) {
             selectEntity(mapEntity);
+        } else if (selected instanceof Task task) {
+            log("Selected task #" + task.getId() + " in the outliner. Task entries are read-only here.");
+        } else if (selected != null) {
+            log("⚠ Ignored outliner selection of unsupported entry type: " + selected.getClass().getSimpleName());
         }
     }
 
@@ -1602,6 +1804,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("\u26a0 No simulation loaded. Return to Setup and load a config.");
             return;
         }
+        if (engine.isFinished()) {
+            log("\u26a0 Simulation already complete. Press Stop to reset before playing again.");
+            if (playBtn != null) playBtn.setDisable(true);
+            return;
+        }
 
         logPollingTimeline.play(); // start regular polling
 
@@ -1638,10 +1845,55 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             playBtn.setStyle("-fx-background-color: #2E9E5B;");
             pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
 
-            // Auto-generate tasks from map racks/stations if dispatcher is empty
+            // ── Validate manual-mode racks before generating tasks ──
+            if (engine.getMap() != null) {
+                java.util.Set<java.util.UUID> stationIds = new java.util.HashSet<>();
+                for (MapEntity me : engine.getMap().getEntities()) {
+                    if (me instanceof DeliveryStation ds) stationIds.add(ds.getId());
+                }
+                List<String> offenders = new ArrayList<>();
+                for (MapEntity me : engine.getMap().getEntities()) {
+                    if (me instanceof Rack r && r.isManualDropoffAssignment()) {
+                        boolean hasValid = r.getValidDropoffIds().stream()
+                            .anyMatch(uid -> uid != null && stationIds.contains(uid));
+                        if (!hasValid) offenders.add(r.getName());
+                    }
+                }
+                if (!offenders.isEmpty()) {
+                    running = false;
+                    paused = false;
+                    if (playBtn  != null) playBtn.setStyle("");
+                    if (pauseBtn != null) pauseBtn.setStyle("");
+                    if (simStatusLabel != null) {
+                        simStatusLabel.setText("STOPPED");
+                        simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
+                    }
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.ERROR);
+                    alert.setTitle("Cannot start simulation");
+                    alert.setHeaderText("Manual-mode racks have no valid dropoff points");
+                    alert.setContentText(
+                        "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
+                        + String.join("\n  \u2022 ", offenders)
+                        + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
+                    alert.showAndWait();
+                    log("\u26a0 Play aborted: " + offenders.size() + " rack(s) have an empty manual dropoff pool.");
+                    return;
+                }
+            }
+
+            // Generate tasks if the dispatcher is empty.
+            // Automatic mode: exactly engine.getMaxTasks() tasks, random rack+station pairs.
+            // Manual mode: one task per rack box using each rack's configured dropoff pool.
             if (engine.getDispatcher().getAllQueuedTasks().isEmpty() && engine.getMap() != null) {
-                List<Task> generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
-                        engine.getMap(), 50, engine.getSeed());
+                List<Task> generated;
+                if (engine.isManualTaskAssignment()) {
+                    generated = com.openrobotics.task.TaskGenerator.generateRandomTasks(
+                            engine.getMap(), Integer.MAX_VALUE, engine.getSeed());
+                } else {
+                    generated = com.openrobotics.task.TaskGenerator.generateAutomaticTasks(
+                            engine.getMap(), engine.getMaxTasks(), engine.getSeed());
+                }
                 if (!generated.isEmpty()) {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
@@ -1696,6 +1948,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         running = false;
         paused  = false;
         stopLoop();
+        if (playBtn != null) playBtn.setDisable(false);
         if (simStatusLabel != null) {
             simStatusLabel.setText("STOPPED");
             simStatusLabel.setStyle("-fx-text-fill: #D6453D; -fx-font-weight: bold;");
@@ -1709,8 +1962,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onRestart() {
-        // If already at tick 0 and not running, nothing to reset
-        if (localTick == 0 && !running && !simulationFailed) {
+        // If already at tick 0, not running, and there is nothing to reload, nothing to reset.
+        String earlyReloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        if (localTick == 0 && !running && !simulationFailed && earlyReloadPath == null) {
             log("Already at tick 0. Nothing to reset.");
             return;
         }
@@ -1719,6 +1973,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animationProgress = 0.0;
         prevRobotPositions.clear();
         selectedEntity = null;
+        undoStack.clear();
+        redoStack.clear();
         onStop();
         localTick = 0;
         simulationFailed = false;
@@ -1859,14 +2115,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            // Checking if simulation stopped due to failure or completion
-            if (engine.getSimulationError() != SimulationError.NONE) {
+            // Sandbox mode: no robots means an empty map used for layout/stepping only —
+            // treat the tick as a no-op success so the step counter still advances.
+            if (engine.getSimulationError() == SimulationError.NO_ROBOTS_SPAWNED) {
+                // fall through to the localTick++ / display-update block below
+            } else if (engine.getSimulationError() != SimulationError.NONE) {
                 handleSimulationFailure();
+                return;
             } else {
                 handleSimulationComplete();
+                return;
             }
-
-            return;
         }
         localTick++;
 
@@ -1895,7 +2154,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportStatusLabel != null) {
             viewportStatusLabel.setText("Workload complete");
         }
-        if (playBtn  != null) playBtn.setStyle("");
+        if (playBtn  != null) { playBtn.setStyle(""); playBtn.setDisable(true); }
         if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation complete at TICK " + localTick + ".");
     }

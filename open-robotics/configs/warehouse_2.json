@@ -1,0 +1,184 @@
+{
+  "config" : {
+    "runId" : "880dc38a-6b22-49a9-b5d0-12a21e6f1e7b",
+    "runName" : "Warehouse Beta",
+    "tickMs" : 100,
+    "maxTicks" : 5000,
+    "seed" : 67890,
+    "batteryCapacity" : 100.0,
+    "lowBatteryThreshold" : 20.0,
+    "chargePerTick" : 5.0,
+    "energyPerMove" : 1.0,
+    "loadingTicks" : 1,
+    "unloadingTicks" : 1,
+    "maxTasks" : 10,
+    "manualTaskAssignment" : false
+  },
+  "map" : {
+    "mapId" : "46867af5-f112-4f06-b22b-610706264844",
+    "width" : 12,
+    "height" : 12,
+    "tiles" : [ {
+      "x" : 6,
+      "y" : 6,
+      "isOccupied" : true
+    }, {
+      "x" : 3,
+      "y" : 8,
+      "isOccupied" : true
+    } ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "660e8400-e29b-41d4-a716-446655440001",
+      "name" : "Bot-Beta",
+      "position" : {
+        "x" : 1,
+        "y" : 1
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "RANGE",
+      "stuckTicks" : 0
+    }, {
+      "id" : "660e8400-e29b-41d4-a716-446655440002",
+      "name" : "Bot-Gamma",
+      "position" : {
+        "x" : 10,
+        "y" : 10
+      },
+      "type" : null,
+      "battery" : 85.5,
+      "state" : "IDLE",
+      "navigationStrategy" : "BUG",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ {
+      "id" : "00000000-0000-0000-0000-000000000002",
+      "name" : "Charge-02",
+      "position" : {
+        "x" : 0,
+        "y" : 11
+      },
+      "type" : "CHARGING"
+    }, {
+      "id" : "00000000-0000-0000-0000-000000000003",
+      "name" : "Delivery-01",
+      "position" : {
+        "x" : 11,
+        "y" : 0
+      },
+      "type" : "DELIVERY"
+    } ],
+    "racks" : [ {
+      "id" : "10000000-0000-0000-0000-000000000001",
+      "name" : "Rack-A1",
+      "position" : {
+        "x" : 4,
+        "y" : 4
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
+    }, {
+      "id" : "10000000-0000-0000-0000-000000000002",
+      "name" : "Rack-A2",
+      "position" : {
+        "x" : 7,
+        "y" : 4
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
+    } ],
+    "obstacles" : [ {
+      "id" : "20000000-0000-0000-0000-000000000001",
+      "name" : "Obstacle-01",
+      "position" : {
+        "x" : 6,
+        "y" : 3
+      },
+      "type" : null
+    }, {
+      "id" : "5c7598a0-c055-4df7-9da1-dd14aaa9cc2b",
+      "name" : "wall_1",
+      "position" : {
+        "x" : 6,
+        "y" : 8
+      },
+      "type" : null
+    }, {
+      "id" : "9730adad-c4ed-4714-8aff-baedfbb38d32",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 7
+      },
+      "type" : null
+    }, {
+      "id" : "cb05e955-4a38-42cf-b859-6b00c731f8d9",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 6
+      },
+      "type" : null
+    }, {
+      "id" : "162ae3a6-0b20-45b2-b1db-01337ef0b3ae",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 4
+      },
+      "type" : null
+    }, {
+      "id" : "306d1534-aa87-40a8-b9cd-783c3ec10039",
+      "name" : "wall_1_copy",
+      "position" : {
+        "x" : 6,
+        "y" : 5
+      },
+      "type" : null
+    } ]
+  },
+  "tasks" : [ {
+    "id" : 202,
+    "pickupLocation" : {
+      "x" : 7,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 11,
+      "y" : 0
+    },
+    "priority" : 7,
+    "status" : "PENDING"
+  }, {
+    "id" : 201,
+    "pickupLocation" : {
+      "x" : 4,
+      "y" : 4
+    },
+    "dropoffLocation" : {
+      "x" : 11,
+      "y" : 0
+    },
+    "priority" : 3,
+    "status" : "PENDING"
+  } ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : true,
+    "speedMultiplier" : 1.0
+  },
+  "coordination" : {
+    "type" : "RESERVATION_K",
+    "k" : 2,
+    "intersections" : null
+  }
+}
