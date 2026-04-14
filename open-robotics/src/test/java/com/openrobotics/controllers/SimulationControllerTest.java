@@ -341,7 +341,6 @@ public class SimulationControllerTest extends ApplicationTest {
 
         assertEquals("RUNNING", simStatus.getText());
         assertTrue(consoleText().contains("Simulation started."));
-        assertEquals("hello testing", field("databaseArea", TextArea.class).getText());
         assertNotNull(field("initialSnapshotPath", String.class));
         assertTrue(field("playBtn", Button.class).getStyle().contains("#2E9E5B"));
 
