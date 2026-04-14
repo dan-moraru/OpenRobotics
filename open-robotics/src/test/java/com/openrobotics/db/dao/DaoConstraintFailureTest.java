@@ -20,8 +20,23 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Integration tests that assert DAO writes fail when database constraints are violated.
+ *
+ * <p>These tests intentionally submit invalid inputs to verify that JDBC operations surface
+ * {@link SQLException} for JSONB validation failures, foreign-key violations, and uniqueness
+ * conflicts. The suite is guarded to run only when the shared DB schema is migrated to the UUID
+ * robot-column shape expected by current DAOs.</p>
+ */
 public class DaoConstraintFailureTest {
 
+    /**
+     * Initializes database access once for the suite and skips tests when schema prerequisites are
+     * not met in the shared environment.
+     *
+     * @throws IOException if database config initialization fails
+     * @throws SQLException if DB bootstrap/migration connectivity fails
+     */
     @BeforeAll
     static void initDatabase() throws IOException, SQLException {
         Database.init();
@@ -31,6 +46,9 @@ public class DaoConstraintFailureTest {
         );
     }
 
+    /**
+     * Verifies map insertion rejects malformed JSON content in the JSONB tile-data column.
+     */
     @Test
     void mapDao_insert_rejects_invalid_jsonb_tile_data() {
         MapRecord record = new MapRecord();
@@ -43,6 +61,9 @@ public class DaoConstraintFailureTest {
         assertThrows(SQLException.class, () -> MapDao.insert(record));
     }
 
+    /**
+     * Verifies simulation-run insert fails when referencing a non-existent map ID.
+     */
     @Test
     void simulationRunDao_insert_rejects_unknown_map_foreign_key() {
         SimulationRunRecord record = new SimulationRunRecord();
@@ -55,6 +76,14 @@ public class DaoConstraintFailureTest {
         assertThrows(SQLException.class, () -> SimulationRunDao.insert(record));
     }
 
+    /**
+     * Verifies map deletion fails while a simulation run still references that map.
+     *
+     * <p>The test creates a valid map/run pair, asserts delete failure, then performs explicit
+     * cleanup in dependency order.</p>
+     *
+     * @throws Exception if setup or cleanup DAO operations fail unexpectedly
+     */
     @Test
     void mapDao_deleteById_rejects_removal_when_runs_still_reference_map() throws Exception {
         UUID mapId = MapDao.insert(validMap("Referenced Map"));
@@ -71,6 +100,11 @@ public class DaoConstraintFailureTest {
         }
     }
 
+    /**
+     * Verifies run-results table enforces one result row per run (unique run reference).
+     *
+     * @throws Exception if setup or cleanup DAO operations fail unexpectedly
+     */
     @Test
     void runResultDao_insert_rejects_duplicate_row_for_same_run() throws Exception {
         UUID mapId = MapDao.insert(validMap("Duplicate Result Map"));
@@ -95,6 +129,9 @@ public class DaoConstraintFailureTest {
         }
     }
 
+    /**
+     * Verifies task/log/stats DAOs reject inserts/upserts that reference unknown run IDs.
+     */
     @Test
     void workloadTaskAndLogAndStats_inserts_reject_unknown_run_foreign_keys() {
         UUID unknownRunId = UUID.randomUUID();
@@ -120,6 +157,9 @@ public class DaoConstraintFailureTest {
         assertThrows(SQLException.class, () -> RobotRunStatsDao.upsert(stats));
     }
 
+    /**
+     * Builds a minimal valid map record used by tests that need a persisted map parent row.
+     */
     private MapRecord validMap(String name) {
         MapRecord record = new MapRecord();
         record.setName(name);
@@ -130,6 +170,9 @@ public class DaoConstraintFailureTest {
         return record;
     }
 
+    /**
+     * Builds a minimal valid simulation-run record referencing an existing map.
+     */
     private SimulationRunRecord validRun(UUID mapId) {
         SimulationRunRecord record = new SimulationRunRecord();
         record.setMapId(mapId);
