@@ -211,7 +211,7 @@
             <Label fx:id="statusLabel" styleClass="setup-status-label" text=""/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="LOAD" styleClass="button-neutral" onAction="#onLoadConfig"/>
-            <Button fx:id="setupNextButton" text="NEXT  &#x2192;" styleClass="button-green"
+            <Button fx:id="setupNextButton" text="START SIMULATION  &#x2192;" styleClass="button-green"
                     onAction="#onStartSimulation"/>
         </HBox>
     </bottom>
