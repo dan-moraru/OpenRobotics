@@ -349,13 +349,13 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals("RUNNING", simStatus.getText());
         assertTrue(consoleText().contains("Simulation started."));
         assertNotNull(field("initialSnapshotPath", String.class));
-        assertTrue(field("playBtn", Button.class).getStyle().contains("#2E9E5B"));
+        assertTrue(field("playBtn", Button.class).getStyle().contains("#1a743f"));
 
         fireButton("pauseBtn");
 
         assertEquals("PAUSED", simStatus.getText());
         assertTrue(consoleText().contains("Simulation paused."));
-        assertTrue(field("pauseBtn", Button.class).getStyle().contains("#C23B42"));
+        assertTrue(field("pauseBtn", Button.class).getStyle().contains("#C0392B"));
 
         fireButton("playBtn");
 
@@ -406,13 +406,13 @@ public class SimulationControllerTest extends ApplicationTest {
     void zoom_buttons_and_origin_reset_update_zoom_and_console() {
         double initialZoom = field("zoom", Double.class);
 
-        fireButtonByText("⊕");
+        fireButtonByText("+");
         assertTrue(field("zoom", Double.class) > initialZoom);
 
-        fireButtonByText("⊖");
+        fireButtonByText("-");
         assertEquals(initialZoom, field("zoom", Double.class), 0.0001);
 
-        fireButtonByText("⌖");
+        fireButtonByText("⊙");
         assertEquals(1.0, field("zoom", Double.class), 0.0001);
         assertTrue(consoleText().contains("Viewport reset to origin."));
     }
