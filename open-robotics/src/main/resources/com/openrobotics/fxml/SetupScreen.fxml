@@ -67,17 +67,17 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Map Seed (hidden unless random_map selected) — row-a, no hint needed -->
-                            <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <!-- Map Seed (hidden unless random_map selected) — row-b, matches Map above it -->
+                            <HBox fx:id="mapSeedRow" styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                 <Label text="Map Seed" styleClass="prop-label-bold"/>
                                 <TextField fx:id="randomSeedField" promptText="auto"
                                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Button text="↺" styleClass="button-reset" onAction="#onResetRandomSeed"/>
                             </HBox>
 
-                            <!-- Coordination Policy — row-b -->
-                            <VBox styleClass="setup-prop-group-b">
-                                <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <!-- Coordination Policy — row-a -->
+                            <VBox styleClass="setup-prop-group-a">
+                                <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Coordination Policy" styleClass="prop-label-bold"/>
                                     <ComboBox fx:id="policyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                     <Button text="↺" styleClass="button-reset" onAction="#onResetPolicy"/>
@@ -86,9 +86,9 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Reservation K — row-a -->
-                            <VBox styleClass="setup-prop-group-a">
-                                <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
+                            <!-- Reservation K — row-b -->
+                            <VBox styleClass="setup-prop-group-b">
+                                <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Reservation K" styleClass="prop-label-bold"/>
                                     <Spinner fx:id="reservationKSpinner"
                                              editable="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
@@ -98,9 +98,9 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Task Assignment Mode -->
-                            <VBox styleClass="setup-prop-group-b">
-                                <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                            <!-- Task Assignment Mode — row-a -->
+                            <VBox styleClass="setup-prop-group-a">
+                                <HBox styleClass="setup-prop-row-a" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Task Assignment" styleClass="prop-label-bold"/>
                                     <HBox spacing="12" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                         <RadioButton fx:id="autoTaskRadio" text="Automatic" selected="true"/>
@@ -111,7 +111,7 @@
                                        styleClass="setup-param-hint" wrapText="true"/>
                             </VBox>
 
-                            <!-- Number of Tasks (hidden in manual mode) -->
+                            <!-- Number of Tasks (hidden in manual mode) — row-b -->
                             <VBox fx:id="maxTasksGroup" styleClass="setup-prop-group-b">
                                 <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
                                     <Label text="Number of Tasks" styleClass="prop-label-bold"/>
