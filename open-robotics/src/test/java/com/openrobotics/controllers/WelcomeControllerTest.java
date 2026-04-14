@@ -13,8 +13,20 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+/**
+ * JavaFX navigation test for {@link WelcomeController}.
+ *
+ * <p>This test suite verifies that the welcome screen loads correctly and that the primary
+ * call-to-action button routes users to the setup screen.</p>
+ */
 public class WelcomeControllerTest extends ApplicationTest {
 
+    /**
+     * Loads the welcome screen FXML on the TestFX stage.
+     *
+     * @param stage JavaFX stage supplied by TestFX
+     * @throws Exception if FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         ScreenNavigator.setPrimaryStage(stage);
@@ -25,6 +37,11 @@ public class WelcomeControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Verifies clicking the "START SETUP" action navigates to the setup screen.
+     *
+     * <p>Navigation success is asserted by querying a setup-specific control ({@code #mapCombo}).</p>
+     */
     @Test
     void start_setup_navigates_to_setup_screen() {
         Button startButton = lookup((Button b) ->
