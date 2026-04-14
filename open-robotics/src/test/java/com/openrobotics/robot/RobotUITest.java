@@ -1,28 +1,22 @@
 package com.openrobotics.robot;
 
+import java.io.IOException;
 import javafx.stage.Stage;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.paint.Color;
 import org.testfx.framework.junit5.ApplicationTest;
 
 import com.openrobotics.MainApp;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 public class RobotUITest extends ApplicationTest {
 
+    /**
+     * Start the main application and set the stage.
+     */
     @Override
     public void start(Stage stage) {
-        new MainApp().start(stage);
+        try {
+            new MainApp().start(stage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    // @Test
-    // public void should_verify_robot_color() {
-    //     // Find the rectangle by the ID we set in MainApp
-    //     Rectangle robot = lookup("#robotShape").queryAs(Rectangle.class);
-
-    //     // Assert that the fill color is BLUE
-    //     assertEquals(Color.BLUE, robot.getFill(), "The robot should be blue!");
-    // }
 }
