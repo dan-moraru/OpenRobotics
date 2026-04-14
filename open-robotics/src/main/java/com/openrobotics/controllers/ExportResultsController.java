@@ -19,10 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/**
- * Controller for {@code ExportResultsDialog.fxml}.
- * Serializes post-simulation results to a JSON file chosen by the user.
- */
+/** controller for ExportResultsDialog.fxml; serialises post-simulation results to a user-chosen JSON file */
 public class ExportResultsController implements ScreenNavigator.DialogController {
 
     @FXML private TextField        fileNameField;
@@ -145,7 +142,7 @@ public class ExportResultsController implements ScreenNavigator.DialogController
         close();
     }
 
-    /** Builds the results DTO from the current engine state. */
+    // builds the export DTO from current engine state
     private ResultsExportDTO buildDTO(SimulationEngine engine) {
         ResultsExportDTO dto = new ResultsExportDTO();
         dto.runName    = AppState.getConfigPath() != null ? AppState.getConfigPath() : "unknown";
