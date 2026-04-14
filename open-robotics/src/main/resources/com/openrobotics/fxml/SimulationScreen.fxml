@@ -365,18 +365,14 @@
                                                             <Label text="Paste" styleClass="shortcut-desc"/>
                                                         </HBox>
                                                         <HBox styleClass="shortcut-row-a" spacing="0">
-                                                            <Label text="Ctrl+D" styleClass="shortcut-key"/>
-                                                            <Label text="Duplicate" styleClass="shortcut-desc"/>
-                                                        </HBox>
-                                                        <HBox styleClass="shortcut-row-b" spacing="0">
                                                             <Label text="Ctrl+Z" styleClass="shortcut-key"/>
                                                             <Label text="Undo" styleClass="shortcut-desc"/>
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-a" spacing="0">
+                                                        <HBox styleClass="shortcut-row-b" spacing="0">
                                                             <Label text="Ctrl+Y" styleClass="shortcut-key"/>
                                                             <Label text="Redo" styleClass="shortcut-desc"/>
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-b" spacing="0">
+                                                        <HBox styleClass="shortcut-row-a" spacing="0">
                                                             <Label text="Del" styleClass="shortcut-key"/>
                                                             <Label text="Delete selected" styleClass="shortcut-desc"/>
                                                         </HBox>
