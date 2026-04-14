@@ -129,21 +129,21 @@ public class SimulationEngine {
                     robot.setStuckTicks(rDto.stuckTicks);
                     robot.setState(RobotState.valueOf(rDto.state));
 
-                AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
-                robot.setNav(NavigationStrategy.create(algo, this.seed));
-                SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
-                robot.setSensor(SensorStrategy.create(sensorType));
-                this.map.addEntity(robot);
-            }  // closes for loop
-        }  
+                    AlgorithmType algo = AlgorithmType.fromConfigString(rDto.navigationStrategy);
+                    robot.setNav(NavigationStrategy.create(algo, this.seed));
+                    SensorType sensorType = SensorType.fromConfigString(rDto.sensorStrategy);
+                    robot.setSensor(SensorStrategy.create(sensorType));
+                    this.map.addEntity(robot);
+                }
+            }
 
             this.robotConfig = new RobotConfig(
-                dto.config.batteryCapacity     > 0 ? dto.config.batteryCapacity     : 100.0f,
+                dto.config.batteryCapacity > 0 ? dto.config.batteryCapacity : 100.0f,
                 dto.config.lowBatteryThreshold > 0 ? dto.config.lowBatteryThreshold : 20.0f,
-                dto.config.chargePerTick       > 0 ? dto.config.chargePerTick       : 5.0f,
-                dto.config.energyPerMove       > 0 ? dto.config.energyPerMove       : 1.0f,
-                dto.config.loadingTicks        > 0 ? dto.config.loadingTicks        : 1,
-                dto.config.unloadingTicks      > 0 ? dto.config.unloadingTicks      : 1
+                dto.config.chargePerTick > 0 ? dto.config.chargePerTick : 5.0f,
+                dto.config.energyPerMove > 0 ? dto.config.energyPerMove : 1.0f,
+                dto.config.loadingTicks > 0 ? dto.config.loadingTicks : 1,
+                dto.config.unloadingTicks > 0 ? dto.config.unloadingTicks : 1
             );
             for (MapEntity e : this.map.getEntities()) {
                 if (e instanceof Robot r) r.setConfig(this.robotConfig);
@@ -211,7 +211,6 @@ public class SimulationEngine {
             this.maxTasks = dto.config.maxTasks > 0 ? dto.config.maxTasks : 10;
             this.manualTaskAssignment = dto.config.manualTaskAssignment;
             this.simulationError = SimulationError.NONE;
-            // seed already set before robot creation loop
             this.collisionManager = new CollisionManager();
             this.initialized = this.map != null && this.robots != null && this.dispatcher != null && this.collisionManager != null;
 
@@ -303,12 +302,12 @@ public class SimulationEngine {
         dto.config.seed = this.seed;
         dto.config.maxTasks = this.maxTasks;
         dto.config.manualTaskAssignment = this.manualTaskAssignment;
-        dto.config.batteryCapacity     = robotConfig.batteryCapacity;
+        dto.config.batteryCapacity = robotConfig.batteryCapacity;
         dto.config.lowBatteryThreshold = robotConfig.lowBatteryThreshold;
-        dto.config.chargePerTick       = robotConfig.chargePerTick;
-        dto.config.energyPerMove       = robotConfig.energyPerMove;
-        dto.config.loadingTicks        = robotConfig.loadingTicks;
-        dto.config.unloadingTicks      = robotConfig.unloadingTicks;
+        dto.config.chargePerTick = robotConfig.chargePerTick;
+        dto.config.energyPerMove = robotConfig.energyPerMove;
+        dto.config.loadingTicks = robotConfig.loadingTicks;
+        dto.config.unloadingTicks = robotConfig.unloadingTicks;
 
         // Map Section
         dto.map = new SimulationConfigDTO.MapSection();
