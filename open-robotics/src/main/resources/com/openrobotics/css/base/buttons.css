@@ -19,17 +19,17 @@
     -fx-background-color: #4D4B45;
 }
 
-/* EDITOR tab button */
+/* Active tab button — padding must match .tab-btn exactly to prevent layout shift */
 .button.tab-btn-active {
-    -fx-background-color: #8D8A7F;
+    -fx-background-color: #B8B4A6;
     -fx-text-fill: #2A2926;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-padding: 6 20 7 20;
-    -fx-background-radius: 6 6 0 0;
-    -fx-border-color: #8D8A7F #8D8A7F transparent #8D8A7F;
-    -fx-border-width: 1 1 0 1;
-    -fx-border-radius: 6 6 0 0;
+    -fx-padding: 5 16 5 16;
+    -fx-background-radius: 4;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
     -fx-cursor: hand;
 }
 
@@ -154,7 +154,7 @@
 .zoom-btn {
     -fx-background-color: #C2BEAE;
     -fx-text-fill: #1a1a18;
-    -fx-font-size: 15px;
+    -fx-font-size: 14px;
     -fx-padding: 3 8 3 8;
     -fx-background-radius: 3px;
     -fx-border-color: #8D8A7F;

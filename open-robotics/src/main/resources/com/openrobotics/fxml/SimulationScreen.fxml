@@ -71,11 +71,7 @@
                         <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
                         <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button onAction="#onSaveConfig" styleClass="button-neutral" text="SAVE">
-                            <HBox.margin>
-                                <Insets bottom="4.0" right="8.0" />
-                            </HBox.margin>
-                        </Button>
+                        <Button onAction="#onSaveConfig" styleClass="tab-btn" text="SAVE" />
                     </children>
                 </HBox>
             </children>
