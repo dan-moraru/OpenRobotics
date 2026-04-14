@@ -100,6 +100,26 @@
     -fx-padding: 0 0 20 0;
 }
 
+/* Radio buttons inside property rows — inherit row bg, match label text style */
+.setup-prop-row-a .radio-button,
+.setup-prop-row-b .radio-button {
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 11px;
+}
+
+.setup-prop-row-a .radio-button .radio,
+.setup-prop-row-b .radio-button .radio {
+    -fx-background-color: #8D8A7F;
+    -fx-border-color: #5D5B54;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.setup-prop-row-a .radio-button:selected .dot,
+.setup-prop-row-b .radio-button:selected .dot {
+    -fx-background-color: #1a1a18;
+    -fx-background-radius: 10px;
+}
 
 /* ── 4. VIEWPORT ────────────────────────────────────────────── */
 

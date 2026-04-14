@@ -100,10 +100,12 @@
 
                             <!-- Task Assignment Mode -->
                             <VBox styleClass="setup-prop-group-b">
-                                <Label text="Task Assignment" styleClass="prop-label-bold"/>
-                                <HBox spacing="12" alignment="CENTER_LEFT">
-                                    <RadioButton fx:id="autoTaskRadio" text="Automatic" selected="true"/>
-                                    <RadioButton fx:id="manualTaskRadio" text="Manual"/>
+                                <HBox styleClass="setup-prop-row-b" alignment="CENTER_LEFT" spacing="5">
+                                    <Label text="Task Assignment" styleClass="prop-label-bold"/>
+                                    <HBox spacing="12" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                        <RadioButton fx:id="autoTaskRadio" text="Automatic" selected="true"/>
+                                        <RadioButton fx:id="manualTaskRadio" text="Manual"/>
+                                    </HBox>
                                 </HBox>
                                 <Label text="Automatic: tasks are randomly generated up to the number below. Manual: tasks come from each rack's box count and configured dropoff pool."
                                        styleClass="setup-param-hint" wrapText="true"/>
