@@ -13,8 +13,21 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * Integration test for dispatcher-driven task assignment across simulation ticks.
+ *
+ * <p>This suite verifies priority ordering and wave-based assignment behavior when multiple robots
+ * consume queued tasks over time.</p>
+ */
 public class SimulationDispatcherIntegrationTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Verifies dispatcher assigns highest-priority tasks first to available robots, then feeds
+     * remaining lower-priority work in a later wave after completions.
+     *
+     * <p>The assertions track task status transitions, pending-queue counts, and robot completion
+     * counters to ensure assignment and progression remain consistent across ticks.</p>
+     */
     @Test
     void dispatcherFeedsHighestPriorityTasksAcrossMultipleCompletionWaves() {
         Map map = new Map(6, 2);
