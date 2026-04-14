@@ -32,11 +32,33 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration test for full config round-trip fidelity under Traffic Rules coordination.
+ *
+ * <p>The scenario builds a heterogeneous simulation (multiple robots, stations, rack, obstacle,
+ * tasks, and occupied tiles), performs save → load → save, then asserts that both DTO-level data
+ * and runtime engine reconstructions preserve expected metadata and strategy types.</p>
+ */
 public class ConfigRoundTripTrafficRulesIntegrationTest extends SimulationIntegrationTestSupport {
 
     @TempDir
     Path tempDir;
 
+    /**
+     * Verifies save/load/save round-trip preserves map/entity/task metadata and Traffic Rules
+     * coordination intersections.
+     *
+     * <p>Assertions cover:
+     * <ul>
+     *   <li>top-level config values (run name, tick/max ticks, seed),</li>
+     *   <li>map dimensions and occupied tile flags,</li>
+     *   <li>entity counts and robot strategy/sensor/state metadata,</li>
+     *   <li>coordination type and intersection count, and</li>
+     *   <li>reconstructed runtime engine object types and pending workload.</li>
+     * </ul>
+     *
+     * @throws Exception if serialization/deserialization fails
+     */
     @Test
     void saveLoadSaveRoundTripPreservesEntitiesMetadataAndTrafficRules() throws Exception {
         Map map = new Map(6, 4);
@@ -141,6 +163,9 @@ public class ConfigRoundTripTrafficRulesIntegrationTest extends SimulationIntegr
         assertEquals(1, countEntitiesOfType(loadedEngine.getMap().getEntities(), Obstacle.class));
     }
 
+    /**
+     * Returns whether a tile list contains an occupied tile at the given coordinates.
+     */
     private boolean hasOccupiedTile(List<SimulationConfigDTO.TileDTO> tiles, int x, int y) {
         if (tiles == null) {
             return false;
@@ -148,6 +173,9 @@ public class ConfigRoundTripTrafficRulesIntegrationTest extends SimulationIntegr
         return tiles.stream().anyMatch(tile -> tile.x == x && tile.y == y && tile.isOccupied);
     }
 
+    /**
+     * Finds a DTO robot by name, failing if no matching entry exists.
+     */
     private SimulationConfigDTO.RobotDTO findRobot(List<SimulationConfigDTO.RobotDTO> robots, String name) {
         return robots.stream()
                 .filter(robot -> name.equals(robot.name))
@@ -155,6 +183,9 @@ public class ConfigRoundTripTrafficRulesIntegrationTest extends SimulationIntegr
                 .orElseThrow();
     }
 
+    /**
+     * Finds a runtime robot by name, failing with an assertion if absent.
+     */
     private Robot findRobot(Robot[] robots, String name) {
         for (Robot robot : robots) {
             if (name.equals(robot.getName())) {
@@ -164,6 +195,9 @@ public class ConfigRoundTripTrafficRulesIntegrationTest extends SimulationIntegr
         throw new AssertionError("Robot not found: " + name);
     }
 
+    /**
+     * Counts entities assignable to the provided runtime type.
+     */
     private int countEntitiesOfType(List<MapEntity> entities, Class<?> type) {
         return (int) entities.stream().filter(type::isInstance).count();
     }
