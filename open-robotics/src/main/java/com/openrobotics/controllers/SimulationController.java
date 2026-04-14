@@ -51,7 +51,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -2078,6 +2077,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      * avoid blocking/glitching the UI
      */
     public void fetchLogsAsync() {
+        if (engine == null) return;
         javafx.concurrent.Task<Object> task = new javafx.concurrent.Task() {
             @Override
             protected Object call() {
@@ -2086,7 +2086,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
                     System.out.println("[SimulationController] Fetched " + logs.size() + " log(s) asynchronously in " + (System.currentTimeMillis() - start) + " ms.");
                     return logs;
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     System.out.println("Error fetching logs from database: " + e.getMessage());
                     return null;
                 }
@@ -2111,6 +2111,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
      * Synchronously fetches simulation logs from the database and updates the logs area.
      */
     public void fetchLogsSync() {
+        if (engine == null) return;
         try {
             long start = System.currentTimeMillis();
             List<SimLogRecord> logs = SimLogDao.findLatestLogs(engine.getRunId(), lastSeenLogId);
@@ -2119,7 +2120,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             start = System.currentTimeMillis();
             updateLogsArea(logs);
             System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println("Error fetching logs from database: " + e.getMessage());
         }
     }
