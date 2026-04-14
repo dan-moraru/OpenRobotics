@@ -1,37 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import java.lang.*?>
 <?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.CheckMenuItem?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.geometry.Insets?>
 
 <!--
   Simulation Screen
@@ -40,8 +13,7 @@
   console bg #32312D, console header #C2BEAE
 -->
 
-<BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
+<BorderPane styleClass="sim-root" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.openrobotics.controllers.SimulationController">
 
     <top>
         <VBox spacing="0">
@@ -50,60 +22,58 @@
                     <children>
                         <ImageView fitHeight="28" fitWidth="28" preserveRatio="true">
                             <image>
-                                <Image url="@../img/logo_black.png"/>
+                                <Image url="@../img/logo_black.png" />
                             </image>
                         </ImageView>
                         <VBox spacing="1">
                             <children>
-                                <Label styleClass="app-title" text="OpenRobotics"/>
-                                <Label styleClass="version-label" text="v1.0.0"/>
+                                <Label styleClass="app-title" text="OpenRobotics" />
+                                <Label styleClass="version-label" text="v1.0.0" />
                             </children>
                         </VBox>
-                        <MenuBar useSystemMenuBar="false" styleClass="menu-bar-top">
+                        <MenuBar styleClass="menu-bar-top" useSystemMenuBar="false">
                             <menus>
                                 <Menu text="File">
                                     <items>
                                     <MenuItem onAction="#onSaveConfig" text="Save..." />
                                     <MenuItem onAction="#onLoadConfig" text="Load..." />
-                                        <MenuItem onAction="#onMenuWelcome" text="Welcome Screen"/>
-                                        <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results"/>
-                                        <MenuItem onAction="#onExit" text="Exit"/>
+                                        <MenuItem onAction="#onMenuWelcome" text="Welcome Screen" />
+                                        <MenuItem onAction="#onMenuCalculateResults" text="Calculate Results" />
+                                        <MenuItem onAction="#onExit" text="Exit" />
                                     </items>
                                 </Menu>
                                 <Menu text="Help">
                                     <items>
-                                        <MenuItem onAction="#onMenuGithub" text="GitHub Page"/>
+                                        <MenuItem onAction="#onMenuGithub" text="GitHub Page" />
                                     </items>
                                 </Menu>
                                 <Menu text="View">
                                     <items>
-                                        <CheckMenuItem fx:id="toggleSidebarItem" text="Sidebar" selected="true"
-                                                       onAction="#onToggleSidebar"/>
-                                        <CheckMenuItem fx:id="toggleConsoleItem" text="Console" selected="true"
-                                                       onAction="#onToggleConsole"/>
+                                        <CheckMenuItem fx:id="toggleSidebarItem" onAction="#onToggleSidebar" selected="true" text="Sidebar" />
+                                        <CheckMenuItem fx:id="toggleConsoleItem" onAction="#onToggleConsole" selected="true" text="Console" />
                                     </items>
                                 </Menu>
                             </menus>
                         </MenuBar>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="objsLabel" styleClass="sim-stat-label" text="Objects: 0"/>
-                        <Region minWidth="12"/>
-                        <Label fx:id="ramLabel" styleClass="sim-stat-label" text="RAM: – KB"/>
-                        <Region minWidth="12"/>
-                        <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="Canvas Size: 600×600 tiles"/>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="objsLabel" styleClass="sim-stat-label" text="Objects: 0" />
+                        <Region minWidth="12" />
+                        <Label fx:id="ramLabel" styleClass="sim-stat-label" text="RAM: – KB" />
+                        <Region minWidth="12" />
+                        <Label fx:id="canvasSizeLabel" styleClass="sim-stat-label" text="Canvas Size: 600×600 tiles" />
                     </children>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
                     <children>
-                        <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK"/>
-                        <Region minWidth="8"/>
-                        <Region minWidth="232.0"/>
-                        <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR"/>
-                        <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS"/>
-                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#onBackToSetup" styleClass="tab-btn" text="← BACK" />
+                        <Region minWidth="8" />
+                        <Region minWidth="232.0" />
+                        <Button fx:id="editorTabBtn" onAction="#onTabEditor" styleClass="tab-btn-active" text="EDITOR" />
+                        <Button fx:id="resultsTabBtn" onAction="#onViewResults" styleClass="tab-btn" text="RESULTS" />
+                        <Region HBox.hgrow="ALWAYS" />
                         <Button onAction="#onSaveConfig" styleClass="button-neutral" text="SAVE">
                             <HBox.margin>
-                                <Insets right="8.0" bottom="4.0"/>
+                                <Insets bottom="4.0" right="8.0" />
                             </HBox.margin>
                         </Button>
                     </children>
@@ -119,106 +89,95 @@
                 <VBox fx:id="sidebarPanel" minWidth="0" prefWidth="230.0" spacing="0" styleClass="sidebar-sim">
                     <children>
 
-                        <TabPane fx:id="outlinerTabPane" maxHeight="430" prefHeight="410" styleClass="sidebar-tab-pane"
-                                 tabClosingPolicy="UNAVAILABLE" VBox.vgrow="NEVER">
+                        <TabPane fx:id="outlinerTabPane" maxHeight="430" prefHeight="410" styleClass="sidebar-tab-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="NEVER">
                             <tabs>
 
                                 <Tab text="Add Object">
                                     <content>
                                         <VBox spacing="0" styleClass="sidebar-panel">
-                                            <Label prefWidth="229.0" styleClass="sim-help-label"
-                                                   text="To add an object, drag and drop it into the viewport."/>
-                                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
-                                                        styleClass="sidebar-scroll" maxHeight="320">
-                                                <VBox spacing="4" styleClass="sidebar-panel" style="-fx-padding: 6;">
+                                            <Label prefWidth="229.0" styleClass="sim-help-label" text="To add an object, drag and drop it into the viewport." />
+                                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="320" styleClass="sidebar-scroll" vbarPolicy="AS_NEEDED">
+                                                <VBox spacing="4" style="-fx-padding: 6;" styleClass="sidebar-panel">
 
-                                                    <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="ROBOT" maxWidth="Infinity">
+                                                    <Button maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="ROBOT">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/robot.png"/></image>
+                                                                    <image><Image url="@../img/robot.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Robot" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Autonomous warehouse agent" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Robot" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Autonomous warehouse agent" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
                                                     </Button>
 
-                                                    <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="CHARGER" maxWidth="Infinity">
+                                                    <Button maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="CHARGER">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/charger.png"/></image>
+                                                                    <image><Image url="@../img/charger.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Charging Station" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Recharges robot batteries" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Charging Station" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Recharges robot batteries" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
                                                     </Button>
 
-                                                    <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="STATION" maxWidth="Infinity">
+                                                    <Button maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="STATION">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/station.png"/></image>
+                                                                    <image><Image url="@../img/station.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Delivery Station" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Task dropoff point for robots" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Delivery Station" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Task dropoff point for robots" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
                                                     </Button>
 
-                                                    <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="WALL" maxWidth="Infinity">
+                                                    <Button maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="WALL">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/wall.png"/></image>
+                                                                    <image><Image url="@../img/wall.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Wall" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Impassable obstacle tile" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Wall" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Impassable obstacle tile" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
                                                     </Button>
 
-                                                    <Button onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="SHELF" maxWidth="Infinity">
+                                                    <Button maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" styleClass="object-tile" userData="SHELF">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/shelf.png"/></image>
+                                                                    <image><Image url="@../img/shelf.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Shelf / Rack" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Storage rack, task pickup point" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Shelf / Rack" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Storage rack, task pickup point" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
                                                     </Button>
 
-                                                    <Button fx:id="intersectionObjectTile" managed="false" visible="false"
-                                                            onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick"
-                                                            styleClass="object-tile" userData="INTERSECTION" maxWidth="Infinity"
-                                                            style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #CDCBC3;">
+                                                    <Button fx:id="intersectionObjectTile" managed="false" maxWidth="Infinity" onDragDetected="#onObjectTileDragDetected" onMouseClicked="#onAddObjectClick" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #CDCBC3;" styleClass="object-tile" userData="INTERSECTION" visible="false">
                                                         <graphic>
                                                             <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 0 12 0 12;">
                                                                 <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
-                                                                    <image><Image url="@../img/intersection.png"/></image>
+                                                                    <image><Image url="@../img/intersection.png" /></image>
                                                                 </ImageView>
                                                                 <VBox spacing="2">
-                                                                    <Label text="Intersection" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
-                                                                    <Label text="Traffic rules crossing point" style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;"/>
+                                                                    <Label style="-fx-font-weight: bold; -fx-font-size: 11px;" text="Intersection" />
+                                                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #5D5B54;" text="Traffic rules crossing point" />
                                                                 </VBox>
                                                             </HBox>
                                                         </graphic>
@@ -234,9 +193,8 @@
                                     <content>
                                         <VBox spacing="4" styleClass="sidebar-panel">
                                             <children>
-                                                <TextField fx:id="outlinerSearchField" promptText="Filter objects…"
-                                                           styleClass="sidebar-filter-field"/>
-                                                <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS"/>
+                                                <TextField fx:id="outlinerSearchField" promptText="Filter objects…" styleClass="sidebar-filter-field" />
+                                                <ListView fx:id="outlinerListView" VBox.vgrow="ALWAYS" />
                                             </children>
                                         </VBox>
                                     </content>
@@ -246,7 +204,7 @@
 
                         <HBox alignment="CENTER_LEFT" styleClass="properties-header">
                             <children>
-                                <Label styleClass="properties-title" text="Properties"/>
+                                <Label styleClass="properties-title" text="Properties" />
                             </children>
                         </HBox>
 
@@ -254,13 +212,13 @@
                             <content>
                                 <VBox fx:id="propertiesPanel" spacing="0" styleClass="properties-panel">
                                     <children>
-                                        <Label styleClass="sim-help-label" text="Select an object."/>
+                                        <Label styleClass="sim-help-label" text="Select an object." />
                                     </children>
                                 </VBox>
                             </content>
                         </ScrollPane>
 
-                        <HBox alignment="CENTER_LEFT" spacing="5" styleClass="prop-row-a"/>
+                        <HBox alignment="CENTER_LEFT" spacing="5" styleClass="prop-row-a" />
                     </children>
 
                 </VBox>
@@ -272,113 +230,101 @@
                             <left>
                                 <HBox alignment="CENTER_LEFT" spacing="6">
                                     <children>
-                                        <Label styleClass="viewport-icon-label" text="⊞"/>
-                                        <Label styleClass="viewport-title-label" text="2D Viewport"/>
-                                        <Label fx:id="editModeLabel" styleClass="viewport-subtle-label" text=""/>
+                                        <Label styleClass="viewport-icon-label" text="⊞" />
+                                        <Label styleClass="viewport-title-label" text="2D Viewport" />
+                                        <Label fx:id="editModeLabel" styleClass="viewport-subtle-label" text="" />
                                     </children>
                                 </HBox>
                             </left>
                             <center>
-                                <Label fx:id="viewportStatusLabel" styleClass="viewport-status-label" text=""/>
+                                <Label fx:id="viewportStatusLabel" styleClass="viewport-status-label" text="" />
                             </center>
                             <right>
                                 <HBox alignment="CENTER_RIGHT" spacing="4">
                                     <children>
-                                        <Button onAction="#onRestart" styleClass="playback-btn" text="↺"/>
-                                        <Button fx:id="playBtn" onAction="#onPlay" styleClass="playback-btn" text="▶"/>
-                                        <Button fx:id="pauseBtn" onAction="#onPause" styleClass="playback-btn"
-                                                text="⏸"/>
-                                        <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶"/>
-                                        <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn"
-                                                text="x1"/>
-                                        <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn"
-                                                text="x2"/>
-                                        <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn"
-                                                text="x3"/>
-                                        <Button fx:id="speed10Btn" onAction="#onSpeed10" styleClass="speed-btn"
-                                                text="x10"/>
-                                        <Label styleClass="viewport-subtle-label" text="View">
+                                        <Button onAction="#onRestart" styleClass="playback-btn" text="↺" />
+                                        <Button fx:id="playBtn" onAction="#onPlay" styleClass="playback-btn" text="▶" />
+                                        <Button fx:id="pauseBtn" onAction="#onPause" styleClass="playback-btn" text="⏸" />
+                                        <Button onAction="#onNextFrame" styleClass="playback-btn" text="▶▶" />
+                                        <Button fx:id="speed1Btn" onAction="#onSpeed1" styleClass="speed-btn" text="x1" />
+                                        <Button fx:id="speed2Btn" onAction="#onSpeed2" styleClass="speed-btn" text="x2" />
+                                        <Button fx:id="speed3Btn" onAction="#onSpeed3" styleClass="speed-btn" text="x3" />
+                                        <Button fx:id="speed10Btn" onAction="#onSpeed10" styleClass="speed-btn" text="x10" />
+                                        <Label styleClass="viewport-subtle-label" text="Zoom  ">
                                             <HBox.margin>
-                                                <Insets left="6"/>
+                                                <Insets left="6" />
                                             </HBox.margin>
                                         </Label>
-                                        <Button onAction="#onZoomIn" styleClass="playback-btn" text="⊕"/>
-                                        <Button onAction="#onReturnToOrigin" styleClass="playback-btn" text="⌖"/>
-                                        <Button onAction="#onZoomOut" styleClass="playback-btn" text="⊖"/>
+                                        <Button onAction="#onZoomIn" styleClass="zoom-btn" text="+" />
+                                        <Button onAction="#onReturnToOrigin" styleClass="zoom-btn" text="⊙" />
+                                        <Button onAction="#onZoomOut" styleClass="zoom-btn" text="-" />
                                     </children>
                                 </HBox>
                             </right>
                         </BorderPane>
 
-                        <SplitPane fx:id="viewportConsoleSplit" dividerPositions="0.83" orientation="VERTICAL"
-                                   styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
+                        <SplitPane fx:id="viewportConsoleSplit" dividerPositions="0.83" orientation="VERTICAL" styleClass="sim-vsplit" VBox.vgrow="ALWAYS">
                             <items>
                                 <VBox spacing="0">
                                     <children>
                                         <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">
                                             <children>
-                                                <Canvas fx:id="warehouseCanvas" managed="false"/>
+                                                <Canvas fx:id="warehouseCanvas" managed="false" />
                                                 <!-- Bottom-left: tick counter and progress — mouse-transparent overlay -->
-                                                <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity"
-                                                      mouseTransparent="true" pickOnBounds="false" spacing="8"
-                                                      styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">
-                                                    <Label fx:id="tickDisplayLabel" styleClass="tick-label" text="TICK 0"/>
-                                                    <ProgressBar fx:id="simProgressBar" prefHeight="10.0"
-                                                                 prefWidth="120.0" progress="0.0"/>
+                                                <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" mouseTransparent="true" pickOnBounds="false" spacing="8" styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">
+                                                    <Label fx:id="tickDisplayLabel" styleClass="tick-label" text="TICK 0" />
+                                                    <ProgressBar fx:id="simProgressBar" prefHeight="10.0" prefWidth="120.0" progress="0.0" />
                                                     <StackPane.margin>
-                                                        <Insets bottom="10.0" left="10.0"/>
+                                                        <Insets bottom="10.0" left="10.0" />
                                                     </StackPane.margin>
                                                 </HBox>
 
                                                 <!-- Bottom-right: info button — shows shortcut overlay on click -->
-                                                <Button styleClass="viewport-info-btn" text="?" onAction="#onToggleShortcutOverlay"
-                                                        StackPane.alignment="BOTTOM_RIGHT">
+                                                <Button onAction="#onToggleShortcutOverlay" styleClass="viewport-info-btn" text="?" StackPane.alignment="BOTTOM_RIGHT">
                                                     <StackPane.margin>
-                                                        <Insets bottom="10.0" right="10.0"/>
+                                                        <Insets bottom="10.0" right="10.0" />
                                                     </StackPane.margin>
                                                 </Button>
 
                                                 <!-- Shortcut overlay — hidden by default, toggled by info button -->
-                                                <VBox fx:id="shortcutOverlay" styleClass="shortcut-overlay"
-                                                      visible="false" managed="false"
-                                                      StackPane.alignment="BOTTOM_RIGHT" maxWidth="220" maxHeight="-Infinity">
-                                                    <HBox styleClass="shortcut-overlay-header" alignment="CENTER_LEFT">
-                                                        <Label text="Keyboard Shortcuts" styleClass="shortcut-overlay-title"/>
-                                                        <Region HBox.hgrow="ALWAYS"/>
-                                                        <Button text="✕" styleClass="dialog-close-btn" onAction="#onToggleShortcutOverlay"/>
+                                                <VBox fx:id="shortcutOverlay" managed="false" maxHeight="-Infinity" maxWidth="220" styleClass="shortcut-overlay" visible="false" StackPane.alignment="BOTTOM_RIGHT">
+                                                    <HBox alignment="CENTER_LEFT" styleClass="shortcut-overlay-header">
+                                                        <Label styleClass="shortcut-overlay-title" text="Keyboard Shortcuts" />
+                                                        <Region HBox.hgrow="ALWAYS" />
+                                                        <Button onAction="#onToggleShortcutOverlay" styleClass="dialog-close-btn" text="✕" />
                                                     </HBox>
-                                                    <VBox styleClass="shortcut-overlay-body" spacing="0">
-                                                        <HBox styleClass="shortcut-row-a" spacing="0">
-                                                            <Label text="LMB" styleClass="shortcut-key"/>
-                                                            <Label text="Select / Drag" styleClass="shortcut-desc"/>
+                                                    <VBox spacing="0" styleClass="shortcut-overlay-body">
+                                                        <HBox spacing="0" styleClass="shortcut-row-a">
+                                                            <Label styleClass="shortcut-key" text="LMB" />
+                                                            <Label styleClass="shortcut-desc" text="Select / Drag" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-b" spacing="0">
-                                                            <Label text="RMB" styleClass="shortcut-key"/>
-                                                            <Label text="Pan viewport" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-b">
+                                                            <Label styleClass="shortcut-key" text="RMB" />
+                                                            <Label styleClass="shortcut-desc" text="Pan viewport" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-a" spacing="0">
-                                                            <Label text="Ctrl+C" styleClass="shortcut-key"/>
-                                                            <Label text="Copy" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-a">
+                                                            <Label styleClass="shortcut-key" text="Ctrl+C" />
+                                                            <Label styleClass="shortcut-desc" text="Copy" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-b" spacing="0">
-                                                            <Label text="Ctrl+V" styleClass="shortcut-key"/>
-                                                            <Label text="Paste" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-b">
+                                                            <Label styleClass="shortcut-key" text="Ctrl+V" />
+                                                            <Label styleClass="shortcut-desc" text="Paste" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-a" spacing="0">
-                                                            <Label text="Ctrl+Z" styleClass="shortcut-key"/>
-                                                            <Label text="Undo" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-a">
+                                                            <Label styleClass="shortcut-key" text="Ctrl+Z" />
+                                                            <Label styleClass="shortcut-desc" text="Undo" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-b" spacing="0">
-                                                            <Label text="Ctrl+Y" styleClass="shortcut-key"/>
-                                                            <Label text="Redo" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-b">
+                                                            <Label styleClass="shortcut-key" text="Ctrl+Y" />
+                                                            <Label styleClass="shortcut-desc" text="Redo" />
                                                         </HBox>
-                                                        <HBox styleClass="shortcut-row-a" spacing="0">
-                                                            <Label text="Del" styleClass="shortcut-key"/>
-                                                            <Label text="Delete selected" styleClass="shortcut-desc"/>
+                                                        <HBox spacing="0" styleClass="shortcut-row-a">
+                                                            <Label styleClass="shortcut-key" text="Del" />
+                                                            <Label styleClass="shortcut-desc" text="Delete selected" />
                                                         </HBox>
                                                     </VBox>
                                                     <StackPane.margin>
-                                                        <Insets bottom="40.0" right="10.0"/>
+                                                        <Insets bottom="40.0" right="10.0" />
                                                     </StackPane.margin>
                                                 </VBox>
                                             </children>
@@ -386,23 +332,20 @@
                                     </children>
                                 </VBox>
 
-                                <SplitPane dividerPositions="0.5" styleClass="sim-hsplit" minHeight="0"
-                                           prefHeight="120">
+                                <SplitPane dividerPositions="0.5" minHeight="0" prefHeight="120" styleClass="sim-hsplit">
                                     <items>
                                         <VBox fx:id="consoleShell" spacing="0" styleClass="console-shell">
                                             <children>
                                                 <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                                     <children>
-                                                        <Label text="Console"/>
-                                                        <Region HBox.hgrow="ALWAYS"/>
-                                                        <Label fx:id="tipLabel" styleClass="sim-tip-label" text=""/>
-                                                        <Region HBox.hgrow="ALWAYS"/>
-                                                        <Button fx:id="clearConsoleButton" onAction="#onClearConsole"
-                                                                styleClass="console-clear-btn" text="Clear"/>
+                                                        <Label text="Console" />
+                                                        <Region HBox.hgrow="ALWAYS" />
+                                                        <Label fx:id="tipLabel" styleClass="sim-tip-label" text="" />
+                                                        <Region HBox.hgrow="ALWAYS" />
+                                                        <Button fx:id="clearConsoleButton" onAction="#onClearConsole" styleClass="console-clear-btn" text="Clear" />
                                                     </children>
                                                 </HBox>
-                                                <TextArea fx:id="consoleArea" editable="false" promptText="&gt;"
-                                                          wrapText="true" VBox.vgrow="ALWAYS"/>
+                                                <TextArea fx:id="consoleArea" editable="false" promptText="&gt;" wrapText="true" VBox.vgrow="ALWAYS" />
                                             </children>
                                         </VBox>
 
@@ -410,11 +353,10 @@
                                             <children>
                                                 <HBox alignment="CENTER_LEFT" spacing="6" styleClass="console-header">
                                                     <children>
-                                                        <Label text="Database Simulation Logs"/>
+                                                        <Label text="Database Simulation Logs" />
                                                     </children>
                                                 </HBox>
-                                                <TextArea fx:id="logArea" editable="false" promptText="&gt;"
-                                                          wrapText="true" VBox.vgrow="ALWAYS"/>
+                                                <TextArea fx:id="logArea" editable="false" promptText="&gt;" wrapText="true" VBox.vgrow="ALWAYS" />
                                             </children>
                                         </VBox>
                                     </items>

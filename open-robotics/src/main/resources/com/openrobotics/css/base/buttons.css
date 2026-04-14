@@ -151,6 +151,18 @@
     -fx-cursor: hand;
 }
 
+.zoom-btn {
+    -fx-background-color: #C2BEAE;
+    -fx-text-fill: #1a1a18;
+    -fx-font-size: 15px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 3px;
+    -fx-border-color: #8D8A7F;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-cursor: hand;
+}
+
 .playback-btn:hover {
     -fx-background-color: #8D8A7F;
     -fx-text-fill: #C2BEAE;
