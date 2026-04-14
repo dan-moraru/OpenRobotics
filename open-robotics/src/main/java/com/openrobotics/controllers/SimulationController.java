@@ -104,6 +104,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private VBox sidebarPanel;
     @FXML private VBox consoleShell;
     @FXML private Label     tickDisplayLabel;
+    @FXML private VBox      shortcutOverlay;
 
     // Saved divider positions so collapse/expand is smooth
     private double savedSidebarDivider  = 0.17;
@@ -2184,6 +2185,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onExit() {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
+    }
+
+    /**
+     * Toggles the shortcut reference overlay on/off.
+     * The overlay sits inside viewportStack so it floats above the canvas.
+     */
+    @FXML
+    private void onToggleShortcutOverlay() {
+        boolean nowVisible = !shortcutOverlay.isVisible();
+        shortcutOverlay.setVisible(nowVisible);
+        shortcutOverlay.setManaged(nowVisible);
     }
 
     /**

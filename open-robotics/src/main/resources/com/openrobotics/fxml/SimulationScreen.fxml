@@ -318,19 +318,73 @@
                                         <StackPane fx:id="viewportStack" styleClass="viewport-pane" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <Canvas fx:id="warehouseCanvas" managed="false"/>
+                                                <!-- Bottom-left: tick counter and progress — mouse-transparent overlay -->
                                                 <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity"
                                                       mouseTransparent="true" pickOnBounds="false" spacing="8"
                                                       styleClass="tick-overlay" StackPane.alignment="BOTTOM_LEFT">
-                                                    <children>
-                                                        <Label fx:id="tickDisplayLabel" styleClass="tick-label"
-                                                               text="TICK 0"/>
-                                                        <ProgressBar fx:id="simProgressBar" prefHeight="10.0"
-                                                                     prefWidth="120.0" progress="0.0"/>
-                                                    </children>
+                                                    <Label fx:id="tickDisplayLabel" styleClass="tick-label" text="TICK 0"/>
+                                                    <ProgressBar fx:id="simProgressBar" prefHeight="10.0"
+                                                                 prefWidth="120.0" progress="0.0"/>
                                                     <StackPane.margin>
                                                         <Insets bottom="10.0" left="10.0"/>
                                                     </StackPane.margin>
                                                 </HBox>
+
+                                                <!-- Bottom-right: info button — shows shortcut overlay on click -->
+                                                <Button styleClass="viewport-info-btn" text="?" onAction="#onToggleShortcutOverlay"
+                                                        StackPane.alignment="BOTTOM_RIGHT">
+                                                    <StackPane.margin>
+                                                        <Insets bottom="10.0" right="10.0"/>
+                                                    </StackPane.margin>
+                                                </Button>
+
+                                                <!-- Shortcut overlay — hidden by default, toggled by info button -->
+                                                <VBox fx:id="shortcutOverlay" styleClass="shortcut-overlay"
+                                                      visible="false" managed="false"
+                                                      StackPane.alignment="BOTTOM_RIGHT" maxWidth="220" maxHeight="-Infinity">
+                                                    <HBox styleClass="shortcut-overlay-header" alignment="CENTER_LEFT">
+                                                        <Label text="Keyboard Shortcuts" styleClass="shortcut-overlay-title"/>
+                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                        <Button text="✕" styleClass="dialog-close-btn" onAction="#onToggleShortcutOverlay"/>
+                                                    </HBox>
+                                                    <VBox styleClass="shortcut-overlay-body" spacing="0">
+                                                        <HBox styleClass="shortcut-row-a" spacing="0">
+                                                            <Label text="LMB" styleClass="shortcut-key"/>
+                                                            <Label text="Select / Drag" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-b" spacing="0">
+                                                            <Label text="RMB" styleClass="shortcut-key"/>
+                                                            <Label text="Pan viewport" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-a" spacing="0">
+                                                            <Label text="Ctrl+C" styleClass="shortcut-key"/>
+                                                            <Label text="Copy" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-b" spacing="0">
+                                                            <Label text="Ctrl+V" styleClass="shortcut-key"/>
+                                                            <Label text="Paste" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-a" spacing="0">
+                                                            <Label text="Ctrl+D" styleClass="shortcut-key"/>
+                                                            <Label text="Duplicate" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-b" spacing="0">
+                                                            <Label text="Ctrl+Z" styleClass="shortcut-key"/>
+                                                            <Label text="Undo" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-a" spacing="0">
+                                                            <Label text="Ctrl+Y" styleClass="shortcut-key"/>
+                                                            <Label text="Redo" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                        <HBox styleClass="shortcut-row-b" spacing="0">
+                                                            <Label text="Del" styleClass="shortcut-key"/>
+                                                            <Label text="Delete selected" styleClass="shortcut-desc"/>
+                                                        </HBox>
+                                                    </VBox>
+                                                    <StackPane.margin>
+                                                        <Insets bottom="40.0" right="10.0"/>
+                                                    </StackPane.margin>
+                                                </VBox>
                                             </children>
                                         </StackPane>
                                     </children>

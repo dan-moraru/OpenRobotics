@@ -193,6 +193,79 @@
     -fx-text-fill: #1a1a18;
 }
 
+/* ── SHORTCUT OVERLAY ───────────────────────────────────────────────── */
+
+/* Floating "?" button anchored to bottom-right of the viewport */
+.viewport-info-btn {
+    -fx-background-color: rgba(93, 91, 84, 0.75);
+    -fx-text-fill: #C2BEAE;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12px;
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.viewport-info-btn:hover {
+    -fx-background-color: rgba(93, 91, 84, 1.0);
+}
+
+/* Overlay container — floats above canvas, anchored bottom-right */
+.shortcut-overlay {
+    -fx-background-color: #3D3C39;
+    -fx-border-color: #5D5B54;
+    -fx-border-width: 1px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0, 0, 2);
+}
+
+/* Header bar with title and close button */
+.shortcut-overlay-header {
+    -fx-background-color: #5D5B54;
+    -fx-padding: 6 8 6 10;
+    -fx-background-radius: 6 6 0 0;
+}
+
+.shortcut-overlay-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+}
+
+/* Shortcut rows — alternating backgrounds for readability */
+.shortcut-overlay-body {
+    -fx-padding: 4 0 4 0;
+}
+
+.shortcut-row-a {
+    -fx-background-color: #3D3C39;
+    -fx-padding: 4 10 4 10;
+}
+
+.shortcut-row-b {
+    -fx-background-color: #464540;
+    -fx-padding: 4 10 4 10;
+}
+
+/* Key badge — fixed width so descriptions align */
+.shortcut-key {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C2BEAE;
+    -fx-min-width: 60px;
+}
+
+/* Description text next to each key */
+.shortcut-desc {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8D8A7F;
+}
+
 /* Tick overlay */
 .tick-label {
     -fx-font-size: 11px;
