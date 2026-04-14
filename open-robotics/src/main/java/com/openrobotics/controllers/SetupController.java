@@ -97,6 +97,8 @@ public class SetupController {
     //  Default values (spec §5.1.3.4)
     // ------------------------------------------------------------------ //
 
+    private static final Color INTERSECTION_FILL_COLOR = Color.web("#8C7B38", 0.25);
+    private static final Color INTERSECTION_STROKE_COLOR = Color.web("#6A4828");
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final int    DEFAULT_MAX_TASKS     = 10;
@@ -325,6 +327,7 @@ public class SetupController {
             int tileOffY = (ch - contentH) / 2 - minY;
 
             drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY);
+            drawTrafficRuleIntersections(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY);
         }
     }
 
@@ -362,6 +365,31 @@ public class SetupController {
                 gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
             } else if (entity instanceof Obstacle) {
                 gc.setFill(Color.web("#5D5B54")); gc.fillRect(sx, sy, tileSize, tileSize);
+            }
+        }
+    }
+
+    private void drawTrafficRuleIntersections(GraphicsContext gc, com.openrobotics.map.Map map, double ox, double oy, double tileSize, int tileOffX, int tileOffY) {
+        if (!AppState.hasEngine() || !AppState.getEngine().usesTrafficRulesPolicy()) return;
+        double markerInset = Math.max(3.0, tileSize * 0.22);
+
+        Image intersectionIcon = IconLoader.getIcon("INTERSECTION");
+
+        gc.setStroke(INTERSECTION_STROKE_COLOR);
+        gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
+
+        for (Vector2D intersection : AppState.getEngine().getTrafficRuleIntersections()) {
+            double sx = ox + (tileOffX + intersection.getX()) * tileSize;
+            double sy = oy + (tileOffY + intersection.getY()) * tileSize;
+
+            if (intersectionIcon != null && !intersectionIcon.isError()) {
+                gc.drawImage(intersectionIcon, sx, sy, tileSize, tileSize);
+            } else {
+                double centerInset = Math.max(2.0, tileSize * 0.38);
+                gc.setFill(INTERSECTION_FILL_COLOR);
+                gc.fillOval(sx + markerInset, sy + markerInset, tileSize - 2 * markerInset, tileSize - 2 * markerInset);
+                gc.strokeLine(sx + centerInset, sy + tileSize / 2.0, sx + tileSize - centerInset, sy + tileSize / 2.0);
+                gc.strokeLine(sx + tileSize / 2.0, sy + centerInset, sx + tileSize / 2.0, sy + tileSize - centerInset);
             }
         }
     }
