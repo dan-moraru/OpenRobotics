@@ -9,7 +9,7 @@ import javafx.scene.layout.StackPane;
 import java.awt.Desktop;
 import java.util.logging.Logger;
 
-/** controller for WelcomeScreen.fxml; shows branding and changelog, START SETUP navigates to the setup screen */
+/** Controller for WelcomeScreen.fxml; shows branding and changelog, and routes {@code START SETUP} to the setup screen. */
 public class WelcomeController {
     private static final Logger LOGGER = Logger.getLogger(WelcomeController.class.getName());
 

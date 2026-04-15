@@ -18,7 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/** controller for SaveConfigDialog.fxml; lets the user choose a directory and file name, then saves the current config */
+/**
+ * Controller for SaveConfigDialog.fxml; lets the user choose a directory and file name, then
+ * saves the current config.
+ */
 public class SaveConfigController implements ScreenNavigator.DialogController {
 
     @FXML private TextField        fileNameField;
@@ -40,7 +43,12 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         this.dialogStage = stage;
     }
 
-    /** returns the full path set when the user clicked Save, or null if not yet saved */
+    /**
+     * Returns the full path set when the user clicked {@code Save}, or {@code null} if the dialog
+     * has not saved a file yet.
+     *
+     * @return the saved config path, or {@code null} if no file has been saved yet.
+     */
     public String getResultFilePath() {
         return resultFilePath;
     }

@@ -24,7 +24,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import java.util.List;
 
-/** controller for ResultsScreen.fxml; displays the post-simulation results dashboard using data from AppState.getEngine() */
+/**
+ * Controller for ResultsScreen.fxml; displays the post-simulation results dashboard using data
+ * from {@link AppState#getEngine()}.
+ */
 public class ResultsController {
 
     // top bar

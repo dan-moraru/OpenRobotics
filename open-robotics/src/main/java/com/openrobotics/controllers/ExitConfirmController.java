@@ -4,7 +4,10 @@ import com.openrobotics.util.ScreenNavigator;
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
-/** controller for ExitConfirmDialog.fxml; implements both DialogController and ExitConfirmResultHolder */
+/**
+ * Controller for ExitConfirmDialog.fxml; implements both {@link ScreenNavigator.DialogController}
+ * and {@link ScreenNavigator.ExitConfirmResultHolder}.
+ */
 public class ExitConfirmController
         implements ScreenNavigator.DialogController,
                    ScreenNavigator.ExitConfirmResultHolder {

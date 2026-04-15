@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/** controller for LoadConfigDialog.fxml; lets the user pick a JSON config file from recent history or the filesystem */
+/**
+ * Controller for LoadConfigDialog.fxml; lets the user pick a JSON config file from recent history
+ * or the filesystem.
+ */
 public class LoadConfigController implements ScreenNavigator.DialogController {
 
     @FXML private ComboBox<String> configFileCombo;
@@ -97,7 +100,13 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         close();
     }
 
-    /** returns the file chosen by the user, or null if cancelled; callers retrieve this via the FXMLLoader from ScreenNavigator.openDialog() */
+    /**
+     * Returns the file chosen by the user, or {@code null} if the dialog was cancelled.
+     * Callers retrieve this after the dialog closes via the FXMLLoader from
+     * {@link ScreenNavigator#openDialog}.
+     *
+     * @return the selected file, or {@code null} if cancelled.
+     */
     public File getSelectedFile() {
         return selectedFile;
     }

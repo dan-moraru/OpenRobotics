@@ -6,7 +6,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-/** controller for ObjectDescDialog.fxml; shows a description of a placeable object and lets the user add it to the viewport (§4.2) */
+/**
+ * Controller for ObjectDescDialog.fxml; shows a description of a placeable object and lets the
+ * user add it to the viewport (§4.2).
+ */
 public class ObjectDescController implements ScreenNavigator.DialogController {
 
     @FXML private Label objectIconLabel;
@@ -24,7 +27,12 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         this.dialogStage = stage;
     }
 
-    /** populates all labels for the given type. @param type one of: ROBOT, CHARGER, STATION, DOCK, WALL, INTERSECTION */
+    /**
+     * Populates all labels for the given object type.
+     *
+     * @param type one of {@code ROBOT}, {@code CHARGER}, {@code STATION}, {@code DOCK},
+     *             {@code WALL}, or {@code INTERSECTION}.
+     */
     public void setObjectType(String type) {
         this.objectType = type;
         if (propsOverview != null) {
@@ -109,7 +117,11 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         close();
     }
 
-    /** returns true if the user pressed "Add to Viewport" */
+    /**
+     * Returns whether the user pressed {@code Add to Viewport}.
+     *
+     * @return {@code true} if the user requested that the object be added.
+     */
     public boolean isAddRequested() { return addRequested; }
     public String  getObjectType()  { return objectType; }
 

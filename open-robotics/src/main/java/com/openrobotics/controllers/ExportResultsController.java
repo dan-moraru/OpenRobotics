@@ -19,7 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/** controller for ExportResultsDialog.fxml; serialises post-simulation results to a user-chosen JSON file */
+/**
+ * Controller for ExportResultsDialog.fxml; serializes post-simulation results to a user-chosen
+ * JSON file.
+ */
 public class ExportResultsController implements ScreenNavigator.DialogController {
 
     @FXML private TextField        fileNameField;
