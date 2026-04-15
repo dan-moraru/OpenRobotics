@@ -9,14 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** DAO for the run_workload_tasks table */
+/** DAO for the {@code run_workload_tasks} table. */
 public final class WorkloadTaskDao {
 
     private WorkloadTaskDao() {}
 
     /**
-     * inserts a workload task record and returns its generated ID.
+     * Inserts a workload task record and returns its generated ID.
      *
+     * @param r the workload task record to insert
+     * @return the generated row ID
      * @throws SQLException on database error
      */
     public static long insert(WorkloadTaskRecord r) throws SQLException {
@@ -52,8 +54,10 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * finds all workload task records for a given run, ordered by ID.
+     * Finds all workload task records for a given run, ordered by ID.
      *
+     * @param runId the run UUID to query
+     * @return list of workload task records for the run
      * @throws SQLException on database error
      */
     public static List<WorkloadTaskRecord> findByRunId(UUID runId) throws SQLException {
@@ -72,8 +76,11 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * updates status and completed_tick for a task.
+     * Updates the {@code status} and {@code completed_tick} for a task.
      *
+     * @param id the row ID of the task to update
+     * @param status the new status string
+     * @param completedTick the tick at which the task was completed; may be {@code null}
      * @throws SQLException on database error
      */
     public static void markCompleted(long id, String status, Integer completedTick) throws SQLException {
@@ -88,8 +95,11 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * assigns a task to a robot; also sets status to IN_PROGRESS.
+     * Assigns a task to a robot and sets its status to {@code IN_PROGRESS}.
      *
+     * @param id the row ID of the task to assign
+     * @param robotId the UUID of the robot being assigned
+     * @param assignedTick the tick at which the assignment occurs
      * @throws SQLException on database error
      */
     public static void assignToRobot(long id, UUID robotId, int assignedTick) throws SQLException {
@@ -104,9 +114,10 @@ public final class WorkloadTaskDao {
     }
 
     /**
-     * deletes all workload task records for a given run.
+     * Deletes all workload task records for a given run.
      *
-     * @return number of deleted rows
+     * @param runId the run UUID whose workload task records should be deleted
+     * @return the number of deleted rows
      * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {

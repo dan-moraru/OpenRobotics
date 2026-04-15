@@ -9,14 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** DAO for the sim_logs table */
+/** DAO for the {@code sim_logs} table. */
 public final class SimLogDao {
 
     private SimLogDao() {}
 
     /**
-     * inserts a single log record and returns its generated ID.
+     * Inserts a single log record and returns its generated ID.
      *
+     * @param r the sim log record to insert
+     * @return the generated row ID
      * @throws SQLException on database error
      */
     public static long insert(SimLogRecord r) throws SQLException {
@@ -44,8 +46,9 @@ public final class SimLogDao {
     }
 
     /**
-     * inserts a batch of log records in a single transaction for better throughput.
+     * Inserts a batch of log records in a single transaction for better throughput.
      *
+     * @param records the list of sim log records to insert; no-op if empty
      * @throws SQLException on database error
      */
     public static void insertBatch(List<SimLogRecord> records) throws SQLException {
@@ -81,8 +84,10 @@ public final class SimLogDao {
     }
 
     /**
-     * finds all log records for a run, ordered by tick then ID.
+     * Finds all log records for a run, ordered by tick then ID.
      *
+     * @param runId the run UUID to query
+     * @return list of sim log records for the run
      * @throws SQLException on database error
      */
     public static List<SimLogRecord> findByRunId(UUID runId) throws SQLException {
@@ -91,9 +96,11 @@ public final class SimLogDao {
     }
 
     /**
-     * finds all log records for a run greater than the given log id, ordered by tick then ID.
+     * Finds all log records for a run with an ID greater than {@code lastSeenId}, ordered by tick then ID.
      *
-     * @param lastSeenId the last log ID that was seen by the caller; only logs with a greater ID will be returned
+     * @param runId the run UUID to query
+     * @param lastSeenId the last log ID seen by the caller; only records with a greater ID are returned
+     * @return list of sim log records newer than {@code lastSeenId}
      * @throws SQLException on database error
      */
     public static List<SimLogRecord> findLatestLogs(UUID runId, long lastSeenId) throws SQLException {
@@ -114,8 +121,11 @@ public final class SimLogDao {
     }
 
     /**
-     * finds all log records for a run at a specific tick, ordered by ID.
+     * Finds all log records for a run at a specific tick, ordered by ID.
      *
+     * @param runId the run UUID to query
+     * @param tick the tick number to filter by
+     * @return list of sim log records at the given tick
      * @throws SQLException on database error
      */
     public static List<SimLogRecord> findByRunIdAndTick(UUID runId, int tick) throws SQLException {
@@ -135,9 +145,10 @@ public final class SimLogDao {
     }
 
     /**
-     * deletes all log records for a run.
+     * Deletes all log records for a run.
      *
-     * @return number of deleted rows
+     * @param runId the run UUID whose log records should be deleted
+     * @return the number of deleted rows
      * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {

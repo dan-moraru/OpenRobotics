@@ -10,14 +10,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** DAO for the maps table */
+/** DAO for the {@code maps} table. */
 public final class MapDao {
 
     private MapDao() {}
 
     /**
-     * inserts a map record; uses {@code r.getId()} if set, otherwise generates a new UUID.
+     * Inserts a map record; uses {@code r.getId()} if set, otherwise generates a new UUID.
      *
+     * @param r the map record to insert
      * @return the inserted map's ID
      * @throws SQLException on database error
      */
@@ -43,8 +44,10 @@ public final class MapDao {
     }
 
     /**
-     * finds a map record by ID.
+     * Finds a map record by ID.
      *
+     * @param id the map UUID to look up
+     * @return an {@link Optional} containing the record, or empty if not found
      * @throws SQLException on database error
      */
     public static Optional<MapRecord> findById(UUID id) throws SQLException {
@@ -59,8 +62,9 @@ public final class MapDao {
     }
 
     /**
-     * returns all map records ordered by created_at descending.
+     * Returns all map records ordered by {@code created_at} descending.
      *
+     * @return list of all map records
      * @throws SQLException on database error
      */
     public static List<MapRecord> findAll() throws SQLException {
@@ -77,9 +81,10 @@ public final class MapDao {
     }
 
     /**
-     * deletes a map record by ID.
+     * Deletes a map record by ID.
      *
-     * @return true if a row was deleted
+     * @param id the UUID of the map record to delete
+     * @return {@code true} if a row was deleted
      * @throws SQLException on database error
      */
     public static boolean deleteById(UUID id) throws SQLException {
