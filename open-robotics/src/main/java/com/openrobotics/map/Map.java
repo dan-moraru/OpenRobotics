@@ -13,7 +13,7 @@ import com.openrobotics.map.entities.station.DeliveryStation;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 
-/** Warehouse grid; owns all tiles and entities and provides spatial queries (uml 3.3.3). */
+/** Warehouse grid; owns all tiles and entities and provides spatial queries. */
 public class Map {
     private UUID mapid; // unique identifier for database storage
     private final int width;  // number of columns (x-axis)

@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static com.openrobotics.robot.RobotState.IDLE;
 
-/** Robot entity; extends MapEntity with a state machine, navigation, sensor, and lifetime stats (uml 3.3.4). */
+/** Robot entity; extends MapEntity with a state machine, navigation, sensor, and lifetime stats. */
 public class Robot extends MapEntity {
     private float battery;
     private NavigationStrategy nav;

@@ -6,7 +6,7 @@ import com.openrobotics.robot.AlgorithmType;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.simulationcore.MoveIntention;
 
-/** Strategy pattern interface for robot navigation (uml 3.3.4 / 3.4.5). */
+/** Strategy pattern interface for robot navigation. */
 public interface NavigationStrategy {
 
     /**

@@ -4,7 +4,7 @@ import com.openrobotics.map.Vector2D;
 
 import java.util.Objects;
 
-/** a task assigned to a robot; pairs a rack pickup location with a delivery station dropoff */
+/** A task assigned to a robot; pairs a rack pickup location with a delivery station dropoff. */
 public class Task implements Comparable<Task> {
     private final long id; // unique id
     private long artificialId; // temporary fix for disconnect between database and application task ids
@@ -13,6 +13,15 @@ public class Task implements Comparable<Task> {
     private int priority; // higher = more urgent
     private TaskStatus status; // PENDING, IN_PROGRESS, COMPLETED, FAILED
 
+    /**
+     * Creates a new task with the given id, locations, and priority.
+     * Status is initialised to {@link TaskStatus#PENDING}.
+     *
+     * @param id unique task identifier
+     * @param pickupLocation the rack tile the robot must visit first
+     * @param dropoffLocation the delivery station tile the robot must deliver to
+     * @param priority higher values are more urgent
+     */
     public Task(long id, Vector2D pickupLocation, Vector2D dropoffLocation, int priority) {
         this.id = id;
         this.pickupLocation = pickupLocation;
@@ -28,7 +37,12 @@ public class Task implements Comparable<Task> {
     public int getPriority() { return priority; }
     public TaskStatus getStatus() { return status; }
 
-    /** avoid mutating priority while this task is in a sorted collection; it can invalidate ordering assumptions */
+    /**
+     * Mutates the task priority; avoid calling while this task is in a sorted collection
+     * as it can invalidate ordering assumptions.
+     *
+     * @param priority the new priority value
+     */
     @Deprecated
     public void setPriority(int priority) { this.priority = priority; }
     public void setStatus(TaskStatus status) { this.status = status; }
@@ -56,7 +70,7 @@ public class Task implements Comparable<Task> {
         return Objects.hash(id);
     }
 
-    /** higher priority first; ties broken by ascending task id */
+    // higher priority first; ties broken by ascending task id
     @Override
     public int compareTo(Task task) {
         int byPriority = Integer.compare(task.priority, this.priority);

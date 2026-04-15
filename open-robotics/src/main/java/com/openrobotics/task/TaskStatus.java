@@ -1,6 +1,6 @@
 package com.openrobotics.task;
 
-/** task lifecycle states */
+/** Task lifecycle states. */
 public enum TaskStatus {
     PENDING,
     IN_PROGRESS,

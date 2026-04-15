@@ -2,7 +2,7 @@ package com.openrobotics.map;
 
 import java.util.UUID;
 
-/** Base class for all physical objects placed on the warehouse map (uml 3.3.4). */
+/** Base class for all physical objects placed on the warehouse map. */
 public class MapEntity {
     private final UUID id; // unique id for logging in db
     private String name; // user-facing label
