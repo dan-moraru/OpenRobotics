@@ -3,7 +3,7 @@ package com.openrobotics.db.model;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-/** database record for the maps table */
+/** Database record for the {@code maps} table. */
 public class MapRecord {
 
     private UUID id;
@@ -24,6 +24,12 @@ public class MapRecord {
     public void setName(String name) { this.name = name; }
 
     public int getWidth() { return width; }
+    /**
+     * Sets the map width.
+     *
+     * @param width the map width in tiles; must be positive
+     * @throws IllegalArgumentException if {@code width} is zero or negative
+     */
     public void setWidth(int width) {
         if (width <= 0) {
             throw new IllegalArgumentException("width must be positive");
@@ -32,6 +38,12 @@ public class MapRecord {
     }
 
     public int getHeight() { return height; }
+    /**
+     * Sets the map height.
+     *
+     * @param height the map height in tiles; must be positive
+     * @throws IllegalArgumentException if {@code height} is zero or negative
+     */
     public void setHeight(int height) {
         if (height <= 0) {
             throw new IllegalArgumentException("height must be positive");

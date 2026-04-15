@@ -2,7 +2,7 @@ package com.openrobotics.db.model;
 
 import java.util.UUID;
 
-/** database record for the run_workload_tasks table */
+/** Database record for the {@code run_workload_tasks} table. */
 public class WorkloadTaskRecord {
 
     private Long id;

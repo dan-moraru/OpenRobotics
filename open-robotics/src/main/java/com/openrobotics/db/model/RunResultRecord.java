@@ -3,7 +3,7 @@ package com.openrobotics.db.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/** database record for the run_results table */
+/** Database record for the {@code run_results} table. */
 public class RunResultRecord {
 
     private UUID runId;

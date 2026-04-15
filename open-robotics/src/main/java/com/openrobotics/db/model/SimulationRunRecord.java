@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
 
-/** database record for the simulation_runs table */
+/** Database record for the {@code simulation_runs} table. */
 public class SimulationRunRecord {
 
     private UUID id;
@@ -28,6 +28,12 @@ public class SimulationRunRecord {
     public void setMapId(UUID mapId) { this.mapId = mapId; }
 
     public Integer getRobotCount() { return robotCount; }
+    /**
+     * Sets the robot count for this run.
+     *
+     * @param robotCount the number of robots; must be non-negative if non-{@code null}
+     * @throws IllegalArgumentException if {@code robotCount} is negative
+     */
     public void setRobotCount(Integer robotCount) {
         if (robotCount != null && robotCount < 0) {
             throw new IllegalArgumentException("robotCount must be non-negative");
