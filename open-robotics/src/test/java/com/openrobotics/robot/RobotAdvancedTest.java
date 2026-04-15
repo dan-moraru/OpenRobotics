@@ -6,6 +6,7 @@ import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.station.ChargingStation;
+import com.openrobotics.robot.navigation.GreedyNavigationStrategy;
 import com.openrobotics.robot.sensors.Sensor;
 import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.simulationcore.CoordinationPolicy;
@@ -471,17 +472,20 @@ public class RobotAdvancedTest {
     }
 
     /**
-     * If no charging station exists, a low-battery robot gives up moving and becomes IDLE.
+     * If no charging station exists, a low-battery robot continues moving towards its task,
+     * consuming energy as normal (and risking death if battery depletes).
      */
     @Test
-    public void testLowBatteryWithoutChargingStationBecomesIdle() {
+    public void testLowBatteryWithoutChargingStationContinuesMoving() {
         robot.setBattery(10.0f);
         robot.setCurrentTask(new Task(1, new Vector2D(8, 8), new Vector2D(9, 9), 1));
         robot.setState(RobotState.MOVING);
 
         MoveIntention intention = robot.getNextMove(map);
 
-        assertEquals(RobotState.IDLE, robot.getState());
+        assertEquals(RobotState.MOVING, robot.getState());
+        assertEquals(10.0f, robot.getBattery(), 0.001f,
+                "Low-battery robot without charging station should not consume energy when getNextMove() is called with a null navigation strategy");
         assertSame(intention.getFromTile(), intention.getToTile());
     }
 

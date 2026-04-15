@@ -196,6 +196,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private MapEntity draggingOnCanvas = null;
     // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
     private com.openrobotics.map.Vector2D dragStartPosition = null;
+    private Vector2D dragStartIntersection = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
 
@@ -1119,6 +1120,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 selectIntersection(intersectionHit);
                 draggingOnCanvas = null;
                 dragStartPosition = null;
+                // dragStartIntersection arms the intersection for canvas drag
+                dragStartIntersection = intersectionHit;
             } else {
                 // Left click: select. If on an entity, also arm for drag.
                 MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
@@ -1155,7 +1158,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 dragStartPosition = null;
                 log("\u26a0 Cannot move objects while the simulation is running or has advanced past tick 0. Reset first.");
             } else {
-                // Left-drag: move selected entity – snap to nearest tile, clamped to map bounds
+                // Left-drag: move selected entity — snap to nearest tile, clamped to map bounds
                 double tileSize = 32 * zoom;
                 int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
                 int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
@@ -1164,11 +1167,35 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     if (viewportStatusLabel != null)
                         viewportStatusLabel.setText(
                                 "dragging(" + draggingOnCanvas.getName()
-                                + ")  →  (" + newTX + ", " + newTY + ")");
+                                        + ")  →  (" + newTX + ", " + newTY + ")");
                 } else if (viewportStatusLabel != null) {
                     viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
                 }
                 drawViewport();
+            }
+        } else if (dragStartIntersection != null && e.getButton() == MouseButton.PRIMARY) {
+            if (isEditorLocked()) {
+                // Editor locked — abort intersection drag silently
+                dragStartIntersection = null;
+            } else {
+                // Left-drag: move intersection — remove from old tile, place on new tile
+                double tileSize = 32 * zoom;
+                int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+                int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+                Vector2D newPos = new Vector2D(newTX, newTY);
+                if (!newPos.equals(dragStartIntersection)) {
+                    // Toggle removes the old position, toggle adds the new one
+                    engine.toggleTrafficRuleIntersection(
+                            (int) dragStartIntersection.getX(),
+                            (int) dragStartIntersection.getY());
+                    engine.toggleTrafficRuleIntersection(newTX, newTY);
+                    selectedIntersection = newPos;
+                    dragStartIntersection = newPos;
+                    if (viewportStatusLabel != null)
+                        viewportStatusLabel.setText(
+                                "dragging(INTERSECTION)  →  (" + newTX + ", " + newTY + ")");
+                    drawViewport();
+                }
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right-drag: pan the viewport
@@ -1196,6 +1223,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
             dragStartPosition = null;
+            dragStartIntersection = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
 
@@ -1926,7 +1954,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
                 } else {
-                    log("\u26a0 No tasks could be generated. Ensure the map has at least one rack and one delivery station.");
+                    log("\u26a0 No tasks could be generated.");
+                    engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
+                    handleSimulationFailure();
+                    return;
                 }
             }
 
@@ -2143,18 +2174,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            // Sandbox mode: no robots means an empty map used for layout/stepping only —
-            // treat the tick as a no-op success so the step counter still advances.
-            if (engine.getSimulationError() == SimulationError.NO_ROBOTS_SPAWNED) {
-                // fall through to the localTick++ / display-update block below
-            } else if (engine.getSimulationError() != SimulationError.NONE) {
+            if (engine.getSimulationError() != SimulationError.NONE) {
                 handleSimulationFailure();
-                return;
             } else {
                 handleSimulationComplete();
-                return;
             }
+
+            return;
         }
+
         localTick++;
 
         AppState.setSimulationTick(localTick);
