@@ -15,7 +15,10 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/** central logger; robot events are buffered in a background queue, task and simulation events are written synchronously */
+/**
+ * Central simulation logger; robot events are buffered in a background queue, while task and
+ * simulation events are written synchronously.
+ */
 public class Logger {
     private static LoggerMode mode = LoggerMode.DB;
     private static final BlockingQueue<SimLogRecord> robotEventQueue = new LinkedBlockingQueue<>();
@@ -48,15 +51,21 @@ public class Logger {
 
     private Logger() { }
 
-    /** sets the logging mode; NO_OP suppresses all logging calls */
+    /**
+     * Sets the logging mode. {@link LoggerMode#NO_OP} suppresses all logging calls.
+     *
+     * @param newMode the new logging mode
+     */
     public static void setMode(LoggerMode newMode) {
         mode = newMode;
     }
 
     /**
-     * logs a task lifecycle event to the run_workload_task table.
+     * Logs a task lifecycle event to the {@code run_workload_tasks} table.
      *
-     * @return the artificial id of the inserted record (TASK_CREATED only), or -1 for other event types
+     * @param eventType the task event type to persist
+     * @param record the workload task record containing the event payload
+     * @return the inserted record ID for {@link TaskEvent#TASK_CREATED}, or {@code -1} for other event types
      */
     public static long logTaskEvent(TaskEvent eventType, WorkloadTaskRecord record) {
         if (mode == LoggerMode.NO_OP) {
@@ -87,7 +96,12 @@ public class Logger {
         }
     }
 
-    /** logs a simulation run lifecycle event to the simulation_runs table */
+    /**
+     * Logs a simulation run lifecycle event to the {@code simulation_runs} table.
+     *
+     * @param eventType the simulation run event type to persist
+     * @param record the simulation run record containing the event payload
+     */
     public static void logSimulationRunEvent(SimulationRunEvent eventType, SimulationRunRecord record) {
         if (mode == LoggerMode.NO_OP) {
             return;
@@ -114,8 +128,11 @@ public class Logger {
     }
 
     /**
-     * enqueues a robot event for async batch write to the sim_logs table.
-     * the background worker flushes the queue every 5 seconds in batches of up to 100.
+     * Enqueues a robot event for asynchronous batch write to the {@code sim_logs} table.
+     * The background worker flushes the queue about once per second.
+     *
+     * @param eventType the robot event type associated with the log record
+     * @param record the simulation log record to enqueue
      */
     public static void logRobotEvent(RobotEvent eventType, SimLogRecord record) {
         if (mode == LoggerMode.NO_OP) {
@@ -125,10 +142,7 @@ public class Logger {
         robotEventQueue.offer(record);
     }
 
-    /**
-     * flushes all pending robot events in the queue immediately;
-     * can be called at the end of a simulation run to ensure all events are persisted before shutdown.
-     */
+    /** Flushes all pending robot events immediately. */
     public static void flushRobotEvents() {
         List<SimLogRecord> batch = new ArrayList<>();
         robotEventQueue.drainTo(batch);
