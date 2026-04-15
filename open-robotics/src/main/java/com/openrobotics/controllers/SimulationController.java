@@ -199,6 +199,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // Intersection being dragged; Separate from MapEntity drag because
     // intersections are Vector2D points managed by the engine, not MapEntity objects
     private Vector2D dragStartIntersection = null;
+    private Vector2D dragIntersectionOrigin = null;
     // Clipboard for copy/paste — entity and intersection tracked separately
     private MapEntity clipboardEntity = null;
     private Vector2D clipboardIntersection = null;
@@ -225,7 +226,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private long lastSeenLogId = 0;
 
     /** Sealed interface for reversible editor actions. */
-    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction {
+    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction, IntersectionToggleAction, IntersectionMoveAction {
         void undo(SimulationController ctrl);
         void redo(SimulationController ctrl);
         String description();
@@ -278,6 +279,41 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         public void undo(SimulationController ctrl) { robot.setSensor(oldSensorStrat); ctrl.drawViewport(); }
         public void redo(SimulationController ctrl) { robot.setSensor(newSensorStrat); ctrl.drawViewport(); }
         public String description() { return "Change " + robot.getName() + " sensor " + oldSensor + " → " + newSensor; }
+    }
+    // Undo/redo for intersection add/delete — toggle is its own inverse
+    private record IntersectionToggleAction(Vector2D position, boolean wasAdded) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) position.getX(), (int) position.getY());
+            ctrl.drawViewport();
+            ctrl.populateOutliner();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) position.getX(), (int) position.getY());
+            ctrl.drawViewport();
+            ctrl.populateOutliner();
+        }
+        public String description() { return (wasAdded ? "Add" : "Delete") + " INTERSECTION at " + position; }
+    }
+
+    // Undo/redo for intersection drag — stores original and final positions
+    private record IntersectionMoveAction(Vector2D from, Vector2D to) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) to.getX(), (int) to.getY());
+            ctrl.engine.toggleTrafficRuleIntersection((int) from.getX(), (int) from.getY());
+            ctrl.selectedIntersection = from;
+            ctrl.drawViewport();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) from.getX(), (int) from.getY());
+            ctrl.engine.toggleTrafficRuleIntersection((int) to.getX(), (int) to.getY());
+            ctrl.selectedIntersection = to;
+            ctrl.drawViewport();
+        }
+        public String description() { return "Move INTERSECTION from " + from + " to " + to; }
     }
 
     private void pushAction(EditorAction action) {
@@ -1056,6 +1092,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         drawViewport();
         log((alreadyMarked ? "Removed" : "Added") + " INTERSECTION at tile (" + tx + ", " + ty + ").");
+        pushAction(new IntersectionToggleAction(new Vector2D(tx, ty), !alreadyMarked));
         return true;
     }
 
@@ -1122,6 +1159,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 dragStartPosition = null;
                 // dragStartIntersection arms the intersection for canvas drag
                 dragStartIntersection = intersectionHit;
+                dragIntersectionOrigin = intersectionHit;
             } else {
                 // Left click: select. If on an entity, also arm for drag.
                 MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
@@ -1234,10 +1272,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         // Log intersection drag release if the intersection was moved
         if (dragStartIntersection != null) {
+            if (dragIntersectionOrigin != null && !dragIntersectionOrigin.equals(dragStartIntersection)) {
+                pushAction(new IntersectionMoveAction(dragIntersectionOrigin, dragStartIntersection));
+            }
             log("Moved INTERSECTION to tile ("
                     + (int)dragStartIntersection.getX() + ", "
                     + (int)dragStartIntersection.getY() + ").");
             dragStartIntersection = null;
+            dragIntersectionOrigin = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
         }
 
@@ -1285,9 +1327,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void deleteSelected() {
         if (selectedIntersection != null) {
+            Vector2D deletedIntersection = selectedIntersection;
             if (engine != null && engine.toggleTrafficRuleIntersection(
-                    selectedIntersection.getX(), selectedIntersection.getY())) {
-                log("Deleted INTERSECTION at tile (" + selectedIntersection.getX() + ", " + selectedIntersection.getY() + ").");
+                    deletedIntersection.getX(), deletedIntersection.getY())) {
+                log("Deleted INTERSECTION at tile (" + deletedIntersection.getX() + ", " + deletedIntersection.getY() + ").");
+                pushAction(new IntersectionToggleAction(deletedIntersection, false));
             }
             selectedIntersection = null;
             populateOutliner();
@@ -1332,6 +1376,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             populateOutliner();
             drawViewport();
             log("Pasted INTERSECTION at tile (" + newX + ", " + newY + ").");
+            pushAction(new IntersectionToggleAction(new Vector2D(newX, newY), true));
             return;
         }
         if (clipboardEntity == null || engine == null || engine.getMap() == null) return;
