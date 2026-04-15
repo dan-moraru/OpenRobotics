@@ -1315,6 +1315,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void pasteClipboard() {
+        // Paste intersection if that's what was copied
+        if (clipboardIntersection != null && engine != null) {
+            if (guardEditor("paste")) return;
+            int newX = clampTileX((int) clipboardIntersection.getX() + 1);
+            int newY = clampTileY((int) clipboardIntersection.getY() + 1);
+            engine.toggleTrafficRuleIntersection(newX, newY);
+            selectedIntersection = new Vector2D(newX, newY);
+            populateOutliner();
+            drawViewport();
+            log("Pasted INTERSECTION at tile (" + newX + ", " + newY + ").");
+            return;
+        }
         if (clipboardEntity == null || engine == null || engine.getMap() == null) return;
         if (guardEditor("paste")) return;
         int newX = clampTileX((int)clipboardEntity.getPosition().getX() + 1);
