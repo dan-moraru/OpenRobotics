@@ -2405,7 +2405,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onSaveConfig() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration");
+        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration", ctrl -> {
+            if (ctrl instanceof SaveConfigController scc) {
+                SimulationEngine engine = AppState.getEngine();
+                String runName = engine != null ? engine.getRunName() : null;
+                if (runName != null && !runName.isEmpty()) {
+                    scc.setDefaultFileName(runName);
+                }
+            }
+        });
     }
 
     @FXML

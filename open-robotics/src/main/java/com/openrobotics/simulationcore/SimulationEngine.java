@@ -736,6 +736,10 @@ public class SimulationEngine {
         return runId;
     }
 
+    public String getRunName() {
+        return runName;
+    }
+
     public Map getMap() {
         return map;
     }
