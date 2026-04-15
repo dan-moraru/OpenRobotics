@@ -18,8 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * central database access point; runs Flyway migrations at startup and provides a shared HikariCP connection pool.
- * call {@link #init()} once at startup before any DAO calls.
+ * Central database access point; runs {@link Flyway} migrations at startup and provides a shared
+ * {@link HikariDataSource} connection pool.
+ * Call {@link #init()} once at startup before any DAO calls.
  */
 public final class Database {
 
@@ -32,11 +33,12 @@ public final class Database {
     private Database() {}
 
     /**
-     * loads config, runs Flyway migrations, and creates the connection pool.
-     * safe to call multiple times; subsequent calls are no-ops after the first successful init.
+     * Loads database config, runs Flyway migrations, and creates the shared connection pool.
+     * Safe to call multiple times; subsequent calls are no-ops after the first successful initialization.
      *
-     * @throws IOException on config read error
-     * @throws SQLException on connection or migration error
+     * @throws IOException if the database config cannot be read
+     * @throws IllegalStateException if the database was already shut down in this process
+     * @throws FlywayException if Flyway migration fails and cannot be skipped
      */
     public static synchronized void init() throws IOException {
         if (shutdown) {
@@ -125,8 +127,10 @@ public final class Database {
     }
 
     /**
-     * Returns the shared DataSource. {@link #init()} must have been called first.
-     * @throws IllegalStateException if the database has not been initialized yet
+     * Returns the shared {@link DataSource}. {@link #init()} must have been called first.
+     *
+     * @return the shared data source
+     * @throws IllegalStateException if the database has not been initialized or has already been shut down
      */
     public static DataSource getDataSource() {
         if (dataSource == null) {
@@ -139,15 +143,21 @@ public final class Database {
     }
 
     /**
-     * Returns a connection from the pool. Caller must close it (e.g. try-with-resources).
-     * @throws IllegalStateException if the database has not been initialized yet
+     * Returns a connection from the shared pool. Callers must close it, for example with try-with-resources.
+     *
+     * @return a pooled database connection
+     * @throws SQLException if the pool cannot provide a connection
+     * @throws IllegalStateException if the database has not been initialized or has already been shut down
      */
     public static Connection getConnection() throws SQLException {
         return getDataSource().getConnection();
     }
 
     /**
-     * Indicates whether the DB schema has UUID robot identifier columns expected by newer DAO tests.
+     * Indicates whether the active schema includes the UUID robot identifier columns expected by newer DAO tests.
+     *
+     * @return {@code true} if the UUID robot schema is active
+     * @throws IllegalStateException if the database has not been initialized or has already been shut down
      */
     public static boolean isUuidRobotSchemaReady() {
         if (dataSource == null) {
@@ -159,9 +169,7 @@ public final class Database {
         return uuidRobotSchemaReady;
     }
 
-    /**
-     * Closes the shared Hikari pool and marks the DB layer as shut down.
-     */
+    /** Closes the shared HikariCP pool and marks the database layer as shut down. */
     public static synchronized void shutdown() {
         HikariDataSource ds = dataSource;
         dataSource = null;

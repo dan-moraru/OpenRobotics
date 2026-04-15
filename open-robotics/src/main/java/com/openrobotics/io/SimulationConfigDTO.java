@@ -6,7 +6,7 @@ import com.openrobotics.task.TaskStatus;
 import java.util.List;
 import java.util.UUID;
 
-/** JSON schema for simulation config files; sections cover config, map, entities, tasks, coordination, and sim state */
+/** JSON schema for simulation config files; sections cover config, map, entities, tasks, coordination, and simulation state. */
 public class SimulationConfigDTO {
     public ConfigSection config;
     public MapSection map;
@@ -29,7 +29,7 @@ public class SimulationConfigDTO {
         public int    loadingTicks        = 1;
         public int    unloadingTicks      = 1;
         public int    maxTasks            = 10;
-        /** true = tasks come from rack box counts + dropoff pools; false = randomly generated up to maxTasks */
+        /** Whether tasks come from rack box counts and dropoff pools instead of random generation up to {@code maxTasks}. */
         public boolean manualTaskAssignment = false;
     }
 
