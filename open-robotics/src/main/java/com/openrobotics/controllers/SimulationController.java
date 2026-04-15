@@ -196,10 +196,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private MapEntity draggingOnCanvas = null;
     // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
     private com.openrobotics.map.Vector2D dragStartPosition = null;
+    // Intersection being dragged; Separate from MapEntity drag because
+    // intersections are Vector2D points managed by the engine, not MapEntity objects
     private Vector2D dragStartIntersection = null;
+    // Clipboard for copy/paste — entity and intersection tracked separately
+    private MapEntity clipboardEntity = null;
+    private Vector2D clipboardIntersection = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
-
     // ── Drag-over tile highlight ──────────────────────────────────────────
     private int dragHighlightTileX = -1;
     private int dragHighlightTileY = -1;
@@ -1297,8 +1301,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void copySelected() {
+        if (selectedIntersection != null) {
+            // Intersections are positional markers — copy just arms the paste target
+            clipboardIntersection = selectedIntersection;
+            clipboardEntity = null;
+            log("Copied INTERSECTION at tile (" + selectedIntersection.getX() + ", " + selectedIntersection.getY() + ").");
+            return;
+        }
         if (selectedEntity == null) return;
         clipboardEntity = selectedEntity;
+        clipboardIntersection = null;
         log("Copied " + clipboardEntity.getName() + ".");
     }
 
@@ -1324,8 +1336,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             log("Paste blocked at tile (" + newX + ", " + newY + "). Only Robot + ChargingStation/DeliveryStation can share a tile.");
         }
     }
-
-    private MapEntity clipboardEntity = null;
 
     private void clearSelection() {
         selectedEntity = null;
