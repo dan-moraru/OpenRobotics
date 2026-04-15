@@ -10,8 +10,17 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for random task generation from map entities.
+ *
+ * <p>This suite verifies pickup/dropoff source selection, empty-result guardrails, max-count
+ * clamping, and valid-dropoff filtering when racks are configured for manual assignment.</p>
+ */
 class TaskGeneratorTest {
 
+    /**
+     * Verifies generated tasks originate from rack position and target available delivery stations.
+     */
     @Test
     void generatesTasksFromRacksToDeliveryStations() {
         Map map = new Map(10, 10);
@@ -32,6 +41,9 @@ class TaskGeneratorTest {
         }
     }
 
+    /**
+     * Verifies generator returns no tasks when the map lacks delivery stations.
+     */
     @Test
     void returnsEmptyWhenNoDeliveryStations() {
         Map map = new Map(10, 10);
@@ -42,6 +54,9 @@ class TaskGeneratorTest {
         assertTrue(tasks.isEmpty());
     }
 
+    /**
+     * Verifies generated task count is capped by the requested maximum.
+     */
     @Test
     void respectsMaxCount() {
         Map map = new Map(10, 10);
@@ -55,6 +70,9 @@ class TaskGeneratorTest {
         assertEquals(3, tasks.size());
     }
 
+    /**
+     * Verifies manual mode restricts dropoffs to rack {@code validDropoffIds}.
+     */
     @Test
     void respectsValidDropoffIds() {
         com.openrobotics.map.Map map = new com.openrobotics.map.Map(10, 10);
