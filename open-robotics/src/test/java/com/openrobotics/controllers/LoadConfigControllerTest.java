@@ -23,11 +23,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * UI tests for {@link LoadConfigController}.
+ *
+ * <p>This suite verifies combo-box selection behavior, reset/cancel actions, and successful load
+ * flow using the JavaFX dialog defined in {@code LoadConfigDialog.fxml}.</p>
+ */
 public class LoadConfigControllerTest extends ApplicationTest {
 
     private LoadConfigController controller;
     private Stage dialogStage;
 
+    /**
+     * Clears persisted recent configuration entries used by the load dialog.
+     */
     private void clearPrefs() throws Exception {
         Preferences prefs = Preferences.userNodeForPackage(LoadConfigController.class);
         for (int i = 0; i < 8; i++) {
@@ -36,6 +45,9 @@ public class LoadConfigControllerTest extends ApplicationTest {
         prefs.flush();
     }
 
+    /**
+     * Loads the load-config dialog on the JavaFX stage before each test.
+     */
     @Override
     public void start(Stage stage) throws Exception {
         clearPrefs();
@@ -56,6 +68,9 @@ public class LoadConfigControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Test that selecting a combo value updates the selected file and label.
+     */
     @Test
     void selecting_combo_value_updates_selected_file_and_label() {
         String path = new File("sample-config.json").getAbsolutePath();
@@ -71,6 +86,9 @@ public class LoadConfigControllerTest extends ApplicationTest {
         assertEquals(path, controller.getSelectedFile().getAbsolutePath());
     }
 
+    /**
+     * Test that resetting to default clears the selection.
+     */
     @Test
     void reset_to_default_clears_selection() {
         String path = new File("sample-config.json").getAbsolutePath();
@@ -89,6 +107,9 @@ public class LoadConfigControllerTest extends ApplicationTest {
                 lookup("#selectedPathLabel").queryAs(Label.class).getText());
     }
 
+    /**
+     * Test that canceling clears the selection and closes the dialog.
+     */
     @Test
     void cancel_clears_selection_and_closes_dialog() {
         clickOn(lookup((Button b) -> "CANCEL".equals(b.getText())).queryAs(Button.class));
@@ -98,6 +119,9 @@ public class LoadConfigControllerTest extends ApplicationTest {
         assertFalse(dialogStage.isShowing());
     }
 
+    /**
+     * Test that loading closes the dialog when a file is selected.
+     */
     @Test
     void load_closes_dialog_when_file_selected() {
         String path = new File("sample-config.json").getAbsolutePath();

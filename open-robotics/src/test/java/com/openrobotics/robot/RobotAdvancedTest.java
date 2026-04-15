@@ -276,10 +276,7 @@ public class RobotAdvancedTest {
         // Simulate a previous position different from the current one
         // by calling getNextMove() which saves previousPosition, then
         // manually update position to simulate movement.
-        // We use the public API: set previousPosition via getNextMove on a
-        // minimal map, then move the robot.
 
-        // Arrange: call getNextMove to save previousPosition as (5,5)
         @SuppressWarnings("unused")
         MoveIntention intention = robot.getNextMove(map);
         // Now move the robot to (6,5)

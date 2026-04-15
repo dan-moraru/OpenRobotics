@@ -44,34 +44,57 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class SimulationEngineTest {
 
+    /** Default test-map width used by setup fixtures. */
     private static final int MAP_W = 10;
+    /** Default test-map height used by setup fixtures. */
     private static final int MAP_H = 10;
 
+    /** Shared map fixture recreated before each test. */
     private Map map;
+    /** Shared dispatcher fixture recreated before each test. */
     private Dispatcher dispatcher;
+    /** Baseline engine fixture created in {@link #setUp()}. */
     private SimulationEngine engine;
 
+    /**
+     * Robot test double with scripted next-move output and update-call counting.
+     */
     private static class ScriptedRobot extends Robot {
         private MoveIntention nextMove;
         private int updateCalls;
 
+        /**
+         * Creates a scripted robot fixture at a fixed position.
+         */
         private ScriptedRobot(String name, Vector2D position) {
             super(name, position);
         }
 
+        /**
+         * Injects the next move that {@link #getNextMove(Map)} should return.
+         */
         public void setNextMove(MoveIntention nextMove) {
             this.nextMove = nextMove;
         }
 
+        /**
+         * Returns how many times {@link #update(Map)} has been invoked.
+         */
         public int getUpdateCalls() {
             return updateCalls;
         }
 
+        /**
+         * Returns the scripted move intention for the current tick.
+         */
         @Override
         public MoveIntention getNextMove(Map map) {
             return nextMove;
         }
 
+        /**
+         * Increments update-call counter to validate per-tick robot updates.
+         */
         @Override
         public void update(Map map) {
             updateCalls++;
@@ -980,6 +1003,9 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Toggling a traffic-rule intersection on persists marker coordinates in saved config.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionPersistsToSavedConfig() throws IOException {
         SimulationEngine eng = new SimulationEngine(
@@ -1005,6 +1031,9 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Toggling the same traffic-rule intersection twice removes the persisted marker.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionTwiceRemovesMarker() throws IOException {
         SimulationEngine eng = new SimulationEngine(
@@ -1029,6 +1058,10 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Intersection toggling is ignored for non-traffic-rules policies and writes no coordination
+     * marker data.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionIgnoredForNonTrafficRulesPolicy() throws IOException {
         SimulationEngine eng = buildEngine(new Robot[]{});
@@ -1342,7 +1375,8 @@ public class SimulationEngineTest {
 
     /**
      * Creates a base configuration DTO.
-     * @return
+     *
+     * @return fully initialized DTO with default sections for config-load tests
      */
     private SimulationConfigDTO baseConfigDto() {
         SimulationConfigDTO dto = new SimulationConfigDTO();
@@ -1437,6 +1471,15 @@ public class SimulationEngineTest {
         return entity;
     }
 
+    /**
+     * Creates a rack DTO.
+     *
+     * @param id rack ID
+     * @param name rack name
+     * @param x x coordinate
+     * @param y y coordinate
+     * @return rack DTO instance
+     */
     private SimulationConfigDTO.RackDTO rackDto(UUID id, String name, int x, int y) {
         SimulationConfigDTO.RackDTO entity = new SimulationConfigDTO.RackDTO();
         entity.id = id;

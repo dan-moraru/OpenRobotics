@@ -27,8 +27,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * JavaFX integration-style tests for the Results screen/controller flow.
+ *
+ * <p>This suite seeds {@link AppState} with a small deterministic simulation, opens
+ * {@code ResultsScreen.fxml}, and verifies that table/stat labels, charts, and navigation actions
+ * reflect the seeded engine state.</p>
+ */
 public class ResultsControllerTest extends ApplicationTest {
 
+    /**
+     * Seeds global {@link AppState} with a minimal but complete simulation model used by all tests.
+     *
+     * <p>The seeded state includes:
+     * <ul>
+     *   <li>an 8x8 map,</li>
+     *   <li>one robot with a concrete navigation strategy and sensor,</li>
+     *   <li>one queued task in the dispatcher, and</li>
+     *   <li>a known config path for run-name assertions.</li>
+     * </ul>
+     */
     private void seedAppState() {
         Map map = new Map(8, 8);
         Robot robot = new Robot("R1", new Vector2D(1, 1));
@@ -45,6 +63,12 @@ public class ResultsControllerTest extends ApplicationTest {
         AppState.setConfigPath("results-test.json");
     }
 
+    /**
+     * Loads the results screen onto the JavaFX stage after seeding application state.
+     *
+     * @param stage the stage provided by TestFX
+     * @throws Exception if FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         seedAppState();
@@ -56,6 +80,12 @@ public class ResultsControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Verifies that initial table and summary labels are populated from the seeded engine.
+     *
+     * <p>Confirms robot stats row count, tick label, run-name source, and top-level task metrics
+     * shown in both summary and table info labels.</p>
+     */
     @Test
     void results_screen_populates_table_and_summary_from_engine() {
         WaitForAsyncUtils.waitForFxEvents();
@@ -68,6 +98,12 @@ public class ResultsControllerTest extends ApplicationTest {
         assertTrue(lookup("#tableInfoLabel").queryAs(Label.class).getText().contains("1"));
     }
 
+    /**
+     * Verifies that both chart containers are populated when at least one robot exists.
+     *
+     * <p>Asserts non-empty chart containers and validates that the rendered chart nodes are
+     * {@link BarChart} instances.</p>
+     */
     @Test
     void results_screen_creates_charts_when_robots_exist() {
         WaitForAsyncUtils.waitForFxEvents();
@@ -81,6 +117,12 @@ public class ResultsControllerTest extends ApplicationTest {
         assertTrue(chart2.getChildren().get(0) instanceof BarChart);
     }
 
+    /**
+     * Verifies that clicking {@code NEW SIMULATION} navigates back to setup.
+     *
+     * <p>Navigation success is asserted using presence of a setup-screen control
+     * ({@code #mapCombo}).</p>
+     */
     @Test
     void new_simulation_button_navigates_to_setup_screen() {
         clickOn("NEW SIMULATION");
@@ -89,6 +131,11 @@ public class ResultsControllerTest extends ApplicationTest {
         assertTrue(lookup("#mapCombo").tryQuery().isPresent());
     }
 
+    /**
+     * Verifies that clicking {@code RETURN TO EDITOR} navigates to the simulation/editor screen.
+     *
+     * <p>Navigation success is asserted by checking the editor tick label content.</p>
+     */
     @Test
     void return_to_editor_button_navigates_to_simulation_screen() {
         clickOn("RETURN TO EDITOR");

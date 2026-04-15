@@ -50,11 +50,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * UI-focused tests for {@link ExportResultsController}.
+ *
+ * <p>This suite verifies dialog initialization, validation paths, export success and failure states,
+ * DTO construction behavior, and preference persistence for recent export directories. The tests run
+ * with TestFX and use an in-memory {@link PreferencesFactory} to keep state isolated.</p>
+ */
 class ExportResultsControllerTest extends ApplicationTest {
 
     private static final String PREFS_KEY = "recentExportDirs";
     private static final int MAX_RECENT = 8;
 
+    /**
+     * Forces JVM preferences calls to use the in-memory implementation for deterministic tests.
+     */
     static {
         System.setProperty("java.util.prefs.PreferencesFactory",
                 InMemoryPreferencesFactory.class.getName());
@@ -66,6 +76,9 @@ class ExportResultsControllerTest extends ApplicationTest {
     private ExportResultsController controller;
     private Stage dialogStage;
 
+    /**
+     * Boots the dialog under test on the JavaFX stage.
+     */
     @Override
     public void start(Stage stage) throws Exception {
         dialogStage = stage;
@@ -74,6 +87,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         loadDialog();
     }
 
+    /**
+     * Resets global state and closes the dialog after each test.
+     */
     @AfterEach
     void tearDown() throws Exception {
         AppState.clear();
@@ -350,6 +366,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         );
     }
 
+    /**
+     * Loads the export dialog FXML and wires the controller to the current stage.
+     */
     private void loadDialog() throws IOException {
         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(
                 getClass().getResource("/com/openrobotics/fxml/ExportResultsDialog.fxml")));
@@ -360,6 +379,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         dialogStage.show();
     }
 
+    /**
+     * Reloads the dialog on the FX thread so tests can re-evaluate initialization behavior.
+     */
     private void reloadDialog() {
         interact(() -> {
             try {
@@ -371,6 +393,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Selects the provided directory in the combo box, adding it first if needed.
+     */
     private void chooseDirectory(Path directory) {
         String path = directory.toString();
         interact(() -> {
@@ -383,15 +408,30 @@ class ExportResultsControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Updates the export file name field on the FX thread.
+     */
     private void setFileName(String fileName) {
         interact(() -> fileNameField().setText(fileName));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Invokes a no-argument private controller method via reflection.
+     */
     private Object invokePrivate(String methodName) throws Exception {
         return invokePrivate(methodName, new Class<?>[0]);
     }
 
+    /**
+     * Invokes a private controller method via reflection, ensuring execution on the FX thread.
+     *
+     * @param methodName the controller method name
+     * @param parameterTypes reflected parameter types
+     * @param args invocation arguments
+     * @return method result, or {@code null} for void methods
+     * @throws Exception when the invoked method throws an exception
+     */
     private Object invokePrivate(String methodName, Class<?>[] parameterTypes, Object... args) throws Exception {
         Method method = ExportResultsController.class.getDeclaredMethod(methodName, parameterTypes);
         method.setAccessible(true);
@@ -427,19 +467,31 @@ class ExportResultsControllerTest extends ApplicationTest {
         return result[0];
     }
 
+    /**
+     * Returns the file name text field from the dialog scene graph.
+     */
     private TextField fileNameField() {
         return lookup("#fileNameField").queryAs(TextField.class);
     }
 
+    /**
+     * Returns the recent-directory combo box from the dialog scene graph.
+     */
     @SuppressWarnings("unchecked")
     private ComboBox<String> directoryCombo() {
         return lookup("#directoryCombo").queryAs(ComboBox.class);
     }
 
+    /**
+     * Returns the label used by the controller to display status and selected directory text.
+     */
     private Label selectedDirLabel() {
         return lookup("#selectedDirLabel").queryAs(Label.class);
     }
 
+    /**
+     * Clears stored recent directory entries used by the dialog.
+     */
     private void clearPrefs() throws Exception {
         Preferences prefs = prefs();
         for (int i = 0; i < MAX_RECENT; i++) {
@@ -448,6 +500,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         prefs.flush();
     }
 
+    /**
+     * Seeds recent directory preference entries in the order provided.
+     */
     private void writeRecentDirs(String... dirs) throws Exception {
         clearPrefs();
         Preferences prefs = prefs();
@@ -457,10 +512,16 @@ class ExportResultsControllerTest extends ApplicationTest {
         prefs.flush();
     }
 
+    /**
+     * Returns the preferences node used by {@link ExportResultsController}.
+     */
     private Preferences prefs() {
         return Preferences.userNodeForPackage(ExportResultsController.class);
     }
 
+    /**
+     * Creates a dispatcher pre-populated with pending tasks for export metric tests.
+     */
     private Dispatcher dispatcherWithPendingTasks(int count, int firstId) {
         Dispatcher dispatcher = new Dispatcher();
         for (int i = 0; i < count; i++) {
@@ -469,10 +530,16 @@ class ExportResultsControllerTest extends ApplicationTest {
         return dispatcher;
     }
 
+    /**
+     * Creates a simulation engine test double that reports supplied metrics and collaborators.
+     */
     private SimulationEngine reportingEngine(int ticks, Robot[] robots, Dispatcher dispatcher) {
         return new ReportingEngine(ticks, robots, dispatcher);
     }
 
+    /**
+     * SimulationEngine test double exposing fixed tick count, robots, and dispatcher.
+     */
     private static class ReportingEngine extends SimulationEngine {
         private final int ticks;
         private final Robot[] robots;
@@ -501,6 +568,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Dispatcher test double with fixed queued tasks and total task count.
+     */
     private static class ReportingDispatcher extends Dispatcher {
         private final List<Task> tasks;
         private final int totalTasksAdded;
@@ -521,6 +591,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Robot test double returning deterministic reporting fields for export serialization.
+     */
     private static class ReportingRobot extends Robot {
         private final NavigationStrategy nav;
         private final int tasksCompleted;
@@ -586,6 +659,9 @@ class ExportResultsControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Marker navigation strategy used to verify algorithm name rendering in exported JSON.
+     */
     private static class AuditNavigationStrategy implements NavigationStrategy {
         @Override
         public MoveIntention getNextMove(Robot robot, Map map) {
@@ -593,21 +669,29 @@ class ExportResultsControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Preferences factory backed by in-memory preference roots for isolated tests.
+     */
     public static class InMemoryPreferencesFactory implements PreferencesFactory {
         private static final MemoryPreferences USER_ROOT = new MemoryPreferences(null, "");
         private static final MemoryPreferences SYSTEM_ROOT = new MemoryPreferences(null, "");
 
+        // Returns the user root preferences.
         @Override
         public Preferences userRoot() {
             return USER_ROOT;
         }
 
+        // Returns the system root preferences.
         @Override
         public Preferences systemRoot() {
             return SYSTEM_ROOT;
         }
     }
 
+    /**
+     * Minimal in-memory {@link Preferences} implementation for test-only persistence behavior.
+     */
     private static class MemoryPreferences extends AbstractPreferences {
         private final java.util.Map<String, String> values = new ConcurrentHashMap<>();
         private final java.util.Map<String, MemoryPreferences> children = new ConcurrentHashMap<>();
@@ -616,47 +700,56 @@ class ExportResultsControllerTest extends ApplicationTest {
             super(parent, name);
         }
 
+        // Puts a value into the preferences.
         @Override
         protected void putSpi(String key, String value) {
             values.put(key, value);
         }
 
+        // Gets a value from the preferences.
         @Override
         protected String getSpi(String key) {
             return values.get(key);
         }
 
+        // Removes a value from the preferences.
         @Override
         protected void removeSpi(String key) {
             values.remove(key);
         }
 
+        // Removes a node from the preferences.
         @Override
         protected void removeNodeSpi() throws BackingStoreException {
             values.clear();
             children.clear();
         }
 
+        // Returns the keys from the preferences.
         @Override
         protected String[] keysSpi() throws BackingStoreException {
             return values.keySet().toArray(String[]::new);
         }
 
+        // Returns the children names from the preferences.
         @Override
         protected String[] childrenNamesSpi() throws BackingStoreException {
             return children.keySet().toArray(String[]::new);
         }
 
+        // Returns the child preferences.
         @Override
         protected AbstractPreferences childSpi(String name) {
             return children.computeIfAbsent(name, childName -> new MemoryPreferences(this, childName));
         }
 
+        // Syncs the preferences.
         @Override
         protected void syncSpi() throws BackingStoreException {
             // In-memory test preferences are always current.
         }
 
+        // Flushes the preferences.
         @Override
         protected void flushSpi() throws BackingStoreException {
             // Nothing to flush for the in-memory implementation.

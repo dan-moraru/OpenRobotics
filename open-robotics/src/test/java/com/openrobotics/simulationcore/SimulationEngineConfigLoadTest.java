@@ -2,9 +2,6 @@ package com.openrobotics.simulationcore;
 
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
-import com.openrobotics.simulationcore.Dispatcher;
-import com.openrobotics.simulationcore.SimulationEngine;
-import com.openrobotics.task.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,10 +14,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration-style tests for {@link SimulationEngine} JSON load/save behavior.
+ *
+ * <p>This suite verifies successful config loading from test resources, backward-compatible loading
+ * when optional coordination sections are absent, and save-time omission of coordination metadata
+ * when the engine runs with no-op policy semantics.</p>
+ */
 class SimulationEngineConfigLoadTest {
 
+    /**
+     * Verifies a repository-backed scenario JSON can be copied to a temp file and loaded into a
+     * fully initialized engine instance.
+     *
+     * @throws IOException if test resource copy or file operations fail
+     */
     @Test
     void loadsJsonScenarioFromRepositoryRoot() throws IOException {
         Path configPath = Files.createTempFile("test_scenario", ".json");
@@ -38,6 +47,12 @@ class SimulationEngineConfigLoadTest {
         assertEquals(20, engine.getMap().getEntities().size(), "Config load should materialize all scenario entities.");
     }
 
+    /**
+     * Verifies configs without a {@code coordination} section still load successfully and default
+     * to no-op coordination behavior.
+     *
+     * @throws IOException if temporary config file operations fail
+     */
     @Test
     void loadsConfigWithoutCoordinationSectionUsingNoOpPolicy() throws IOException {
         Path configPath = Files.createTempFile("simulation-no-coordination", ".json");
@@ -76,6 +91,11 @@ class SimulationEngineConfigLoadTest {
         assertDoesNotThrow(engine::tick, "Engine should tick with the no-op coordination policy.");
     }
 
+    /**
+     * Verifies saving an engine with no coordination policy omits the coordination JSON block.
+     *
+     * @throws IOException if save/read file operations fail
+     */
     @Test
     void savingWithNoOpPolicyOmitsCoordinationSection() throws IOException {
         SimulationEngine engine = new SimulationEngine(
@@ -93,6 +113,11 @@ class SimulationEngineConfigLoadTest {
                 "Saved JSON should omit the coordination section when using the no-op policy.");
     }
 
+    /**
+     * Finds a robot by name in a possibly sparse robot array.
+     *
+     * @return matching robot or {@code null} if no match exists
+     */
     private Robot findRobotByName(Robot[] robots, String name) {
         for (Robot robot : robots) {
             if (robot != null && name.equals(robot.getName())) {

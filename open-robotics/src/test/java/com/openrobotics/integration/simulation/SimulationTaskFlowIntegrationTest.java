@@ -19,10 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration test for core single-robot task execution flow.
+ *
+ * <p>This suite verifies that a task progresses through dispatcher assignment, robot pickup/dropoff
+ * movement, completion bookkeeping, and stable post-completion engine behavior.</p>
+ */
 public class SimulationTaskFlowIntegrationTest extends SimulationIntegrationTestSupport {
 
     /**
-     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     * Seeds {@link AppState} with a minimal engine so logging-dependent code paths are satisfied
+     * during integration tests.
      */
     private void seedAppState() {
         SimulationEngine dummyEngine = new SimulationEngine(
@@ -35,12 +42,21 @@ public class SimulationTaskFlowIntegrationTest extends SimulationIntegrationTest
         AppState.setEngine(dummyEngine);
     }
 
+    /**
+     * Initializes per-test state and disables logger side effects for deterministic assertions.
+     */
     @BeforeEach
     public void setUp() {
         seedAppState();
         Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
+    /**
+     * Verifies a single robot completes one task end-to-end and then remains stable in idle state.
+     *
+     * <p>Asserts include task status, robot position/state/metrics, dispatcher depletion, and that
+     * an extra tick after completion does not advance simulation time.</p>
+     */
     @Test
     void singleRobotTaskCompletesThroughFullEnginePipeline() {
         Map map = new Map(5, 1);

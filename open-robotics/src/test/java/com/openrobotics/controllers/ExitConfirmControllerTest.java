@@ -13,11 +13,17 @@ import org.testfx.util.WaitForAsyncUtils;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for {@link ExitConfirmController}.
+ */
 public class ExitConfirmControllerTest extends ApplicationTest {
 
     private ExitConfirmController controller;
     private Stage dialogStage;
 
+    /**
+     * Start the application and set the dialog stage.
+     */
     @Override
     public void start(Stage stage) throws Exception {
         dialogStage = stage;
@@ -31,6 +37,9 @@ public class ExitConfirmControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Test that the yes button confirms and closes the dialog.
+     */
     @Test
     void yes_confirms_and_closes_dialog() {
         clickOn(lookup((Button b) -> "QUIT".equals(b.getText())).queryAs(Button.class));
@@ -40,6 +49,9 @@ public class ExitConfirmControllerTest extends ApplicationTest {
         assertFalse(dialogStage.isShowing());
     }
 
+    /**
+     * Test that the no button keeps the unconfirmed state and closes the dialog.
+     */
     @Test
     void no_keeps_unconfirmed_and_closes_dialog() {
         clickOn(lookup((Button b) -> "RETURN".equals(b.getText())).queryAs(Button.class));

@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AlgorithmTypeTest {
 
-    // ── Canonical names ───────────────────────────────────────────────────────
-
     /**
      * "GREEDY" maps to {@link AlgorithmType#GREEDY}.
      */
@@ -48,8 +46,6 @@ public class AlgorithmTypeTest {
     public void testRandomCanonical() {
         assertEquals(AlgorithmType.RANDOM, AlgorithmType.fromConfigString("RANDOM"));
     }
-
-    // ── Class-name aliases ────────────────────────────────────────────────────
 
     /**
      * "GREEDYNAVIGATIONSTRATEGY" maps to {@link AlgorithmType#GREEDY}.

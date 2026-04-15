@@ -20,8 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Regression-style integration tests for longer simulation runs.
+ *
+ * <p>This suite targets stability properties that can regress over extended tick sequences:
+ * multi-robot task completion, tile exclusivity between robots, bounded movement, and successful
+ * completion of battery-constrained workloads that require charging behavior.</p>
+ */
 public class LongRunningSimulationRegressionTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Verifies two robots can complete a multi-task queue over many ticks without ever occupying
+     * the same map tile at the same time.
+     *
+     * <p>The test also asserts task completion outcomes, dispatcher depletion, and final robot
+     * availability/state consistency.</p>
+     */
     @Test
     void multiple_robots_complete_a_longer_queue_without_ever_sharing_a_tile() {
         Map map = new Map(6, 3);
@@ -65,6 +79,12 @@ public class LongRunningSimulationRegressionTest extends SimulationIntegrationTe
         assertTrue(robotB.isAvailable());
     }
 
+    /**
+     * Verifies a low-battery robot can finish a longer sequence by charging as needed.
+     *
+     * <p>Asserts end-state task completion, positive charging activity, valid battery level,
+     * and that the engine no longer advances ticks once workload is fully complete.</p>
+     */
     @Test
     void long_running_sequence_with_charging_eventually_completes_all_tasks() {
         Map map = new Map(7, 2);
@@ -106,6 +126,9 @@ public class LongRunningSimulationRegressionTest extends SimulationIntegrationTe
         assertEquals(completedTick, engine.getTickCounter());
     }
 
+    /**
+     * Asserts all provided robots remain on valid map tiles and on distinct positions.
+     */
     private void assertDistinctAndInBounds(Map map, Robot... robots) {
         Set<Vector2D> positions = new HashSet<>();
         for (Robot robot : robots) {

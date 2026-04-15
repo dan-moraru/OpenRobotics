@@ -21,42 +21,64 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RtaStarNavigationStrategyTest {
 
+    /** Shared map fixture reset before each test. */
     private Map map;
+    /** Strategy under test with deterministic seed. */
     private RtaStarNavigationStrategy strategy;
 
+    /**
+     * Robot test double exposing controllable target/scan values for deterministic assertions.
+     */
     private static class TestRobot extends Robot {
         private Vector2D target;
         private Sensor scan;
 
+        /**
+         * Creates a test robot with configurable start position.
+         */
         private TestRobot(String name, Vector2D position) {
             super(name, position);
         }
 
+        /**
+         * Injects synthetic target used by strategy lookups.
+         */
         public void setTargetForTest(Vector2D target) {
             this.target = target;
         }
 
+        /**
+         * Injects synthetic scan data used by sensor-aware filtering/tie-breaking.
+         */
         public void setScanForTest(Sensor scan) {
             this.scan = scan;
         }
 
+        /** Returns injected test target. */
         @Override
         public Vector2D getTarget() {
             return target;
         }
 
+        /** Returns injected test scan. */
         @Override
         public Sensor getLastScan() {
             return scan;
         }
     }
 
+    /**
+     * Initializes fresh map and strategy fixtures before each test.
+     */
     @BeforeEach
     public void setUp() {
         map = new Map(10, 10);
         strategy = new RtaStarNavigationStrategy(42L);
     }
 
+    /**
+     * Creates a deterministic test robot fixture.
+     */
     private TestRobot makeRobot(int x, int y) {
         return new TestRobot("RtaBot", new Vector2D(x, y));
     }

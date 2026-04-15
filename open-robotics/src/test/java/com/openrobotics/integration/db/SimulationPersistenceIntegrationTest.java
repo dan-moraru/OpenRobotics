@@ -36,13 +36,26 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration tests for end-to-end simulation persistence into DAO-backed tables.
+ *
+ * <p>This suite validates that completed simulation state can be materialized across map/run/task/
+ * log/stats/result DAOs and that deleting a run removes dependent persisted records.</p>
+ */
 public class SimulationPersistenceIntegrationTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Tracks map row created by the current test for dependency-safe cleanup.
+     */
     private UUID createdMapId;
+    /**
+     * Tracks run row created by the current test for dependency-safe cleanup.
+     */
     private UUID createdRunId;
 
     /**
-     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     * Seeds {@link AppState} with a minimal engine so code paths expecting an active engine (for
+     * example logging helpers) remain valid during integration tests.
      */
     private void seedAppState() {
         SimulationEngine dummyEngine = new SimulationEngine(
@@ -55,12 +68,21 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         AppState.setEngine(dummyEngine);
     }
 
+    /**
+     * Prepares shared state before each test and disables runtime logger side effects.
+     */
     @BeforeEach
     public void setUp() {
         seedAppState();
         Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
+    /**
+     * Initializes database access and skips suite when UUID robot schema is not available.
+     *
+     * @throws IOException if DB bootstrap fails
+     * @throws SQLException if DB connectivity/migration checks fail
+     */
     @BeforeAll
     static void initDatabase() throws IOException, SQLException {
         Database.init();
@@ -70,6 +92,11 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         );
     }
 
+    /**
+     * Cleans persisted rows created by tests in child-first dependency order.
+     *
+     * @throws SQLException if DAO cleanup operations fail
+     */
     @AfterEach
     void cleanup() throws SQLException {
         if (createdRunId != null) {
@@ -87,6 +114,12 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         }
     }
 
+    /**
+     * Verifies a completed simulation snapshot can be persisted and queried consistently across all
+     * result-oriented DAOs.
+     *
+     * @throws Exception if simulation setup or DAO operations fail
+     */
     @Test
     void completed_simulation_state_persists_cleanly_across_all_result_daos() throws Exception {
         Map map = new Map(5, 1);
@@ -147,6 +180,11 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         assertEquals(0, result.getCollisions());
     }
 
+    /**
+     * Verifies deleting a run removes associated persisted results, tasks, logs, and stats.
+     *
+     * @throws Exception if DAO setup or deletion fails
+     */
     @Test
     void deleting_a_simulation_run_cascades_persisted_results_logs_tasks_and_stats() throws Exception {
         createdMapId = MapDao.insert(mapRecord("Cascade Map", new Map(2, 1)));
@@ -168,6 +206,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         assertTrue(RobotRunStatsDao.findByRunId(deletedRunId).isEmpty());
     }
 
+    /**
+     * Creates a minimal map record fixture from a runtime map instance.
+     */
     private MapRecord mapRecord(String name, Map map) {
         MapRecord record = new MapRecord();
         record.setName(name);
@@ -178,6 +219,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a simulation-run record fixture linked to a map and optional runtime engine.
+     */
     private SimulationRunRecord runRecord(UUID mapId, SimulationEngine engine) {
         SimulationRunRecord record = new SimulationRunRecord();
         record.setMapId(mapId);
@@ -191,6 +235,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a persisted-task fixture from runtime task and optional robot/engine context.
+     */
     private WorkloadTaskRecord workloadTaskRecord(UUID runId, Task task, Robot robot, SimulationEngine engine) {
         WorkloadTaskRecord record = new WorkloadTaskRecord();
         record.setRunId(runId);
@@ -209,6 +256,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a simulation-log fixture row.
+     */
     private SimLogRecord simLogRecord(UUID runId, int tick, UUID robotId, String eventType, Integer x, Integer y, String details) {
         SimLogRecord record = new SimLogRecord();
         record.setRunId(runId);
@@ -221,6 +271,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates robot-run stats fixture from runtime robot metrics.
+     */
     private RobotRunStatsRecord robotStatsRecord(UUID runId, Robot robot) {
         RobotRunStatsRecord record = new RobotRunStatsRecord();
         record.setRunId(runId);
@@ -237,6 +290,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a run-result fixture from runtime simulation/robot metrics.
+     */
     private RunResultRecord runResultRecord(UUID runId, SimulationEngine engine, Robot robot) {
         RunResultRecord record = new RunResultRecord();
         record.setRunId(runId);
@@ -254,6 +310,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a minimal run-result fixture with explicit scalar values.
+     */
     private RunResultRecord runResultRecord(UUID runId, int completionTicks, double totalEnergy, double tasksPerMinute) {
         RunResultRecord record = new RunResultRecord();
         record.setRunId(runId);
@@ -263,6 +322,9 @@ public class SimulationPersistenceIntegrationTest extends SimulationIntegrationT
         return record;
     }
 
+    /**
+     * Creates a deterministic robot fixture used for stats persistence tests.
+     */
     private Robot statsRobot(UUID robotId) {
         Robot robot = greedyRobot(robotId, "Persisted", 0, 0, 1L);
         robot.setCurrentTask(null);

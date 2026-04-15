@@ -13,8 +13,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration test covering idle-loop behavior when no tasks are configured.
+ *
+ * <p>This suite verifies simulation ticks still advance while robots remain stationary, available,
+ * and task-free in the absence of dispatcher work.</p>
+ */
 public class SimulationIdleLoopIntegrationTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Verifies that with an empty dispatcher the robot stays idle at its start position while tick
+     * counters and idle metrics continue to advance.
+     */
     @Test
     void noConfiguredTasksKeepsSimulationTickingAndRobotIdle() {
         Map map = new Map(3, 3);

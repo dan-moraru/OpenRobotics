@@ -22,50 +22,79 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class BugNavigationStrategyTest {
 
+    /** Shared map fixture reset before each test. */
     private Map map;
+    /** Strategy under test with deterministic seed. */
     private BugNavigationStrategy strategy;
 
+    /**
+     * Robot test double exposing controllable target and scan values for deterministic strategy
+     * assertions.
+     */
     private static class TestRobot extends Robot {
         private Vector2D target;
         private Sensor scan;
 
+        /**
+         * Creates a test robot with auto-generated UUID.
+         */
         private TestRobot(String name, Vector2D position) {
             super(name, position);
         }
 
+        /**
+         * Creates a test robot with explicit UUID for deterministic ordering scenarios.
+         */
         private TestRobot(UUID id, String name, Vector2D position) {
             super(id, name, position);
         }
 
+        /**
+         * Injects a synthetic target used by strategy target lookups.
+         */
         public void setTargetForTest(Vector2D target) {
             this.target = target;
         }
 
+        /**
+         * Injects synthetic sensor scan output used by tie-breaking and obstacle filtering.
+         */
         public void setScanForTest(Sensor scan) {
             this.scan = scan;
         }
 
+        /** Returns injected test target. */
         @Override
         public Vector2D getTarget() {
             return target;
         }
 
+        /** Returns injected test scan. */
         @Override
         public Sensor getLastScan() {
             return scan;
         }
     }
 
+    /**
+     * Initializes a fresh map and strategy instance for each test case.
+     */
     @BeforeEach
     public void setUp() {
         map = new Map(10, 10);
         strategy = new BugNavigationStrategy(42L);
     }
 
+    /**
+     * Creates a deterministic test robot with default name and auto-generated UUID.
+     */
     private TestRobot makeRobot(int x, int y) {
         return new TestRobot("BugBot", new Vector2D(x, y));
     }
 
+    /**
+     * Creates a deterministic test robot with explicit UUID.
+     */
     private TestRobot makeRobot(UUID id, int x, int y) {
         return new TestRobot(id, "BugBot", new Vector2D(x, y));
     }

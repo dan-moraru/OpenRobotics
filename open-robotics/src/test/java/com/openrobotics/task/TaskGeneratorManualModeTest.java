@@ -8,12 +8,24 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for {@link TaskGenerator} behavior when rack manual dropoff mode is enabled/disabled.
+ *
+ * <p>This suite verifies that random mode ignores rack-specific dropoff restrictions, while manual
+ * mode enforces filtered round-robin assignment over resolvable, non-null dropoff station IDs.</p>
+ */
 class TaskGeneratorManualModeTest {
 
+    /**
+     * Creates a deterministic empty map fixture with stable dimensions for task-generation tests.
+     */
     private Map buildMap() {
         return new Map(UUID.randomUUID(), 10, 10);
     }
 
+    /**
+     * Verifies random mode ignores {@code validDropoffIds} and samples from all stations.
+     */
     @Test
     void randomModeIgnoresValidDropoffIds() {
         // In random (non-manual) mode, validDropoffIds is ignored — all stations are valid.
@@ -34,6 +46,9 @@ class TaskGeneratorManualModeTest {
         assertTrue(usedB, "Random mode must draw from all stations, not just validDropoffIds");
     }
 
+    /**
+     * Verifies manual mode performs ordered round-robin over the non-null, resolvable station pool.
+     */
     @Test
     void manualModeUsesRoundRobinOverNonNullPool() {
         Map m = buildMap();
@@ -60,6 +75,9 @@ class TaskGeneratorManualModeTest {
             "Round-robin must cycle through non-null pool in order");
     }
 
+    /**
+     * Verifies manual mode drops unresolvable station IDs and uses only mapped stations.
+     */
     @Test
     void manualModeFiltersUnresolvableIds() {
         Map m = buildMap();
