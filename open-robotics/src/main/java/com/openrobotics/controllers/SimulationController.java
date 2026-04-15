@@ -2141,18 +2141,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            // Sandbox mode: no robots means an empty map used for layout/stepping only —
-            // treat the tick as a no-op success so the step counter still advances.
-            if (engine.getSimulationError() == SimulationError.NO_ROBOTS_SPAWNED) {
-                // fall through to the localTick++ / display-update block below
-            } else if (engine.getSimulationError() != SimulationError.NONE) {
+            if (engine.getSimulationError() != SimulationError.NONE) {
                 handleSimulationFailure();
-                return;
             } else {
                 handleSimulationComplete();
-                return;
             }
+
+            return;
         }
+
         localTick++;
 
         AppState.setSimulationTick(localTick);
