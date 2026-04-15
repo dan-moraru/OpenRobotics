@@ -71,7 +71,8 @@ public class SaveConfigControllerTest extends ApplicationTest {
     @Test
     void initialize_sets_default_filename() {
         TextField fileNameField = lookup("#fileNameField").queryAs(TextField.class);
-        assertTrue(fileNameField.getText().endsWith(".json"));
+        assertTrue(fileNameField.getText().startsWith("experiment_"));
+        assertFalse(fileNameField.getText().endsWith(".json"));
     }
 
     /**

@@ -33,6 +33,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
     private String resultFilePath; // set in onSave(), read by caller after dialog closes
 
     private static final String PREFS_KEY  = "recentSaveDirs";
+    private static final String CONFIG_SUFFIX = ".json";
     private static final int    MAX_RECENT = 8;
     private static final String DEFAULT_DIR = System.getProperty("user.home") + File.separator + ".open-robotics" + File.separator + "configs";
     private static final String BROWSE_SENTINEL = "Browse...";
@@ -51,6 +52,22 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
      */
     public String getResultFilePath() {
         return resultFilePath;
+    }
+
+    /**
+     * Sets the default file name shown in the dialog, stripping any ".json" suffix so the user
+     * only edits the base name.
+     *
+     * @param name the default base file name
+     */
+    public void setDefaultFileName(String name) {
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        if (name.toLowerCase().endsWith(CONFIG_SUFFIX)) {
+            name = name.substring(0, name.length() - CONFIG_SUFFIX.length());
+        }
+        fileNameField.setText(name);
     }
 
     @FXML
@@ -79,7 +96,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         }
 
         fileNameField.setText("experiment_" +
-                java.time.LocalDate.now().toString() + ".json");
+                java.time.LocalDate.now().toString());
     }
 
     @FXML
@@ -128,6 +145,10 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         if (!fileName.matches("^[^\\\\/:\\*?\"<>|\\p{Cntrl}]+$")) {
             selectedDirLabel.setText("File name contains invalid characters.");
             return;
+        }
+        // auto-append .json if not already present
+        if (!fileName.toLowerCase().endsWith(CONFIG_SUFFIX)) {
+            fileName += CONFIG_SUFFIX;
         }
         if (!selectedDirectory.exists()) {
             selectedDirLabel.setText("Selected directory does not exist.");

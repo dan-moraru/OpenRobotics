@@ -1,0 +1,75 @@
+{
+  "config" : {
+    "runId" : "1baa8958-adfc-406b-a838-e9322dc8b957",
+    "runName" : "experiment_1",
+    "tickMs" : 100,
+    "maxTicks" : 30000,
+    "seed" : 42,
+    "batteryCapacity" : 100.0,
+    "lowBatteryThreshold" : 20.0,
+    "chargePerTick" : 5.0,
+    "energyPerMove" : 1.0,
+    "loadingTicks" : 1,
+    "unloadingTicks" : 1,
+    "maxTasks" : 10,
+    "manualTaskAssignment" : false
+  },
+  "map" : {
+    "mapId" : "46ffd701-e156-43bd-9a05-a334d5601a0b",
+    "width" : 16,
+    "height" : 10,
+    "tiles" : [ ]
+  },
+  "entities" : {
+    "robots" : [ {
+      "id" : "e50d74d5-cf03-4479-8693-4c533be3edd2",
+      "name" : "robot_1",
+      "position" : {
+        "x" : 4,
+        "y" : 3
+      },
+      "type" : null,
+      "battery" : 100.0,
+      "state" : "IDLE",
+      "navigationStrategy" : "GREEDY",
+      "sensorStrategy" : "PROXIMITY",
+      "stuckTicks" : 0
+    } ],
+    "stations" : [ {
+      "id" : "ad36503c-eb3c-46cd-a25f-a2cf3bfe423c",
+      "name" : "charger_2",
+      "position" : {
+        "x" : 2,
+        "y" : 2
+      },
+      "type" : "CHARGING"
+    }, {
+      "id" : "f3fd75bf-15bb-4e62-9f9f-3613c8923b49",
+      "name" : "station_3",
+      "position" : {
+        "x" : 10,
+        "y" : 3
+      },
+      "type" : "DELIVERY"
+    } ],
+    "racks" : [ {
+      "id" : "f344d174-c871-4100-9e6b-1e6cd96a2e7a",
+      "name" : "shelf_4",
+      "position" : {
+        "x" : 7,
+        "y" : 4
+      },
+      "type" : null,
+      "boxCount" : 1,
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
+    } ],
+    "obstacles" : [ ]
+  },
+  "tasks" : [ ],
+  "simulation" : {
+    "tick" : 0,
+    "isRunning" : false,
+    "speedMultiplier" : 1.0
+  }
+}
