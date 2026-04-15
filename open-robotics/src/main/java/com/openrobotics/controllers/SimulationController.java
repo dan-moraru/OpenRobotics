@@ -1253,15 +1253,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (engine == null || !engine.usesTrafficRulesPolicy()) return null;
 
         double tileSize = 32 * zoom;
-        double markerInset = Math.max(3.0, tileSize * 0.22);
-        double radius = (tileSize - 2 * markerInset) / 2.0;
 
         for (Vector2D intersection : engine.getTrafficRuleIntersections()) {
-            double centerX = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize + tileSize / 2.0;
-            double centerY = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize + tileSize / 2.0;
-            double dx = sx - centerX;
-            double dy = sy - centerY;
-            if ((dx * dx) + (dy * dy) <= radius * radius) {
+            double px = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize;
+            double py = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize;
+            if (sx >= px && sx < px + tileSize && sy >= py && sy < py + tileSize) {
                 return intersection;
             }
         }
