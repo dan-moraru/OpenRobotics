@@ -21,42 +21,64 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class GreedyNavigationStrategyTest {
 
+    /** Shared map fixture recreated before each test. */
     private Map map;
+    /** Strategy under test with deterministic seed for repeatable tie-break behavior. */
     private GreedyNavigationStrategy strategy;
 
+    /**
+     * Robot test double exposing controllable target/scan values for deterministic assertions.
+     */
     private static class TestRobot extends Robot {
         private Vector2D target;
         private Sensor scan;
 
+        /**
+         * Creates a test robot with configurable starting position.
+         */
         private TestRobot(String name, Vector2D position) {
             super(name, position);
         }
 
+        /**
+         * Injects a synthetic target used by strategy calls.
+         */
         public void setTargetForTest(Vector2D target) {
             this.target = target;
         }
 
+        /**
+         * Injects synthetic sensor scan output used by obstacle/tie-break logic.
+         */
         public void setScanForTest(Sensor scan) {
             this.scan = scan;
         }
 
+        /** Returns injected test target. */
         @Override
         public Vector2D getTarget() {
             return target;
         }
 
+        /** Returns injected test sensor scan. */
         @Override
         public Sensor getLastScan() {
             return scan;
         }
     }
 
+    /**
+     * Initializes fresh map and strategy fixtures before each test.
+     */
     @BeforeEach
     public void setUp() {
         map = new Map(10, 10);
         strategy = new GreedyNavigationStrategy(42L);
     }
 
+    /**
+     * Creates a deterministic test robot with default name.
+     */
     private TestRobot makeRobot(int x, int y) {
         return new TestRobot("GreedyBot", new Vector2D(x, y));
     }
