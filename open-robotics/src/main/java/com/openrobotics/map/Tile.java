@@ -1,6 +1,6 @@
 package com.openrobotics.map;
 
-/** single grid cell in the warehouse map; tracks occupancy and robot-overlap station status */
+/** Single grid cell in the warehouse map; tracks occupancy and station-overlap flags. */
 public class Tile {
     private final int x;
     private final int y;
@@ -23,6 +23,12 @@ public class Tile {
     public boolean isOccupied() { return isOccupied; }
     public boolean isDeliveryStation() { return isDeliveryStation; }
     public boolean isChargingStation() { return isChargingStation; }
+
+    /**
+     * Returns true if robots may overlap on this tile without triggering a collision.
+     *
+     * @return {@code true} if this tile is a delivery station or a charging station
+     */
     public boolean allowsRobotOverlap() { return isDeliveryStation || isChargingStation; }
 
     public void setOccupied(boolean occupied) { this.isOccupied = occupied; }
@@ -33,9 +39,12 @@ public class Tile {
     public void incrementVisitCount() { visitCount++; }
     public void resetVisitCount() { visitCount = 0; }
 
-    /** current position as a new Vector2D; allocates a new object on every call */
+    /**
+     * Returns the current position as a new {@code Vector2D}; allocates a new object on every call.
+     *
+     * @return a new {@code Vector2D} at (x, y)
+     */
     public Vector2D getPosition() {
         return new Vector2D(x, y);
     }
-
 }

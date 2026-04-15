@@ -2,7 +2,7 @@ package com.openrobotics.map;
 
 import java.util.Objects;
 
-/** immutable 2d integer position; used for all grid coordinates throughout the system */
+/** Immutable 2-D integer position used for all grid coordinates throughout the system. */
 public class Vector2D {
     private final int x;
     private final int y;
@@ -15,14 +15,23 @@ public class Vector2D {
     public int getX() { return x; }
     public int getY() { return y; }
 
-    /** returns a new vector offset by (dx, dy); this instance is unchanged */
+    /**
+     * Returns a new vector offset by (dx, dy); this instance is unchanged.
+     *
+     * @param dx the x delta to add
+     * @param dy the y delta to add
+     * @return a new {@code Vector2D} at (x + dx, y + dy)
+     * @throws ArithmeticException if the addition overflows int
+     */
     public Vector2D add(int dx, int dy) {
         return new Vector2D(Math.addExact(this.x, dx), Math.addExact(this.y, dy));
     }
 
     /**
-     * manhattan distance to {@code other}.
+     * Returns the Manhattan distance to {@code other}.
      *
+     * @param other the target position
+     * @return the non-negative integer distance
      * @throws ArithmeticException if the result overflows int
      */
     public int manhattanDistance(Vector2D other) {
