@@ -13,10 +13,12 @@ import java.util.List;
 public class ConfigLoader {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final String BASE_DIR_PROPERTY = "openrobotics.config.baseDir";
 
     private ConfigLoader() {}
 
+    /**
+     * Helper method to validate path of config file
+     */
     private static File validatePath(String path) throws IOException {
         if (path == null || path.isBlank()) {
             throw new IllegalArgumentException("path must not be null or blank");
@@ -25,6 +27,9 @@ public class ConfigLoader {
         return new File(path).getCanonicalFile();
     }
 
+    /**
+     * Helper method to validate java class for parsing library
+     */
     private static <T> void validateTargetClass(Class<T> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz must not be null");
