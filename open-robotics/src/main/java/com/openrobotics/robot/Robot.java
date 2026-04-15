@@ -234,8 +234,6 @@ public class Robot extends MapEntity {
                 } else {
                     System.err.println("[Robot] No charging station found for robot " + getName()
                             + " at " + getPosition() + " with battery=" + battery);
-                    state = IDLE;
-                    return rememberRequestedMove(new MoveIntention(fromTile, fromTile, this));
                 }
             }
         } else {
