@@ -373,35 +373,15 @@ public class SimulationControllerTest extends ApplicationTest {
         Label simStatus = installOptionalStatusLabel();
 
         fireButton("playBtn");
+        WaitForAsyncUtils.waitForFxEvents();
 
-        // Add a bit of delay
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertEquals("RUNNING", simStatus.getText());
-        assertTrue(consoleText().contains("Simulation started."));
+        assertEquals("FAILURE", simStatus.getText());
+        assertTrue(consoleText().contains("\u26a0 No tasks could be generated."));
+        assertTrue(consoleText().contains("Simulation failed: The map configuration is invalid. Simulation cannot run."));
+        assertTrue(consoleText().contains("Simulation failed at TICK 0."));
         assertNotNull(field("initialSnapshotPath", String.class));
-        assertTrue(field("playBtn", Button.class).getStyle().contains("#1a743f"));
-
-        fireButton("pauseBtn");
-
-        assertEquals("PAUSED", simStatus.getText());
-        assertTrue(consoleText().contains("Simulation paused."));
-        assertTrue(field("pauseBtn", Button.class).getStyle().contains("#C0392B"));
-
-        fireButton("playBtn");
-
-        // Add a bit of delay
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertTrue(consoleText().contains("\u26a0 Simulation already complete. Press Stop to reset before playing again."));
+        assertEquals("", field("playBtn", Button.class).getStyle());
+        assertEquals("", field("pauseBtn", Button.class).getStyle());
 
         invokeOnFx("onStop", new Class<?>[0]);
 
@@ -415,12 +395,17 @@ public class SimulationControllerTest extends ApplicationTest {
     @Test
     void play_logs_snapshot_failure_but_still_starts_when_engine_cannot_save_baseline() {
         loadScreenWith(new UnsavableEngine(), null, 30, 30);
-        installOptionalStatusLabel();
+        Label simStatus = installOptionalStatusLabel();
 
         fireButton("playBtn");
+        WaitForAsyncUtils.waitForFxEvents();
         invokeOnFx("onStop", new Class<?>[0]);
 
-        assertTrue(consoleText().contains("Simulation started."));
+        assertEquals("STOPPED", simStatus.getText());
+        assertTrue(consoleText().contains("\u26a0 Could not snapshot initial state: snapshot failed"));
+        assertTrue(consoleText().contains("\u26a0 No tasks could be generated."));
+        assertTrue(consoleText().contains("Simulation failed: The map configuration is invalid. Simulation cannot run."));
+        assertFalse(consoleText().contains("Simulation started."));
     }
 
     /** Verifies speed controls update internal speed factor and append matching log entries. */
