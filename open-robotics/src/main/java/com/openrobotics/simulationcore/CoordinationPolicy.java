@@ -6,18 +6,33 @@ import com.openrobotics.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 
-/** coordination policy interface; implementations filter or delay move intentions each tick */
+/** Coordination policy interface; implementations filter or delay move intentions each tick. */
 public interface CoordinationPolicy {
     CoordinationPolicy NO_OP = (map, intentions) -> copyNonNull(intentions);
 
-    // Applies policy rules to this tick's intentions
-    // Policy can force robots to wait by returning a WAIT intention
+    /**
+     * Applies policy rules to this tick's intentions.
+     * Implementations may force robots to wait by substituting a stay-in-place intention.
+     *
+     * @param map the current warehouse map
+     * @param intentions the raw move intentions for this tick
+     * @return the filtered or modified intentions after policy is applied
+     */
     MoveIntention[] apply(Map map, MoveIntention[] intentions);
 
-    // Coordination-state cleanup hook used by both reroute attempts and full fallback recovery.
+    /**
+     * Releases any per-robot coordination state held by this policy.
+     * Called on both reroute attempts and full fallback deadlock recovery.
+     *
+     * @param robot the robot whose state should be cleared
+     */
     default void clearRobotCoordinationState(Robot robot) {}
 
-    // Default policy: return a copy with null intentions removed
+    /**
+     * Returns the no-op policy; passes all non-null intentions through unchanged.
+     *
+     * @return the shared no-op {@link CoordinationPolicy} instance
+     */
     static CoordinationPolicy noOp() {
         return NO_OP;
     }

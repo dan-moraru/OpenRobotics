@@ -12,7 +12,7 @@ import com.openrobotics.task.TaskStatus;
 
 import java.util.*;
 
-/** manages a priority queue of tasks and assigns them to available robots each tick */
+/** Manages a priority queue of tasks and assigns them to available robots each tick. */
 public class Dispatcher {
     private final List<Task> lifetimeTasks; // stores all tasks ever added to this dispatcher
     private final PriorityQueue<Task> taskQueue;
@@ -24,7 +24,11 @@ public class Dispatcher {
         this.totalTasksAdded = 0;
     }
 
-    /** adds a task to the pending queue if it is not null and not already present */
+    /**
+     * Adds a task to the pending queue and the lifetime task list.
+     *
+     * @param task the task to enqueue; must not be {@code null} or already present
+     */
     public void addTask(Task task) {
         enqueueTask(task, true);
         lifetimeTasks.add(task);
@@ -44,7 +48,11 @@ public class Dispatcher {
         }
     }
 
-    /** adds tasks to the queue in bulk */
+    /**
+     * Adds tasks to the queue in bulk.
+     *
+     * @param tasks the list of tasks to enqueue; must not be {@code null} and must contain no {@code null} entries
+     */
     public void addTasks(List<Task> tasks) {
         if (tasks == null) {
             throw new IllegalArgumentException("Tasks list cannot be null");
@@ -60,9 +68,10 @@ public class Dispatcher {
     }
 
     /**
-     * assigns at most one pending task per available robot; logs each assignment.
+     * Assigns at most one pending task per available robot; logs each assignment.
      *
-     * @return number of assignments made this call
+     * @param robots the array of robots to assign tasks to; must not be {@code null}
+     * @return the number of assignments made during this call
      */
     public int assignTasks(Robot[] robots) {
         if (robots == null) {
@@ -109,7 +118,11 @@ public class Dispatcher {
         return assignmentCount;
     }
 
-    /** requeues a task without incrementing the total count; used for deadlock recovery */
+    /**
+     * Requeues a task without incrementing the total count; used for deadlock recovery.
+     *
+     * @param task the task to requeue; must not be {@code null} or already present in the queue
+     */
     public void requeueTask(Task task) {
         enqueueTask(task, false);
     }
@@ -122,13 +135,22 @@ public class Dispatcher {
         return taskQueue.size();
     }
 
+    /**
+     * Returns all currently queued (pending) tasks sorted by natural task ordering.
+     *
+     * @return sorted list of pending tasks
+     */
     public List<Task> getAllQueuedTasks() {
         List<Task> tasks = new ArrayList<>(taskQueue);
         tasks.sort(Task::compareTo);
         return tasks;
     }
 
-    /** returns all tasks ever added to this dispatcher, including completed ones */
+    /**
+     * Returns all tasks ever added to this dispatcher, including completed and in-progress ones.
+     *
+     * @return a snapshot copy of the lifetime task list
+     */
     public List<Task> getLifetimeTasks() {
         return new ArrayList<>(lifetimeTasks);
     }
@@ -136,6 +158,7 @@ public class Dispatcher {
     /**
      * Returns the total number of tasks ever added to this dispatcher.
      * Used to distinguish "no tasks were configured" from "all tasks completed".
+     *
      * @return the total number of tasks added since construction
      */
     public int getTotalTasksAdded() {

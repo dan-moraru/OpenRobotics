@@ -5,12 +5,19 @@ import com.openrobotics.map.Tile;
 
 import java.util.UUID;
 
-/** represents a pending move request from a robot for one tick */
+/** Represents a pending move request from a robot for one tick. */
 public class MoveIntention {
     private final Robot robot;
     private final Tile from;
     private final Tile to;
 
+    /**
+     * Creates a move intention for the given robot.
+     *
+     * @param from the tile the robot is currently occupying
+     * @param to the tile the robot intends to move to (may equal {@code from} for a wait)
+     * @param robot the robot submitting this intention
+     */
     public MoveIntention(Tile from, Tile to, Robot robot) {
         this.from = from;
         this.to = to;

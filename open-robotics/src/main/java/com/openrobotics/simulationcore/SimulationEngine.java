@@ -24,7 +24,7 @@ import com.openrobotics.task.*;
 import java.io.IOException;
 import java.util.*;
 
-/** tick-based simulation engine; coordinates robot movement, task dispatch, collision resolution, and deadlock recovery */
+/** Tick-based simulation engine; coordinates robot movement, task dispatch, collision resolution, and deadlock recovery. */
 public class SimulationEngine {
     private UUID runId;
     private static final int DEADLOCK_RECOVERY_THRESHOLD = 5;
@@ -48,20 +48,46 @@ public class SimulationEngine {
     private boolean initialized;
     private String initError;
 
-    /** constructs an engine with default run name, tickMs=100, maxTicks=5000, seed=42 */
+    /**
+     * Creates an engine with default run name, {@code tickMs=100}, {@code maxTicks=5000}, {@code seed=42}.
+     *
+     * @param map the warehouse map
+     * @param robots the array of robots to simulate
+     * @param dispatcher the task dispatcher
+     * @param coordinationPolicy the coordination policy; {@code null} is treated as no-op
+     */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy) {
         this(map, robots, dispatcher, coordinationPolicy, "default_run", 100, 5000, 42);
     }
 
-    /** constructs an engine with explicit run config; delegates to the 9-param constructor with maxTasks=10 */
+    /**
+     * Creates an engine with an explicit run config; delegates to the 9-param constructor with {@code maxTasks=10}.
+     *
+     * @param map the warehouse map
+     * @param robots the array of robots to simulate
+     * @param dispatcher the task dispatcher
+     * @param coordinationPolicy the coordination policy; {@code null} is treated as no-op
+     * @param runName name used to identify this run in logs and database records
+     * @param tickMs milliseconds per simulation tick
+     * @param maxTicks maximum number of ticks before the simulation halts
+     * @param seed RNG seed for reproducible task generation and navigation
+     */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
                           String runName, int tickMs, int maxTicks, long seed) {
         this(map, robots, dispatcher, coordinationPolicy, runName, tickMs, maxTicks, seed, 10);
     }
 
     /**
-     * primary constructor; all other constructors delegate here.
+     * Primary constructor; all other programmatic constructors delegate here.
      *
+     * @param map the warehouse map
+     * @param robots the array of robots to simulate
+     * @param dispatcher the task dispatcher
+     * @param coordinationPolicy the coordination policy; {@code null} is treated as no-op
+     * @param runName name used to identify this run in logs and database records
+     * @param tickMs milliseconds per simulation tick
+     * @param maxTicks maximum number of ticks before the simulation halts
+     * @param seed RNG seed for reproducible task generation and navigation
      * @param maxTasks absolute cap on total tasks generated (applies to both static and dynamic workload modes)
      */
     public SimulationEngine(Map map, Robot[] robots, Dispatcher dispatcher, CoordinationPolicy coordinationPolicy,
@@ -84,7 +110,12 @@ public class SimulationEngine {
         this.initialized = map != null && robots != null && dispatcher != null;
     }
 
-    /** constructs an engine by loading state from a JSON config file; use {@link #getInitError()} to check for load failures */
+    /**
+     * Creates an engine by loading state from a JSON config file.
+     * Use {@link #getInitError()} to check whether loading succeeded.
+     *
+     * @param configFilePath path to the JSON config file; {@code null} produces an uninitialised engine
+     */
     public SimulationEngine(String configFilePath) {
         if (configFilePath != null) {
             configInitialization(configFilePath);
@@ -282,7 +313,7 @@ public class SimulationEngine {
     }
 
     /**
-     * saves the current simulation state to a JSON config file.
+     * Saves the current simulation state to a JSON config file.
      *
      * @param path destination file path
      * @throws IOException if the map is not initialized or the file cannot be written
@@ -435,10 +466,11 @@ public class SimulationEngine {
     }
 
     /**
-     * advances the simulation by one tick: dispatches tasks, collects intentions, applies coordination policy,
+     * Advances the simulation by one tick: dispatches tasks, collects intentions, applies coordination policy,
      * resolves conflicts, commits moves, runs robot state machines, and handles deadlock recovery.
      *
-     * @return true if the simulation is still running; false when workload is complete, tick limit reached, or all robots dead
+     * @return {@code true} if the simulation is still running; {@code false} when the workload is complete,
+     *         the tick limit is reached, or all robots are dead
      */
     public boolean tick() {
         if (!initialized || robots == null || dispatcher == null || collisionManager == null || map == null) {
@@ -689,7 +721,11 @@ public class SimulationEngine {
 
     public RobotConfig getRobotConfig() { return robotConfig; }
 
-    /** Replaces the robot physics config and propagates it to all loaded robots. */
+    /**
+     * Replaces the robot physics config and propagates it to all loaded robots.
+     *
+     * @param config the new robot config to apply
+     */
     public void setRobotConfig(RobotConfig config) {
         this.robotConfig = config;
         if (robots != null) {
@@ -717,9 +753,11 @@ public class SimulationEngine {
     }
 
     /**
-     * A run is finished when the clock has started, every robot is idle, and
-     * the dispatcher has no more queued tasks. tickCounter==0 is never
-     * finished so Play on a fresh engine is always allowed.
+     * Returns {@code true} when the clock has started, every robot is idle, and the dispatcher has no
+     * more queued tasks. A {@code tickCounter} of {@code 0} is never considered finished, so Play on a
+     * fresh engine is always allowed.
+     *
+     * @return {@code true} if the run is finished; {@code false} otherwise
      */
     public boolean isFinished() {
         if (tickCounter <= 0) return false;
@@ -750,13 +788,19 @@ public class SimulationEngine {
 
     public long getSeed() { return seed; }
 
-    /** returns the fully-qualified class name of the active coordination policy, or null if none is set */
+    /**
+     * Returns the fully-qualified class name of the active coordination policy.
+     *
+     * @return the class name of the active policy, or {@code null} if none is set
+     */
     public String getCoordinationPolicy() {
         return coordinationPolicy != null ? coordinationPolicy.getClass().getName() : null;
     }
 
     /**
      * Returns whether the active coordination policy is traffic-rules based.
+     *
+     * @return {@code true} if the active policy is a {@link TrafficRulesPolicy}
      */
     public boolean usesTrafficRulesPolicy() {
         return coordinationPolicy instanceof TrafficRulesPolicy;
@@ -764,6 +808,8 @@ public class SimulationEngine {
 
     /**
      * Returns a copy of the configured traffic-rules intersection positions.
+     *
+     * @return unmodifiable set of intersection positions; empty if the active policy is not traffic-rules based
      */
     public Set<Vector2D> getTrafficRuleIntersections() {
         if (!(coordinationPolicy instanceof TrafficRulesPolicy policy)) {
@@ -781,6 +827,10 @@ public class SimulationEngine {
 
     /**
      * Returns whether the provided tile is configured as a traffic-rules intersection.
+     *
+     * @param x the tile x-coordinate
+     * @param y the tile y-coordinate
+     * @return {@code true} if the tile at ({@code x}, {@code y}) is a registered intersection
      */
     public boolean hasTrafficRuleIntersection(int x, int y) {
         return getTrafficRuleIntersections().contains(new Vector2D(x, y));
@@ -789,6 +839,8 @@ public class SimulationEngine {
     /**
      * Toggles the provided tile in the traffic-rules intersection set.
      *
+     * @param x the tile x-coordinate to toggle
+     * @param y the tile y-coordinate to toggle
      * @return {@code true} when the active policy supports traffic-rule intersections
      *         and the coordinate exists on the map; {@code false} otherwise
      */
@@ -811,7 +863,11 @@ public class SimulationEngine {
         return dispatcher;
     }
 
-    /** returns the initialization error message, or null if config loading succeeded */
+    /**
+     * Returns the initialization error message set during config loading.
+     *
+     * @return the error message, or {@code null} if config loading succeeded
+     */
     public String getInitError() {
         return initError;
     }
@@ -822,7 +878,8 @@ public class SimulationEngine {
 
     /**
      * Returns a user-friendly error message based on the current simulation error state.
-     * @return a user-friendly error message if a simulation error is present, or null if no error has occurred.
+     *
+     * @return a user-friendly error message if a simulation error is present, or {@code null} if no error has occurred
      */
     public String getSimulationErrorMessage() {
         if (simulationError == null) {
@@ -847,6 +904,7 @@ public class SimulationEngine {
 
     /**
      * Adds an entity to the simulation map at runtime.
+     *
      * @param entity the entity to add
      */
     public void addEntity(MapEntity entity) {
@@ -860,8 +918,9 @@ public class SimulationEngine {
 
     /**
      * Removes an entity from the simulation map at runtime.
+     *
      * @param entity the entity to remove
-     * @return true if the entity was removed
+     * @return {@code true} if the entity was present and removed; {@code false} otherwise
      */
     public boolean removeEntity(MapEntity entity) {
         if (map != null && entity != null) {
