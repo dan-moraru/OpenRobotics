@@ -19,10 +19,9 @@ public class MapRecordBuilder {
         record.setWidth(map.getWidth());
         record.setHeight(map.getHeight());
 
-        // placeholder to satisfy not-null constraint; TODO: serialize map entities to JSON
+        // placeholder to satisfy not-null constraint
         record.setTileData("{}");
 
-        // TODO: differentiate preset maps from user-created maps and set accordingly
         record.setPreset(false);
     }
 
