@@ -630,7 +630,6 @@ public class SimulationEngine {
             }
 
             // Skipping recovery for robots with depleted batteries
-            // TODO: Consider a method for handling dead robots
             if (robot.getState() == RobotState.BATTERY_DEAD) {
                 continue; // Let battery recovery handle this robot, don't interfere with task recovery
             }
