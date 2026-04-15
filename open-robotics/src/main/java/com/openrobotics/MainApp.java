@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.sql.SQLException;
 
-/** application entry point; initialises the primary stage, connects to the database, and navigates to the welcome screen */
+/** Application entry point; initialises the primary stage, connects to the database, and navigates to the welcome screen. */
 public class MainApp extends Application {
     private SimulationController controller; 
 
@@ -56,6 +56,11 @@ public class MainApp extends Application {
         System.out.println("Shutdown complete.");
     }
 
+    /**
+     * Launches the JavaFX application.
+     *
+     * @param args command-line arguments forwarded to {@link javafx.application.Application#launch}.
+     */
     public static void main(String[] args) {
         launch(args);
     }

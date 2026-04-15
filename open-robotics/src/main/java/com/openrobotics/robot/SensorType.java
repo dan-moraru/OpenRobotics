@@ -1,10 +1,15 @@
 package com.openrobotics.robot;
 
-/** sensor type enum; maps config sensor name strings to enum values */
+/** Sensor type enum; maps config sensor name strings to enum values. */
 public enum SensorType {
     PROXIMITY, RANGE, NONE;
 
-    /** returns the SensorType for {@code name}, case-insensitive; returns NONE if unrecognized */
+    /**
+     * Returns the {@code SensorType} for {@code name}, case-insensitive.
+     *
+     * @param name the config string (e.g. {@code "PROXIMITY"}, {@code "RANGE"})
+     * @return the matching type, or {@code NONE} if the name is {@code null} or unrecognized
+     */
     public static SensorType fromConfigString(String name) {
         if (name == null) return NONE;
         String upper = name.toUpperCase().trim();

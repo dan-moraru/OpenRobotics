@@ -7,7 +7,7 @@ import com.openrobotics.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 
-/** proximity sensor; scans all 8 tiles immediately surrounding the robot (range = 1) */
+/** Proximity sensor; scans all 8 tiles immediately surrounding the robot (range = 1). */
 public class ProximitySensor implements SensorStrategy {
     private final int range = 1;
 

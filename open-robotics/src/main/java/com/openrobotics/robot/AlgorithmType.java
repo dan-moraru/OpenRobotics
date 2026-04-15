@@ -1,10 +1,15 @@
 package com.openrobotics.robot;
 
-/** algorithm type enum; maps config strategy name strings to enum values */
+/** Algorithm type enum; maps config strategy name strings to enum values. */
 public enum AlgorithmType {
     GREEDY, BUG, RTA_STAR, RANDOM, NONE;
 
-    /** returns the AlgorithmType for {@code name}, case-insensitive; returns NONE if unrecognized */
+    /**
+     * Returns the {@code AlgorithmType} for {@code name}, case-insensitive.
+     *
+     * @param name the config string (e.g. {@code "GREEDY"}, {@code "BUG"}, {@code "RTA_STAR"}, {@code "RANDOM"})
+     * @return the matching type, or {@code NONE} if the name is {@code null} or unrecognized
+     */
     public static AlgorithmType fromConfigString(String name) {
         if (name == null) return NONE;
         String upper = name.toUpperCase().trim();

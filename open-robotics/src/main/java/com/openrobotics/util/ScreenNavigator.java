@@ -14,7 +14,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-/** centralises all screen and dialog transitions; holds the primary stage so controllers don't need to pass it around */
+/** Centralises all screen and dialog transitions; holds the primary stage so controllers do not need to pass it around. */
 public final class ScreenNavigator {
 
     // FXML resource paths (relative to the resources root)
@@ -48,7 +48,11 @@ public final class ScreenNavigator {
         return currentController;
     }
 
-    /** loads and displays the given FXML as the primary scene. @param fxmlPath one of the path constants in this class */
+    /**
+     * Loads and displays the given FXML as the primary scene.
+     *
+     * @param fxmlPath one of the path constants in this class
+     */
     public static void loadScreen(String fxmlPath) {
         try {
             if (currentController instanceof Cleanable c) {
@@ -79,16 +83,35 @@ public final class ScreenNavigator {
         }
     }
 
-    /** opens the given FXML as a blocking modal dialog. @return the loader after close, so callers can retrieve controller data */
+    /**
+     * Opens the given FXML as a blocking modal dialog.
+     *
+     * @param fxmlPath the path to the dialog FXML
+     * @return the loader after the dialog closes, so callers can retrieve controller data
+     */
     public static FXMLLoader openDialog(String fxmlPath) {
         return openDialog(fxmlPath, "", null);
     }
 
+    /**
+     * Opens the given FXML as a blocking modal dialog with the given title.
+     *
+     * @param fxmlPath the path to the dialog FXML
+     * @param title the window title to display
+     * @return the loader after the dialog closes, so callers can retrieve controller data
+     */
     public static FXMLLoader openDialog(String fxmlPath, String title) {
         return openDialog(fxmlPath, title, null);
     }
 
-    /** opens a modal dialog with a custom title and optional controller initializer */
+    /**
+     * Opens a modal dialog with a custom title and optional controller initializer.
+     *
+     * @param fxmlPath the path to the dialog FXML
+     * @param title the window title; ignored if blank
+     * @param controllerInitializer optional callback to configure the controller before the dialog opens
+     * @return the loader after the dialog closes, so callers can retrieve controller data
+     */
     public static FXMLLoader openDialog(String fxmlPath, String title, Consumer<Object> controllerInitializer) {
         try {
             URL url = ScreenNavigator.class.getResource(fxmlPath);
@@ -132,7 +155,11 @@ public final class ScreenNavigator {
     public static void goToSimulation() { loadScreen(SIMULATION); }
     public static void goToResults()    { loadScreen(RESULTS); }
 
-    /** shows the exit-confirm dialog; returns true if the user confirmed */
+    /**
+     * Shows the exit-confirm dialog and returns whether the user confirmed.
+     *
+     * @return {@code true} if the user pressed the confirm button
+     */
     public static boolean confirmExit() {
         FXMLLoader loader = openDialog(DIALOG_EXIT_CONFIRM, "Exit");
         Object controller = loader.getController();
@@ -147,7 +174,7 @@ public final class ScreenNavigator {
 
     // marker interfaces — controllers implement these so the navigator can inject the stage without hard-casting
 
-    /** implemented by screen controllers that hold resources (timelines, listeners, bindings) needing release before navigation */
+    /** Implemented by screen controllers that hold resources (timelines, listeners, bindings) needing release before navigation. */
     public interface Cleanable {
         void cleanup();
     }

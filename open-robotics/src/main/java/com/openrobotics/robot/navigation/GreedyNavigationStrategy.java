@@ -11,12 +11,17 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
 
-/** greedy navigation; moves toward target by manhattan distance with seeded tie-breaking and backtracking for dead ends */
+/** Greedy navigation; moves toward the target by Manhattan distance with seeded tie-breaking and backtracking for dead ends. */
 public class GreedyNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id
     private final java.util.Map<UUID, RobotNavState> navStates = new HashMap<>();
 
+    /**
+     * Creates a greedy navigation strategy with the given base seed.
+     *
+     * @param baseSeed the seed used for deterministic tie-breaking per robot
+     */
     public GreedyNavigationStrategy(long baseSeed) {
         this.baseSeed = baseSeed;
     }

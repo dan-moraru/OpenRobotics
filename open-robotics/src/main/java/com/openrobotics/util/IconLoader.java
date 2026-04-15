@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** loads and caches entity icons from resources; all calls happen on the JavaFX thread */
+/** Loads and caches entity icons from resources; all calls happen on the JavaFX thread. */
 public class IconLoader {
     private static final Map<String, Optional<Image>> imageCache = new HashMap<>();
 
@@ -15,7 +15,12 @@ public class IconLoader {
             "RACK", "OBSTACLE", "DELIVERY", "INTERSECTION"
     );
 
-    /** returns the cached icon for the given type, loading it on first access; returns null if not found */
+    /**
+     * Returns the cached icon for the given type, loading it on first access.
+     *
+     * @param type the entity type string (e.g. {@code "ROBOT"}, {@code "RACK"}); case-insensitive
+     * @return the icon {@link Image}, or {@code null} if the resource was not found
+     */
     public static Image getIcon(String type) {
         if (type == null) return null;
 
@@ -25,14 +30,14 @@ public class IconLoader {
             .orElse(null);
     }
 
-    /** pre-loads all standard icons to avoid first-use delays */
+    /** Pre-loads all standard icons to avoid first-use delays. */
     public static void preloadAllIcons() {
         for (String type : SUPPORTED_TYPES) {
             getIcon(type);
         }
     }
 
-    /** clears the icon cache; used in tests */
+    /** Clears the icon cache; used in tests. */
     public static void clearCache() {
         imageCache.clear();
     }

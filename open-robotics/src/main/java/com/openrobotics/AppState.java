@@ -2,7 +2,7 @@ package com.openrobotics;
 
 import com.openrobotics.simulationcore.SimulationEngine;
 
-/** lightweight application-level state holder; shares the active engine and last-loaded config path across screens */
+/** Lightweight application-level state holder; shares the active engine and last-loaded config path across screens. */
 public final class AppState {
 
     private static SimulationEngine engine;
@@ -24,7 +24,13 @@ public final class AppState {
     public static int  getCanvasWidthTiles()                 { return canvasWidthTiles; }
     public static int  getCanvasHeightTiles()                { return canvasHeightTiles; }
     public static void setCanvasDimensions(int w, int h)     { canvasWidthTiles = Math.max(1, w); canvasHeightTiles = Math.max(1, h); }
-    /** Legacy single-axis accessor — returns the larger of width/height. */
+    
+    /**
+     * Returns the larger of the canvas width and height as a single tile dimension.
+     * Legacy accessor — prefer {@link #getCanvasWidthTiles()} and {@link #getCanvasHeightTiles()} for new code.
+     *
+     * @return the larger of {@code canvasWidthTiles} and {@code canvasHeightTiles}
+     */
     public static int  getCanvasTiles()                      { return Math.max(canvasWidthTiles, canvasHeightTiles); }
 
     public static int  getSimulationTick()                     { return simulationTick; }

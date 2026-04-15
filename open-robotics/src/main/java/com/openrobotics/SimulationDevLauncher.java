@@ -4,7 +4,7 @@ import com.openrobotics.util.ScreenNavigator;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
-/** dev launcher that opens the simulation screen directly, bypassing welcome and setup */
+/** Dev launcher that opens the simulation screen directly, bypassing the welcome and setup screens. */
 public class SimulationDevLauncher extends Application {
 
     @Override
@@ -19,6 +19,11 @@ public class SimulationDevLauncher extends Application {
         ScreenNavigator.goToSimulation();
     }
 
+    /**
+     * Launches the dev simulation screen.
+     *
+     * @param args command-line arguments forwarded to {@link javafx.application.Application#launch}.
+     */
     public static void main(String[] args) {
         launch(args);
     }

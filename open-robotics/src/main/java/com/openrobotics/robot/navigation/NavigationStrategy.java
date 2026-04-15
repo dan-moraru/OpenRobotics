@@ -6,16 +6,33 @@ import com.openrobotics.robot.AlgorithmType;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.simulationcore.MoveIntention;
 
-/** strategy pattern interface for robot navigation (uml 3.3.4 / 3.4.5) */
+/** Strategy pattern interface for robot navigation (uml 3.3.4 / 3.4.5). */
 public interface NavigationStrategy {
-    /** returns the robot's intended move for the current tick */
+
+    /**
+     * Returns the robot's intended move for the current tick.
+     *
+     * @param robot the robot requesting the move
+     * @param map the current warehouse map
+     * @return the move intention for this tick
+     */
     MoveIntention getNextMove(Robot robot, Map map);
 
-    /** called during deadlock recovery so the strategy can discard any saved search state for this robot */
+    /**
+     * Called during deadlock recovery so the strategy can discard any saved search state for this robot.
+     *
+     * @param robot the robot whose state should be cleared
+     */
     default void reset(Robot robot) {}
 
-    // Factory: create a navigation strategy for the given algorithm type.
-    // Unknown or NONE falls back to GREEDY so robots are always moveable.
+    /**
+     * Creates a navigation strategy for the given algorithm type; unknown or {@code NONE} falls back
+     * to GREEDY so robots are always moveable.
+     *
+     * @param algo the algorithm type, or {@code null} to use GREEDY
+     * @param seed the base seed for deterministic tie-breaking
+     * @return a new {@link NavigationStrategy} instance for the given type
+     */
     static NavigationStrategy create(AlgorithmType algo, long seed) {
         if (algo == null) return new GreedyNavigationStrategy(seed);
         return switch (algo) {
