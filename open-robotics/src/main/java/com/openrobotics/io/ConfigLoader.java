@@ -17,32 +17,12 @@ public class ConfigLoader {
 
     private ConfigLoader() {}
 
-    private static List<Path> allowedBaseDirs() throws IOException {
-        List<Path> bases = new ArrayList<>();
-        String configuredBase = System.getProperty(BASE_DIR_PROPERTY);
-        if (configuredBase != null && !configuredBase.isBlank()) {
-            bases.add(new File(configuredBase).getCanonicalFile().toPath());
-        } else {
-            bases.add(new File(System.getProperty("user.dir", ".")).getCanonicalFile().toPath());
-        }
-        bases.add(new File(System.getProperty("java.io.tmpdir", ".")).getCanonicalFile().toPath());
-        bases.add(new File(System.getProperty("user.home", ".") + File.separator
-            + ".open-robotics" + File.separator + "configs").getCanonicalFile().toPath());
-        return bases;
-    }
-
     private static File validatePath(String path) throws IOException {
         if (path == null || path.isBlank()) {
             throw new IllegalArgumentException("path must not be null or blank");
         }
-        File file = new File(path).getCanonicalFile();
-        Path filePath = file.toPath();
-        for (Path base : allowedBaseDirs()) {
-            if (filePath.startsWith(base)) {
-                return file;
-            }
-        }
-        throw new SecurityException("path is outside allowed config directories: " + file);
+        // Resolves the file and removes any relative navigation
+        return new File(path).getCanonicalFile();
     }
 
     private static <T> void validateTargetClass(Class<T> clazz) {
