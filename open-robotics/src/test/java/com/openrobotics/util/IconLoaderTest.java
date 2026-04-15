@@ -9,13 +9,26 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
+/**
+ * Unit tests for {@link IconLoader} icon lookup and cache behavior.
+ *
+ * <p>This suite verifies cache hits for equivalent type keys, cache invalidation after clear, and
+ * null/unknown-type handling contract.</p>
+ */
 public class IconLoaderTest {
 
+    /**
+     * Clears icon cache after each test to keep cache-state assertions isolated.
+     */
     @AfterEach
     void clearCache() {
         IconLoader.clearCache();
     }
 
+    /**
+     * Verifies repeated lookups for the same supported type return the cached {@link Image}
+     * instance, regardless of input case.
+     */
     @Test
     void getIcon_returns_cached_instance_for_same_supported_type() {
         Image first = IconLoader.getIcon("ROBOT");
@@ -25,6 +38,9 @@ public class IconLoaderTest {
         assertSame(first, second);
     }
 
+    /**
+     * Verifies clearing cache forces a new icon instance to be loaded on next request.
+     */
     @Test
     void clearCache_forces_a_fresh_load() {
         Image first = IconLoader.getIcon("CHARGER");
@@ -36,6 +52,9 @@ public class IconLoaderTest {
         assertNotSame(first, second);
     }
 
+    /**
+     * Verifies null and unknown icon types return {@code null} without throwing.
+     */
     @Test
     void getIcon_returns_null_for_null_or_unknown_type() {
         assertNull(IconLoader.getIcon(null));
