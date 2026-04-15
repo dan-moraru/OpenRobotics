@@ -427,6 +427,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
         }
 
+        // Outliner selection listener -> update properties panel when user clicks an entity in the outliner
+        if (outlinerListView != null) {
+            outlinerListView.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> onOutlinerSelect());
+        }
+
         // Bind engine from shared AppState
         engine = AppState.getEngine();
         if (engine == null && AppState.hasConfigPath()) {
