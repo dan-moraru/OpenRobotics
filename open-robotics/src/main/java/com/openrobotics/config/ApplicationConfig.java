@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-/** loads database configuration from application.config; env vars DB_URL, DB_USER, DB_PASSWORD override file values */
+/** Loads database configuration from application.config; env vars DB_URL, DB_USER, and DB_PASSWORD override file values. */
 public class ApplicationConfig {
 
     private static final String CONFIG_RESOURCE = "application.config";
@@ -17,10 +17,10 @@ public class ApplicationConfig {
     private final String dbPassword;
 
     /**
-     * loads config from application.config on the classpath, then overrides with env vars if set.
+     * Loads config from application.config on the classpath, then overrides with env vars if set.
      *
      * @throws IOException if the config file cannot be read
-     * @throws IllegalStateException if any required db config value is missing after loading
+     * @throws IllegalStateException if any required database config value is missing after loading
      */
     public ApplicationConfig() throws IOException {
         Properties props = loadFromClasspath();
