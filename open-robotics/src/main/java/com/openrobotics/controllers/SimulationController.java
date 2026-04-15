@@ -1130,13 +1130,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     clearSelection();
                     draggingOnCanvas = null;
                     dragStartPosition = null;
+                    dragStartIntersection = null;
                 }
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
             // Right click: pan mode
             draggingOnCanvas = null;
             dragStartPosition = null;
-            dragStartPosition = null;
+            dragStartIntersection = null;
         }
 
         // Update RAM display
