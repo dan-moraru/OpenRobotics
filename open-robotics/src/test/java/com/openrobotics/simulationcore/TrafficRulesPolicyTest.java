@@ -28,20 +28,31 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TrafficRulesPolicyTest {
 
     // Helpers
-
+    /**
+     * Creates a robot fixture at origin with generated UUID.
+     */
     private static Robot makeRobot(String name) {
         return new Robot(name, new Vector2D(0, 0));
     }
 
+    /**
+     * Creates a move intention using standalone tiles (not map-owned tile instances).
+     */
     private static MoveIntention move(Robot robot, int fromX, int fromY, int toX, int toY) {
         return new MoveIntention(new Tile(fromX, fromY), new Tile(toX, toY), robot);
     }
 
+    /**
+     * Creates a stay intention where source and destination are identical.
+     */
     private static MoveIntention stay(Robot robot, int x, int y) {
         Tile t = new Tile(x, y);
         return new MoveIntention(t, t, robot);
     }
 
+    /**
+     * Builds an intersection tile set from flat coordinate pairs.
+     */
     private static Set<Tile> intersectionSet(int... coords) {
         Set<Tile> set = new HashSet<>();
         for (int i = 0; i < coords.length - 1; i += 2) {
@@ -50,6 +61,9 @@ public class TrafficRulesPolicyTest {
         return set;
     }
 
+    /**
+     * Creates a generic map fixture used by policy-only tests.
+     */
     private static Map testMap() {
         return new Map(20, 20);
     }
@@ -332,6 +346,9 @@ public class TrafficRulesPolicyTest {
         assertEquals(5, released[0].getToTile().getY());
     }
 
+    /**
+     * Longer stop time gets intersection priority when multiple robots contend for the same tile.
+     */
     @Test
     void givesIntersectionPriorityToRobotWithLongerStopTime() {
         Map map = new Map(3, 3);
@@ -357,6 +374,9 @@ public class TrafficRulesPolicyTest {
         assertMove(result, longWait, 1, 1);
     }
 
+    /**
+     * When stop time ties, loaded robots (carrying payload) receive intersection priority.
+     */
     @Test
     void givesIntersectionPriorityToLoadedRobotWhenStopTimeIsTied() {
         Map map = new Map(3, 3);
@@ -382,6 +402,9 @@ public class TrafficRulesPolicyTest {
         assertMove(result, loaded, 1, 1);
     }
 
+    /**
+     * Once a robot acquires an intersection, it remains exclusive until that robot exits.
+     */
     @Test
     void keepsIntersectionExclusiveUntilTheActiveRobotLeaves() {
         Map map = new Map(3, 3);
@@ -423,6 +446,9 @@ public class TrafficRulesPolicyTest {
         assertMove(tickThree, queuedRobot, 1, 1);
     }
 
+    /**
+     * Creates an unloaded moving robot whose task target is also used as pickup target.
+     */
     private static Robot unloadedRobot(String name, UUID id, Vector2D start, Vector2D pickupTarget, int stuckTicks) {
         Robot robot = new Robot(id, name, start);
         robot.setCurrentTask(new Task(id.hashCode(), pickupTarget, pickupTarget, 1));
@@ -431,6 +457,9 @@ public class TrafficRulesPolicyTest {
         return robot;
     }
 
+    /**
+     * Creates a loaded moving robot with dropoff target and configured stuck-tick history.
+     */
     private static Robot loadedRobot(String name, UUID id, Vector2D start, Vector2D dropoffTarget, int stuckTicks) {
         Robot robot = new Robot(id, name, start);
         robot.setCurrentTask(new Task(id.hashCode(), start, dropoffTarget, 1));
@@ -440,15 +469,24 @@ public class TrafficRulesPolicyTest {
         return robot;
     }
 
+    /**
+     * Creates a map-backed move intention using map tile references.
+     */
     private static MoveIntention move(Map map, Robot robot, int fromX, int fromY, int toX, int toY) {
         return new MoveIntention(map.getTile(fromX, fromY), map.getTile(toX, toY), robot);
     }
 
+    /**
+     * Creates a map-backed stay intention for the given tile.
+     */
     private static MoveIntention stay(Map map, Robot robot, int x, int y) {
         Tile tile = map.getTile(x, y);
         return new MoveIntention(tile, tile, robot);
     }
 
+    /**
+     * Asserts that a robot's resulting move intention matches expected destination coordinates.
+     */
     private static void assertMove(MoveIntention[] intentions, Robot robot, int expectedX, int expectedY) {
         for (MoveIntention intention : intentions) {
             if (intention.getRobot().getId().equals(robot.getId())) {
