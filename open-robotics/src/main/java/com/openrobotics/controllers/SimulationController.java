@@ -1218,6 +1218,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
             dragStartPosition = null;
+            dragStartIntersection = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
 
