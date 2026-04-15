@@ -712,14 +712,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             // Selection highlight — always drawn regardless of icon
             if (intersection.equals(selectedIntersection)) {
-                gc.setStroke(OBJECT_SELECTION_COLOR);
-                gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
-                gc.strokeOval(
-                        sx + Math.max(1.0, markerInset - 2.0),
-                        sy + Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0)
-                );
+                gc.setStroke(Color.web("#1a743f"));
+                gc.setLineWidth(Math.max(2.5, tileSize * 0.09));
+                double inset = Math.max(1.5, tileSize * 0.04);
+                gc.strokeRect(sx + inset, sy + inset, tileSize - 2 * inset, tileSize - 2 * inset);
                 gc.setStroke(INTERSECTION_STROKE_COLOR);
                 gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
             }
