@@ -3,10 +3,15 @@ package com.openrobotics.db.recordbuilders;
 import com.openrobotics.db.model.MapRecord;
 import com.openrobotics.map.Map;
 
-/** builds MapRecord instances from Map objects for database persistence */
+/** Builds {@link MapRecord} instances from {@link Map} objects for database persistence. */
 public class MapRecordBuilder {
     private MapRecord record;
 
+    /**
+     * Creates a builder pre-filled from the given map.
+     *
+     * @param map the warehouse map to build a record from
+     */
     public MapRecordBuilder(Map map) {
         this.record = new MapRecord();
         record.setId(map.getMapid());
@@ -21,6 +26,11 @@ public class MapRecordBuilder {
         record.setPreset(false);
     }
 
+    /**
+     * Returns the built {@link MapRecord}.
+     *
+     * @return the populated map record
+     */
     public MapRecord build() {
         return record;
     }
