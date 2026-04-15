@@ -1921,7 +1921,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
                 } else {
-                    log("\u26a0 No tasks could be generated. Ensure the map has at least one rack and one delivery station.");
+                    log("\u26a0 No tasks could be generated.");
+                    engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
+                    handleSimulationFailure();
+                    return;
                 }
             }
 

@@ -830,14 +830,15 @@ public class SimulationEngine {
             return "An unknown error has occurred in the simulation.";
         }
 
-        switch (simulationError) {
-            case ALL_ROBOTS_DEAD:
-                return "All robots have depleted their batteries. Simulation cannot continue.\nConsider adding more charging stations to the map.";
-            case NO_ROBOTS_SPAWNED:
-                return "No robots were spawned in the simulation. Simulation cannot run.\nPlease add robots to the simulation";
-            default:
-                return "An unknown error has occurred in the simulation.";
-        }
+        return simulationError.getMessage();
+    }
+
+    /**
+     * Sets the current simulation error state
+     * @param error the SimulationError to set for the simulation
+     */
+    public void setSimulationError(SimulationError error) {
+        this.simulationError = error;
     }
 
     // generates a new runId; called on reset so logging for each run is isolated
