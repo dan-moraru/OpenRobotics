@@ -1216,7 +1216,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 syncTaskPositions(dragStartPosition, endPos);
             }
             log("Moved " + draggingOnCanvas.getName()
-                + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
+                    + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
             dragStartPosition = null;
             dragStartIntersection = null;
@@ -1225,6 +1225,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             // Persist editor changes so the play-button snapshot and restart are always fresh
             persistEditorChanges();
+        }
+
+        // Log intersection drag release if the intersection was moved
+        if (dragStartIntersection != null) {
+            log("Moved INTERSECTION to tile ("
+                    + (int)dragStartIntersection.getX() + ", "
+                    + (int)dragStartIntersection.getY() + ").");
+            dragStartIntersection = null;
+            if (viewportStatusLabel != null) viewportStatusLabel.setText("");
         }
 
         // Update RAM display
