@@ -12,6 +12,7 @@ public class ExitConfirmController
         implements ScreenNavigator.DialogController,
                    ScreenNavigator.ExitConfirmResultHolder {
 
+    // Dialog State
     private Stage   dialogStage;
     private boolean confirmed = false;
 
@@ -25,6 +26,7 @@ public class ExitConfirmController
         return confirmed;
     }
 
+    // Dialog Actions
     @FXML
     private void onYes() {
         confirmed = true;
@@ -47,6 +49,7 @@ public class ExitConfirmController
         onNo();
     }
 
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }

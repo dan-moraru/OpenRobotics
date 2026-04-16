@@ -18,13 +18,16 @@ import java.util.prefs.Preferences;
  */
 public class LoadConfigController implements ScreenNavigator.DialogController {
 
+    // Form Fields
     @FXML private ComboBox<String> configFileCombo;
     @FXML private Label            selectedPathLabel;
 
+    // Dialog State
     private Stage dialogStage;
     private File  selectedFile;
 
-    // key used to persist recent paths in java preferences
+    // Defaults
+    // Persist recent config paths in Java preferences.
     private static final String PREFS_KEY = "recentConfigPaths";
     private static final int    MAX_RECENT = 8;
     private static final String BROWSE_SENTINEL = "Browse...";
@@ -34,6 +37,7 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         this.dialogStage = stage;
     }
 
+    // Initialization
     @FXML
     private void initialize() {
         configFileCombo.valueProperty().addListener((obs, o, n) -> {
@@ -52,6 +56,7 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         configFileCombo.getItems().add(BROWSE_SENTINEL);
     }
 
+    // File Selection
     private void ensureBrowseSentinelLast() {
         configFileCombo.getItems().remove(BROWSE_SENTINEL);
         configFileCombo.getItems().add(BROWSE_SENTINEL);
@@ -86,6 +91,7 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         }
     }
 
+    // Dialog Actions
     @FXML
     private void onLoad() {
         if (selectedFile != null) {
@@ -111,10 +117,12 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         return selectedFile;
     }
 
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
 
+    // Recent Paths
     private List<String> loadRecentPaths() {
         Preferences prefs = Preferences.userNodeForPackage(LoadConfigController.class);
         List<String> paths = new ArrayList<>();

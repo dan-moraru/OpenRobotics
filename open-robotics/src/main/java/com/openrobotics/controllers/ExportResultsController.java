@@ -25,13 +25,16 @@ import java.util.prefs.Preferences;
  */
 public class ExportResultsController implements ScreenNavigator.DialogController {
 
+    // Form Fields
     @FXML private TextField        fileNameField;
     @FXML private ComboBox<String> directoryCombo;
     @FXML private Label            selectedDirLabel;
 
+    // Dialog State
     private Stage dialogStage;
     private File  selectedDirectory;
 
+    // Defaults
     private static final String PREFS_KEY   = "recentExportDirs";
     private static final int    MAX_RECENT  = 8;
     private static final String DEFAULT_DIR =
@@ -42,6 +45,7 @@ public class ExportResultsController implements ScreenNavigator.DialogController
         this.dialogStage = stage;
     }
 
+    // Initialization
     @FXML
     private void initialize() {
         directoryCombo.valueProperty().addListener((obs, o, n) -> {
@@ -60,6 +64,7 @@ public class ExportResultsController implements ScreenNavigator.DialogController
                 java.time.LocalDate.now().toString() + ".json");
     }
 
+    // Directory Selection
     @FXML
     private void onResetDirectory() {
         selectedDirectory = new File(DEFAULT_DIR);
@@ -85,6 +90,7 @@ public class ExportResultsController implements ScreenNavigator.DialogController
         }
     }
 
+    // Export Actions
     @FXML
     private void onExport() {
         if (selectedDirectory == null) {
@@ -145,7 +151,8 @@ public class ExportResultsController implements ScreenNavigator.DialogController
         close();
     }
 
-    // builds the export DTO from current engine state
+    // Export DTO
+    // Build the export DTO from the current engine state.
     private ResultsExportDTO buildDTO(SimulationEngine engine) {
         ResultsExportDTO dto = new ResultsExportDTO();
         dto.runName    = AppState.getConfigPath() != null ? AppState.getConfigPath() : "unknown";
@@ -188,10 +195,12 @@ public class ExportResultsController implements ScreenNavigator.DialogController
         return dto;
     }
 
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
 
+    // Recent Directories
     private List<String> loadRecentDirs() {
         Preferences prefs = Preferences.userNodeForPackage(ExportResultsController.class);
         List<String> dirs = new ArrayList<>();

@@ -30,17 +30,17 @@ import java.util.List;
  */
 public class ResultsController {
 
-    // top bar
+    // Top Bar
     @FXML private Label ramLabel;
     @FXML private Label simTicksLabel;
     @FXML private Label simStatusLabel;
     @FXML private Label runNameLabel;
 
-    // charts
+    // Charts
     @FXML private StackPane chartContainer1;
     @FXML private StackPane chartContainer2;
 
-    // table
+    // Robot Table
     @FXML private TableView<Robot>          robotStatsTable;
     @FXML private TableColumn<Robot,String> colRobotId;
     @FXML private TableColumn<Robot,String> colNavAlgo;
@@ -54,7 +54,7 @@ public class ResultsController {
     @FXML private Label     tableTitle;
     @FXML private Label     tableInfoLabel;
 
-    // summary stats
+    // Summary Stats
     @FXML private Label statTotalTicks;
     @FXML private Label statTotalTasks;
     @FXML private Label statCompletedTasks;
@@ -76,20 +76,21 @@ public class ResultsController {
     @FXML private Label statMostIdle;
     @FXML private Label statTotalDistance;
 
-    // heatmap viewport
+    // Heatmap
     @FXML private StackPane heatmapContainer;
     @FXML private Canvas    heatmapCanvas;
     @FXML private Label     heatmapPlaceholder;
     @FXML private Label     maskTitleLabel;
     @FXML private Label     maskSubtitleLabel;
 
-    // heatmap settings
+    // Heatmap Settings
     @FXML private CheckBox viewObjectsCheck;
     @FXML private CheckBox maskOpt1Check;
 
+    // Initialization
     @FXML
     private void initialize() {
-        // bind heatmap canvas size and trigger redraw on container resize
+        // Bind the heatmap canvas to the container and redraw on resize.
         if (heatmapCanvas != null && heatmapContainer != null) {
             heatmapCanvas.widthProperty().bind(heatmapContainer.widthProperty());
             heatmapCanvas.heightProperty().bind(heatmapContainer.heightProperty());
@@ -110,6 +111,7 @@ public class ResultsController {
         }
     }
 
+    // Top Bar
     private void updateRamLabel() {
         if (ramLabel != null) {
             long usedKb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
@@ -117,6 +119,7 @@ public class ResultsController {
         }
     }
 
+    // Robot Table
     private void populateTable(SimulationEngine engine) {
         Robot[] robots = engine.getRobots();
         if (robots == null || robots.length == 0) return;
@@ -151,11 +154,12 @@ public class ResultsController {
         }
     }
 
+    // Charts
     private void populateCharts(SimulationEngine engine) {
         Robot[] robots = engine.getRobots();
         if (robots == null || robots.length == 0) return;
 
-        // chart 1: tasks completed per robot
+        // Tasks completed per robot.
         if (chartContainer1 != null) {
             chartContainer1.getChildren().clear();
             CategoryAxis xAxis1 = new CategoryAxis();
@@ -178,7 +182,7 @@ public class ResultsController {
             chartContainer1.getChildren().add(tasksChart);
         }
 
-        // chart 2: energy consumed per robot
+        // Energy consumed per robot.
         if (chartContainer2 != null) {
             chartContainer2.getChildren().clear();
             CategoryAxis xAxis2 = new CategoryAxis();
@@ -202,6 +206,7 @@ public class ResultsController {
         }
     }
 
+    // Summary
     private void populateSummary(SimulationEngine engine) {
         Robot[] robots = engine.getRobots();
         if (robots == null || robots.length == 0) return;
@@ -244,7 +249,7 @@ public class ResultsController {
         completedTasks = sumTasks;
         totalTasks = Math.max(totalTasks, completedTasks + pendingTasks);
 
-        // top bar
+        // Top bar.
         if (simTicksLabel != null) simTicksLabel.setText("Ticks: " + totalTicks);
         if (simStatusLabel != null) {
             simStatusLabel.setText(engine.getIsRunning() ? "Status: Running" : "Status: Stopped");
@@ -254,7 +259,7 @@ public class ResultsController {
                     ? AppState.getConfigPath() : "");
         }
 
-        // simulation summary column
+        // Simulation summary column.
         setText(statTotalTicks, "Total Ticks: " + totalTicks);
         setText(statTotalTasks, "Total Tasks: " + totalTasks);
         setText(statCompletedTasks, "Completed: " + completedTasks);
@@ -270,7 +275,7 @@ public class ResultsController {
             setText(statCompletionRate, "Completion: –");
         }
 
-        // robot averages column
+        // Robot averages column.
         setText(statAvgTasks, String.format("Avg Tasks/Robot: %.1f", (double) sumTasks / robotCount));
         setText(statAvgDistance, String.format("Avg Distance: %.1f tiles", (double) sumDist / robotCount));
         setText(statAvgEnergy, String.format("Avg Energy Used: %.1f", sumEnergy / robotCount));
@@ -280,7 +285,7 @@ public class ResultsController {
         }
         setText(statAvgBattery, String.format("Avg Battery: %.0f%%", sumBattery / robotCount));
 
-        // highlights column
+        // Highlights column.
         setText(statBestRobot, "Most Tasks: " + bestRobot.getName() + " (" + bestRobot.getTasksCompleted() + ")");
         setText(statWorstRobot, "Fewest Tasks: " + worstRobot.getName() + " (" + worstRobot.getTasksCompleted() + ")");
         setText(statMostDistance, "Most Distance: " + mostDistRobot.getName()
@@ -296,13 +301,14 @@ public class ResultsController {
         if (label != null) label.setText(text);
     }
 
+    // Heatmap Rendering
     private void drawMaskCanvas() {
         if (heatmapCanvas == null) return;
         var gc = heatmapCanvas.getGraphicsContext2D();
         double w = heatmapCanvas.getWidth();
         double h = heatmapCanvas.getHeight();
 
-        // background — slightly lighter than the viewport so unvisited tiles stand out
+        // Background: lighter than the viewport so unvisited tiles stand out.
         gc.setFill(javafx.scene.paint.Color.web("#E8E4DB"));
         gc.fillRect(0, 0, w, h);
 
@@ -328,8 +334,7 @@ public class ResultsController {
             }
         }
 
-        // three-band heatmap: low (≤33%), medium (≤66%), high (100%)
-        // visits equal to maxVisits always get the high color regardless of threshold rounding
+        // Use low, medium, and high traffic bands based on the maximum visit count.
         int lowThreshold  = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.33)) : 0;
         int mediumThreshold = maxVisits > 0 ? Math.max(1, (int) Math.ceil(maxVisits * 0.66)) : 0;
 
@@ -340,16 +345,16 @@ public class ResultsController {
                     int visits = tile.getVisitCount();
                     javafx.scene.paint.Color color;
                     if (visits == 0) {
-                        // warm sand — clearly distinct from the canvas background
+                        // Unvisited tiles.
                         color = javafx.scene.paint.Color.web("#F4F1EA");
                     } else if (visits >= mediumThreshold) {
-                        // high traffic — red
+                        // High traffic.
                         color = javafx.scene.paint.Color.web("#C0392B");
                     } else if (visits >= lowThreshold) {
-                        // medium traffic — amber
+                        // Medium traffic.
                         color = javafx.scene.paint.Color.web("#e89003");
                     } else {
-                        // low traffic — yellow
+                        // Low traffic.
                         color = javafx.scene.paint.Color.web("#fffaa2");
                     }
                     gc.setFill(color);
@@ -362,7 +367,7 @@ public class ResultsController {
             drawEntitiesOverlay(gc, engine, tileSize, offsetX, offsetY);
         }
 
-        // map boundary
+        // Map boundary.
         gc.setStroke(javafx.scene.paint.Color.web("#5D5B54"));
         gc.setLineWidth(1.5);
         gc.strokeRect(offsetX, offsetY, mapW * tileSize, mapH * tileSize);
@@ -371,7 +376,7 @@ public class ResultsController {
     private void drawEntitiesOverlay(GraphicsContext gc, SimulationEngine engine, double tileSize, double offsetX, double offsetY) {
         if (engine.getMap() == null) return;
 
-        // obstacles — dark
+        // Obstacles.
         gc.setFill(javafx.scene.paint.Color.web("#2A2926"));
         for (MapEntity entity : engine.getMap().getEntities()) {
             if (entity instanceof Obstacle) {
@@ -381,7 +386,7 @@ public class ResultsController {
             }
         }
 
-        // charging stations — amber
+        // Charging stations.
         gc.setFill(javafx.scene.paint.Color.web("#8C7B38"));
         for (MapEntity entity : engine.getMap().getEntities()) {
             if (entity instanceof ChargingStation) {
@@ -391,7 +396,7 @@ public class ResultsController {
             }
         }
 
-        // delivery stations — blue
+        // Delivery stations.
         gc.setFill(javafx.scene.paint.Color.web("#3A5A8C"));
         for (MapEntity entity : engine.getMap().getEntities()) {
             if (entity instanceof DeliveryStation) {
@@ -401,7 +406,7 @@ public class ResultsController {
             }
         }
 
-        // racks — grey
+        // Racks.
         gc.setFill(javafx.scene.paint.Color.web("#6E6B65"));
         for (MapEntity entity : engine.getMap().getEntities()) {
             if (entity instanceof Rack) {
@@ -411,7 +416,7 @@ public class ResultsController {
             }
         }
 
-        // robots — colored dots at their final positions, colored by state
+        // Robots at their final positions, colored by state.
         Robot[] robots = engine.getRobots();
         if (robots != null) {
             for (Robot robot : robots) {
@@ -430,6 +435,7 @@ public class ResultsController {
         }
     }
 
+    // Navigation
     @FXML private void onTabEditor()  { ScreenNavigator.goToSimulation(); }
     @FXML private void onTabResults() { }
 

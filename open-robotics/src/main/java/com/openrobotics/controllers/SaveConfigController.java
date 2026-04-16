@@ -24,14 +24,17 @@ import java.util.prefs.Preferences;
  */
 public class SaveConfigController implements ScreenNavigator.DialogController {
 
+    // Form Fields
     @FXML private TextField        fileNameField;
     @FXML private ComboBox<String> directoryCombo;
     @FXML private Label            selectedDirLabel;
 
+    // Dialog State
     private Stage  dialogStage;
     private File   selectedDirectory;
     private String resultFilePath; // set in onSave(), read by caller after dialog closes
 
+    // Defaults
     private static final String PREFS_KEY  = "recentSaveDirs";
     private static final String CONFIG_SUFFIX = ".json";
     private static final int    MAX_RECENT = 8;
@@ -44,6 +47,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         this.dialogStage = stage;
     }
 
+    // Result Access
     /**
      * Returns the full path set when the user clicked {@code Save}, or {@code null} if the dialog
      * has not saved a file yet.
@@ -70,12 +74,13 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         fileNameField.setText(name);
     }
 
+    // Initialization
     @FXML
     private void initialize() {
         directoryCombo.valueProperty().addListener((obs, o, n) -> {
             if (n == null) return;
             if (BROWSE_SENTINEL.equals(n)) {
-                // defer so the popup closes before the native chooser opens; restore prior selection first
+                // Let the combo close before opening the native chooser.
                 javafx.application.Platform.runLater(() -> {
                     directoryCombo.getSelectionModel().select(o);
                     onBrowse();
@@ -99,6 +104,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
                 java.time.LocalDate.now().toString());
     }
 
+    // Directory Selection
     @FXML
     private void onResetDirectory() {
         selectedDirectory = new File(DEFAULT_DIR);
@@ -131,6 +137,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         directoryCombo.getItems().add(BROWSE_SENTINEL);
     }
 
+    // Save Actions
     @FXML
     private void onSave() {
         if (selectedDirectory == null) {
@@ -146,7 +153,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             selectedDirLabel.setText("File name contains invalid characters.");
             return;
         }
-        // auto-append .json if not already present
+        // Auto-append the config suffix when the user omits it.
         if (!fileName.toLowerCase().endsWith(CONFIG_SUFFIX)) {
             fileName += CONFIG_SUFFIX;
         }
@@ -174,7 +181,7 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
             saveRecentDir(selectedDirectory.getAbsolutePath());
             resultFilePath = fullPath;
 
-            // automatically save a copy to ./configs so it appears in the load list
+            // Mirror the saved config into ./configs so it appears in the load list.
             File configsDir = new File(CONFIG_DIR);
             if (!configsDir.exists()) {
                 configsDir.mkdirs();
@@ -203,10 +210,12 @@ public class SaveConfigController implements ScreenNavigator.DialogController {
         return value == null ? "" : value.trim();
     }
 
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
 
+    // Recent Directories
     private List<String> loadRecentDirs() {
         Preferences prefs = Preferences.userNodeForPackage(SaveConfigController.class);
         List<String> dirs = new ArrayList<>();

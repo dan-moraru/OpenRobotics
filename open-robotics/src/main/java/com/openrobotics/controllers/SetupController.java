@@ -45,38 +45,47 @@ import java.util.Set;
  */
 public class SetupController {
 
+    // Map Settings
     @FXML private ComboBox<String> mapCombo;
     @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
 
+    // Coordination Policy
     @FXML private ComboBox<String> policyCombo;
     @FXML private Spinner<Integer> reservationKSpinner;
 
+    // Task Settings
     @FXML private RadioButton      autoTaskRadio;
     @FXML private RadioButton      manualTaskRadio;
     @FXML private VBox             maxTasksGroup;
     @FXML private TextField        maxTasksField;
     @FXML private TextField        workloadSeedField;
 
+    // Robot Settings
     @FXML private TextField        batteryCapacityField;
     @FXML private TextField        lowBatteryField;
     @FXML private TextField        chargePerTickField;
     @FXML private TextField        energyPerMoveField;
 
+    // Run Settings
     @FXML private TextField maxTicksField;
 
     @FXML private TextField runNameField;
 
+    // Preview
     @FXML private Spinner<Integer> canvasWidthSpinner;
     @FXML private Spinner<Integer> canvasHeightSpinner;
     @FXML private Canvas    previewCanvas;
     @FXML private StackPane viewportPreviewStack;
     @FXML private Label     canvasWarnLabel;
 
+    // Status
     @FXML private Label statusLabel;
 
+    // Config Files
     @FXML private ListView<String> configListView;
 
+    // Defaults
     private static final Color INTERSECTION_FILL_COLOR = Color.web("#8C7B38", 0.25);
     private static final Color INTERSECTION_STROKE_COLOR = Color.web("#6A4828");
     private static final String DEFAULT_POLICY        = "NONE";
@@ -94,6 +103,7 @@ public class SetupController {
     private static final float  DEFAULT_ENERGY_PER_MOVE  = 1.0f;
     private final String CONFIG_DIRECTORY_PATH = "./configs";
 
+    // Initialization
     @FXML
     private void initialize() {
         mapCombo.setItems(FXCollections.observableArrayList(
@@ -199,6 +209,7 @@ public class SetupController {
         if (initialMap != null) autoSetCanvasForMap(initialMap);
     }
 
+    // Reset Actions
     @FXML private void onResetMap() {
         mapCombo.getSelectionModel().selectFirst();
         refreshPreview();
@@ -222,6 +233,7 @@ public class SetupController {
     @FXML private void onResetChargePerTick()       { setTextIfPresent(chargePerTickField, String.valueOf((int) DEFAULT_CHARGE_PER_TICK)); }
     @FXML private void onResetEnergyPerMove()       { setTextIfPresent(energyPerMoveField, String.valueOf((int) DEFAULT_ENERGY_PER_MOVE)); }
 
+    // Preview Rendering
     private void refreshPreview() {
         double vw = previewCanvas.getWidth();
         double vh = previewCanvas.getHeight();
@@ -354,6 +366,7 @@ public class SetupController {
         return null;
     }
 
+    // Built-in Maps
     private com.openrobotics.map.Map buildBuiltinMap(String name) {
         return switch (name) {
             case "empty"              -> null;
@@ -473,6 +486,7 @@ public class SetupController {
         return new int[]{minX, minY, maxX, maxY};
     }
 
+    // Canvas Constraints
     private void autoSetCanvasForMap(String mapName) {
         if ("empty".equals(mapName)) {
             // empty map — keep current canvas size
@@ -559,6 +573,7 @@ public class SetupController {
         System.out.println("[SetupController] " + message);
     }
 
+    // Config Loading
     private File getFallbackTestConfig() {
         File fromWorkingDir = new File(System.getProperty("user.dir"), "test_scenario.json");
         if (fromWorkingDir.isFile()) return fromWorkingDir;
@@ -678,6 +693,7 @@ public class SetupController {
         }
     }
 
+    // Start Simulation
     @FXML
     private void onStartSimulation() {
         debugStatus("Start Simulation clicked.");
@@ -714,6 +730,7 @@ public class SetupController {
         goToSimulationScreen();
     }
 
+    // Engine Construction
     // Persists a temp config so restart can rebuild runs started from setup values.
     private void persistEngineToTempFile(SimulationEngine engine) {
         try {
@@ -795,6 +812,7 @@ public class SetupController {
         return engine;
     }
 
+    // Map and Task Generation
     // Copies a builtin map into the current canvas with a one-tile margin.
     private com.openrobotics.map.Map buildBuiltinMapInCanvas(String mapName, int canvasW, int canvasH) {
         com.openrobotics.map.Map src = buildBuiltinMap(mapName);
@@ -917,6 +935,7 @@ public class SetupController {
         };
     }
 
+    // Parsing Helpers
     private int parseIntSafe(String text, int fallback) {
         try { return Integer.parseInt(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
@@ -933,6 +952,7 @@ public class SetupController {
         try { return Float.parseFloat(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
 
+    // Validation
     // Validates the minimum required inputs before starting the simulation.
     private boolean validate() {
         // Loaded configs intentionally clear the map combo, so skip that check once an engine exists.
@@ -951,6 +971,7 @@ public class SetupController {
         return true;
     }
 
+    // Navigation
     @FXML
     private void onTabEditor() { /* already on setup/editor screen */ }
 

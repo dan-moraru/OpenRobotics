@@ -12,12 +12,14 @@ import javafx.stage.Stage;
  */
 public class ObjectDescController implements ScreenNavigator.DialogController {
 
+    // Form Fields
     @FXML private Label objectIconLabel;
     @FXML private Label objectNameLabel;
     @FXML private Label objectTypeLabel;
     @FXML private Label objectDescLabel;
     @FXML private VBox  propsOverview;
 
+    // Dialog State
     private Stage  dialogStage;
     private String objectType;
     private boolean addRequested = false;
@@ -27,6 +29,7 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         this.dialogStage = stage;
     }
 
+    // Dialog Content
     /**
      * Populates all labels for the given object type.
      *
@@ -106,6 +109,7 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
         }
     }
 
+    // Dialog Actions
     @FXML
     private void onAdd() {
         addRequested = true;
@@ -125,6 +129,7 @@ public class ObjectDescController implements ScreenNavigator.DialogController {
     public boolean isAddRequested() { return addRequested; }
     public String  getObjectType()  { return objectType; }
 
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
