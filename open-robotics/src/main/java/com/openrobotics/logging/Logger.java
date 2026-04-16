@@ -2,13 +2,10 @@ package com.openrobotics.logging;
 
 import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.dao.SimulationRunDao;
-import com.openrobotics.db.dao.WorkloadTaskDao;
 import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
-import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
-import com.openrobotics.logging.eventtypes.TaskEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Central simulation logger; robot events are buffered in a background queue, while task and
- * simulation events are written synchronously.
+ * Central simulation logger; robot events are buffered in a background queue, while simulation events are written synchronously.
  */
 public class Logger {
     private static LoggerMode mode = LoggerMode.DB;
@@ -58,42 +54,6 @@ public class Logger {
      */
     public static void setMode(LoggerMode newMode) {
         mode = newMode;
-    }
-
-    /**
-     * Logs a task lifecycle event to the {@code run_workload_tasks} table.
-     *
-     * @param eventType the task event type to persist
-     * @param record the workload task record containing the event payload
-     * @return the inserted record ID for {@link TaskEvent#TASK_CREATED}, or {@code -1} for other event types
-     */
-    public static long logTaskEvent(TaskEvent eventType, WorkloadTaskRecord record) {
-        if (mode == LoggerMode.NO_OP) {
-            return -1;
-        }
-        if (mode == null) {
-            System.err.println("Failed to log task event of type: " + eventType);
-            return -1;
-        }
-
-        try {
-            switch (eventType) {
-                case TASK_CREATED:
-                    return WorkloadTaskDao.insert(record);
-                case TASK_ASSIGNED:
-                    WorkloadTaskDao.assignToRobot(record.getId(), record.getAssignedRobotId(), record.getAssignedTick());
-                    return -1;
-                case TASK_COMPLETED:
-                    WorkloadTaskDao.markCompleted(record.getId(), record.getStatus(), record.getCompletedTick());
-                    return -1;
-                default:
-                    throw new IllegalStateException("Unsupported event type: " + eventType);
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to log task event of type: " + eventType);
-            System.err.println("Exception message: " + e.getMessage());
-            return -1;
-        }
     }
 
     /**
