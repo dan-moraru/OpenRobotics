@@ -3,6 +3,7 @@ package com.openrobotics.simulationcore;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
@@ -56,6 +57,12 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
             UUID robotId = robot.getId();
 
             if (!hasTiles(intention)) {
+                result.add(intention);
+                continue;
+            }
+
+            if (robot.getState() == RobotState.BATTERY_DEAD) {
+                clearRobotCoordinationState(robot);
                 result.add(intention);
                 continue;
             }
@@ -161,6 +168,11 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
             return;
         }
 
+        if (owner.getState() == RobotState.BATTERY_DEAD) {
+            activeIntersectionRobotId = null;
+            return;
+        }
+
         if (owner.getPosition() == null) {
             activeIntersectionRobotId = null;
             return;
@@ -226,6 +238,23 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
      */
     public Set<Tile> getIntersectionTiles() {
         return new HashSet<>(intersections);
+    }
+
+    @Override
+    public void clearRobotCoordinationState(Robot robot) {
+        if (robot == null) {
+            return;
+        }
+
+        UUID robotId = robot.getId();
+        if (robotId == null) {
+            return;
+        }
+
+        intersectionQueue.remove(robotId);
+        if (robotId.equals(activeIntersectionRobotId)) {
+            activeIntersectionRobotId = null;
+        }
     }
 
     private boolean hasTiles(MoveIntention intention) {
