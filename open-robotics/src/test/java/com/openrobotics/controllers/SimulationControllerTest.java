@@ -185,7 +185,7 @@ public class SimulationControllerTest extends ApplicationTest {
 
         assertAll(
                 () -> assertSame(fixture.engine, AppState.getEngine()),
-                () -> assertEquals("Canvas Size: 6×5 Tiles", field("canvasSizeLabel", Label.class).getText()),
+                () -> assertEquals("Canvas Size: 5×5 Tiles", field("canvasSizeLabel", Label.class).getText()),
                 () -> assertEquals("Loaded 5 objects", field("viewportStatusLabel", Label.class).getText()),
                 () -> assertEquals("Objects: 6", field("objsLabel", Label.class).getText()),
                 () -> assertEquals(6, outliner.getItems().size()),

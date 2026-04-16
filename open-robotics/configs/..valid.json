@@ -1,6 +1,6 @@
 {
   "config" : {
-    "runId" : "641949f5-3dbe-43c8-ad7b-cfeb1b222f18",
+    "runId" : "ebc72ee6-96dc-4bb3-a878-6f8e7df4cf02",
     "runName" : "default_run",
     "tickMs" : 100,
     "maxTicks" : 5000,
@@ -15,14 +15,14 @@
     "manualTaskAssignment" : false
   },
   "map" : {
-    "mapId" : "5b307bf9-e784-4863-8250-7367bf3d6560",
+    "mapId" : "4ef3d4b7-a31b-4aab-8064-b16b7de126b6",
     "width" : 8,
     "height" : 8,
     "tiles" : [ ]
   },
   "entities" : {
     "robots" : [ {
-      "id" : "cef66328-ce04-4d1c-8217-57ab1a8c4f93",
+      "id" : "bb6e0a02-c19d-4200-9c79-8c2f0feb95e3",
       "name" : "R1",
       "position" : {
         "x" : 1,

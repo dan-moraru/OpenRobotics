@@ -271,19 +271,37 @@ public class SetupControllerTest extends ApplicationTest {
      */
     @Test
     void validate_rejects_bad_max_tick_values_and_accepts_positive_integer() {
+        // Select a map so the validation doesn't fail on the Map check early
+        interact(() -> {
+            ComboBox<String> maps = lookup("#mapCombo").queryComboBox();
+            maps.getSelectionModel().selectFirst();
+        });
+
         TextField maxTicks = textField("maxTicksField");
 
-        interact(() -> maxTicks.setText("abc"));
+        // Test non-numeric characters
+        interact(() -> {
+            maxTicks.clear();
+            maxTicks.setText("abc");
+        });
+        assertEquals("", maxTicks.getText());
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
-        assertEquals("⚠ Max ticks must be a positive integer.", statusLabel().getText());
+        assertEquals("\u26a0 Max Ticks requires a valid number.", statusLabel().getText());
 
+        // Test zero
         interact(() -> maxTicks.setText("0"));
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
+        assertEquals("\u26a0 Max Ticks must be between 1 and 1000000.", statusLabel().getText());
 
-        interact(() -> maxTicks.setText("-5"));
+        // Test negative
+        interact(() -> {
+            maxTicks.clear();
+            maxTicks.setText("-5");
+        });
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
 
-        interact(() -> maxTicks.setText("1"));
+        // Test valid positive integer
+        interact(() -> maxTicks.setText("30000"));
         assertTrue((boolean) invokePrivate("validate", new Class<?>[0]));
         assertEquals("", statusLabel().getText());
     }

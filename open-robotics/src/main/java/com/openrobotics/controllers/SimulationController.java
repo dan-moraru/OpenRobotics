@@ -482,22 +482,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 System.out.println("Error saving map to database: " + e.getMessage());
             }
 
-            // Expand the canvas just enough to fit loaded entities while respecting the setup minimum.
-            if (!loadedMap.getEntities().isEmpty()) {
-                int maxTileX = 0, maxTileY = 0;
-                for (MapEntity entity : loadedMap.getEntities()) {
-                    maxTileX = Math.max(maxTileX, (int) entity.getPosition().getX());
-                    maxTileY = Math.max(maxTileY, (int) entity.getPosition().getY());
-                }
-                int entitySpanX = maxTileX + 1;
-                int entitySpanY = maxTileY + 1;
-                canvasWidthTiles  = Math.max(AppState.getCanvasWidthTiles(),  entitySpanX + 2);
-                canvasHeightTiles = Math.max(AppState.getCanvasHeightTiles(), entitySpanY + 2);
-                entityOffsetTileX = (canvasWidthTiles  - entitySpanX) / 2;
-                entityOffsetTileY = (canvasHeightTiles - entitySpanY) / 2;
-            }
-            if (canvasSizeLabel != null)
+            // buildBuiltinMapInCanvas and loaded configs already sit at their correct absolute tile positions within the map. Adding a centering offset on top
+            // Use map dimensions directly and set offsets to zero.
+            canvasWidthTiles  = loadedMap.getWidth();
+            canvasHeightTiles = loadedMap.getHeight();
+            entityOffsetTileX = 0;
+            entityOffsetTileY = 0;
+            if (canvasSizeLabel != null) {
                 canvasSizeLabel.setText("Canvas Size: " + canvasWidthTiles + "×" + canvasHeightTiles + " Tiles");
+            }
 
             refreshIntersectionObjectTileVisibility();
             populateOutliner();
@@ -1529,21 +1522,45 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             HBox batteryBox = new HBox(8);
             batteryBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             float maxBattery = robot.getConfig().batteryCapacity;
+
             Spinner<Double> batterySpinner = new Spinner<>(
-                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0, maxBattery, robot.getBattery(), 1.0));
+                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, (double) maxBattery, (double) robot.getBattery(), 1.0));
             batterySpinner.setPrefWidth(90);
             batterySpinner.setEditable(true);
+
+            // Restrict input to positive digits and a single decimal point
+            batterySpinner.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.matches("\\d*(\\.\\d*)?")) {
+                    return change;
+                }
+                return null; // Reject the change
+            }));
+
+            // Force spinner to commit text value when the user clicks away
+            batterySpinner.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                if (!isFocused) {
+                    batterySpinner.increment(0);
+                }
+            });
+
             batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
                     if (guardEditor("change battery")) {
-                        batterySpinner.getValueFactory().setValue(oldVal);
+                        // Revert spinner if editor is locked
+                        Platform.runLater(() -> batterySpinner.getValueFactory().setValue(oldVal));
                         return;
                     }
-                    robot.setBattery(newVal.floatValue());
+
+                    float newBat = newVal.floatValue();
+                    float oldBat = oldVal.floatValue();
+
+                    robot.setBattery(newBat);
                     drawViewport();
-                    pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
+                    pushAction(new BatteryChangeAction(robot, oldBat, newBat));
                 }
             });
+
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
             propertiesPanel.getChildren().add(batteryBox);
 
@@ -1611,8 +1628,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         Label headerLabel = new Label("Valid Dropoff Points");
         headerLabel.setStyle("-fx-font-weight: bold;");
         Tooltip headerTip = new Tooltip(
-            "Boxes are distributed across the valid dropoff points using round-robin. " +
-            "Null slots are ignored. At least one non-null slot is required to play.");
+                "Boxes are distributed across the valid dropoff points using round-robin. " +
+                        "Null slots are ignored. At least one non-null slot is required to play.");
         Tooltip.install(headerLabel, headerTip);
         Button addBtn = new Button("+");
         addBtn.setOnAction(ev -> {
@@ -1649,7 +1666,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 DeliveryStation ds = stationById.get(id);
                 display = ds == null ? "(deleted station)"
                         : ds.getName() + " (" + (int)ds.getPosition().getX()
-                          + ", " + (int)ds.getPosition().getY() + ")";
+                        + ", " + (int)ds.getPosition().getY() + ")";
             }
             Label displayLabel = new Label(display);
             if (id == null || stationById.get(id) == null) {
@@ -1678,7 +1695,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (tipLabel != null) {
             // Reuse the main viewport click handler for the actual station assignment.
             tipLabel.setText("TIP: Click a delivery station to assign it to slot #"
-                + slotIndex + ". Click elsewhere to cancel.");
+                    + slotIndex + ". Click elsewhere to cancel.");
         }
         viewportStack.setCursor(javafx.scene.Cursor.CROSSHAIR);
         drawViewport();
@@ -1801,11 +1818,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         List<Object> newBacking = new ArrayList<>();
         // Keep entity rows first so editor selections stay predictable.
         for (MapEntity e : engine.getMap().getEntities()) {
-            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // robot
-                    : (e instanceof Rack)     ? "\ud83d\udce6 "  // rack/shelf
-                    : (e instanceof Station)  ? "\u26a1 "        // station
-                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // wall/obstacle
-                    :                           "\u25ab ";        // generic entity
+            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "    // robot
+                    : (e instanceof Rack)     ? "\ud83d\udce6 "         // rack/shelf
+                    : (e instanceof ChargingStation)  ? "\u26a1 "       // charging station
+                    : (e instanceof DeliveryStation) ? "\uD83C\uDFC1 "             // delivery station
+                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "         // wall/obstacle
+                    : "\u25ab ";                                        // generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                 newItems.add(entry);
@@ -1836,11 +1854,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (objsLabel != null && !newText.equals(objsLabel.getText())) {
             objsLabel.setText(newText);
         }
-    }
-
-    @FXML
-    private void onResetStringProp() {
-        if (strPropField != null) strPropField.setText("Hello");
     }
 
     // Playback Controls
@@ -1896,7 +1909,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 for (MapEntity me : engine.getMap().getEntities()) {
                     if (me instanceof Rack r && r.isManualDropoffAssignment()) {
                         boolean hasValid = r.getValidDropoffIds().stream()
-                            .anyMatch(uid -> uid != null && stationIds.contains(uid));
+                                .anyMatch(uid -> uid != null && stationIds.contains(uid));
                         if (!hasValid) offenders.add(r.getName());
                     }
                 }
@@ -1914,9 +1927,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     alert.setTitle("Cannot start simulation");
                     alert.setHeaderText("Manual-mode racks have no valid dropoff points");
                     alert.setContentText(
-                        "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
-                        + String.join("\n  \u2022 ", offenders)
-                        + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
+                            "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
+                                    + String.join("\n  \u2022 ", offenders)
+                                    + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
                     alert.showAndWait();
                     log("\u26a0 Play aborted: " + offenders.size() + " rack(s) have an empty manual dropoff pool.");
                     return;
