@@ -484,14 +484,27 @@ public class SimulationEngine {
             return false;
         }
 
+        // guard against ticking when no tasks were ever added to the dispatcher
+        if (dispatcher.getTotalTasksAdded() == 0) {
+            this.running = false;
+
+            // differentiate between no tasks because of manual assignment (user didn't add any) vs. automatic generation (generation failed)
+            if (manualTaskAssignment) {
+                simulationError = SimulationError.NO_TASKS_ASSIGNED;
+            } else {
+                simulationError = SimulationError.NO_TASKS_GENERATED;
+            }
+
+            return false;
+        }
+
         if (tickCounter >= maxTicks) {
             this.running = false;
             return false;
         }
 
-        // "No configured tasks" is treated as sandbox mode: ticks still run.
-        // Only short-circuit when a workload was actually configured and is now finished.
-        if (dispatcher.getTotalTasksAdded() > 0 && workloadComplete()) {
+        // Check if workload complete before ticking
+        if (workloadComplete()) {
             this.running = false;
 
             SimulationRunRecordBuilder recordBuilder = new SimulationRunRecordBuilder(this);

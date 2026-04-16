@@ -1554,7 +1554,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 HBox boxCountBox = new HBox(8);
                 boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 Spinner<Integer> boxCountSpinner = new Spinner<>(
-                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+                        new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 99, rack.getBoxCount()));
                 boxCountSpinner.setPrefWidth(80);
                 boxCountSpinner.setEditable(true);
                 boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
@@ -1566,7 +1566,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     rack.setBoxCount(newV);
                     persistEditorChanges();
                 });
-                boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+                boxCountBox.getChildren().addAll(new Label("Number of tasks:"), boxCountSpinner);
                 propertiesPanel.getChildren().add(boxCountBox);
 
                 HBox manualBox = new HBox(8);
@@ -1925,15 +1925,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 } else {
                     generated = com.openrobotics.task.TaskGenerator.generateAutomaticTasks(
                             engine.getMap(), engine.getMaxTasks(), engine.getSeed());
+
+                    // No task assignments could be generated due to invalid map configuration
+                    if (generated.isEmpty()) {
+                        log("\u26a0 No tasks could be generated.");
+                        engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
+                        handleSimulationFailure();
+                        return;
+                    }
                 }
                 if (!generated.isEmpty()) {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
-                } else {
-                    log("\u26a0 No tasks could be generated.");
-                    engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
-                    handleSimulationFailure();
-                    return;
                 }
             }
 
