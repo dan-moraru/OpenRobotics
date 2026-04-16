@@ -7,6 +7,10 @@ public final class AppState {
 
     private static SimulationEngine engine;
     private static String configPath;
+    private static String editorBaselinePath;
+    private static String simulationConsoleText;
+    private static String simulationLogText;
+    private static long simulationLogCursor;
     private static int canvasWidthTiles  = 15;
     private static int canvasHeightTiles = 15;
     private static int simulationTick = 0;
@@ -20,6 +24,21 @@ public final class AppState {
     public static String getConfigPath()                     { return configPath; }
     public static void setConfigPath(String path)            { configPath = path; }
     public static boolean hasConfigPath()                    { return configPath != null && !configPath.isBlank(); }
+
+    public static String getEditorBaselinePath()            { return editorBaselinePath; }
+    public static void setEditorBaselinePath(String path)   { editorBaselinePath = path; }
+    public static boolean hasEditorBaselinePath()           { return editorBaselinePath != null && !editorBaselinePath.isBlank(); }
+
+    public static String getSimulationConsoleText()         { return simulationConsoleText; }
+    public static void setSimulationConsoleText(String text){ simulationConsoleText = text; }
+    public static boolean hasSimulationConsoleText()        { return simulationConsoleText != null && !simulationConsoleText.isBlank(); }
+
+    public static String getSimulationLogText()             { return simulationLogText; }
+    public static void setSimulationLogText(String text)    { simulationLogText = text; }
+    public static boolean hasSimulationLogText()            { return simulationLogText != null && !simulationLogText.isBlank(); }
+
+    public static long getSimulationLogCursor()             { return simulationLogCursor; }
+    public static void setSimulationLogCursor(long cursor)  { simulationLogCursor = Math.max(0, cursor); }
 
     public static int  getCanvasWidthTiles()                 { return canvasWidthTiles; }
     public static int  getCanvasHeightTiles()                { return canvasHeightTiles; }
@@ -39,6 +58,10 @@ public final class AppState {
     public static void clear() {
         engine = null;
         configPath = null;
+        editorBaselinePath = null;
+        simulationConsoleText = null;
+        simulationLogText = null;
+        simulationLogCursor = 0;
         simulationTick = 0;
     }
 }
