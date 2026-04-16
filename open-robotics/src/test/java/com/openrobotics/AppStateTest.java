@@ -32,11 +32,11 @@ public class AppStateTest {
     }
 
     /**
-     * Verifies {@link AppState#clear()} removes engine/config path while preserving previously set
+     * Verifies {@link AppState#clear()} removes engine/config paths while preserving previously set
      * canvas dimensions.
      */
     @Test
-    void clear_resets_engine_and_config_path_but_keeps_canvas_dimensions() {
+    void clear_resets_engine_and_paths_but_keeps_canvas_dimensions() {
         SimulationEngine engine = new SimulationEngine(
                 new Map(1, 1),
                 new Robot[0],
@@ -46,14 +46,17 @@ public class AppStateTest {
 
         AppState.setEngine(engine);
         AppState.setConfigPath("sample.json");
+        AppState.setEditorBaselinePath("baseline.json");
         AppState.setCanvasDimensions(12, 8);
 
         AppState.clear();
 
         assertNull(AppState.getEngine());
         assertNull(AppState.getConfigPath());
+        assertNull(AppState.getEditorBaselinePath());
         assertFalse(AppState.hasEngine());
         assertFalse(AppState.hasConfigPath());
+        assertFalse(AppState.hasEditorBaselinePath());
         assertEquals(12, AppState.getCanvasWidthTiles());
         assertEquals(8, AppState.getCanvasHeightTiles());
     }
@@ -81,7 +84,7 @@ public class AppStateTest {
      * Verifies engine/config assignment updates both direct getters and presence flags.
      */
     @Test
-    void engine_and_config_path_flags_follow_assigned_values() {
+    void engine_and_path_flags_follow_assigned_values() {
         SimulationEngine engine = new SimulationEngine(
                 new Map(1, 1),
                 new Robot[0],
@@ -91,10 +94,13 @@ public class AppStateTest {
 
         AppState.setEngine(engine);
         AppState.setConfigPath("config.json");
+        AppState.setEditorBaselinePath("baseline.json");
 
         assertSame(engine, AppState.getEngine());
         assertEquals("config.json", AppState.getConfigPath());
+        assertEquals("baseline.json", AppState.getEditorBaselinePath());
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
+        assertTrue(AppState.hasEditorBaselinePath());
     }
 }

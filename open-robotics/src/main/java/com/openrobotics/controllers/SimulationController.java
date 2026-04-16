@@ -361,6 +361,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 initialSnapshotPath = snap.getAbsolutePath();
             }
             engine.configSaving(initialSnapshotPath);
+            AppState.setEditorBaselinePath(initialSnapshotPath);
         } catch (Exception ex) {
             log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
         }
@@ -451,6 +452,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         // Rebuild the engine lazily when the controller is opened from a saved config path.
         engine = AppState.getEngine();
+        initialSnapshotPath = AppState.getEditorBaselinePath();
         if (engine == null && AppState.hasConfigPath()) {
             engine = new SimulationEngine(AppState.getConfigPath());
             if (engine == null || engine.getMap() == null) {
@@ -1993,7 +1995,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     @FXML
     private void onRestart() {
-        String earlyReloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        String earlyReloadPath = resolveReloadPath();
         if (localTick == 0 && !running && !simulationFailed && earlyReloadPath == null) {
             log("Already at tick 0. Nothing to reset.");
             return;
@@ -2012,7 +2014,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         lastSeenLogId = 0;
         AppState.setSimulationTick(0);
         // Reload the latest editor baseline rather than the original config file.
-        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        String reloadPath = resolveReloadPath();
         if (reloadPath != null) {
             SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
@@ -2494,7 +2496,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (engine == null || running) return;
         try {
             // Reuse the existing snapshot file when possible.
-            String savePath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+            String savePath = resolveReloadPath();
             if (savePath == null) {
                 java.io.File tmp = java.io.File.createTempFile("openrobotics_editor_", ".json");
                 tmp.deleteOnExit();
@@ -2503,9 +2505,21 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
             // Keep restart/play anchored to the latest editable layout rather than the original import.
             engine.configSaving(savePath);
+            initialSnapshotPath = savePath;
+            AppState.setEditorBaselinePath(savePath);
         } catch (Exception ex) {
             log("\u26a0 Could not auto-save editor changes: " + ex.getMessage());
         }
+    }
+
+    private String resolveReloadPath() {
+        if (initialSnapshotPath != null && !initialSnapshotPath.isBlank()) {
+            return initialSnapshotPath;
+        }
+        if (AppState.hasEditorBaselinePath()) {
+            return AppState.getEditorBaselinePath();
+        }
+        return AppState.getConfigPath();
     }
 
     private void updateRamLabel() {

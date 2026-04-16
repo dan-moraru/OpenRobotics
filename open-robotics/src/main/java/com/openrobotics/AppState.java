@@ -7,6 +7,7 @@ public final class AppState {
 
     private static SimulationEngine engine;
     private static String configPath;
+    private static String editorBaselinePath;
     private static int canvasWidthTiles  = 15;
     private static int canvasHeightTiles = 15;
     private static int simulationTick = 0;
@@ -20,6 +21,10 @@ public final class AppState {
     public static String getConfigPath()                     { return configPath; }
     public static void setConfigPath(String path)            { configPath = path; }
     public static boolean hasConfigPath()                    { return configPath != null && !configPath.isBlank(); }
+
+    public static String getEditorBaselinePath()            { return editorBaselinePath; }
+    public static void setEditorBaselinePath(String path)   { editorBaselinePath = path; }
+    public static boolean hasEditorBaselinePath()           { return editorBaselinePath != null && !editorBaselinePath.isBlank(); }
 
     public static int  getCanvasWidthTiles()                 { return canvasWidthTiles; }
     public static int  getCanvasHeightTiles()                { return canvasHeightTiles; }
@@ -39,6 +44,7 @@ public final class AppState {
     public static void clear() {
         engine = null;
         configPath = null;
+        editorBaselinePath = null;
         simulationTick = 0;
     }
 }
