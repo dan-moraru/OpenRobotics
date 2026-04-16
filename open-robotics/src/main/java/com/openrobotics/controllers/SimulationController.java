@@ -1818,11 +1818,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         List<Object> newBacking = new ArrayList<>();
         // Keep entity rows first so editor selections stay predictable.
         for (MapEntity e : engine.getMap().getEntities()) {
-            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // robot
-                    : (e instanceof Rack)     ? "\ud83d\udce6 "  // rack/shelf
-                    : (e instanceof Station)  ? "\u26a1 "        // station
-                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // wall/obstacle
-                    :                           "\u25ab ";        // generic entity
+            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "    // robot
+                    : (e instanceof Rack)     ? "\ud83d\udce6 "         // rack/shelf
+                    : (e instanceof ChargingStation)  ? "\u26a1 "       // charging station
+                    : (e instanceof DeliveryStation) ? "\uD83C\uDFC1 "             // delivery station
+                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "         // wall/obstacle
+                    : "\u25ab ";                                        // generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                 newItems.add(entry);
@@ -1853,11 +1854,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (objsLabel != null && !newText.equals(objsLabel.getText())) {
             objsLabel.setText(newText);
         }
-    }
-
-    @FXML
-    private void onResetStringProp() {
-        if (strPropField != null) strPropField.setText("Hello");
     }
 
     // Playback Controls
