@@ -2451,8 +2451,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private boolean restorePersistedOutputState() {
         lastSeenLogId = AppState.getSimulationLogCursor();
+        localTick = AppState.getSimulationTick();
 
         boolean restored = false;
+
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
         if (consoleArea != null && AppState.getSimulationConsoleText() != null) {
             consoleArea.setText(AppState.getSimulationConsoleText());
             restored = restored || !consoleArea.getText().isBlank();
