@@ -1432,7 +1432,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getX()) return;
             if (guardEditor("move")) { xSpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
@@ -1449,7 +1449,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getY()) return;
             if (guardEditor("move")) { ySpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
@@ -1527,15 +1527,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             batterySpinner.setPrefWidth(90);
             batterySpinner.setEditable(true);
             batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
-                    if (guardEditor("change battery")) {
-                        batterySpinner.getValueFactory().setValue(oldVal);
-                        return;
-                    }
-                    robot.setBattery(newVal.floatValue());
-                    drawViewport();
-                    pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
+                if (newVal == null || oldVal == null || newVal.floatValue() == robot.getBattery()) return;
+                if (guardEditor("change battery")) {
+                    batterySpinner.getValueFactory().setValue(oldVal);
+                    return;
                 }
+                robot.setBattery(newVal.floatValue());
+                drawViewport();
+                pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
+
             });
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
             propertiesPanel.getChildren().add(batteryBox);
@@ -1558,7 +1558,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 boxCountSpinner.setPrefWidth(80);
                 boxCountSpinner.setEditable(true);
                 boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
-                    if (newV == null || oldV == null || newV.equals(oldV)) return;
+                    if (newV == null || oldV == null || newV == rack.getBoxCount()) return;
                     if (guardEditor("change box count")) {
                         boxCountSpinner.getValueFactory().setValue(oldV);
                         return;
@@ -1577,6 +1577,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
                 dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
                 manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                    if (newV == rack.isManualDropoffAssignment()) return;
                     if (guardEditor("toggle manual assignment")) {
                         manualCheck.setSelected(oldV);
                         return;
