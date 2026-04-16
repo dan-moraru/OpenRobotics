@@ -1,10 +1,6 @@
 package com.openrobotics.simulationcore;
 
 import com.openrobotics.AppState;
-import com.openrobotics.db.model.WorkloadTaskRecord;
-import com.openrobotics.logging.Logger;
-import com.openrobotics.logging.eventtypes.TaskEvent;
-import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 import com.openrobotics.task.Task;
@@ -104,10 +100,6 @@ public class Dispatcher {
 
                     taskQueue.poll();
                     assignmentCount++;
-
-                    WorkloadTaskRecordBuilder recordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), task);
-                    WorkloadTaskRecord record = recordBuilder.buildTaskAssignmentRecord(currentTick, robot.getId());
-                    Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
                 } catch (RuntimeException ex) {
                     System.err.println("[Dispatcher] Failed to assign task " + task.getId()
                             + " to robot " + robot.getId() + ": " + ex.getMessage());

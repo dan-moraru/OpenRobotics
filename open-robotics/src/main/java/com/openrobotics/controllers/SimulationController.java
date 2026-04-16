@@ -6,13 +6,10 @@ import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.model.MapRecord;
 import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
-import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.db.recordbuilders.MapRecordBuilder;
 import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
-import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
-import com.openrobotics.logging.eventtypes.TaskEvent;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Obstacle;
@@ -1964,19 +1961,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 }
             }
 
+            // Logging simulation start event
             SimulationRunRecordBuilder simRunRecordBuilder = new SimulationRunRecordBuilder(engine);
             SimulationRunRecord record = simRunRecordBuilder.buildSimulationStartRecord();
             Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, record);
-
-            List<Task> existingTasks = engine.getDispatcher().getAllQueuedTasks();
-
-            for (Task task : existingTasks) {
-                // Mirror task creation into the DB-backed log stream before the first tick advances.
-                WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
-                WorkloadTaskRecord taskRecord = taskRecordBuilder.buildTaskCreationRecord(engine.getTickCounter());
-                long artificialId = Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
-                task.setArtificialId(artificialId);
-            }
 
             startLoop();
             log("Simulation started.");

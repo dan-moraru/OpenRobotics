@@ -4,12 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openrobotics.AppState;
 import com.openrobotics.db.model.SimLogRecord;
-import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.db.recordbuilders.SimLogRecordBuilder;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.RobotEvent;
-import com.openrobotics.logging.eventtypes.TaskEvent;
-import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Tile;
@@ -371,12 +368,6 @@ public class Robot extends MapEntity {
                     if (currentTask != null) {
                         currentTask.setStatus(TaskStatus.COMPLETED);
                         tasksCompleted++;
-
-                        // Logging task completion event
-                        int currentTick = AppState.getEngine().getTickCounter();
-                        WorkloadTaskRecordBuilder taskCompletionRecordBuilder = new WorkloadTaskRecordBuilder(AppState.getEngine().getRunId(), currentTask);
-                        WorkloadTaskRecord record = taskCompletionRecordBuilder.buildTaskCompletionRecord(currentTick);
-                        Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
                     }
                     setCurrentTask(null);
                     hasPickedUp = false;
