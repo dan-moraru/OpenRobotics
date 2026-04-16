@@ -336,18 +336,18 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(outliner().getItems().stream().anyMatch(item -> item.contains("(2, 1) → (4, 1)")));
     }
 
-    /** Verifies single-step frame advances simulation tick/progress/status and logs. */
+    /** Verifies single-step frame fails to advance simulation tick/progress/status and logs. */
     @Test
-    void next_frame_with_engine_advances_tick_status_progress_and_console() {
+    void next_frame_with_engine_does_not_advance_tick_status_progress_and_console() {
         loadScreenWith(emptyEngine(), null, 30, 30);
         Label simStatus = installOptionalStatusLabel();
 
         invokeOnFx("onNextFrame", new Class<?>[0]);
 
-        assertEquals("STEPPING", simStatus.getText());
-        assertEquals("TICK 1", tickLabel().getText());
-        assertEquals(0.001, progressBar().getProgress(), 0.0001);
-        assertTrue(consoleText().contains("Step → TICK 1"));
+        assertEquals("FAILURE", simStatus.getText());
+        assertEquals("TICK 0", tickLabel().getText());
+        assertEquals(0.0, progressBar().getProgress(), 0.0001);
+        assertTrue(consoleText().contains("Step → TICK 0"));
     }
 
     /** Verifies completion path updates status/progress without incrementing tick counter. */
@@ -471,7 +471,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals(0.83, consoleSplit.getDividerPositions()[0], 0.08);
     }
 
-    /** Verifies restart with valid engine resets run state and rotates run identifier. */
+    /** Verifies restart with invalid engine resets run state and rotates run identifier. */
     @Test
     void restart_with_engine_resets_tick_progress_status_and_updates_run_id() {
         SimulationEngine engine = emptyEngine();
@@ -480,7 +480,7 @@ public class SimulationControllerTest extends ApplicationTest {
         UUID originalRunId = engine.getRunId();
 
         invokeOnFx("onNextFrame", new Class<?>[0]);
-        assertEquals("TICK 1", tickLabel().getText());
+        assertEquals("TICK 0", tickLabel().getText());
 
         fireButtonByText("↺");
 

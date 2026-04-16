@@ -1,6 +1,9 @@
 package com.openrobotics.integration.simulation;
 
+import com.openrobotics.AppState;
 import com.openrobotics.integration.SimulationIntegrationTestSupport;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
@@ -51,12 +54,19 @@ public class ReservationKIntegrationTest extends SimulationIntegrationTestSuppor
         map.addEntity(leadRobot);
         map.addEntity(trailingRobot);
 
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.addTask(trailingTask); // adding task so ticking doesn't fail
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[]{leadRobot, trailingRobot},
-                new Dispatcher(),
+                dispatcher,
                 new ReservationKPolicy(2)
         );
+
+        // Setting global state for logging
+        AppState.setEngine(engine);
+        Logger.setMode(LoggerMode.NO_OP);
 
         engine.tick();
         assertEquals(pos(2, 0), leadRobot.getPosition());
