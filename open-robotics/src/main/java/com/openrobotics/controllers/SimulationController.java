@@ -1100,7 +1100,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 }
             } else {
                 cancelDropoffPicking();
-                log("Dropoff assignment cancelled.");
+                log("Dropoff assignment cancelled. Please select a drop off station");
             }
             return;
         }
