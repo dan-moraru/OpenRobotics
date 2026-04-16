@@ -347,6 +347,73 @@ public class TrafficRulesPolicyTest {
     }
 
     /**
+     * A dead robot inside an intersection must not keep ownership on later ticks.
+     */
+    @Test
+    void releasesIntersectionOwnershipWhenOwnerDiesInsideIntersection() {
+        Map map = new Map(3, 3);
+        TrafficRulesPolicy policy = new TrafficRulesPolicy(Set.of(map.getTile(1, 1), map.getTile(1, 2)));
+
+        Robot owner = unloadedRobot("owner",
+                UUID.fromString("00000000-0000-0000-0000-000000000031"),
+                new Vector2D(1, 1),
+                new Vector2D(2, 1),
+                2);
+        Robot challenger = unloadedRobot("challenger",
+                UUID.fromString("00000000-0000-0000-0000-000000000032"),
+                new Vector2D(0, 2),
+                new Vector2D(2, 2),
+                1);
+
+        MoveIntention[] blocked = policy.apply(map, new MoveIntention[] {
+                stay(map, owner, 1, 1),
+                move(map, challenger, 0, 2, 1, 2)
+        });
+        assertMove(blocked, challenger, 0, 2);
+
+        owner.setState(RobotState.BATTERY_DEAD);
+
+        MoveIntention[] released = policy.apply(map, new MoveIntention[] {
+                stay(map, owner, 1, 1),
+                move(map, challenger, 0, 2, 1, 2)
+        });
+        assertMove(released, challenger, 1, 2);
+    }
+
+    /**
+     * Clearing coordination state should drop the active owner immediately.
+     */
+    @Test
+    void clearRobotCoordinationStateReleasesActiveIntersectionOwner() {
+        Map map = new Map(3, 3);
+        TrafficRulesPolicy policy = new TrafficRulesPolicy(Set.of(map.getTile(1, 1), map.getTile(1, 2)));
+
+        Robot owner = unloadedRobot("owner",
+                UUID.fromString("00000000-0000-0000-0000-000000000033"),
+                new Vector2D(1, 1),
+                new Vector2D(2, 1),
+                2);
+        Robot challenger = unloadedRobot("challenger",
+                UUID.fromString("00000000-0000-0000-0000-000000000034"),
+                new Vector2D(0, 2),
+                new Vector2D(2, 2),
+                1);
+
+        MoveIntention[] blocked = policy.apply(map, new MoveIntention[] {
+                stay(map, owner, 1, 1),
+                move(map, challenger, 0, 2, 1, 2)
+        });
+        assertMove(blocked, challenger, 0, 2);
+
+        policy.clearRobotCoordinationState(owner);
+
+        MoveIntention[] released = policy.apply(map, new MoveIntention[] {
+                move(map, challenger, 0, 2, 1, 2)
+        });
+        assertMove(released, challenger, 1, 2);
+    }
+
+    /**
      * Longer stop time gets intersection priority when multiple robots contend for the same tile.
      */
     @Test

@@ -510,6 +510,55 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Simulation reset failed"));
     }
 
+    /** Verifies reset after Results → Editor reloads the saved editor baseline instead of the original config. */
+    @Test
+    void restart_after_results_round_trip_uses_editor_baseline_snapshot() throws Exception {
+        Path originalConfig = tempDir.resolve("original-empty.json");
+        Path baselineConfig = tempDir.resolve("editor-baseline.json");
+
+        SimulationEngine originalEngine = new SimulationEngine(
+                new Map(4, 4),
+                new Robot[]{},
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+        originalEngine.configSaving(originalConfig.toString());
+
+        Map editedMap = new Map(4, 4);
+        Robot placedRobot = new Robot("placed_bot", new Vector2D(2, 1));
+        editedMap.addEntity(placedRobot);
+        SimulationEngine editedEngine = new SimulationEngine(
+                editedMap,
+                new Robot[]{ placedRobot },
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+        editedEngine.configSaving(baselineConfig.toString());
+
+        loadScreenWith(editedEngine, originalConfig.toString(), baselineConfig.toString(), 30, 30);
+
+        assertEquals(baselineConfig.toString(), field("initialSnapshotPath", String.class));
+
+        fireButtonByText("RESULTS");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertNotNull(lookup("#robotStatsTable").queryAs(TableView.class));
+
+        fireButtonByText("RETURN TO EDITOR");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        interact(this::syncControllerFromNavigator);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(baselineConfig.toString(), field("initialSnapshotPath", String.class));
+
+        fireButtonByText("↺");
+
+        assertEquals(1, AppState.getEngine().getMap().getEntities().size());
+        assertTrue(AppState.getEngine().getMap().getEntities().stream()
+                .anyMatch(entity -> "placed_bot".equals(entity.getName())));
+        assertEquals("TICK 0", tickLabel().getText());
+    }
+
     /** Verifies results navigation and back-navigation route to expected real screens. */
     @Test
     void results_tab_and_back_button_navigate_through_real_screens() {
@@ -588,6 +637,14 @@ public class SimulationControllerTest extends ApplicationTest {
      * Loads/reloads screen using provided engine/config and canvas dimensions.
      */
     private void loadScreenWith(SimulationEngine engine, String configPath, int canvasWidth, int canvasHeight) {
+        loadScreenWith(engine, configPath, null, canvasWidth, canvasHeight);
+    }
+
+    /**
+     * Loads/reloads screen using provided engine/config/baseline and canvas dimensions.
+     */
+    private void loadScreenWith(SimulationEngine engine, String configPath, String editorBaselinePath,
+                                int canvasWidth, int canvasHeight) {
         interact(() -> {
             try {
                 AppState.clear();
@@ -597,6 +654,9 @@ public class SimulationControllerTest extends ApplicationTest {
                 }
                 if (configPath != null) {
                     AppState.setConfigPath(configPath);
+                }
+                if (editorBaselinePath != null) {
+                    AppState.setEditorBaselinePath(editorBaselinePath);
                 }
                 loadSceneFromCurrentAppState();
             } catch (Exception ex) {
@@ -617,6 +677,11 @@ public class SimulationControllerTest extends ApplicationTest {
         controller = loader.getController();
         stage.setScene(new Scene(root, 1200, 700));
         stage.show();
+    }
+
+    /** Refreshes the cached controller after navigation recreates the simulation screen. */
+    private void syncControllerFromNavigator() {
+        controller = assertInstanceOf(SimulationController.class, ScreenNavigator.getCurrentController());
     }
 
     /** Builds and loads a representative fixture containing multiple entity types and one task. */

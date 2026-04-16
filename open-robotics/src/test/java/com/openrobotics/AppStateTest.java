@@ -32,11 +32,11 @@ public class AppStateTest {
     }
 
     /**
-     * Verifies {@link AppState#clear()} removes engine/config path while preserving previously set
+     * Verifies {@link AppState#clear()} removes engine/config/output paths while preserving previously set
      * canvas dimensions.
      */
     @Test
-    void clear_resets_engine_and_config_path_but_keeps_canvas_dimensions() {
+    void clear_resets_engine_and_paths_but_keeps_canvas_dimensions() {
         SimulationEngine engine = new SimulationEngine(
                 new Map(1, 1),
                 new Robot[0],
@@ -46,14 +46,25 @@ public class AppStateTest {
 
         AppState.setEngine(engine);
         AppState.setConfigPath("sample.json");
+        AppState.setEditorBaselinePath("baseline.json");
+        AppState.setSimulationConsoleText("console");
+        AppState.setSimulationLogText("log");
+        AppState.setSimulationLogCursor(42);
         AppState.setCanvasDimensions(12, 8);
 
         AppState.clear();
 
         assertNull(AppState.getEngine());
         assertNull(AppState.getConfigPath());
+        assertNull(AppState.getEditorBaselinePath());
+        assertNull(AppState.getSimulationConsoleText());
+        assertNull(AppState.getSimulationLogText());
+        assertEquals(0, AppState.getSimulationLogCursor());
         assertFalse(AppState.hasEngine());
         assertFalse(AppState.hasConfigPath());
+        assertFalse(AppState.hasEditorBaselinePath());
+        assertFalse(AppState.hasSimulationConsoleText());
+        assertFalse(AppState.hasSimulationLogText());
         assertEquals(12, AppState.getCanvasWidthTiles());
         assertEquals(8, AppState.getCanvasHeightTiles());
     }
@@ -81,7 +92,7 @@ public class AppStateTest {
      * Verifies engine/config assignment updates both direct getters and presence flags.
      */
     @Test
-    void engine_and_config_path_flags_follow_assigned_values() {
+    void engine_and_path_flags_follow_assigned_values() {
         SimulationEngine engine = new SimulationEngine(
                 new Map(1, 1),
                 new Robot[0],
@@ -91,10 +102,21 @@ public class AppStateTest {
 
         AppState.setEngine(engine);
         AppState.setConfigPath("config.json");
+        AppState.setEditorBaselinePath("baseline.json");
+        AppState.setSimulationConsoleText("console");
+        AppState.setSimulationLogText("log");
+        AppState.setSimulationLogCursor(7);
 
         assertSame(engine, AppState.getEngine());
         assertEquals("config.json", AppState.getConfigPath());
+        assertEquals("baseline.json", AppState.getEditorBaselinePath());
+        assertEquals("console", AppState.getSimulationConsoleText());
+        assertEquals("log", AppState.getSimulationLogText());
+        assertEquals(7, AppState.getSimulationLogCursor());
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
+        assertTrue(AppState.hasEditorBaselinePath());
+        assertTrue(AppState.hasSimulationConsoleText());
+        assertTrue(AppState.hasSimulationLogText());
     }
 }
