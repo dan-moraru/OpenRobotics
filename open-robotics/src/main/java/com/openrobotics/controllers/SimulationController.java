@@ -485,22 +485,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 System.out.println("Error saving map to database: " + e.getMessage());
             }
 
-            // Expand the canvas just enough to fit loaded entities while respecting the setup minimum.
-            if (!loadedMap.getEntities().isEmpty()) {
-                int maxTileX = 0, maxTileY = 0;
-                for (MapEntity entity : loadedMap.getEntities()) {
-                    maxTileX = Math.max(maxTileX, (int) entity.getPosition().getX());
-                    maxTileY = Math.max(maxTileY, (int) entity.getPosition().getY());
-                }
-                int entitySpanX = maxTileX + 1;
-                int entitySpanY = maxTileY + 1;
-                canvasWidthTiles  = Math.max(AppState.getCanvasWidthTiles(),  entitySpanX + 2);
-                canvasHeightTiles = Math.max(AppState.getCanvasHeightTiles(), entitySpanY + 2);
-                entityOffsetTileX = (canvasWidthTiles  - entitySpanX) / 2;
-                entityOffsetTileY = (canvasHeightTiles - entitySpanY) / 2;
-            }
-            if (canvasSizeLabel != null)
+            // buildBuiltinMapInCanvas and loaded configs already sit at their correct absolute tile positions within the map. Adding a centering offset on top
+            // Use map dimensions directly and set offsets to zero.
+            canvasWidthTiles  = loadedMap.getWidth();
+            canvasHeightTiles = loadedMap.getHeight();
+            entityOffsetTileX = 0;
+            entityOffsetTileY = 0;
+            if (canvasSizeLabel != null) {
                 canvasSizeLabel.setText("Canvas Size: " + canvasWidthTiles + "×" + canvasHeightTiles + " Tiles");
+            }
 
             refreshIntersectionObjectTileVisibility();
             populateOutliner();
@@ -1614,8 +1607,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         Label headerLabel = new Label("Valid Dropoff Points");
         headerLabel.setStyle("-fx-font-weight: bold;");
         Tooltip headerTip = new Tooltip(
-            "Boxes are distributed across the valid dropoff points using round-robin. " +
-            "Null slots are ignored. At least one non-null slot is required to play.");
+                "Boxes are distributed across the valid dropoff points using round-robin. " +
+                        "Null slots are ignored. At least one non-null slot is required to play.");
         Tooltip.install(headerLabel, headerTip);
         Button addBtn = new Button("+");
         addBtn.setOnAction(ev -> {
@@ -1652,7 +1645,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 DeliveryStation ds = stationById.get(id);
                 display = ds == null ? "(deleted station)"
                         : ds.getName() + " (" + (int)ds.getPosition().getX()
-                          + ", " + (int)ds.getPosition().getY() + ")";
+                        + ", " + (int)ds.getPosition().getY() + ")";
             }
             Label displayLabel = new Label(display);
             if (id == null || stationById.get(id) == null) {
@@ -1681,7 +1674,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (tipLabel != null) {
             // Reuse the main viewport click handler for the actual station assignment.
             tipLabel.setText("TIP: Click a delivery station to assign it to slot #"
-                + slotIndex + ". Click elsewhere to cancel.");
+                    + slotIndex + ". Click elsewhere to cancel.");
         }
         viewportStack.setCursor(javafx.scene.Cursor.CROSSHAIR);
         drawViewport();
@@ -1899,7 +1892,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 for (MapEntity me : engine.getMap().getEntities()) {
                     if (me instanceof Rack r && r.isManualDropoffAssignment()) {
                         boolean hasValid = r.getValidDropoffIds().stream()
-                            .anyMatch(uid -> uid != null && stationIds.contains(uid));
+                                .anyMatch(uid -> uid != null && stationIds.contains(uid));
                         if (!hasValid) offenders.add(r.getName());
                     }
                 }
@@ -1917,9 +1910,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     alert.setTitle("Cannot start simulation");
                     alert.setHeaderText("Manual-mode racks have no valid dropoff points");
                     alert.setContentText(
-                        "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
-                        + String.join("\n  \u2022 ", offenders)
-                        + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
+                            "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
+                                    + String.join("\n  \u2022 ", offenders)
+                                    + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
                     alert.showAndWait();
                     log("\u26a0 Play aborted: " + offenders.size() + " rack(s) have an empty manual dropoff pool.");
                     return;
