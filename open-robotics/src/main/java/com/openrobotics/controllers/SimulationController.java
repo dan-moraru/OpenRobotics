@@ -219,6 +219,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private Timeline logPollingTimeline;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private long lastSeenLogId = 0;
+    private boolean restoredOutputState = false;
 
     // Editor Actions
     private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction, IntersectionToggleAction, IntersectionMoveAction {
@@ -384,6 +385,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         // Resume the canvas dimensions chosen on the setup screen.
         canvasWidthTiles  = AppState.getCanvasWidthTiles();
         canvasHeightTiles = AppState.getCanvasHeightTiles();
+        restoredOutputState = restorePersistedOutputState();
 
         // Use listeners instead of property binding so the canvas does not lock SplitPane layout.
         viewportStack.widthProperty().addListener((obs, oldW, newW) -> {
@@ -505,14 +507,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("Loaded " + loadedMap.getEntities().size() + " objects");
             }
-            log("Loaded simulation with " + loadedMap.getEntities().size() + " entities. Press \u25b6 to start.");
+            if (!restoredOutputState) {
+                log("Loaded simulation with " + loadedMap.getEntities().size() + " entities. Press \u25b6 to start.");
+            }
             drawViewport();
         } else {
             refreshIntersectionObjectTileVisibility();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("No config loaded");
             }
-            log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+            if (!restoredOutputState) {
+                log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+            }
         }
 
         IconLoader.preloadAllIcons();
@@ -533,7 +539,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
         }
 
-        log("Simulation screen ready. Drag an object from the panel into the viewport.");
+        if (!restoredOutputState) {
+            log("Simulation screen ready. Drag an object from the panel into the viewport.");
+        }
     }
 
     // Viewport Rendering
@@ -2013,6 +2021,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         simulationFailed = false;
         lastSeenLogId = 0;
         AppState.setSimulationTick(0);
+        AppState.setSimulationLogCursor(0);
         // Reload the latest editor baseline rather than the original config file.
         String reloadPath = resolveReloadPath();
         if (reloadPath != null) {
@@ -2060,6 +2069,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             System.out.println("[SimulationController] Clearing log area on simulation reset.");
             logArea.clear();
         }
+        AppState.setSimulationLogText("");
+        AppState.setSimulationLogCursor(0);
     }
 
     @FXML
@@ -2118,6 +2129,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     public void cleanup() {
         shutdown();
         stopLoop();
+        if (AppState.hasEngine()) {
+            persistOutputState();
+        }
         if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
         if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
         warehouseCanvas.widthProperty().unbind();
@@ -2289,6 +2303,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML
     private void onClearConsole() {
         if (consoleArea != null) consoleArea.clear();
+        AppState.setSimulationConsoleText("");
     }
 
     @FXML
@@ -2322,6 +2337,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         undoStack.clear();
         redoStack.clear();
+        clearPersistedOutputState();
 
         SimulationEngine loaded = new SimulationEngine(file.getAbsolutePath());
         if (loaded == null || loaded.getMap() == null || loaded.getInitError() != null) {
@@ -2349,7 +2365,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void log(String message) {
         System.out.println("[SimulationController] " + message);
-        if (consoleArea != null) consoleArea.appendText(message + "\n");
+        if (consoleArea != null) {
+            consoleArea.appendText(message + "\n");
+            AppState.setSimulationConsoleText(consoleArea.getText());
+        } else {
+            String existing = AppState.getSimulationConsoleText();
+            AppState.setSimulationConsoleText((existing == null ? "" : existing) + message + "\n");
+        }
     }
 
     // Database Logging
@@ -2417,7 +2439,52 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             lastSeenLogId = log.getId();
         }
 
-        logArea.appendText(sb.toString());
+        if (logArea != null) {
+            logArea.appendText(sb.toString());
+            AppState.setSimulationLogText(logArea.getText());
+        } else {
+            String existing = AppState.getSimulationLogText();
+            AppState.setSimulationLogText((existing == null ? "" : existing) + sb);
+        }
+        AppState.setSimulationLogCursor(lastSeenLogId);
+    }
+
+    private boolean restorePersistedOutputState() {
+        lastSeenLogId = AppState.getSimulationLogCursor();
+
+        boolean restored = false;
+        if (consoleArea != null && AppState.getSimulationConsoleText() != null) {
+            consoleArea.setText(AppState.getSimulationConsoleText());
+            restored = restored || !consoleArea.getText().isBlank();
+        }
+        if (logArea != null && AppState.getSimulationLogText() != null) {
+            logArea.setText(AppState.getSimulationLogText());
+            restored = restored || !logArea.getText().isBlank();
+        }
+        return restored;
+    }
+
+    private void persistOutputState() {
+        if (consoleArea != null) {
+            AppState.setSimulationConsoleText(consoleArea.getText());
+        }
+        if (logArea != null) {
+            AppState.setSimulationLogText(logArea.getText());
+        }
+        AppState.setSimulationLogCursor(lastSeenLogId);
+    }
+
+    private void clearPersistedOutputState() {
+        if (consoleArea != null) {
+            consoleArea.clear();
+        }
+        if (logArea != null) {
+            logArea.clear();
+        }
+        AppState.setSimulationConsoleText("");
+        AppState.setSimulationLogText("");
+        AppState.setSimulationLogCursor(0);
+        lastSeenLogId = 0;
     }
 
     // Navigation
