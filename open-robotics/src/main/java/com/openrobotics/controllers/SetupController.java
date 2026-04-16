@@ -205,6 +205,17 @@ public class SetupController {
             }
         });
 
+        // Apply input restrictions (prevent negative signs and letters)
+        makeIntegerOnly(maxTasksField);
+        makeIntegerOnly(maxTicksField);
+        makeIntegerOnly(workloadSeedField);
+        makeIntegerOnly(randomSeedField);
+        makeFloatOnly(batteryCapacityField);
+        makeFloatOnly(lowBatteryField);
+        makeFloatOnly(chargePerTickField);
+        makeFloatOnly(energyPerMoveField);
+        makeSpinnerIntegerOnly(reservationKSpinner);
+
         String initialMap = mapCombo.getValue();
         if (initialMap != null) autoSetCanvasForMap(initialMap);
     }
@@ -954,22 +965,131 @@ public class SetupController {
     }
 
     // Validation
+
     // Validates the minimum required inputs before starting the simulation.
     private boolean validate() {
-        // Loaded configs intentionally clear the map combo, so skip that check once an engine exists.
+        // Map Check
         if (!AppState.hasEngine() && mapCombo.getValue() == null) {
-            statusLabel.setText("\u26a0 Please select a map or load a config file.");
+            statusLabel.setText("⚠ Please select a map or load a config file.");
             return false;
         }
-        try {
-            int ticks = Integer.parseInt(maxTicksField.getText().trim());
-            if (ticks <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            statusLabel.setText("\u26a0 Max ticks must be a positive integer.");
-            return false;
+
+        if ("RESERVATION_K".equals(policyCombo.getValue())) {
+            if (!checkSpinnerBound(reservationKSpinner, "Reservation K", 1, 50)) return false;
         }
-        statusLabel.setText("");
+
+        // Integer Bounds
+        if (!checkIntBound(maxTasksField, "Max Tasks", 1, 500)) return false;
+        if (!checkIntBound(maxTicksField, "Max Ticks", 1, 1000000)) return false;
+
+        // Float Bounds
+        if (batteryCapacityField != null && batteryCapacityField.getScene() != null) {
+            if (!checkFloatBound(batteryCapacityField, "Battery Capacity", 1.0f, 1000.0f)) return false;
+            if (!checkFloatBound(lowBatteryField, "Low Battery", 0.0f, 1000.0f)) return false;
+            if (!checkFloatBound(chargePerTickField, "Charge Per Tick", 0.0f, 100.0f)) return false;
+            if (!checkFloatBound(energyPerMoveField, "Energy Per Move", 0.0f, 100.0f)) return false;
+
+            float cap = Float.parseFloat(batteryCapacityField.getText().trim());
+            float low = Float.parseFloat(lowBatteryField.getText().trim());
+            if (low >= cap) {
+                statusLabel.setText("⚠ Low battery threshold must be lower than total capacity.");
+                return false;
+            }
+        }
+
+        statusLabel.setText(""); // Clear errors
         return true;
+    }
+
+    private boolean checkIntBound(TextField field, String fieldName, int min, int max) {
+        if (field == null) return true;
+        try {
+            int value = Integer.parseInt(field.getText().trim());
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
+
+    private boolean checkFloatBound(TextField field, String fieldName, float min, float max) {
+        if (field == null) return true;
+        try {
+            float value = Float.parseFloat(field.getText().trim());
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
+
+    private boolean checkSpinnerBound(Spinner<Integer> spinner, String fieldName, int min, int max) {
+        if (spinner == null || spinner.isDisabled()) return true;
+        try {
+            // Check the editor text because Spinner.getValue() might not have changed yet
+            String text = spinner.getEditor().getText().trim();
+            if (text.isEmpty()) {
+                statusLabel.setText("⚠ " + fieldName + " cannot be empty.");
+                return false;
+            }
+
+            int value = Integer.parseInt(text);
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+
+            // Force the spinner to adopt the typed value internally
+            spinner.getValueFactory().setValue(value);
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
+
+    /** Restricts a TextField to only accept positive integers */
+    private void makeIntegerOnly(TextField field) {
+        if (field == null) return;
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            // Allows empty string (while deleting) or digits only
+            if (change.getControlNewText().matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+    }
+
+    /** Restricts a TextField to accept positive floats (decimals) */
+    private void makeFloatOnly(TextField field) {
+        if (field == null) return;
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            // Allows empty, digits, or digits with a single decimal point
+            if (change.getControlNewText().matches("\\d*(\\.\\d*)?")) {
+                return change;
+            }
+            return null;
+        }));
+    }
+
+    /** Restricts an editable Spinner to only accept positive integers */
+    private void makeSpinnerIntegerOnly(Spinner<Integer> spinner) {
+        if (spinner == null || !spinner.isEditable()) return;
+        TextField editor = spinner.getEditor();
+        editor.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().matches("\\d*")) {
+                return change;
+            }
+            return null; // Reject the keystroke
+        }));
     }
 
     // Navigation
