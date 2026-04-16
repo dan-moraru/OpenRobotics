@@ -964,11 +964,8 @@ public class SetupController {
     }
 
     // Validation
-    // Validates the minimum required inputs before starting the simulation.
-    // ------------------------------------------------------------------ //
-    //  Validation
-    // ------------------------------------------------------------------ //
 
+    // Validates the minimum required inputs before starting the simulation.
     private boolean validate() {
         // Map Check
         if (!AppState.hasEngine() && mapCombo.getValue() == null) {
