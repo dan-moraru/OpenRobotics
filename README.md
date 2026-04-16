@@ -218,7 +218,7 @@ open-robotics/
 │   ├── com/openrobotics/img/         # Logo and simulation assets
 │   └── db/migration/                 # Flyway SQL migrations
 ├── src/test/java/com/openrobotics/   # Unit, integration, and UI tests
-├── configs/                          # Sample JSON simulation configs
+├── configs/                          # Saved JSON simulation configs
 └── pom.xml
 ```
 
