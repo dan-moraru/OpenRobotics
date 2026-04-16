@@ -53,14 +53,14 @@ class RackTest {
     }
 
     /**
-     * Verifies box count setter clamps invalid low values to minimum supported count of one.
+     * Verifies box count setter clamps invalid low values to minimum supported count of zero.
      */
     @Test
-    void boxCountSetterEnforcesMinimumOfOne() {
+    void boxCountSetterEnforcesMinimumOfZero() {
         Rack rack = new Rack("r1", new Vector2D(0, 0));
         rack.setBoxCount(0);
-        assertEquals(1, rack.getBoxCount());
+        assertEquals(0, rack.getBoxCount());
         rack.setBoxCount(-5);
-        assertEquals(1, rack.getBoxCount());
+        assertEquals(0, rack.getBoxCount());
     }
 }

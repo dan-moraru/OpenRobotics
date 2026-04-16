@@ -1,5 +1,8 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
@@ -32,6 +35,13 @@ public class ReservationKPolicyTest {
     @BeforeEach
     public void setUp() {
         policy = new ReservationKPolicy(1);
+    }
+
+    /**
+     * Creates a position vector with integer tile coordinates.
+     */
+    protected Vector2D pos(int x, int y) {
+        return new Vector2D(x, y);
     }
 
     /**
@@ -567,12 +577,20 @@ public class ReservationKPolicyTest {
         map.addEntity(robotA);
         map.addEntity(robotB);
 
+        // Creating dispatcher and loading it with a dummy task
+        Dispatcher dispatcher = new Dispatcher();
+        Task dummyTask = new Task(1, pos(0, 1), pos(3, 1), 1);
+        dispatcher.addTask(dummyTask);
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[] { robotA, robotB },
-                new Dispatcher(),
+                dispatcher,
                 new ReservationKPolicy(3)
         );
+
+        AppState.setEngine(engine);
+        Logger.setMode(LoggerMode.NO_OP);
 
         engine.tick();
 

@@ -76,7 +76,6 @@ public class Dispatcher {
             return 0; // there are no tasks available, no assignments are made
         }
 
-        int currentTick = AppState.getEngine().getTickCounter(); // getting the current simulation tick from global app state
         int assignmentCount = 0;
 
         for (Robot robot : robots) {
