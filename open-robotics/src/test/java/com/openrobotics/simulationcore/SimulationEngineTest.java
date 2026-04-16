@@ -232,20 +232,21 @@ public class SimulationEngineTest {
     }
 
     /**
-     * With no configured tasks, the engine treats this as sandbox mode:
-     * {@code tick()} still advances time and leaves {@code running = false}.
-     * At least one robot is required for tick() to proceed past the no-robots guard.
+     * When no tasks have ever been added to the dispatcher, {@code tick()} exits
+     * early without advancing the counter, sets {@code running} to {@code false},
+     * and records a {@link SimulationError#NO_TASKS_GENERATED} error.
+     * At least one robot is required to reach the no-tasks guard.
      */
     @Test
-    public void testTickStopsWhenWorkloadComplete() {
+    public void testTickStopsWhenNoTasksAdded() {
         Robot r = makeRobot("R1", 5, 5);
         SimulationEngine eng = buildEngine(new Robot[]{ r });
-        int before = eng.getTickCounter();
         eng.tick();
 
-        assertEquals(before + 1, eng.getTickCounter(),
-                "tick() should increment in no-workload sandbox mode");
+        assertEquals(0, eng.getTickCounter(),
+                "tick() should not increment when no tasks have been added");
         assertFalse(eng.getIsRunning());
+        assertEquals(SimulationError.NO_TASKS_GENERATED, eng.getSimulationError());
     }
 
     /**
@@ -277,6 +278,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickBlocksSameDirectionFollowThrough() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         ScriptedRobot leader = new ScriptedRobot("Leader", new Vector2D(1, 0));
         leader.setState(RobotState.MOVING);
         leader.setNextMove(new MoveIntention(map.getTile(1, 0), map.getTile(2, 0), leader));
@@ -302,6 +305,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickAllowsOverlapOnDeliveryStation() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         map.addEntity(new DeliveryStation("Delivery", new Vector2D(1, 0)));
 
         ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
@@ -329,6 +334,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickAllowsOverlapOnChargingStation() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         map.addEntity(new ChargingStation("Charging", new Vector2D(1, 0)));
 
         ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
@@ -544,6 +551,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickDoesNotCommitIllegalMoveIntentions() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         ScriptedRobot robot = new ScriptedRobot("Scripted", new Vector2D(0, 0));
         robot.setNextMove(new MoveIntention(map.getTile(0, 0), map.getTile(2, 0), robot));
 

@@ -1100,7 +1100,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 }
             } else {
                 cancelDropoffPicking();
-                log("Dropoff assignment cancelled.");
+                log("Dropoff assignment cancelled. Please select a drop off station");
             }
             return;
         }
@@ -1432,7 +1432,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getX()) return;
             if (guardEditor("move")) { xSpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
@@ -1449,7 +1449,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getY()) return;
             if (guardEditor("move")) { ySpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
@@ -1545,20 +1545,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             });
 
             batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
-                    if (guardEditor("change battery")) {
-                        // Revert spinner if editor is locked
+                if (newVal == null || oldVal == null || newVal.floatValue() == robot.getBattery()) return;
+                if (guardEditor("change battery")) {
+                    // Revert spinner if editor is locked
                         Platform.runLater(() -> batterySpinner.getValueFactory().setValue(oldVal));
-                        return;
-                    }
-
+                    return;
+                }
                     float newBat = newVal.floatValue();
                     float oldBat = oldVal.floatValue();
 
                     robot.setBattery(newBat);
-                    drawViewport();
-                    pushAction(new BatteryChangeAction(robot, oldBat, newBat));
-                }
+                drawViewport();
+                pushAction(new BatteryChangeAction(robot, oldBat, newBat));
             });
 
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
@@ -1577,30 +1575,54 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             if (globalManual) {
                 HBox boxCountBox = new HBox(8);
                 boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
                 Spinner<Integer> boxCountSpinner = new Spinner<>(
-                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+                        new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 99, rack.getBoxCount()));
                 boxCountSpinner.setPrefWidth(80);
                 boxCountSpinner.setEditable(true);
+
+                // Restrict input to positive integers only (no decimals, no negatives)
+                boxCountSpinner.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+                    if (change.getControlNewText().matches("\\d*")) {
+                        return change;
+                    }
+                    return null; // Reject non-digit characters
+                }));
+
+                // Force spinner to commit text value when the user clicks away
+                boxCountSpinner.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                    if (!isFocused) {
+                        boxCountSpinner.increment(0);
+                    }
+                });
+
                 boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
-                    if (newV == null || oldV == null || newV.equals(oldV)) return;
+                    if (newV == null || oldV == null || newV.equals(rack.getBoxCount())) return;
+
                     if (guardEditor("change box count")) {
-                        boxCountSpinner.getValueFactory().setValue(oldV);
+                        // Revert spinner if editor is locked
+                        javafx.application.Platform.runLater(() -> boxCountSpinner.getValueFactory().setValue(oldV));
                         return;
                     }
+
                     rack.setBoxCount(newV);
                     persistEditorChanges();
                 });
-                boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+
+                boxCountBox.getChildren().addAll(new Label("Number of tasks:"), boxCountSpinner);
                 propertiesPanel.getChildren().add(boxCountBox);
 
                 HBox manualBox = new HBox(8);
                 manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
                 manualCheck.setSelected(rack.isManualDropoffAssignment());
+
                 VBox dropoffArrayBox = new VBox(4);
                 dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
                 dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
+
                 manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                    if (newV == rack.isManualDropoffAssignment()) return;
                     if (guardEditor("toggle manual assignment")) {
                         manualCheck.setSelected(oldV);
                         return;
@@ -1611,6 +1633,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     renderRackDropoffArray(rack, dropoffArrayBox);
                     persistEditorChanges();
                 });
+
                 manualBox.getChildren().add(manualCheck);
                 propertiesPanel.getChildren().add(manualBox);
 
@@ -1945,15 +1968,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 } else {
                     generated = com.openrobotics.task.TaskGenerator.generateAutomaticTasks(
                             engine.getMap(), engine.getMaxTasks(), engine.getSeed());
+
+                    // No task assignments could be generated due to invalid map configuration
+                    if (generated.isEmpty()) {
+                        log("\u26a0 No tasks could be generated.");
+                        engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
+                        handleSimulationFailure();
+                        return;
+                    }
                 }
                 if (!generated.isEmpty()) {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
-                } else {
-                    log("\u26a0 No tasks could be generated.");
-                    engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
-                    handleSimulationFailure();
-                    return;
                 }
             }
 

@@ -21,7 +21,7 @@ public class Rack extends MapEntity {
      */
     public Rack(String name, Vector2D position) {
         super(name, position);
-        this.boxCount = 1;
+        this.boxCount = 0;
         this.validDropoffIds = new ArrayList<>();
     }
 
@@ -34,7 +34,7 @@ public class Rack extends MapEntity {
      */
     public Rack(UUID id, String name, Vector2D position) {
         super(id, name, position);
-        this.boxCount = 1;
+        this.boxCount = 0;
         this.validDropoffIds = new ArrayList<>();
     }
 
@@ -47,7 +47,7 @@ public class Rack extends MapEntity {
      */
     public void setBoxCount(int boxCount) {
         // a rack always has at least 1 box; 0 would mean nothing to pick up
-        this.boxCount = Math.max(1, boxCount);
+        this.boxCount = Math.max(0, boxCount);
     }
 
     public List<UUID> getValidDropoffIds() { return validDropoffIds; }

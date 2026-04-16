@@ -97,10 +97,13 @@ public class TrafficRulesIntegrationTest extends SimulationIntegrationTestSuppor
                 map.getTile(2, 1)
         ));
 
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.addTask(taskA); // adding task so ticking doesn't fail
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[]{robotA, robotB},
-                new Dispatcher(),
+                dispatcher,
                 policy
         );
 
