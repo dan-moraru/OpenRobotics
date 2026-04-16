@@ -785,8 +785,9 @@ public class SetupController {
         CoordinationPolicy policy = buildCoordinationPolicy();
 
         Dispatcher dispatcher = new Dispatcher();
-        // Seed the dispatcher with the initial rack-to-station workload.
-        if (maxTasks > 0 && map != null) {
+
+        // Seed the dispatcher with the initial rack-to-station workload if not in manual mode
+        if (!isManualMode && maxTasks > 0 && map != null) {
             generateFixedTasks(map, seed, maxTasks, dispatcher);
         }
 
