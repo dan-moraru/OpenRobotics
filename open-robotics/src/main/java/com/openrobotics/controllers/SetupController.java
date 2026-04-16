@@ -124,8 +124,7 @@ public class SetupController {
                     AppState.clear();
                     configListView.getSelectionModel().clearSelection();
                 }
-                canvasWidthSpinner.setDisable(false);
-                canvasHeightSpinner.setDisable(false);
+                setConfigParamsDisabled(false);
                 autoSetCanvasForMap(n);
             }
             refreshPreview();
@@ -197,24 +196,12 @@ public class SetupController {
                 if (success) {
                     // Config-backed maps own their dimensions, so clear the template selection.
                     mapCombo.getSelectionModel().clearSelection();
-                    canvasWidthSpinner.setDisable(true);
-                    canvasHeightSpinner.setDisable(true);
+                    setConfigParamsDisabled(true);
                     refreshPreview();
                     checkCanvasConstraint();
                 }
             }
         });
-
-        // Apply input restrictions (prevent negative signs and letters)
-        makeIntegerOnly(maxTasksField);
-        makeIntegerOnly(maxTicksField);
-        makeIntegerOnly(workloadSeedField);
-        makeIntegerOnly(randomSeedField);
-        makeFloatOnly(batteryCapacityField);
-        makeFloatOnly(lowBatteryField);
-        makeFloatOnly(chargePerTickField);
-        makeFloatOnly(energyPerMoveField);
-        makeSpinnerIntegerOnly(reservationKSpinner);
 
         String initialMap = mapCombo.getValue();
         if (initialMap != null) autoSetCanvasForMap(initialMap);
@@ -222,6 +209,9 @@ public class SetupController {
 
     // Reset Actions
     @FXML private void onResetMap() {
+        AppState.clear();
+        configListView.getSelectionModel().clearSelection();
+        setConfigParamsDisabled(false);
         mapCombo.getSelectionModel().selectFirst();
         refreshPreview();
         checkCanvasConstraint();
@@ -269,8 +259,7 @@ public class SetupController {
         if (isConfigFile && previewMap != null) {
             cw = previewMap.getWidth();
             ch = previewMap.getHeight();
-            canvasWidthSpinner.setDisable(true);
-            canvasHeightSpinner.setDisable(true);
+            setConfigParamsDisabled(true);
         }
 
         double padding = 16;
@@ -674,6 +663,8 @@ public class SetupController {
     @FXML
     private void onLoadConfig() {
         if (promptAndLoadConfig()) {
+            mapCombo.getSelectionModel().clearSelection();
+            setConfigParamsDisabled(true);
             refreshPreview();
             checkCanvasConstraint();
         }
@@ -964,131 +955,65 @@ public class SetupController {
     }
 
     // Validation
-
     // Validates the minimum required inputs before starting the simulation.
     private boolean validate() {
-        // Map Check
+        // Loaded configs intentionally clear the map combo, so skip that check once an engine exists.
         if (!AppState.hasEngine() && mapCombo.getValue() == null) {
-            statusLabel.setText("⚠ Please select a map or load a config file.");
+            statusLabel.setText("\u26a0 Please select a map or load a config file.");
             return false;
         }
-
-        if ("RESERVATION_K".equals(policyCombo.getValue())) {
-            if (!checkSpinnerBound(reservationKSpinner, "Reservation K", 1, 50)) return false;
+        try {
+            int ticks = Integer.parseInt(maxTicksField.getText().trim());
+            if (ticks <= 0) throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            statusLabel.setText("\u26a0 Max ticks must be a positive integer.");
+            return false;
         }
-
-        // Integer Bounds
-        if (!checkIntBound(maxTasksField, "Max Tasks", 1, 500)) return false;
-        if (!checkIntBound(maxTicksField, "Max Ticks", 1, 1000000)) return false;
-
-        // Float Bounds
-        if (batteryCapacityField != null && batteryCapacityField.getScene() != null) {
-            if (!checkFloatBound(batteryCapacityField, "Battery Capacity", 1.0f, 1000.0f)) return false;
-            if (!checkFloatBound(lowBatteryField, "Low Battery", 0.0f, 1000.0f)) return false;
-            if (!checkFloatBound(chargePerTickField, "Charge Per Tick", 0.0f, 100.0f)) return false;
-            if (!checkFloatBound(energyPerMoveField, "Energy Per Move", 0.0f, 100.0f)) return false;
-
-            float cap = Float.parseFloat(batteryCapacityField.getText().trim());
-            float low = Float.parseFloat(lowBatteryField.getText().trim());
-            if (low >= cap) {
-                statusLabel.setText("⚠ Low battery threshold must be lower than total capacity.");
-                return false;
-            }
-        }
-
-        statusLabel.setText(""); // Clear errors
+        statusLabel.setText("");
         return true;
     }
 
-    private boolean checkIntBound(TextField field, String fieldName, int min, int max) {
-        if (field == null) return true;
-        try {
-            int value = Integer.parseInt(field.getText().trim());
-            if (value < min || value > max) {
-                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
-                return false;
-            }
-            return true;
-        } catch (NumberFormatException e) {
-            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
-            return false;
+    /**
+     * Disables or re-enables all user-editable parameters on the setup screen.
+     * Called with {@code true} whenever a config file is loaded so the user cannot
+     * accidentally change parameters that belong to the file, and with {@code false}
+     * when switching back to a template map.
+     * The reservationK spinner has its own separate policy-driven disable logic and
+     * is therefore excluded here, it is always re-evaluated by the policyCombo listener.
+     */
+    private void setConfigParamsDisabled(boolean disabled) {
+        // Coordination policy
+        policyCombo.setDisable(disabled);
+        if (!disabled) {
+            // Re-check the policy-driven disable for reservationK
+            reservationKSpinner.setDisable(!"RESERVATION_K".equals(policyCombo.getValue()));
+        } else {
+            reservationKSpinner.setDisable(true);
         }
+
+        // Task settings
+        if (autoTaskRadio  != null) autoTaskRadio.setDisable(disabled);
+        if (manualTaskRadio != null) manualTaskRadio.setDisable(disabled);
+        maxTasksField.setDisable(disabled);
+        workloadSeedField.setDisable(disabled);
+
+        // Robot physics
+        setDisableIfPresent(batteryCapacityField, disabled);
+        setDisableIfPresent(lowBatteryField, disabled);
+        setDisableIfPresent(chargePerTickField, disabled);
+        setDisableIfPresent(energyPerMoveField, disabled);
+
+        // Run settings
+        maxTicksField.setDisable(disabled);
+        runNameField.setDisable(disabled);
+
+        // Canvas size
+        canvasWidthSpinner.setDisable(disabled);
+        canvasHeightSpinner.setDisable(disabled);
     }
 
-    private boolean checkFloatBound(TextField field, String fieldName, float min, float max) {
-        if (field == null) return true;
-        try {
-            float value = Float.parseFloat(field.getText().trim());
-            if (value < min || value > max) {
-                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
-                return false;
-            }
-            return true;
-        } catch (NumberFormatException e) {
-            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
-            return false;
-        }
-    }
-
-    private boolean checkSpinnerBound(Spinner<Integer> spinner, String fieldName, int min, int max) {
-        if (spinner == null || spinner.isDisabled()) return true;
-        try {
-            // Check the editor text because Spinner.getValue() might not have changed yet
-            String text = spinner.getEditor().getText().trim();
-            if (text.isEmpty()) {
-                statusLabel.setText("⚠ " + fieldName + " cannot be empty.");
-                return false;
-            }
-
-            int value = Integer.parseInt(text);
-            if (value < min || value > max) {
-                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
-                return false;
-            }
-
-            // Force the spinner to adopt the typed value internally
-            spinner.getValueFactory().setValue(value);
-            return true;
-        } catch (NumberFormatException e) {
-            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
-            return false;
-        }
-    }
-
-    /** Restricts a TextField to only accept positive integers */
-    private void makeIntegerOnly(TextField field) {
-        if (field == null) return;
-        field.setTextFormatter(new TextFormatter<>(change -> {
-            // Allows empty string (while deleting) or digits only
-            if (change.getControlNewText().matches("\\d*")) {
-                return change;
-            }
-            return null;
-        }));
-    }
-
-    /** Restricts a TextField to accept positive floats (decimals) */
-    private void makeFloatOnly(TextField field) {
-        if (field == null) return;
-        field.setTextFormatter(new TextFormatter<>(change -> {
-            // Allows empty, digits, or digits with a single decimal point
-            if (change.getControlNewText().matches("\\d*(\\.\\d*)?")) {
-                return change;
-            }
-            return null;
-        }));
-    }
-
-    /** Restricts an editable Spinner to only accept positive integers */
-    private void makeSpinnerIntegerOnly(Spinner<Integer> spinner) {
-        if (spinner == null || !spinner.isEditable()) return;
-        TextField editor = spinner.getEditor();
-        editor.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().matches("\\d*")) {
-                return change;
-            }
-            return null; // Reject the keystroke
-        }));
+    private void setDisableIfPresent(TextField field, boolean disabled) {
+        if (field != null) field.setDisable(disabled);
     }
 
     // Navigation
