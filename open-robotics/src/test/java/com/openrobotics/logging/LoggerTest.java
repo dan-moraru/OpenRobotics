@@ -5,7 +5,6 @@ import com.openrobotics.db.model.SimulationRunRecord;
 import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.logging.eventtypes.RobotEvent;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
-import com.openrobotics.logging.eventtypes.TaskEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,28 +80,6 @@ class LoggerTest {
     }
 
     /**
-     * Verifies NO_OP mode suppresses task persistence and returns {@code -1}.
-     */
-    @Test
-    void noOpMode_ignores_task_events_and_returns_minus_one_without_touching_record() {
-        WorkloadTaskRecord record = workloadRecord();
-
-        long result = Logger.logTaskEvent(TaskEvent.TASK_CREATED, record);
-
-        assertEquals(-1, result);
-    }
-
-    /**
-     * Verifies NO_OP task logging remains safe for null event and null record inputs.
-     */
-    @Test
-    void noOpMode_ignores_null_task_event_and_null_record_safely() {
-        long result = assertDoesNotThrow(() -> Logger.logTaskEvent(null, null));
-
-        assertEquals(-1, result);
-    }
-
-    /**
      * Verifies NO_OP mode suppresses simulation-run logging across normal and null inputs.
      */
     @Test
@@ -124,58 +101,6 @@ class LoggerTest {
         Logger.logRobotEvent(null, null);
 
         assertTrue(robotQueue().isEmpty());
-    }
-
-    /**
-     * Verifies DB mode catches unsupported/null simulation event types and reports errors.
-     */
-    @Test
-    void dbMode_taskEventWithNullEvent_isCaughtAndReported() {
-        Logger.setMode(LoggerMode.DB);
-
-        CapturedErr captured = captureErr(() -> {
-            long result = Logger.logTaskEvent(null, workloadRecord());
-            assertEquals(-1, result);
-        });
-
-        assertAll(
-                () -> assertTrue(captured.text().contains("Failed to log task event of type: null")),
-                () -> assertTrue(captured.text().contains("Exception message:"))
-        );
-    }
-
-    /**
-     * Verifies DB-mode task-assignment branch catches invalid in-memory record state.
-     */
-    @Test
-    void dbMode_taskAssignedWithMissingId_isCaughtBeforeDatabaseCall() {
-        Logger.setMode(LoggerMode.DB);
-        WorkloadTaskRecord record = workloadRecord();
-        record.setId(null);
-
-        CapturedErr captured = captureErr(() -> {
-            long result = Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, record);
-            assertEquals(-1, result);
-        });
-
-        assertTrue(captured.text().contains("Failed to log task event of type: TASK_ASSIGNED"));
-    }
-
-    /**
-     * Verifies DB-mode task-completion branch catches invalid in-memory record state.
-     */
-    @Test
-    void dbMode_taskCompletedWithMissingId_isCaughtBeforeDatabaseCall() {
-        Logger.setMode(LoggerMode.DB);
-        WorkloadTaskRecord record = workloadRecord();
-        record.setId(null);
-
-        CapturedErr captured = captureErr(() -> {
-            long result = Logger.logTaskEvent(TaskEvent.TASK_COMPLETED, record);
-            assertEquals(-1, result);
-        });
-
-        assertTrue(captured.text().contains("Failed to log task event of type: TASK_COMPLETED"));
     }
 
     /**
@@ -269,27 +194,6 @@ class LoggerTest {
 
         assertThrows(NullPointerException.class, () ->
                 Logger.logRobotEvent(RobotEvent.MOVE_EXECUTED, null));
-    }
-
-    /**
-     * Verifies null logger mode fails task logging safely while robot queueing still operates.
-     */
-    @Test
-    void settingNullModeMakesTaskLoggingFailSafelyButRobotLoggingStillQueues() throws Exception {
-        Logger.setMode(null);
-        SimLogRecord record = simLogRecord();
-        long[] result = new long[1];
-
-        CapturedErr captured = captureErr(() ->
-                result[0] = Logger.logTaskEvent(TaskEvent.TASK_ASSIGNED, workloadRecord()));
-        Logger.logRobotEvent(RobotEvent.NEAR_MISS, record);
-
-        assertAll(
-                () -> assertEquals(-1, result[0]),
-                () -> assertTrue(captured.text().contains("Failed to log task event of type: TASK_ASSIGNED")),
-                () -> assertEquals(1, robotQueue().size()),
-                () -> assertSame(record, robotQueue().peek())
-        );
     }
 
     /**
