@@ -1525,21 +1525,45 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             HBox batteryBox = new HBox(8);
             batteryBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             float maxBattery = robot.getConfig().batteryCapacity;
+
             Spinner<Double> batterySpinner = new Spinner<>(
-                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0, maxBattery, robot.getBattery(), 1.0));
+                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, (double) maxBattery, (double) robot.getBattery(), 1.0));
             batterySpinner.setPrefWidth(90);
             batterySpinner.setEditable(true);
+
+            // Restrict input to positive digits and a single decimal point
+            batterySpinner.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.matches("\\d*(\\.\\d*)?")) {
+                    return change;
+                }
+                return null; // Reject the change
+            }));
+
+            // Force spinner to commit text value when the user clicks away
+            batterySpinner.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                if (!isFocused) {
+                    batterySpinner.increment(0);
+                }
+            });
+
             batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
                     if (guardEditor("change battery")) {
-                        batterySpinner.getValueFactory().setValue(oldVal);
+                        // Revert spinner if editor is locked
+                        Platform.runLater(() -> batterySpinner.getValueFactory().setValue(oldVal));
                         return;
                     }
-                    robot.setBattery(newVal.floatValue());
+
+                    float newBat = newVal.floatValue();
+                    float oldBat = oldVal.floatValue();
+
+                    robot.setBattery(newBat);
                     drawViewport();
-                    pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
+                    pushAction(new BatteryChangeAction(robot, oldBat, newBat));
                 }
             });
+
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
             propertiesPanel.getChildren().add(batteryBox);
 
