@@ -2206,6 +2206,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void handleSimulationComplete() {
+        drawViewport(); // drawing the final viewport
         stopLoop();
         running = false;
         paused = false;
@@ -2222,6 +2223,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void handleSimulationFailure() {
+        drawViewport(); // drawing the final viewport
         stopLoop();
         running = false;
         paused = false;
