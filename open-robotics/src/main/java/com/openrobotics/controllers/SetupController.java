@@ -799,11 +799,6 @@ public class SetupController {
 
         Dispatcher dispatcher = new Dispatcher();
 
-        // Seed the dispatcher with the initial rack-to-station workload if not in manual mode
-        if (!isManualMode && maxTasks > 0 && map != null) {
-            generateFixedTasks(map, seed, maxTasks, dispatcher);
-        }
-
         String runName = runNameField.getText().trim();
         if (runName.isEmpty()) runName = DEFAULT_RUN_NAME;
 

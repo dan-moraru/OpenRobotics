@@ -526,7 +526,7 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(77, engine.getMaxTicks());
         assertEquals(123L, engine.getSeed());
         assertTrue(engine.getCoordinationPolicy().contains(ReservationKPolicy.class.getName()));
-        assertEquals(4, engine.getDispatcher().getTotalTasksAdded());
+        assertEquals(0, engine.getDispatcher().getTotalTasksAdded());
         assertEquals(150.5f, config.batteryCapacity, 0.001f);
         assertEquals(35.5f, config.lowBatteryThreshold, 0.001f);
         assertEquals(9.5f, config.chargePerTick, 0.001f);
@@ -580,7 +580,7 @@ public class SetupControllerTest extends ApplicationTest {
 
         assertEquals(entitySignature(first.getMap()), entitySignature(second.getMap()));
         assertEquals(111L, first.getSeed());
-        assertEquals(3, first.getDispatcher().getTotalTasksAdded());
+        assertEquals(0, first.getDispatcher().getTotalTasksAdded());
         assertEquals(1, countEntities(first.getMap(), ChargingStation.class));
         assertEquals(1, countEntities(first.getMap(), DeliveryStation.class));
     }
@@ -732,7 +732,7 @@ public class SetupControllerTest extends ApplicationTest {
 
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
-        assertEquals(2, AppState.getEngine().getDispatcher().getTotalTasksAdded());
+        assertEquals(0, AppState.getEngine().getDispatcher().getTotalTasksAdded());
         assertEquals(200, AppState.getEngine().getMaxTicks());
         assertNotNull(lookup("#warehouseCanvas").queryAs(Canvas.class));
     }
@@ -754,7 +754,7 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
         assertEquals(18, AppState.getEngine().getMap().getWidth());
-        assertEquals(1, AppState.getEngine().getDispatcher().getTotalTasksAdded());
+        assertEquals(0, AppState.getEngine().getDispatcher().getTotalTasksAdded());
         assertNotNull(lookup("#warehouseCanvas").queryAs(Canvas.class));
     }
 
