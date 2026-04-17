@@ -976,7 +976,7 @@ public class SetupController {
         }
 
         // Integer Bounds
-        if (!checkIntBound(maxTasksField, "Max Tasks", 1, 500)) return false;
+        if (!checkIntBound(maxTasksField, "Max Tasks", 1, 50000)) return false;
         if (!checkIntBound(maxTicksField, "Max Ticks", 1, 1000000)) return false;
 
         // Float Bounds
