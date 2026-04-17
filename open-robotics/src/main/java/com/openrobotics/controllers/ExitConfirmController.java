@@ -5,58 +5,34 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 /**
- * Controller for {@code ExitConfirmDialog.fxml}.
- *
- * <p>Implements both {@link ScreenNavigator.DialogController} (to receive the
- * owning stage) and {@link ScreenNavigator.ExitConfirmResultHolder} (so the
- * navigator can read back whether the user confirmed the exit).
+ * Controller for ExitConfirmDialog.fxml; implements both {@link ScreenNavigator.DialogController}
+ * and {@link ScreenNavigator.ExitConfirmResultHolder}.
  */
 public class ExitConfirmController
         implements ScreenNavigator.DialogController,
                    ScreenNavigator.ExitConfirmResultHolder {
 
+    // Dialog State
     private Stage   dialogStage;
     private boolean confirmed = false;
-
-    // ------------------------------------------------------------------ //
-    //  DialogController
-    // ------------------------------------------------------------------ //
 
     @Override
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
     }
 
-    // ------------------------------------------------------------------ //
-    //  ExitConfirmResultHolder
-    // ------------------------------------------------------------------ //
-
     @Override
     public boolean isConfirmed() {
         return confirmed;
     }
 
-    // ------------------------------------------------------------------ //
-    //  FXML initialisation
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void initialize() {
-        // Nothing to initialise – labels are static in the FXML.
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Event Handlers
-    // ------------------------------------------------------------------ //
-
-    /** User pressed "Yes – Exit": set confirmed flag and close. */
+    // Dialog Actions
     @FXML
     private void onYes() {
         confirmed = true;
         close();
     }
 
-    /** User pressed "No – Keep Working": leave confirmed = false and close. */
     @FXML
     private void onNo() {
         confirmed = false;
@@ -73,12 +49,8 @@ public class ExitConfirmController
         onNo();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Helper
-    // ------------------------------------------------------------------ //
-
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
 }
-

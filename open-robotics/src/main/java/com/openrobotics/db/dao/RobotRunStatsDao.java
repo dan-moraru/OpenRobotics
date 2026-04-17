@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** DAO for the robot_run_stats table */
+/** DAO for the {@code robot_run_stats} table. */
 public final class RobotRunStatsDao {
 
     private RobotRunStatsDao() {}
 
     /**
-     * inserts or updates robot stats for a (run_id, robot_id) pair.
+     * Inserts or updates robot stats for a ({@code run_id}, {@code robot_id}) pair.
      *
+     * @param r the robot run stats record to upsert
      * @return the row ID of the upserted record
      * @throws SQLException on database error
      */
@@ -61,8 +62,10 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * finds all robot stats records for a given run.
+     * Finds all robot stats records for a given run, ordered by {@code robot_id}.
      *
+     * @param runId the run UUID to query
+     * @return list of robot run stats records for the run
      * @throws SQLException on database error
      */
     public static List<RobotRunStatsRecord> findByRunId(UUID runId) throws SQLException {
@@ -81,8 +84,11 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * finds a robot stats record by run ID and robot ID.
+     * Finds a robot stats record by run ID and robot ID.
      *
+     * @param runId the run UUID to query
+     * @param robotId the robot UUID to query
+     * @return an {@link Optional} containing the record, or empty if not found
      * @throws SQLException on database error
      */
     public static Optional<RobotRunStatsRecord> findByRunIdAndRobotId(UUID runId, UUID robotId) throws SQLException {
@@ -98,9 +104,10 @@ public final class RobotRunStatsDao {
     }
 
     /**
-     * deletes all robot stats records for a given run.
+     * Deletes all robot stats records for a given run.
      *
-     * @return number of deleted rows
+     * @param runId the run UUID whose robot stats should be deleted
+     * @return the number of deleted rows
      * @throws SQLException on database error
      */
     public static int deleteByRunId(UUID runId) throws SQLException {

@@ -40,63 +40,54 @@ import java.util.Set;
 
 /**
  * Controller for {@code SetupScreen.fxml}.
- *
- * <p>Manages all simulation configuration inputs (§4.1.2):
- * <ul>
- *   <li>Map selection / random map generation</li>
- *   <li>Coordination policy + reservation k</li>
- *   <li>Workload parameters</li>
- *   <li>Simulation tick settings</li>
- *   <li>Load / Save configuration file</li>
- *   <li>Edit Warehouse</li>
- * </ul>
+ * Manages simulation configuration input, preview rendering, config-file loading, and transition
+ * into the editor flow (§4.1.2).
  */
 public class SetupController {
 
-    // ── MAP ─────────────────────────────────────────────────────────────
+    // Map Settings
     @FXML private ComboBox<String> mapCombo;
     @FXML private HBox mapSeedRow;
     @FXML private TextField        randomSeedField;
-    // ── COORDINATION POLICY ─────────────────────────────────────────────
+
+    // Coordination Policy
     @FXML private ComboBox<String> policyCombo;
     @FXML private Spinner<Integer> reservationKSpinner;
 
-    // ── WORKLOAD ────────────────────────────────────────────────────────
+    // Task Settings
     @FXML private RadioButton      autoTaskRadio;
     @FXML private RadioButton      manualTaskRadio;
     @FXML private VBox             maxTasksGroup;
     @FXML private TextField        maxTasksField;
     @FXML private TextField        workloadSeedField;
 
-    // ── ROBOT PHYSICS ────────────────────────────────────────────────────
+    // Robot Settings
     @FXML private TextField        batteryCapacityField;
     @FXML private TextField        lowBatteryField;
     @FXML private TextField        chargePerTickField;
     @FXML private TextField        energyPerMoveField;
 
-    // ── SIMULATION ──────────────────────────────────────────────────────
+    // Run Settings
     @FXML private TextField maxTicksField;
 
-    // ── RUN META ────────────────────────────────────────────────────────
     @FXML private TextField runNameField;
 
-    // ── CANVAS ──────────────────────────────────────────────────────────
+    // Preview
     @FXML private Spinner<Integer> canvasWidthSpinner;
     @FXML private Spinner<Integer> canvasHeightSpinner;
     @FXML private Canvas    previewCanvas;
     @FXML private StackPane viewportPreviewStack;
     @FXML private Label     canvasWarnLabel;
 
-    // ── STATUS ──────────────────────────────────────────────────────────
+    // Status
     @FXML private Label statusLabel;
 
-    // Config file list
+    // Config Files
     @FXML private ListView<String> configListView;
 
-    // ------------------------------------------------------------------ //
-    //  Default values (spec §5.1.3.4)
-    // ------------------------------------------------------------------ //
-
+    // Defaults
+    private static final Color INTERSECTION_FILL_COLOR = Color.web("#8C7B38", 0.25);
+    private static final Color INTERSECTION_STROKE_COLOR = Color.web("#6A4828");
     private static final String DEFAULT_POLICY        = "NONE";
     private static final int    DEFAULT_RESERVATION_K = 3;
     private static final int    DEFAULT_MAX_TASKS     = 10;
@@ -111,16 +102,10 @@ public class SetupController {
     private static final float  DEFAULT_CHARGE_PER_TICK  = 5.0f;
     private static final float  DEFAULT_ENERGY_PER_MOVE  = 1.0f;
     private final String CONFIG_DIRECTORY_PATH = "./configs";
-    // private static final int    DEFAULT_CANVAS_TILES  = 15;
 
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
+    // Initialization
     @FXML
     private void initialize() {
-
-        // Map dropdown
         mapCombo.setItems(FXCollections.observableArrayList(
                 "empty", "baseline_small", "narrow_aisles", "many_intersections", "random_map"));
         mapCombo.getSelectionModel().selectFirst();
@@ -134,15 +119,12 @@ public class SetupController {
             boolean isRandom = "random_map".equals(n);
             mapSeedRow.setVisible(isRandom);
             if (n != null) {
-                // User explicitly chose a template, drop any previously loaded config file
-                // so the preview and NEXT button both use the template, not the old engine.
+                // Switching back to a template invalidates any loaded config-backed engine.
                 if (AppState.hasEngine()) {
                     AppState.clear();
                     configListView.getSelectionModel().clearSelection();
                 }
-                // Re-enable canvas size spinners now that a template map is active
-                canvasWidthSpinner.setDisable(false);
-                canvasHeightSpinner.setDisable(false);
+                setConfigParamsDisabled(false);
                 autoSetCanvasForMap(n);
             }
             refreshPreview();
@@ -152,12 +134,10 @@ public class SetupController {
         reservationKSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, DEFAULT_RESERVATION_K));
 
-        // Coordination policy
         policyCombo.setItems(FXCollections.observableArrayList(
                 "NONE", "TRAFFIC_RULES", "RESERVATION_K"));
         policyCombo.getSelectionModel().select(DEFAULT_POLICY);
 
-        // Canvas size spinners
         canvasWidthSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5000, AppState.getCanvasWidthTiles()));
         canvasHeightSpinner.setValueFactory(
@@ -173,7 +153,6 @@ public class SetupController {
             checkCanvasConstraint();
         });
 
-        // Task assignment mode toggle
         ToggleGroup taskModeGroup = new ToggleGroup();
         autoTaskRadio.setToggleGroup(taskModeGroup);
         manualTaskRadio.setToggleGroup(taskModeGroup);
@@ -184,24 +163,21 @@ public class SetupController {
             maxTasksGroup.setVisible(!isManual);
         });
 
-        // Default text fields
         maxTasksField.setText(String.valueOf(DEFAULT_MAX_TASKS));
         workloadSeedField.setText(String.valueOf(DEFAULT_WORKLOAD_SEED));
         maxTicksField.setText(String.valueOf(DEFAULT_MAX_TICKS));
         runNameField.setText(DEFAULT_RUN_NAME);
 
-        // Robot physics fields
         setTextIfPresent(batteryCapacityField, String.valueOf((int) DEFAULT_BATTERY_CAPACITY));
         setTextIfPresent(lowBatteryField, String.valueOf((int) DEFAULT_LOW_BATTERY));
         setTextIfPresent(chargePerTickField, String.valueOf((int) DEFAULT_CHARGE_PER_TICK));
         setTextIfPresent(energyPerMoveField, String.valueOf((int) DEFAULT_ENERGY_PER_MOVE));
 
-        // Disable reservation k spinner unless policy is RESERVATION_K
         reservationKSpinner.setDisable(true);
         policyCombo.valueProperty().addListener((obs, oldVal, newVal) ->
                 reservationKSpinner.setDisable(!"RESERVATION_K".equals(newVal)));
 
-        // Resize canvas to fill its parent without creating a layout min-width constraint
+        // Keep the preview canvas synced to the available stack size without forcing layout width.
         viewportPreviewStack.widthProperty().addListener((obs, o, n) -> {
             previewCanvas.setWidth(n.doubleValue());
             refreshPreview();
@@ -211,39 +187,42 @@ public class SetupController {
             refreshPreview();
         });
 
-        // Get config lists
         onRefreshFileList();
 
-        // Listener to load config from list
         configListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 File selectedFile = new File(CONFIG_DIRECTORY_PATH, newValue);
                 boolean success = loadConfigFile(selectedFile);
                 if (success) {
-                    // Unselect the dropdown map since custom file is active
+                    // Config-backed maps own their dimensions, so clear the template selection.
                     mapCombo.getSelectionModel().clearSelection();
-
-                    // Disable canvas size spinners, config file dimensions are fixed
-                    canvasWidthSpinner.setDisable(true);
-                    canvasHeightSpinner.setDisable(true);
-
-                    // Redraw the canvas
+                    setConfigParamsDisabled(true);
                     refreshPreview();
                     checkCanvasConstraint();
                 }
             }
         });
 
-        // Apply canvas sizing for the initial map selection (listener fires only on changes)
+        // Apply input restrictions (prevent negative signs and letters)
+        makeIntegerOnly(maxTasksField);
+        makeIntegerOnly(maxTicksField);
+        makeIntegerOnly(workloadSeedField);
+        makeIntegerOnly(randomSeedField);
+        makeFloatOnly(batteryCapacityField);
+        makeFloatOnly(lowBatteryField);
+        makeFloatOnly(chargePerTickField);
+        makeFloatOnly(energyPerMoveField);
+        makeSpinnerIntegerOnly(reservationKSpinner);
+
         String initialMap = mapCombo.getValue();
         if (initialMap != null) autoSetCanvasForMap(initialMap);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Reset Handlers
-    // ------------------------------------------------------------------ //
-
+    // Reset Actions
     @FXML private void onResetMap() {
+        AppState.clear();
+        configListView.getSelectionModel().clearSelection();
+        setConfigParamsDisabled(false);
         mapCombo.getSelectionModel().selectFirst();
         refreshPreview();
         checkCanvasConstraint();
@@ -266,10 +245,7 @@ public class SetupController {
     @FXML private void onResetChargePerTick()       { setTextIfPresent(chargePerTickField, String.valueOf((int) DEFAULT_CHARGE_PER_TICK)); }
     @FXML private void onResetEnergyPerMove()       { setTextIfPresent(energyPerMoveField, String.valueOf((int) DEFAULT_ENERGY_PER_MOVE)); }
 
-    // ------------------------------------------------------------------ //
-    //  Preview Canvas
-    // ------------------------------------------------------------------ //
-
+    // Preview Rendering
     private void refreshPreview() {
         double vw = previewCanvas.getWidth();
         double vh = previewCanvas.getHeight();
@@ -279,7 +255,6 @@ public class SetupController {
 
         com.openrobotics.map.Map previewMap = null;
 
-        // If a config file has been loaded, render that map instead of the combo selection
         if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
             previewMap = AppState.getEngine().getMap();
         } else {
@@ -290,16 +265,12 @@ public class SetupController {
         int cw = canvasWidthSpinner.getValue() != null ? canvasWidthSpinner.getValue() : AppState.getCanvasWidthTiles();
         int ch = canvasHeightSpinner.getValue() != null ? canvasHeightSpinner.getValue() : AppState.getCanvasHeightTiles();
 
-        // For config file maps the dimensions are fixed by the file — use them directly.
-        // For template maps the user controls the canvas size via the spinners, so keep cw/ch
-        // from the spinners above and let the entity centering logic place content inside it.
+        // Loaded config previews use fixed map dimensions instead of the editable canvas spinners.
         boolean isConfigFile = AppState.hasEngine() && AppState.getEngine().getMap() == previewMap;
         if (isConfigFile && previewMap != null) {
             cw = previewMap.getWidth();
             ch = previewMap.getHeight();
-            // Disable canvas size spinners, config file dimensions are fixed
-            canvasWidthSpinner.setDisable(true);
-            canvasHeightSpinner.setDisable(true);
+            setConfigParamsDisabled(true);
         }
 
         double padding = 16;
@@ -325,6 +296,7 @@ public class SetupController {
             int tileOffY = (ch - contentH) / 2 - minY;
 
             drawPreviewEntities(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY);
+            drawTrafficRuleIntersections(gc, previewMap, bx, by, tileSize, tileOffX, tileOffY);
         }
     }
 
@@ -333,11 +305,10 @@ public class SetupController {
                                      int tileOffX, int tileOffY) {
         double pad = Math.max(1.0, tileSize * 0.06);
 
-        // Show robots only when previewing a loaded config file, not for template maps.
+        // Template maps preview layout only; robot markers are shown for loaded configs.
         boolean showRobots = AppState.hasEngine() && AppState.getEngine().getMap() == map;
 
         for (MapEntity entity : map.getEntities()) {
-            // Skip robots entirely for template maps
             if (entity instanceof Robot && !showRobots) continue;
 
             double sx = ox + (tileOffX + entity.getPosition().getX()) * tileSize;
@@ -348,7 +319,7 @@ public class SetupController {
                 if (wallLike) gc.drawImage(icon, sx, sy, tileSize, tileSize);
                 else          gc.drawImage(icon, sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
             } else if (entity instanceof Robot) {
-                // Fallback robot rendering: dark rounded rect + small green dot
+                // Fallback robot marker when the preview icon is unavailable.
                 gc.setFill(Color.web("#4D4B45"));
                 gc.fillRoundRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad, 4, 4);
                 double r = Math.max(2.0, tileSize * 0.15);
@@ -362,6 +333,31 @@ public class SetupController {
                 gc.setFill(Color.web("#599068")); gc.fillRect(sx+pad, sy+pad, tileSize-2*pad, tileSize-2*pad);
             } else if (entity instanceof Obstacle) {
                 gc.setFill(Color.web("#5D5B54")); gc.fillRect(sx, sy, tileSize, tileSize);
+            }
+        }
+    }
+
+    private void drawTrafficRuleIntersections(GraphicsContext gc, com.openrobotics.map.Map map, double ox, double oy, double tileSize, int tileOffX, int tileOffY) {
+        if (!AppState.hasEngine() || !AppState.getEngine().usesTrafficRulesPolicy()) return;
+        double markerInset = Math.max(3.0, tileSize * 0.22);
+
+        Image intersectionIcon = IconLoader.getIcon("INTERSECTION");
+
+        gc.setStroke(INTERSECTION_STROKE_COLOR);
+        gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
+
+        for (Vector2D intersection : AppState.getEngine().getTrafficRuleIntersections()) {
+            double sx = ox + (tileOffX + intersection.getX()) * tileSize;
+            double sy = oy + (tileOffY + intersection.getY()) * tileSize;
+
+            if (intersectionIcon != null && !intersectionIcon.isError()) {
+                gc.drawImage(intersectionIcon, sx, sy, tileSize, tileSize);
+            } else {
+                double centerInset = Math.max(2.0, tileSize * 0.38);
+                gc.setFill(INTERSECTION_FILL_COLOR);
+                gc.fillOval(sx + markerInset, sy + markerInset, tileSize - 2 * markerInset, tileSize - 2 * markerInset);
+                gc.strokeLine(sx + centerInset, sy + tileSize / 2.0, sx + tileSize - centerInset, sy + tileSize / 2.0);
+                gc.strokeLine(sx + tileSize / 2.0, sy + centerInset, sx + tileSize / 2.0, sy + tileSize - centerInset);
             }
         }
     }
@@ -381,10 +377,7 @@ public class SetupController {
         return null;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Built-in Map Builders
-    // ------------------------------------------------------------------ //
-
+    // Built-in Maps
     private com.openrobotics.map.Map buildBuiltinMap(String name) {
         return switch (name) {
             case "empty"              -> null;
@@ -395,25 +388,7 @@ public class SetupController {
         };
     }
 
-    /**
-     * FIX #2 – baseline_small (16 × 10).
-     *
-     * Layout:
-     * <pre>
-     *  y\x  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
-     *   0   W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W
-     *   1   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   2   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   3   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   4   C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  D  ← main aisle
-     *   5   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   6   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   7   W  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *   8   W  .  .  .  .  .  .  .  .  .  .  .  .  .  .  W  ← lower aisle
-     *   9   W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W
-     * </pre>
-     * Vertical aisles at cols 4, 7, 10.  Charger/delivery on side-wall openings.
-     */
+    // Builds the 16x10 baseline warehouse template.
     private com.openrobotics.map.Map buildBaselineSmall() {
         final int W = 16, H = 10;
         com.openrobotics.map.Map m = new com.openrobotics.map.Map(W, H);
@@ -442,22 +417,7 @@ public class SetupController {
         return m;
     }
 
-    /**
-     * FIX #2 – narrow_aisles (22 × 14).
-     *
-     * Six 2-wide shelving units with tall rack blocks and only 1-tile vertical aisles.
-     * <pre>
-     *  cols: 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
-     *  y=0 : W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W
-     *  y=1 : W  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *  ...5: W  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *  y=6 : C  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  D  ← main aisle
-     *  y=7 : W  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  W  ← lower aisle
-     *  y=8 : W  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *  ...12: W .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  R  R  .  .  W
-     *  y=13: W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W  W
-     * </pre>
-     */
+    // Builds the 22x14 narrow-aisles warehouse template.
     private com.openrobotics.map.Map buildNarrowAisles() {
         final int W = 22, H = 14;
         com.openrobotics.map.Map m = new com.openrobotics.map.Map(W, H);
@@ -486,33 +446,7 @@ public class SetupController {
         return m;
     }
 
-    /**
-     * FIX #2 – many_intersections (26 × 18).
-     *
-     * Seven 2-wide shelving units × four short rack blocks, creating a dense
-     * grid of crossing aisles (14 intersection points per horizontal aisle).
-     * <pre>
-     *  cols: 0 1 2 3 | 5 6 | 8 9 |11 12|14 15|17 18|20 21| 23 24 25
-     *  y=0 : W  W  W  W  W  ...wall...  W
-     *  y=1 : W  . [R  R] . [R  R] ...
-     *  y=2 : W  . [R  R] . [R  R] ...
-     *  y=3 : W  .  .  .  .  .  ... (aisle)
-     *  y=4 : W  . [R  R] . [R  R] ...
-     *  y=5 : W  . [R  R] . [R  R] ...
-     *  y=6 : W  .  .  .  .  .  ... (aisle)
-     *  y=7 : W  .  .  .  .  .  ... (wider aisle)
-     *  y=8 : C  .  .  .  .  .  ...  D  ← main aisle
-     *  y=9 : W  .  .  .  .  .  ... (wider aisle)
-     *  y=10: W  . [R  R] . [R  R] ...
-     *  y=11: W  . [R  R] . [R  R] ...
-     *  y=12: W  .  .  .  .  .  ... (aisle)
-     *  y=13: W  . [R  R] . [R  R] ...
-     *  y=14: W  . [R  R] . [R  R] ...
-     *  y=15: W  .  .  .  .  .  ... (aisle)
-     *  y=16: W  .  .  .  .  .  ...
-     *  y=17: W  W  W  W  W  ...wall...  W
-     * </pre>
-     */
+    // Builds the 26x18 dense-intersection warehouse template.
     private com.openrobotics.map.Map buildManyIntersections() {
         final int W = 26, H = 18;
         com.openrobotics.map.Map m = new com.openrobotics.map.Map(W, H);
@@ -541,10 +475,6 @@ public class SetupController {
         return m;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Canvas Constraint + Auto-sizing
-    // ------------------------------------------------------------------ //
-
     private boolean isBuiltinMap(String name) {
         return "baseline_small".equals(name) || "narrow_aisles".equals(name) || "many_intersections".equals(name);
     }
@@ -567,6 +497,7 @@ public class SetupController {
         return new int[]{minX, minY, maxX, maxY};
     }
 
+    // Canvas Constraints
     private void autoSetCanvasForMap(String mapName) {
         if ("empty".equals(mapName)) {
             // empty map — keep current canvas size
@@ -596,7 +527,7 @@ public class SetupController {
     }
 
     private void checkCanvasConstraint() {
-        // If a config file has been loaded, use the engine's map dimensions
+        // Config-backed maps use fixed dimensions from the loaded engine.
         if (AppState.hasEngine() && AppState.getEngine().getMap() != null) {
             com.openrobotics.map.Map map = AppState.getEngine().getMap();
             enforceSpinnerMin(1, 1);
@@ -642,25 +573,18 @@ public class SetupController {
         if (hf.getValue() < minH) hf.setValue(minH);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Blocked preview click
-    // ------------------------------------------------------------------ //
-
     @FXML
     private void onPreviewBlocked(MouseEvent event) {
         statusLabel.setText("Map preview not interactive during setup.");
         event.consume();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Config File Actions
-    // ------------------------------------------------------------------ //
-
     private void debugStatus(String message) {
         statusLabel.setText(message);
         System.out.println("[SetupController] " + message);
     }
 
+    // Config Loading
     private File getFallbackTestConfig() {
         File fromWorkingDir = new File(System.getProperty("user.dir"), "test_scenario.json");
         if (fromWorkingDir.isFile()) return fromWorkingDir;
@@ -750,12 +674,13 @@ public class SetupController {
     @FXML
     private void onLoadConfig() {
         if (promptAndLoadConfig()) {
+            mapCombo.getSelectionModel().clearSelection();
+            setConfigParamsDisabled(true);
             refreshPreview();
             checkCanvasConstraint();
         }
     }
 
-    // Get config file list
     @FXML
     private void onRefreshFileList() {
         if (configListView == null) return;
@@ -763,7 +688,6 @@ public class SetupController {
         configListView.getItems().clear();
         File configDir = new File(CONFIG_DIRECTORY_PATH);
 
-        // Create directory if it doesn't exist
         if (!configDir.exists()) {
             configDir.mkdirs();
         }
@@ -782,10 +706,7 @@ public class SetupController {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Start Simulation
-    // ------------------------------------------------------------------ //
-
+    // Start Simulation
     @FXML
     private void onStartSimulation() {
         debugStatus("Start Simulation clicked.");
@@ -793,7 +714,6 @@ public class SetupController {
 
         if (!AppState.hasEngine()) {
             if (AppState.hasConfigPath()) {
-                // Rebuild engine from previously loaded config path
                 debugStatus("Rebuilding engine from saved config path.");
                 try {
                     SimulationEngine engine = new SimulationEngine(AppState.getConfigPath());
@@ -808,15 +728,13 @@ public class SetupController {
                     return;
                 }
             } else {
-                // Build engine from current setup screen values
                 SimulationEngine engine = buildEngineFromSetup();
                 if (engine == null) return;
                 AppState.setEngine(engine);
-                // persist to a temp JSON so SimulationController.onRestart() can reload it
                 persistEngineToTempFile(engine);
             }
         } else if (!AppState.hasConfigPath()) {
-            // Engine exists but was built from UI values, rebuild so latest field values apply.
+            // Rebuild UI-started runs so the latest field edits are applied.
             SimulationEngine engine = buildEngineFromSetup();
             if (engine == null) return;
             AppState.setEngine(engine);
@@ -825,11 +743,8 @@ public class SetupController {
         goToSimulationScreen();
     }
 
-    /**
-     * Saves the given engine to a temp JSON file and stores the path in AppState.
-     * This allows SimulationController.onRestart() to reload the engine even when the user
-     * started from a template map (no pre-existing config file).
-     */
+    // Engine Construction
+    // Persists a temp config so restart can rebuild runs started from setup values.
     private void persistEngineToTempFile(SimulationEngine engine) {
         try {
             File tmp = File.createTempFile("openrobotics_run_", ".json");
@@ -843,9 +758,7 @@ public class SetupController {
         }
     }
 
-    /**
-     * Constructs a SimulationEngine entirely from the current UI field values.
-     */
+    // Builds a SimulationEngine from the current setup-screen values.
     private SimulationEngine buildEngineFromSetup() {
         int canvasW = canvasWidthSpinner.getValue() != null ? canvasWidthSpinner.getValue() : 16;
         int canvasH = canvasHeightSpinner.getValue() != null ? canvasHeightSpinner.getValue() : 10;
@@ -870,7 +783,7 @@ public class SetupController {
         } else {
             String mapName = mapCombo.getValue();
             if (mapName == null || mapName.isBlank()) {
-                // Shouldn't reach here if validate() passed, but guard just in case
+                // Guard against a cleared map selection before engine construction.
                 statusLabel.setText("\u26a0 Please select a map.");
                 return null;
             }
@@ -884,15 +797,7 @@ public class SetupController {
 
         CoordinationPolicy policy = buildCoordinationPolicy();
 
-        // Robots are not auto-spawned here — they must be placed in the editor
-        // or loaded from a JSON config file (handled via SimulationEngine(configPath)).
-
         Dispatcher dispatcher = new Dispatcher();
-        // Generate tasks based on the map's racks and delivery stations.
-        // Tasks are generated here so the engine has the expected workload from the start.
-        if (maxTasks > 0 && map != null) {
-            generateFixedTasks(map, seed, maxTasks, dispatcher);
-        }
 
         String runName = runNameField.getText().trim();
         if (runName.isEmpty()) runName = DEFAULT_RUN_NAME;
@@ -916,9 +821,8 @@ public class SetupController {
         return engine;
     }
 
-    /**
-     * Constructs a builtin map scaled/centred to fit the canvas dimensions.
-     */
+    // Map and Task Generation
+    // Copies a builtin map into the current canvas with a one-tile margin.
     private com.openrobotics.map.Map buildBuiltinMapInCanvas(String mapName, int canvasW, int canvasH) {
         com.openrobotics.map.Map src = buildBuiltinMap(mapName);
         com.openrobotics.map.Map map = new com.openrobotics.map.Map(canvasW, canvasH);
@@ -946,9 +850,7 @@ public class SetupController {
         return map;
     }
 
-    /**
-     * Generates a random warehouse map of the given dimensions.
-     */
+    // Generates a random warehouse layout for the current canvas size.
     private com.openrobotics.map.Map buildRandomMap(int width, int height, long seed) {
         com.openrobotics.map.Map map = new com.openrobotics.map.Map(width, height);
         java.util.Random rng = new java.util.Random(seed);
@@ -1020,15 +922,7 @@ public class SetupController {
         return center; // fallback
     }
 
-    /**
-     * Generates a fixed number of tasks based on the map's racks and delivery stations.
-     * Used by tests to verify task generation logic.
-     *
-     * @param map the map containing racks and delivery stations
-     * @param seed random seed for reproducibility
-     * @param count number of tasks to generate
-     * @param dispatcher the dispatcher to add tasks to
-     */
+    // Seeds the dispatcher with the initial automatically generated tasks.
     private void generateFixedTasks(com.openrobotics.map.Map map, long seed, int count, Dispatcher dispatcher) {
         List<Task> tasks = TaskGenerator.generateAutomaticTasks(map, count, seed);
         for (Task task : tasks) {
@@ -1050,6 +944,7 @@ public class SetupController {
         };
     }
 
+    // Parsing Helpers
     private int parseIntSafe(String text, int fallback) {
         try { return Integer.parseInt(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
@@ -1066,35 +961,176 @@ public class SetupController {
         try { return Float.parseFloat(text.trim()); } catch (NumberFormatException e) { return fallback; }
     }
 
-    /** Basic validation – returns {@code true} if all required fields are filled. */
+    // Validation
+
+    // Validates the minimum required inputs before starting the simulation.
     private boolean validate() {
-        // If a config file was loaded from the list, the engine and path are already set
-        // skip the map combo check entirely since it was intentionally cleared on file selection.
+        // Map Check
         if (!AppState.hasEngine() && mapCombo.getValue() == null) {
-            statusLabel.setText("\u26a0 Please select a map or load a config file.");
+            statusLabel.setText("⚠ Please select a map or load a config file.");
             return false;
         }
-        try {
-            int ticks = Integer.parseInt(maxTicksField.getText().trim());
-            if (ticks <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            statusLabel.setText("\u26a0 Max ticks must be a positive integer.");
-            return false;
+
+        if ("RESERVATION_K".equals(policyCombo.getValue())) {
+            if (!checkSpinnerBound(reservationKSpinner, "Reservation K", 1, 50)) return false;
         }
-        statusLabel.setText("");
+
+        // Integer Bounds
+        if (!checkIntBound(maxTasksField, "Max Tasks", 1, 500)) return false;
+        if (!checkIntBound(maxTicksField, "Max Ticks", 1, 1000000)) return false;
+
+        // Float Bounds
+        if (batteryCapacityField != null && batteryCapacityField.getScene() != null) {
+            if (!checkFloatBound(batteryCapacityField, "Battery Capacity", 1.0f, 1000.0f)) return false;
+            if (!checkFloatBound(lowBatteryField, "Low Battery", 0.0f, 1000.0f)) return false;
+            if (!checkFloatBound(chargePerTickField, "Charge Per Tick", 0.0f, 100.0f)) return false;
+            if (!checkFloatBound(energyPerMoveField, "Energy Per Move", 0.0f, 100.0f)) return false;
+
+            float cap = Float.parseFloat(batteryCapacityField.getText().trim());
+            float low = Float.parseFloat(lowBatteryField.getText().trim());
+            if (low >= cap) {
+                statusLabel.setText("⚠ Low battery threshold must be lower than total capacity.");
+                return false;
+            }
+        }
+
+        statusLabel.setText(""); // Clear errors
         return true;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Tab strip
-    // ------------------------------------------------------------------ //
+    private boolean checkIntBound(TextField field, String fieldName, int min, int max) {
+        if (field == null) return true;
+        try {
+            int value = Integer.parseInt(field.getText().trim());
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
 
-    @FXML
-    private void onTabEditor() { /* already on setup/editor screen */ }
+    private boolean checkFloatBound(TextField field, String fieldName, float min, float max) {
+        if (field == null) return true;
+        try {
+            float value = Float.parseFloat(field.getText().trim());
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
 
-    // ------------------------------------------------------------------ //
-    //  Menu items
-    // ------------------------------------------------------------------ //
+    private boolean checkSpinnerBound(Spinner<Integer> spinner, String fieldName, int min, int max) {
+        if (spinner == null || spinner.isDisabled()) return true;
+        try {
+            // Check the editor text because Spinner.getValue() might not have changed yet
+            String text = spinner.getEditor().getText().trim();
+            if (text.isEmpty()) {
+                statusLabel.setText("⚠ " + fieldName + " cannot be empty.");
+                return false;
+            }
+
+            int value = Integer.parseInt(text);
+            if (value < min || value > max) {
+                statusLabel.setText("⚠ " + fieldName + " must be between " + min + " and " + max + ".");
+                return false;
+            }
+
+            // Force the spinner to adopt the typed value internally
+            spinner.getValueFactory().setValue(value);
+            return true;
+        } catch (NumberFormatException e) {
+            statusLabel.setText("⚠ " + fieldName + " requires a valid number.");
+            return false;
+        }
+    }
+
+    /** Restricts a TextField to only accept positive integers */
+    private void makeIntegerOnly(TextField field) {
+        if (field == null) return;
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            // Allows empty string (while deleting) or digits only
+            if (change.getControlNewText().matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+    }
+
+    /** Restricts a TextField to accept positive floats (decimals) */
+    private void makeFloatOnly(TextField field) {
+        if (field == null) return;
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            // Allows empty, digits, or digits with a single decimal point
+            if (change.getControlNewText().matches("\\d*(\\.\\d*)?")) {
+                return change;
+            }
+            return null;
+        }));
+    }
+
+    /** Restricts an editable Spinner to only accept positive integers */
+    private void makeSpinnerIntegerOnly(Spinner<Integer> spinner) {
+        if (spinner == null || !spinner.isEditable()) return;
+        TextField editor = spinner.getEditor();
+        editor.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().matches("\\d*")) {
+                return change;
+            }
+            return null; // Reject the keystroke
+        }));
+    }
+
+    /**
+     * Disables or re-enables all user-editable parameters on the setup screen.
+     * Called with {@code true} whenever a config file is loaded and with {@code false} when switching back to a template map.
+     * The reservationK spinner has its own separate policy-driven disable logic
+     */
+    private void setConfigParamsDisabled(boolean disabled) {
+
+        // Coordination policy
+        policyCombo.setDisable(disabled);
+        if (!disabled) {
+            // Re-evaluate the policy-driven disable for reservationK
+            reservationKSpinner.setDisable(!"RESERVATION_K".equals(policyCombo.getValue()));
+        } else {
+            reservationKSpinner.setDisable(true);
+        }
+
+        // Task settings
+        if (autoTaskRadio  != null) autoTaskRadio.setDisable(disabled);
+        if (manualTaskRadio != null) manualTaskRadio.setDisable(disabled);
+        maxTasksField.setDisable(disabled);
+        workloadSeedField.setDisable(disabled);
+
+        // Robot physics
+        setDisableIfPresent(batteryCapacityField, disabled);
+        setDisableIfPresent(lowBatteryField, disabled);
+        setDisableIfPresent(chargePerTickField, disabled);
+        setDisableIfPresent(energyPerMoveField, disabled);
+
+        // Run settings
+        maxTicksField.setDisable(disabled);
+        runNameField.setDisable(disabled);
+
+        // Canvas size
+        canvasWidthSpinner.setDisable(disabled);
+        canvasHeightSpinner.setDisable(disabled);
+    }
+
+    private void setDisableIfPresent(TextField field, boolean disabled) {
+        if (field != null) field.setDisable(disabled);
+    }
+
+    // Navigation
 
     @FXML
     private void onMenuWelcome() { ScreenNavigator.goToWelcome(); }
@@ -1107,10 +1143,6 @@ public class SetupController {
             statusLabel.setText("Could not open browser.");
         }
     }
-
-    // ------------------------------------------------------------------ //
-    //  Global Exit
-    // ------------------------------------------------------------------ //
 
     @FXML
     private void onExit() {

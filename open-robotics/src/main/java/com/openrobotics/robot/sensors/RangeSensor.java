@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** range sensor; casts 15 rays in a 90-degree arc ahead of the robot, stopping each ray at the first Obstacle */
+/** Range sensor; casts 15 rays in a 90-degree arc ahead of the robot, stopping each ray at the first {@link Obstacle}. */
 public class RangeSensor implements SensorStrategy {
     private final double maxRange = 5.0;
     private final int rayCount = 15; // Number of rays (90 degrees / 15 = 1 ray every 6 deg)

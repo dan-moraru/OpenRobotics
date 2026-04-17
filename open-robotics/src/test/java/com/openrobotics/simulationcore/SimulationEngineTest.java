@@ -44,34 +44,57 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class SimulationEngineTest {
 
+    /** Default test-map width used by setup fixtures. */
     private static final int MAP_W = 10;
+    /** Default test-map height used by setup fixtures. */
     private static final int MAP_H = 10;
 
+    /** Shared map fixture recreated before each test. */
     private Map map;
+    /** Shared dispatcher fixture recreated before each test. */
     private Dispatcher dispatcher;
+    /** Baseline engine fixture created in {@link #setUp()}. */
     private SimulationEngine engine;
 
+    /**
+     * Robot test double with scripted next-move output and update-call counting.
+     */
     private static class ScriptedRobot extends Robot {
         private MoveIntention nextMove;
         private int updateCalls;
 
+        /**
+         * Creates a scripted robot fixture at a fixed position.
+         */
         private ScriptedRobot(String name, Vector2D position) {
             super(name, position);
         }
 
+        /**
+         * Injects the next move that {@link #getNextMove(Map)} should return.
+         */
         public void setNextMove(MoveIntention nextMove) {
             this.nextMove = nextMove;
         }
 
+        /**
+         * Returns how many times {@link #update(Map)} has been invoked.
+         */
         public int getUpdateCalls() {
             return updateCalls;
         }
 
+        /**
+         * Returns the scripted move intention for the current tick.
+         */
         @Override
         public MoveIntention getNextMove(Map map) {
             return nextMove;
         }
 
+        /**
+         * Increments update-call counter to validate per-tick robot updates.
+         */
         @Override
         public void update(Map map) {
             updateCalls++;
@@ -209,20 +232,21 @@ public class SimulationEngineTest {
     }
 
     /**
-     * With no configured tasks, the engine treats this as sandbox mode:
-     * {@code tick()} still advances time and leaves {@code running = false}.
-     * At least one robot is required for tick() to proceed past the no-robots guard.
+     * When no tasks have ever been added to the dispatcher, {@code tick()} exits
+     * early without advancing the counter, sets {@code running} to {@code false},
+     * and records a {@link SimulationError#NO_TASKS_GENERATED} error.
+     * At least one robot is required to reach the no-tasks guard.
      */
     @Test
-    public void testTickStopsWhenWorkloadComplete() {
+    public void testTickStopsWhenNoTasksAdded() {
         Robot r = makeRobot("R1", 5, 5);
         SimulationEngine eng = buildEngine(new Robot[]{ r });
-        int before = eng.getTickCounter();
         eng.tick();
 
-        assertEquals(before + 1, eng.getTickCounter(),
-                "tick() should increment in no-workload sandbox mode");
+        assertEquals(0, eng.getTickCounter(),
+                "tick() should not increment when no tasks have been added");
         assertFalse(eng.getIsRunning());
+        assertEquals(SimulationError.NO_TASKS_GENERATED, eng.getSimulationError());
     }
 
     /**
@@ -254,6 +278,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickBlocksSameDirectionFollowThrough() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         ScriptedRobot leader = new ScriptedRobot("Leader", new Vector2D(1, 0));
         leader.setState(RobotState.MOVING);
         leader.setNextMove(new MoveIntention(map.getTile(1, 0), map.getTile(2, 0), leader));
@@ -279,6 +305,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickAllowsOverlapOnDeliveryStation() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         map.addEntity(new DeliveryStation("Delivery", new Vector2D(1, 0)));
 
         ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
@@ -306,6 +334,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickAllowsOverlapOnChargingStation() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         map.addEntity(new ChargingStation("Charging", new Vector2D(1, 0)));
 
         ScriptedRobot staying = new ScriptedRobot("Staying", new Vector2D(1, 0));
@@ -521,6 +551,8 @@ public class SimulationEngineTest {
      */
     @Test
     public void testTickDoesNotCommitIllegalMoveIntentions() {
+        dispatcher.addTask(makeTask(1, 0, 0, 9, 9));
+
         ScriptedRobot robot = new ScriptedRobot("Scripted", new Vector2D(0, 0));
         robot.setNextMove(new MoveIntention(map.getTile(0, 0), map.getTile(2, 0), robot));
 
@@ -980,6 +1012,9 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Toggling a traffic-rule intersection on persists marker coordinates in saved config.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionPersistsToSavedConfig() throws IOException {
         SimulationEngine eng = new SimulationEngine(
@@ -1005,6 +1040,9 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Toggling the same traffic-rule intersection twice removes the persisted marker.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionTwiceRemovesMarker() throws IOException {
         SimulationEngine eng = new SimulationEngine(
@@ -1029,6 +1067,10 @@ public class SimulationEngineTest {
         }
     }
 
+    /**
+     * Intersection toggling is ignored for non-traffic-rules policies and writes no coordination
+     * marker data.
+     */
     @Test
     public void testToggleTrafficRuleIntersectionIgnoredForNonTrafficRulesPolicy() throws IOException {
         SimulationEngine eng = buildEngine(new Robot[]{});
@@ -1342,7 +1384,8 @@ public class SimulationEngineTest {
 
     /**
      * Creates a base configuration DTO.
-     * @return
+     *
+     * @return fully initialized DTO with default sections for config-load tests
      */
     private SimulationConfigDTO baseConfigDto() {
         SimulationConfigDTO dto = new SimulationConfigDTO();
@@ -1437,6 +1480,15 @@ public class SimulationEngineTest {
         return entity;
     }
 
+    /**
+     * Creates a rack DTO.
+     *
+     * @param id rack ID
+     * @param name rack name
+     * @param x x coordinate
+     * @param y y coordinate
+     * @return rack DTO instance
+     */
     private SimulationConfigDTO.RackDTO rackDto(UUID id, String name, int x, int y) {
         SimulationConfigDTO.RackDTO entity = new SimulationConfigDTO.RackDTO();
         entity.id = id;

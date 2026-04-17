@@ -61,6 +61,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * JavaFX controller tests for {@link SetupController}.
+ *
+ * <p>This suite validates setup-screen defaults, field-reset handlers, validation logic, map/task
+ * builders, config load/persist behavior, start-simulation flow, and navigation actions. Tests
+ * primarily invoke private controller logic via reflection to assert internal behavior while
+ * running on a real JavaFX scene.</p>
+ */
 public class SetupControllerTest extends ApplicationTest {
 
     @TempDir
@@ -69,6 +77,12 @@ public class SetupControllerTest extends ApplicationTest {
     private Stage stage;
     private SetupController controller;
 
+    /**
+     * Loads the setup screen into the TestFX stage.
+     *
+     * @param stage JavaFX stage supplied by TestFX
+     * @throws Exception if FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         this.stage = stage;
@@ -76,6 +90,9 @@ public class SetupControllerTest extends ApplicationTest {
         loadSetupScene();
     }
 
+    /**
+     * Resets shared app state and reloads a clean setup scene before each test.
+     */
     @BeforeEach
     void resetSetupScene() {
         AppState.clear();
@@ -83,12 +100,18 @@ public class SetupControllerTest extends ApplicationTest {
         loadSetupSceneOnFx();
     }
 
+    /**
+     * Clears global state after each test to avoid cross-test coupling.
+     */
     @AfterEach
     void clearSharedState() {
         AppState.clear();
         AppState.setCanvasDimensions(30, 30);
     }
 
+    /**
+     * Verifies initial control defaults, option lists, and visibility flags on first render.
+     */
     @Test
     void initialize_sets_all_visible_defaults_and_available_options() {
         assertAll(
@@ -110,6 +133,9 @@ public class SetupControllerTest extends ApplicationTest {
         );
     }
 
+    /**
+     * Verifies random-map selection reveals seed controls and random-seed reset clears input.
+     */
     @Test
     void random_map_selection_shows_seed_row_and_reset_clears_seed() {
         TextField seedField = textField("randomSeedField");
@@ -129,6 +155,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals("", seedField.getText());
     }
 
+    /**
+     * Verifies built-in map presets auto-size canvas controls and warning visibility toggles.
+     */
     @Test
     void builtin_map_selection_auto_sizes_canvas_and_warns_at_minimum() {
         interact(() -> mapCombo().setValue("baseline_small"));
@@ -150,6 +179,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertFalse(field("canvasWarnLabel", Label.class).isVisible());
     }
 
+    /**
+     * Verifies reservation-K spinner enablement is tied strictly to RESERVATION_K policy.
+     */
     @Test
     void reservation_spinner_enables_only_for_reservation_k_policy() {
         interact(() -> policyCombo().setValue("RESERVATION_K"));
@@ -165,6 +197,10 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(reservationKSpinner().isDisabled());
     }
 
+    /**
+     * Verifies all reset handlers restore default values for map, workload, canvas, and robot
+     * physics fields.
+     */
     @Test
     void reset_handlers_restore_defaults_for_visible_and_optional_fields() {
         installRobotPhysicsFields("150", "35", "9", "3");
@@ -213,6 +249,9 @@ public class SetupControllerTest extends ApplicationTest {
         );
     }
 
+    /**
+     * Verifies validation requires map selection only when no engine is already loaded.
+     */
     @Test
     void validate_rejects_missing_map_only_when_no_engine_is_loaded() {
         interact(() -> mapCombo().getSelectionModel().clearSelection());
@@ -227,25 +266,49 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals("", statusLabel().getText());
     }
 
+    /**
+     * Verifies max-ticks validation rejects invalid/non-positive values and accepts valid input.
+     */
     @Test
     void validate_rejects_bad_max_tick_values_and_accepts_positive_integer() {
+        // Select a map so the validation doesn't fail on the Map check early
+        interact(() -> {
+            ComboBox<String> maps = lookup("#mapCombo").queryComboBox();
+            maps.getSelectionModel().selectFirst();
+        });
+
         TextField maxTicks = textField("maxTicksField");
 
-        interact(() -> maxTicks.setText("abc"));
+        // Test non-numeric characters
+        interact(() -> {
+            maxTicks.clear();
+            maxTicks.setText("abc");
+        });
+        assertEquals("", maxTicks.getText());
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
-        assertEquals("⚠ Max ticks must be a positive integer.", statusLabel().getText());
+        assertEquals("\u26a0 Max Ticks requires a valid number.", statusLabel().getText());
 
+        // Test zero
         interact(() -> maxTicks.setText("0"));
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
+        assertEquals("\u26a0 Max Ticks must be between 1 and 1000000.", statusLabel().getText());
 
-        interact(() -> maxTicks.setText("-5"));
+        // Test negative
+        interact(() -> {
+            maxTicks.clear();
+            maxTicks.setText("-5");
+        });
         assertFalse((boolean) invokePrivate("validate", new Class<?>[0]));
 
-        interact(() -> maxTicks.setText("1"));
+        // Test valid positive integer
+        interact(() -> maxTicks.setText("30000"));
         assertTrue((boolean) invokePrivate("validate", new Class<?>[0]));
         assertEquals("", statusLabel().getText());
     }
 
+    /**
+     * Verifies coordination policy builder maps combo selection to expected implementations.
+     */
     @Test
     void buildCoordinationPolicy_returns_expected_policy_implementations() {
         assertSame(CoordinationPolicy.noOp(), invokePrivate("buildCoordinationPolicy", new Class<?>[0]));
@@ -264,6 +327,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertSame(CoordinationPolicy.noOp(), invokePrivate("buildCoordinationPolicy", new Class<?>[0]));
     }
 
+    /**
+     * Verifies parse helpers trim values and return fallback defaults on malformed input.
+     */
     @Test
     void parse_helpers_trim_values_and_return_fallbacks_for_bad_input() {
         assertEquals(12, invokePrivate("parseIntSafe", new Class<?>[]{String.class, int.class}, " 12 ", 3));
@@ -274,6 +340,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(9.0f, (float) invokePrivate("parseOptionalFloatField", new Class<?>[]{TextField.class, float.class}, new TextField("9"), 2.0f), 0.001f);
     }
 
+    /**
+     * Verifies built-in map builders return expected dimensions, entities, and computed bounds.
+     */
     @Test
     void builtin_map_builders_return_expected_shapes_and_bounds() {
         assertNull(invokePrivate("buildBuiltinMap", new Class<?>[]{String.class}, "empty"));
@@ -300,6 +369,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(List.of(0, 0, 15, 9), List.of(bounds[0], bounds[1], bounds[2], bounds[3]));
     }
 
+    /**
+     * Verifies embedding a built-in map into a larger canvas preserves entity types and placement.
+     */
     @Test
     void builtin_map_in_canvas_preserves_entity_types_and_offsets_into_canvas() {
         Map empty = (Map) invokePrivate("buildBuiltinMapInCanvas", new Class<?>[]{String.class, int.class, int.class}, "empty", 8, 6);
@@ -316,6 +388,10 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(countEntities(baseline, Obstacle.class) > 0);
     }
 
+    /**
+     * Verifies random-map generation is deterministic for a fixed seed and keeps core entities in
+     * expected regions.
+     */
     @Test
     void random_map_builder_is_seeded_and_keeps_core_entities_in_expected_regions() {
         Map first = (Map) invokePrivate("buildRandomMap", new Class<?>[]{int.class, int.class, long.class}, 16, 10, 123L);
@@ -332,6 +408,10 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(15, onlyEntity(first, DeliveryStation.class).getPosition().getX());
     }
 
+    /**
+     * Verifies spawn-tile finder selects nearest traversable/unoccupied tile and falls back to
+     * center when all tiles are occupied.
+     */
     @Test
     void findSpawnTile_returns_nearest_available_traversable_tile_or_center_fallback() {
         Map map = new Map(3, 3);
@@ -367,6 +447,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(new Vector2D(1, 1), fallback);
     }
 
+    /**
+     * Verifies fixed task generation uses racks and delivery stations when both are available.
+     */
     @Test
     void generateFixedTasks_uses_racks_and_delivery_stations_when_available() {
         Map map = new Map(4, 3);
@@ -383,6 +466,10 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies fixed-task generation falls back to automatic generation when rack pickups are
+     * unavailable.
+     */
     @Test
     void generateFixedTasks_falls_back_to_automatic_task_generation() {
         Map map = new Map(3, 3);
@@ -396,6 +483,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(dispatcher.getAllQueuedTasks().stream().noneMatch(task -> task.getPickupLocation().equals(new Vector2D(2, 2))));
     }
 
+    /**
+     * Verifies fixed-task generation skips floor pickups when racks are completely unreachable.
+     */
     @Test
     void generateFixedTasks_does_not_create_floor_pickups_for_unreachable_racks() {
         Map map = new Map(3, 3);
@@ -412,6 +502,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(0, dispatcher.getPendingTaskCount());
     }
 
+    /**
+     * Verifies engine builder consumes field values and propagates robot config/custom policy.
+     */
     @Test
     void buildEngineFromSetup_uses_field_values_defaults_and_robot_config() {
         installRobotPhysicsFields("150.5", "35.5", "9.5", "3.5");
@@ -433,13 +526,16 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(77, engine.getMaxTicks());
         assertEquals(123L, engine.getSeed());
         assertTrue(engine.getCoordinationPolicy().contains(ReservationKPolicy.class.getName()));
-        assertEquals(4, engine.getDispatcher().getTotalTasksAdded());
+        assertEquals(0, engine.getDispatcher().getTotalTasksAdded());
         assertEquals(150.5f, config.batteryCapacity, 0.001f);
         assertEquals(35.5f, config.lowBatteryThreshold, 0.001f);
         assertEquals(9.5f, config.chargePerTick, 0.001f);
         assertEquals(3.5f, config.energyPerMove, 0.001f);
     }
 
+    /**
+     * Verifies engine builder falls back to defaults for invalid numeric fields and blank run name.
+     */
     @Test
     void buildEngineFromSetup_falls_back_for_invalid_numeric_fields_and_blank_run_name() {
         installRobotPhysicsFields("bad", "bad", "bad", "bad");
@@ -465,6 +561,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(1.0f, config.energyPerMove, 0.001f);
     }
 
+    /**
+     * Verifies random-map engine construction honors explicit map seed for deterministic topology.
+     */
     @Test
     void buildEngineFromSetup_random_map_honors_explicit_map_seed() {
         interact(() -> {
@@ -481,11 +580,14 @@ public class SetupControllerTest extends ApplicationTest {
 
         assertEquals(entitySignature(first.getMap()), entitySignature(second.getMap()));
         assertEquals(111L, first.getSeed());
-        assertEquals(3, first.getDispatcher().getTotalTasksAdded());
+        assertEquals(0, first.getDispatcher().getTotalTasksAdded());
         assertEquals(1, countEntities(first.getMap(), ChargingStation.class));
         assertEquals(1, countEntities(first.getMap(), DeliveryStation.class));
     }
 
+    /**
+     * Verifies engine builder returns null and reports status when map selection is missing.
+     */
     @Test
     void buildEngineFromSetup_returns_null_and_status_when_map_selection_is_missing() {
         interact(() -> mapCombo().getSelectionModel().clearSelection());
@@ -494,6 +596,11 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals("⚠ Please select a map.", statusLabel().getText());
     }
 
+    /**
+     * Verifies config loader rejects null, missing, and malformed files with user-facing status.
+     *
+     * @throws Exception if temp-file setup fails
+     */
     @Test
     void loadConfigFile_rejects_null_missing_and_malformed_files() throws Exception {
         assertFalse((boolean) invokePrivate("loadConfigFile", new Class<?>[]{File.class}, (Object) null));
@@ -510,6 +617,11 @@ public class SetupControllerTest extends ApplicationTest {
         assertFalse(AppState.hasEngine());
     }
 
+    /**
+     * Verifies config loader accepts a valid saved config and updates {@link AppState}.
+     *
+     * @throws Exception if config save helper fails
+     */
     @Test
     void loadConfigFile_accepts_valid_saved_config_and_updates_app_state() throws Exception {
         File config = saveEngineConfig(tempDir.resolve("valid-config.json"), emptyEngine());
@@ -523,6 +635,12 @@ public class SetupControllerTest extends ApplicationTest {
         assertEquals(3, AppState.getEngine().getMap().getHeight());
     }
 
+    /**
+     * Verifies selecting a config file from the list loads it, clears map selection, and disables
+     * manual canvas-size controls.
+     *
+     * @throws Exception if file setup fails
+     */
     @Test
     void selecting_config_list_item_loads_config_clears_map_selection_and_disables_canvas_size() throws Exception {
         File configDir = new File("configs");
@@ -545,6 +663,11 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies refresh-file-list includes only JSON configs and ignores non-JSON files.
+     *
+     * @throws Exception if temporary file operations fail
+     */
     @Test
     void refresh_file_list_includes_json_files_and_ignores_non_json_files() throws Exception {
         File configDir = new File("configs");
@@ -566,6 +689,9 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies temporary config persistence stores restart path and reports success status.
+     */
     @Test
     void persistEngineToTempFile_stores_restart_config_path_and_reports_success() {
         SimulationEngine engine = emptyEngine();
@@ -577,6 +703,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(statusLabel().getText().contains("✔ Config persisted for restart"));
     }
 
+    /**
+     * Verifies persistence failure reports error and clears stale restart config path.
+     */
     @Test
     void persistEngineToTempFile_reports_error_and_clears_path_when_save_fails() {
         AppState.setConfigPath("existing.json");
@@ -587,6 +716,10 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(statusLabel().getText().contains("⚠ Could not persist temp config for restart: cannot save"));
     }
 
+    /**
+     * Verifies start-simulation builds engine from setup fields, persists config, and navigates to
+     * simulation screen.
+     */
     @Test
     void startSimulation_builds_engine_from_setup_values_persists_config_and_navigates() {
         interact(() -> {
@@ -599,11 +732,15 @@ public class SetupControllerTest extends ApplicationTest {
 
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
-        assertEquals(2, AppState.getEngine().getDispatcher().getTotalTasksAdded());
+        assertEquals(0, AppState.getEngine().getDispatcher().getTotalTasksAdded());
         assertEquals(200, AppState.getEngine().getMaxTicks());
         assertNotNull(lookup("#warehouseCanvas").queryAs(Canvas.class));
     }
 
+    /**
+     * Verifies start-simulation rebuilds UI-driven engine when an engine exists but no config path
+     * is available.
+     */
     @Test
     void startSimulation_rebuilds_existing_ui_built_engine_when_no_config_path_exists() {
         AppState.setEngine(emptyEngine());
@@ -617,10 +754,15 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(AppState.hasEngine());
         assertTrue(AppState.hasConfigPath());
         assertEquals(18, AppState.getEngine().getMap().getWidth());
-        assertEquals(1, AppState.getEngine().getDispatcher().getTotalTasksAdded());
+        assertEquals(0, AppState.getEngine().getDispatcher().getTotalTasksAdded());
         assertNotNull(lookup("#warehouseCanvas").queryAs(Canvas.class));
     }
 
+    /**
+     * Verifies start-simulation surfaces reload errors when saved config path contains bad JSON.
+     *
+     * @throws Exception if malformed file setup fails
+     */
     @Test
     void startSimulation_reports_config_reload_failure_when_saved_path_is_bad() throws Exception {
         Path malformed = tempDir.resolve("bad-start.json");
@@ -634,6 +776,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertNotNull(lookup("#mapCombo").queryAs(ComboBox.class));
     }
 
+    /**
+     * Verifies preview-blocked handler reports message and consumes incoming mouse event.
+     */
     @Test
     void preview_blocked_sets_message_and_consumes_event() {
         MouseEvent event = mouseClick();
@@ -644,6 +789,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertTrue(event.isConsumed());
     }
 
+    /**
+     * Verifies welcome menu action navigates back to the welcome screen.
+     */
     @Test
     void menu_welcome_navigates_to_welcome_screen() {
         invokeOnFx("onMenuWelcome", new Class<?>[0]);
@@ -651,6 +799,9 @@ public class SetupControllerTest extends ApplicationTest {
         assertNotNull(lookup("#rootPane").query());
     }
 
+    /**
+     * Reloads setup scene on FX thread for deterministic per-test controller state.
+     */
     private void loadSetupSceneOnFx() {
         interact(() -> {
             try {
@@ -662,6 +813,11 @@ public class SetupControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Loads setup FXML and binds controller to the shared test stage.
+     *
+     * @throws Exception if FXML loading fails
+     */
     private void loadSetupScene() throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/openrobotics/fxml/SetupScreen.fxml"));
         Parent root = loader.load();
@@ -670,6 +826,9 @@ public class SetupControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Injects robot-physics text fields used by build/reset logic.
+     */
     private void installRobotPhysicsFields(String battery, String lowBattery, String charge, String energy) {
         interact(() -> {
             setField("batteryCapacityField", new TextField(battery));
@@ -680,19 +839,34 @@ public class SetupControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Persists a simulation engine to a config file path for load/reload tests.
+     *
+     * @return saved config file
+     * @throws IOException if serialization fails
+     */
     private File saveEngineConfig(Path path, SimulationEngine engine) throws IOException {
         engine.configSaving(path.toAbsolutePath().toString());
         return path.toFile();
     }
 
+    /**
+     * Creates a minimal empty engine used as a baseline for state and persistence tests.
+     */
     private SimulationEngine emptyEngine() {
         return new SimulationEngine(new Map(3, 3), new Robot[0], new Dispatcher(), CoordinationPolicy.noOp());
     }
 
+    /**
+     * Counts entities of a specific type present in the map.
+     */
     private long countEntities(Map map, Class<? extends MapEntity> type) {
         return map.getEntities().stream().filter(type::isInstance).count();
     }
 
+    /**
+     * Returns the single entity of the requested type and asserts uniqueness.
+     */
     private <T extends MapEntity> T onlyEntity(Map map, Class<T> type) {
         List<T> matches = map.getEntities().stream()
                 .filter(type::isInstance)
@@ -702,6 +876,9 @@ public class SetupControllerTest extends ApplicationTest {
         return matches.get(0);
     }
 
+    /**
+     * Produces a deterministic string signature for map entities to compare map topology.
+     */
     private String entitySignature(Map map) {
         return map.getEntities().stream()
                 .map(entity -> entity.getClass().getSimpleName()
@@ -711,6 +888,9 @@ public class SetupControllerTest extends ApplicationTest {
                 .collect(Collectors.joining("|"));
     }
 
+    /**
+     * Creates a primary-button click event used for preview-blocking handler tests.
+     */
     private MouseEvent mouseClick() {
         return new MouseEvent(
                 MouseEvent.MOUSE_CLICKED,
@@ -734,41 +914,68 @@ public class SetupControllerTest extends ApplicationTest {
         );
     }
 
+    /**
+     * Returns the setup map-selection combo box.
+     */
     @SuppressWarnings("unchecked")
     private ComboBox<String> mapCombo() {
         return (ComboBox<String>) field("mapCombo", ComboBox.class);
     }
 
+    /**
+     * Returns the coordination-policy combo box.
+     */
     @SuppressWarnings("unchecked")
     private ComboBox<String> policyCombo() {
         return (ComboBox<String>) field("policyCombo", ComboBox.class);
     }
 
+    /**
+     * Returns the reservation-K spinner.
+     */
     private Spinner<Integer> reservationKSpinner() {
         return integerSpinner("reservationKSpinner");
     }
 
+    /**
+     * Returns the canvas-width spinner.
+     */
     private Spinner<Integer> canvasWidthSpinner() {
         return integerSpinner("canvasWidthSpinner");
     }
 
+    /**
+     * Returns the canvas-height spinner.
+     */
     private Spinner<Integer> canvasHeightSpinner() {
         return integerSpinner("canvasHeightSpinner");
     }
 
+    /**
+     * Returns a spinner field by name, cast as integer spinner.
+     */
     @SuppressWarnings("unchecked")
     private Spinner<Integer> integerSpinner(String fieldName) {
         return (Spinner<Integer>) field(fieldName, Spinner.class);
     }
 
+    /**
+     * Returns a reflected text field by controller field name.
+     */
     private TextField textField(String fieldName) {
         return field(fieldName, TextField.class);
     }
 
+    /**
+     * Returns setup status label used for user-facing validation/load messages.
+     */
     private Label statusLabel() {
         return field("statusLabel", Label.class);
     }
 
+    /**
+     * Invokes a private controller method on FX thread and returns the result.
+     */
     private Object invokeOnFx(String name, Class<?>[] parameterTypes, Object... args) {
         AtomicReference<Object> result = new AtomicReference<>();
         interact(() -> result.set(invokePrivate(name, parameterTypes, args)));
@@ -776,6 +983,9 @@ public class SetupControllerTest extends ApplicationTest {
         return result.get();
     }
 
+    /**
+     * Invokes a private controller method via reflection, marshalling to FX thread when needed.
+     */
     private Object invokePrivate(String name, Class<?>[] parameterTypes, Object... args) {
         if (!Platform.isFxApplicationThread()) {
             AtomicReference<Object> result = new AtomicReference<>();
@@ -798,6 +1008,9 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Reads a private controller field and casts it to expected type.
+     */
     private <T> T field(String name, Class<T> type) {
         try {
             Field field = SetupController.class.getDeclaredField(name);
@@ -808,6 +1021,9 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Sets a private controller field by reflection.
+     */
     private void setField(String name, Object value) {
         try {
             Field field = SetupController.class.getDeclaredField(name);
@@ -818,6 +1034,9 @@ public class SetupControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * SimulationEngine test double that always fails when saving config.
+     */
     private static class UnsavableEngine extends SimulationEngine {
         UnsavableEngine() {
             super(new Map(2, 2), new Robot[0], new Dispatcher(), CoordinationPolicy.noOp());

@@ -8,10 +8,17 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.Random;
 
-/** random navigation strategy; used in tests only, not wired in production */
+/** Random navigation strategy; used in tests only, not wired in production. */
 public class RandomNavigation implements NavigationStrategy {
 
-    /** shuffles all four cardinal directions with fisher-yates, skips any that land on rerouteAvoidTile, and returns the first valid move; falls back to WAIT if all are blocked */
+    /**
+     * Shuffles all four cardinal directions with Fisher-Yates, skips any that land on
+     * {@code rerouteAvoidTile}, and returns the first valid move; falls back to WAIT if all are blocked.
+     *
+     * @param robot the robot requesting the move
+     * @param map the current warehouse map
+     * @return the move intention for this tick
+     */
     @Override
     public MoveIntention getNextMove(Robot robot, Map map) {
         Vector2D position = robot.getPosition();
@@ -19,7 +26,7 @@ public class RandomNavigation implements NavigationStrategy {
         Vector2D target = robot.getTarget();
         Vector2D rerouteAvoidTile = robot.getRerouteAvoidTile();
 
-        // Try each direction at most once in random order, then fall back to WAIT.
+        // try each direction at most once in random order, then fall back to WAIT
         Direction[] directions = Direction.values();
         // unseeded — intentionally non-deterministic; this strategy is test-only
         Random random = new Random();

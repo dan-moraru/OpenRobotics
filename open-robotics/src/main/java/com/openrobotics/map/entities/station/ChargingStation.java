@@ -4,7 +4,7 @@ import com.openrobotics.map.Vector2D;
 
 import java.util.UUID;
 
-/** charging station; robots travel here to recharge when battery is low */
+/** Charging station; robots travel here to recharge when their battery is low. */
 public class ChargingStation extends Station {
     public ChargingStation(String name, Vector2D position) {
         super(name, position);

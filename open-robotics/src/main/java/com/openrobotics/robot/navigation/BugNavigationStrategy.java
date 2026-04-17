@@ -12,12 +12,17 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
 
-/** bug2 navigation; alternates between greedy goal-seeking and left-hand boundary following when an obstacle is encountered */
+/** Bug2 navigation; alternates between greedy goal-seeking and left-hand boundary following when an obstacle is encountered. */
 public class BugNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id (same pattern as greedy)
     private final java.util.Map<UUID, BugNavState> navStates = new HashMap<>();
 
+    /**
+     * Creates a Bug2 navigation strategy with the given base seed.
+     *
+     * @param baseSeed the seed used for deterministic tie-breaking per robot
+     */
     public BugNavigationStrategy(long baseSeed) {
         this.baseSeed = baseSeed;
     }

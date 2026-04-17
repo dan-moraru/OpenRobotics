@@ -1,6 +1,9 @@
 package com.openrobotics.integration.simulation;
 
+import com.openrobotics.AppState;
 import com.openrobotics.integration.SimulationIntegrationTestSupport;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
@@ -14,8 +17,21 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Integration test for temporal spacing behavior under {@link ReservationKPolicy}.
+ *
+ * <p>This scenario validates that a trailing robot yields to a lead robot in a one-tile corridor
+ * when the lead robot has reserved a forward window of tiles.</p>
+ */
 public class ReservationKIntegrationTest extends SimulationIntegrationTestSupport {
 
+    /**
+     * Verifies Reservation-K enforces a wait for the trailing robot until the lead robot advances
+     * beyond the reserved horizon.
+     *
+     * <p>The test uses deterministic UUID ordering because policy internals process robots in UUID
+     * order; random IDs would make movement ordering and assertions flaky.</p>
+     */
     @Test
     void reservationKMakesTrailingRobotWaitForLeadRobotsWindow() {
         Map map = new Map(5, 1);
@@ -38,12 +54,19 @@ public class ReservationKIntegrationTest extends SimulationIntegrationTestSuppor
         map.addEntity(leadRobot);
         map.addEntity(trailingRobot);
 
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.addTask(trailingTask); // adding task so ticking doesn't fail
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[]{leadRobot, trailingRobot},
-                new Dispatcher(),
+                dispatcher,
                 new ReservationKPolicy(2)
         );
+
+        // Setting global state for logging
+        AppState.setEngine(engine);
+        Logger.setMode(LoggerMode.NO_OP);
 
         engine.tick();
         assertEquals(pos(2, 0), leadRobot.getPosition());

@@ -5,7 +5,7 @@ import com.openrobotics.map.MapEntity;
 
 import java.util.UUID;
 
-/** abstract base for station-type map entities (charging and delivery) */
+/** Abstract base for station-type map entities (charging and delivery). */
 public abstract class Station extends MapEntity {
     private boolean isBusy;
 

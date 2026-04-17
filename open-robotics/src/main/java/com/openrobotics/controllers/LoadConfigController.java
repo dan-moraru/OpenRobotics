@@ -13,37 +13,31 @@ import java.util.List;
 import java.util.prefs.Preferences;
 
 /**
- * Controller for {@code LoadConfigDialog.fxml}.
- *
- * <p>Implements {@link ScreenNavigator.DialogController} so the navigator
- * can inject the owning dialog stage for self-close behaviour.
+ * Controller for LoadConfigDialog.fxml; lets the user pick a JSON config file from recent history
+ * or the filesystem.
  */
 public class LoadConfigController implements ScreenNavigator.DialogController {
 
+    // Form Fields
     @FXML private ComboBox<String> configFileCombo;
     @FXML private Label            selectedPathLabel;
 
+    // Dialog State
     private Stage dialogStage;
     private File  selectedFile;
 
-    /** Key used to persist recent paths in Java Preferences. */
+    // Defaults
+    // Persist recent config paths in Java preferences.
     private static final String PREFS_KEY = "recentConfigPaths";
     private static final int    MAX_RECENT = 8;
     private static final String BROWSE_SENTINEL = "Browse...";
-
-    // ------------------------------------------------------------------ //
-    //  DialogController
-    // ------------------------------------------------------------------ //
 
     @Override
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
+    // Initialization
     @FXML
     private void initialize() {
         configFileCombo.valueProperty().addListener((obs, o, n) -> {
@@ -62,14 +56,11 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         configFileCombo.getItems().add(BROWSE_SENTINEL);
     }
 
+    // File Selection
     private void ensureBrowseSentinelLast() {
         configFileCombo.getItems().remove(BROWSE_SENTINEL);
         configFileCombo.getItems().add(BROWSE_SENTINEL);
     }
-
-    // ------------------------------------------------------------------ //
-    //  Event Handlers
-    // ------------------------------------------------------------------ //
 
     @FXML
     private void onResetToDefault() {
@@ -100,6 +91,7 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         }
     }
 
+    // Dialog Actions
     @FXML
     private void onLoad() {
         if (selectedFile != null) {
@@ -114,24 +106,23 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         close();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Result accessor (for callers that stored the FXMLLoader)
-    // ------------------------------------------------------------------ //
-
-    /** Returns the file chosen by the user, or {@code null} if cancelled. */
+    /**
+     * Returns the file chosen by the user, or {@code null} if the dialog was cancelled.
+     * Callers retrieve this after the dialog closes via the FXMLLoader from
+     * {@link ScreenNavigator#openDialog}.
+     *
+     * @return the selected file, or {@code null} if cancelled.
+     */
     public File getSelectedFile() {
         return selectedFile;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Helpers
-    // ------------------------------------------------------------------ //
-
+    // Dialog Helpers
     private void close() {
         if (dialogStage != null) dialogStage.close();
     }
 
-    @SuppressWarnings("unchecked")
+    // Recent Paths
     private List<String> loadRecentPaths() {
         Preferences prefs = Preferences.userNodeForPackage(LoadConfigController.class);
         List<String> paths = new ArrayList<>();
@@ -156,4 +147,3 @@ public class LoadConfigController implements ScreenNavigator.DialogController {
         }
     }
 }
-

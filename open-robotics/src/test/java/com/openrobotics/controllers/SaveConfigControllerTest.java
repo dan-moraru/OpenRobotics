@@ -23,11 +23,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * JavaFX UI tests for {@link SaveConfigController}.
+ *
+ * <p>This suite validates default initialization, directory-reset behavior, save-form validation
+ * errors, successful save confirmation flow, and cancel semantics for the save-config dialog.</p>
+ */
 public class SaveConfigControllerTest extends ApplicationTest {
 
     private SaveConfigController controller;
     private Stage dialogStage;
 
+    /**
+     * Clears persisted recent save-directory entries to keep tests deterministic.
+     */
     private void clearPrefs() throws Exception {
         Preferences prefs = Preferences.userNodeForPackage(SaveConfigController.class);
         for (int i = 0; i < 8; i++) {
@@ -36,6 +45,12 @@ public class SaveConfigControllerTest extends ApplicationTest {
         prefs.flush();
     }
 
+    /**
+     * Loads the save-config dialog FXML and attaches it to the TestFX stage.
+     *
+     * @param stage the JavaFX stage provided by TestFX
+     * @throws Exception if preferences reset or FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         clearPrefs();
@@ -50,12 +65,19 @@ public class SaveConfigControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /**
+     * Verifies the filename input is pre-populated with a JSON-suffixed default value.
+     */
     @Test
     void initialize_sets_default_filename() {
         TextField fileNameField = lookup("#fileNameField").queryAs(TextField.class);
-        assertTrue(fileNameField.getText().endsWith(".json"));
+        assertTrue(fileNameField.getText().startsWith("experiment_"));
+        assertFalse(fileNameField.getText().endsWith(".json"));
     }
 
+    /**
+     * Verifies reset-directory action selects the default OpenRobotics directory.
+     */
     @Test
     void reset_directory_sets_default_directory() {
         clickOn("↺");
@@ -64,6 +86,9 @@ public class SaveConfigControllerTest extends ApplicationTest {
         assertTrue(lookup("#selectedDirLabel").queryAs(Label.class).getText().contains(".open-robotics"));
     }
 
+    /**
+     * Verifies save action is rejected when no directory is selected.
+     */
     @Test
     void save_without_directory_shows_error() {
         clickOn(lookup((Button b) -> "SAVE".equals(b.getText())).queryAs(Button.class));
@@ -73,6 +98,11 @@ public class SaveConfigControllerTest extends ApplicationTest {
                 lookup("#selectedDirLabel").queryAs(Label.class).getText());
     }
 
+    /**
+     * Verifies invalid filename characters are rejected during save validation.
+     *
+     * @throws Exception if temporary directory setup/cleanup fails
+     */
     @Test
     void save_with_invalid_filename_shows_error() throws Exception {
         Path dir = Files.createTempDirectory("save-config-test");
@@ -96,6 +126,9 @@ public class SaveConfigControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies save validation rejects directories that do not exist.
+     */
     @Test
     void save_with_nonexistent_directory_shows_error() {
         File missing = new File(System.getProperty("java.io.tmpdir"), "definitely-missing-openrobotics-save-dir");
@@ -113,6 +146,11 @@ public class SaveConfigControllerTest extends ApplicationTest {
                 lookup("#selectedDirLabel").queryAs(Label.class).getText());
     }
 
+    /**
+     * Verifies save validation rejects a selected path when it is a file, not a directory.
+     *
+     * @throws Exception if temporary file setup/cleanup fails
+     */
     @Test
     void save_with_file_path_instead_of_directory_shows_error() throws Exception {
         Path file = Files.createTempFile("save-config-test", ".json");
@@ -134,6 +172,11 @@ public class SaveConfigControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies successful save validation stores selected values and closes the dialog.
+     *
+     * @throws Exception if temporary directory setup/cleanup fails
+     */
     @Test
     void successful_save_validation_closes_dialog_and_preserves_selection() throws Exception {
         Path dir = Files.createTempDirectory("save-config-test");
@@ -161,6 +204,9 @@ public class SaveConfigControllerTest extends ApplicationTest {
         }
     }
 
+    /**
+     * Verifies cancel clears selected output directory and closes the dialog.
+     */
     @Test
     void cancel_clears_selected_directory_and_closes_dialog() {
         clickOn(lookup((Button b) -> "CANCEL".equals(b.getText())).queryAs(Button.class));

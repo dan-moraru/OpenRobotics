@@ -7,10 +7,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** result of a single sensor scan; exposes detected entities and spatial query methods */
+/** Result of a single sensor scan; exposes detected entities and spatial query methods. */
 public class Sensor {
     private final List<MapEntity> detectedEntities;
 
+    /**
+     * Creates a scan result from the given list of detected entities.
+     *
+     * @param entities the entities detected during this scan
+     */
     public Sensor(List<MapEntity> entities) {
         this.detectedEntities = entities;
     }
@@ -19,7 +24,12 @@ public class Sensor {
         return detectedEntities;
     }
 
-    /** true if an Obstacle entity was detected at the given position */
+    /**
+     * Returns true if an {@link Obstacle} entity was detected at the given position.
+     *
+     * @param pos the position to check
+     * @return {@code true} if an obstacle was detected at {@code pos}
+     */
     public boolean isObstacleDetectedAt(Vector2D pos) {
         for (MapEntity e : detectedEntities) {
             if (e instanceof Obstacle && e.getPosition().equals(pos)) {
@@ -29,7 +39,11 @@ public class Sensor {
         return false;
     }
 
-    /** positions of all detected Obstacle entities; convenience for navigation strategies */
+    /**
+     * Returns the positions of all detected {@link Obstacle} entities; convenience for navigation strategies.
+     *
+     * @return a set of positions where obstacles were detected
+     */
     public Set<Vector2D> getObstaclePositions() {
         Set<Vector2D> positions = new HashSet<>();
         for (MapEntity e : detectedEntities) {
@@ -39,9 +53,14 @@ public class Sensor {
     }
 
     /**
-     * steps from {@code from} toward {@code toward} that are free of detected obstacles.
-     * tiles beyond the sensor's scan range are treated as unknown (not clear) — a PROXIMITY robot
-     * always returns maxDist, while a RANGE robot returns the real value (1–5)
+     * Returns the number of steps from {@code from} toward {@code toward} that are free of detected obstacles.
+     * Tiles beyond the sensor's scan range are treated as unknown (not confirmed clear) — a PROXIMITY
+     * robot always returns {@code maxDist}, while a RANGE robot returns the real value (1–5).
+     *
+     * @param from the robot's current position
+     * @param toward the candidate next tile
+     * @param maxDist the maximum distance to check (scan range cap)
+     * @return the number of obstacle-free steps, up to {@code maxDist}
      */
     public int knownClearanceToward(Vector2D from, Vector2D toward, int maxDist) {
         if (from != null && from.equals(toward)) {

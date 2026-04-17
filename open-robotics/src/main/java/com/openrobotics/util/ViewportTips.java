@@ -59,7 +59,7 @@ public class ViewportTips {
                 "A fresh selection tip appears below the viewport when nothing is selected"
     ));
 
-    /* Shuffled deck for sequential non-repeating rotation */
+    // shuffled deck for sequential non-repeating rotation
     private static final List<String> deck = new ArrayList<>();
     private static int deckIndex = 0;
     private static final Object lock = new Object();
@@ -67,6 +67,8 @@ public class ViewportTips {
     /**
      * Returns the next tip in shuffled sequence.
      * Reshuffles the deck once all tips have been shown.
+     *
+     * @return the next tip string
      */
     public static String nextTip() {
         synchronized (lock) {
@@ -86,13 +88,19 @@ public class ViewportTips {
     /**
      * Returns a single random tip without advancing the deck.
      * Use for one-off display (e.g. on first load).
+     *
+     * @return a randomly selected tip string
      */
     public static String getRandomSelectionTip() {
         if (selectionTips.isEmpty()) return "Left-click to select";
         return selectionTips.get(ThreadLocalRandom.current().nextInt(selectionTips.size()));
     }
 
-    /** Adds a custom tip to the pool. */
+    /**
+     * Adds a custom tip to the pool.
+     *
+     * @param tip the tip text to add; ignored if {@code null} or blank
+     */
     public static void addTip(String tip) {
         if (tip != null && !tip.isBlank()) {
             synchronized (lock) {
@@ -103,7 +111,11 @@ public class ViewportTips {
         }
     }
 
-    /** Replaces all tips with a custom set. */
+    /**
+     * Replaces all tips with a custom set.
+     *
+     * @param tips the new tip list; {@code null} entries and blank strings are ignored
+     */
     public static void setTips(List<String> tips) {
         List<String> filtered = new ArrayList<>();
         if (tips != null) {
@@ -121,7 +133,11 @@ public class ViewportTips {
         }
     }
 
-    /** Returns an unmodifiable view of all registered tips. */
+    /**
+     * Returns an unmodifiable view of all registered tips.
+     *
+     * @return unmodifiable list of all registered tip strings
+     */
     public static List<String> getAllTips() {
         return Collections.unmodifiableList(selectionTips);
     }

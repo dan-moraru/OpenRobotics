@@ -1,5 +1,6 @@
-package com.openrobotics;
+package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
@@ -8,10 +9,6 @@ import com.openrobotics.map.Vector2D;
 import com.openrobotics.robot.Robot;
 import com.openrobotics.robot.RobotState;
 import com.openrobotics.robot.navigation.NavigationStrategy;
-import com.openrobotics.simulationcore.CoordinationPolicy;
-import com.openrobotics.simulationcore.Dispatcher;
-import com.openrobotics.simulationcore.MoveIntention;
-import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,10 +21,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration-style tests for deadlock recovery behavior in {@link SimulationEngine}.
+ *
+ * <p>This suite validates first-attempt reroute behavior, second-attempt reset/requeue fallback,
+ * immediate fallback when reroute avoid tile equals task target, and reroute-budget reset when a
+ * robot receives a new task.</p>
+ */
 class SimulationEngineDeadlockRecoveryTest {
 
     /**
-     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     * Seeds {@link AppState} with a minimal engine so logging-dependent paths remain valid.
      */
     private void seedAppState() {
         SimulationEngine dummyEngine = new SimulationEngine(
@@ -40,12 +44,19 @@ class SimulationEngineDeadlockRecoveryTest {
         AppState.setEngine(dummyEngine);
     }
 
+    /**
+     * Initializes per-test state and disables logger side effects for deterministic assertions.
+     */
     @BeforeEach
     public void setUp() {
         seedAppState();
         Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
+    /**
+     * Verifies first deadlock triggers a reroute attempt while preserving task ownership and moving
+     * state, and that strategy/policy reset hooks are invoked once.
+     */
     @Test
     void firstDeadlockAttemptsARerouteWithoutDroppingTheTask() {
         Map map = new Map(3, 3);
@@ -83,6 +94,9 @@ class SimulationEngineDeadlockRecoveryTest {
         assertTrue(recoveredBot.hasRerouteAttemptedForCurrentTask());
     }
 
+    /**
+     * Verifies second deadlock (after failed reroute) falls back to reset + task requeue.
+     */
     @Test
     void secondDeadlockFallsBackToResetAndRequeue() {
         Map map = new Map(3, 3);
@@ -114,6 +128,9 @@ class SimulationEngineDeadlockRecoveryTest {
         assertEquals(2, nav.resetCalls);
     }
 
+    /**
+     * Verifies immediate fallback path when the computed reroute-avoid tile equals task target.
+     */
     @Test
     void fallingBackImmediatelyWhenTheAvoidTileIsTheTargetRequeuesTheTask() {
         Map map = new Map(3, 3);
@@ -143,6 +160,9 @@ class SimulationEngineDeadlockRecoveryTest {
         assertEquals(1, nav.resetCalls);
     }
 
+    /**
+     * Verifies assigning a different task clears reroute-attempt state for the robot.
+     */
     @Test
     void assigningANewTaskResetsTheRerouteBudget() {
         Map map = new Map(3, 3);
@@ -166,6 +186,10 @@ class SimulationEngineDeadlockRecoveryTest {
         assertNull(robot.getLastRequestedNextTile());
     }
 
+    /**
+     * Navigation test double that succeeds on reroute by choosing a different tile once avoid state
+     * is set.
+     */
     private static class RerouteSuccessStrategy implements NavigationStrategy {
         private int resetCalls;
 
@@ -176,12 +200,18 @@ class SimulationEngineDeadlockRecoveryTest {
             return new MoveIntention(fromTile, map.getTile(next.getX(), next.getY()), robot);
         }
 
+        /**
+         * Counts strategy reset invocations triggered by engine deadlock handling.
+         */
         @Override
         public void reset(Robot robot) {
             resetCalls++;
         }
     }
 
+    /**
+     * Navigation test double that fails reroute by waiting after avoid tile is set.
+     */
     private static class RerouteFailureStrategy implements NavigationStrategy {
         private int resetCalls;
 
@@ -194,12 +224,18 @@ class SimulationEngineDeadlockRecoveryTest {
             return new MoveIntention(fromTile, fromTile, robot);
         }
 
+        /**
+         * Counts strategy reset invocations triggered by engine deadlock handling.
+         */
         @Override
         public void reset(Robot robot) {
             resetCalls++;
         }
     }
 
+    /**
+     * Navigation test double that always targets the same tile (used to force avoid==target path).
+     */
     private static class TargetTileStrategy implements NavigationStrategy {
         private int resetCalls;
 
@@ -209,12 +245,18 @@ class SimulationEngineDeadlockRecoveryTest {
             return new MoveIntention(fromTile, map.getTile(2, 1), robot);
         }
 
+        /**
+         * Counts strategy reset invocations triggered by engine deadlock handling.
+         */
         @Override
         public void reset(Robot robot) {
             resetCalls++;
         }
     }
 
+    /**
+     * Coordination policy test double that passes intentions through and tracks state-clear hooks.
+     */
     private static class HookAwarePolicy implements CoordinationPolicy {
         private int clearCalls;
 
@@ -223,12 +265,18 @@ class SimulationEngineDeadlockRecoveryTest {
             return intentions;
         }
 
+        /**
+         * Counts engine calls that clear per-robot coordination state.
+         */
         @Override
         public void clearRobotCoordinationState(Robot robot) {
             clearCalls++;
         }
     }
 
+    /**
+     * Local non-null assertion helper used to avoid additional static imports.
+     */
     private static void assertNotNull(Object value) {
         assertTrue(value != null);
     }

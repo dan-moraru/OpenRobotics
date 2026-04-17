@@ -22,10 +22,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * Integration test for intersection exclusivity under {@link TrafficRulesPolicy}.
+ *
+ * <p>This suite verifies that only one robot occupies/advances through constrained intersection
+ * tiles at a time, while trailing robots wait and resume once the intersection clears.</p>
+ */
 public class TrafficRulesIntegrationTest extends SimulationIntegrationTestSupport {
 
     /**
-     * Seed AppState with a dummy SimulationEngine to satisfy logging code
+     * Seeds {@link AppState} with a minimal engine so logging-dependent paths remain valid during
+     * simulation integration tests.
      */
     private void seedAppState() {
         SimulationEngine dummyEngine = new SimulationEngine(
@@ -38,12 +45,21 @@ public class TrafficRulesIntegrationTest extends SimulationIntegrationTestSuppor
         AppState.setEngine(dummyEngine);
     }
 
+    /**
+     * Initializes per-test state and disables logger side effects for deterministic assertions.
+     */
     @BeforeEach
     public void setUp() {
         seedAppState();
         Logger.setMode(LoggerMode.NO_OP); // disable logging during tests
     }
 
+    /**
+     * Verifies traffic-rules policy enforces exclusive traversal through configured intersections.
+     *
+     * <p>The test advances several ticks and checks that robot A clears the intersection before
+     * robot B is allowed to enter, while task ownership/state transitions remain coherent.</p>
+     */
     @Test
     void trafficRulesKeepsIntersectionExclusiveAcrossTicks() {
         Map map = new Map(4, 4);
@@ -81,10 +97,13 @@ public class TrafficRulesIntegrationTest extends SimulationIntegrationTestSuppor
                 map.getTile(2, 1)
         ));
 
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.addTask(taskA); // adding task so ticking doesn't fail
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[]{robotA, robotB},
-                new Dispatcher(),
+                dispatcher,
                 policy
         );
 

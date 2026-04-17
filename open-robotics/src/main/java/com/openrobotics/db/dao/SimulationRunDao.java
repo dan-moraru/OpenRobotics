@@ -10,14 +10,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** DAO for the simulation_runs table */
+/** DAO for the {@code simulation_runs} table. */
 public final class SimulationRunDao {
 
     private SimulationRunDao() {}
 
     /**
-     * inserts a simulation run record; uses {@code r.getId()} if set, otherwise generates a new UUID.
+     * Inserts a simulation run record; uses {@code r.getId()} if set, otherwise generates a new UUID.
      *
+     * @param r the simulation run record to insert
      * @return the inserted run's ID
      * @throws SQLException on database error
      */
@@ -48,8 +49,10 @@ public final class SimulationRunDao {
     }
 
     /**
-     * finds a simulation run record by ID.
+     * Finds a simulation run record by ID.
      *
+     * @param id the run UUID to look up
+     * @return an {@link Optional} containing the record, or empty if not found
      * @throws SQLException on database error
      */
     public static Optional<SimulationRunRecord> findById(UUID id) throws SQLException {
@@ -64,8 +67,10 @@ public final class SimulationRunDao {
     }
 
     /**
-     * finds all simulation run records for a given map, ordered by started_at descending.
+     * Finds all simulation run records for a given map, ordered by {@code started_at} descending.
      *
+     * @param mapId the map UUID to filter by
+     * @return list of simulation run records for the map
      * @throws SQLException on database error
      */
     public static List<SimulationRunRecord> findByMapId(UUID mapId) throws SQLException {
@@ -84,8 +89,11 @@ public final class SimulationRunDao {
     }
 
     /**
-     * updates the status and finished_at timestamp of a simulation run.
+     * Updates the {@code status} and {@code finished_at} timestamp of a simulation run.
      *
+     * @param id the run UUID to update
+     * @param status the new status string
+     * @param finishedAt the completion timestamp; may be {@code null}
      * @throws SQLException on database error
      */
     public static void updateStatus(UUID id, String status, Timestamp finishedAt) throws SQLException {
@@ -100,9 +108,10 @@ public final class SimulationRunDao {
     }
 
     /**
-     * deletes a simulation run record by ID.
+     * Deletes a simulation run record by ID.
      *
-     * @return true if a row was deleted
+     * @param id the run UUID to delete
+     * @return {@code true} if a row was deleted
      * @throws SQLException on database error
      */
     public static boolean deleteById(UUID id) throws SQLException {

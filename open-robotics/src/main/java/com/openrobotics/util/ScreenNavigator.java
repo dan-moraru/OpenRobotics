@@ -14,13 +14,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-/**
- * Utility class that centralises all screen/dialog transitions.
- *
- * <p>Every screen is loaded from its FXML resource. The primary {@link Stage}
- * is held as a static reference so any controller can call
- * {@code ScreenNavigator.loadScreen(...)} without passing the stage around.
- */
+/** Centralises all screen and dialog transitions; holds the primary stage so controllers do not need to pass it around. */
 public final class ScreenNavigator {
 
     // FXML resource paths (relative to the resources root)
@@ -35,19 +29,13 @@ public final class ScreenNavigator {
     public static final String DIALOG_EXIT_CONFIRM  = "/com/openrobotics/fxml/ExitConfirmDialog.fxml";
     public static final String DIALOG_EXPORT_RESULTS = "/com/openrobotics/fxml/ExportResultsDialog.fxml";
 
-    /** The application's primary stage – set once in {@link com.openrobotics.MainApp}. */
+    // set once in MainApp.start()
     private static Stage primaryStage;
-
-    /** Holds the controller of the currently displayed screen so it can be cleaned up on navigation. */
+    // used to call cleanup() before replacing the screen
     private static Object currentController;
 
     private ScreenNavigator() {}
 
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
-    /** Called once from {@link com.openrobotics.MainApp#start(Stage)}. */
     public static void setPrimaryStage(Stage stage) {
         primaryStage = stage;
     }
@@ -60,18 +48,13 @@ public final class ScreenNavigator {
         return currentController;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Full-screen navigation
-    // ------------------------------------------------------------------ //
-
     /**
-     * Loads and displays the given FXML as the primary scene (full screen).
+     * Loads and displays the given FXML as the primary scene.
      *
-     * @param fxmlPath one of the path constants defined in this class
+     * @param fxmlPath one of the path constants in this class
      */
     public static void loadScreen(String fxmlPath) {
         try {
-            // Clean up the previous screen's controller before replacing it
             if (currentController instanceof Cleanable c) {
                 c.cleanup();
             }
@@ -100,23 +83,22 @@ public final class ScreenNavigator {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Modal dialogs
-    // ------------------------------------------------------------------ //
-
     /**
      * Opens the given FXML as a blocking modal dialog.
      *
-     * @param fxmlPath one of the {@code DIALOG_*} constants
-     * @return the {@link FXMLLoader} after the dialog is closed
-     *         (lets callers retrieve the controller for result data)
+     * @param fxmlPath the path to the dialog FXML
+     * @return the loader after the dialog closes, so callers can retrieve controller data
      */
     public static FXMLLoader openDialog(String fxmlPath) {
         return openDialog(fxmlPath, "", null);
     }
 
     /**
-     * Opens a modal dialog with a custom title.
+     * Opens the given FXML as a blocking modal dialog with the given title.
+     *
+     * @param fxmlPath the path to the dialog FXML
+     * @param title the window title to display
+     * @return the loader after the dialog closes, so callers can retrieve controller data
      */
     public static FXMLLoader openDialog(String fxmlPath, String title) {
         return openDialog(fxmlPath, title, null);
@@ -124,6 +106,11 @@ public final class ScreenNavigator {
 
     /**
      * Opens a modal dialog with a custom title and optional controller initializer.
+     *
+     * @param fxmlPath the path to the dialog FXML
+     * @param title the window title; ignored if blank
+     * @param controllerInitializer optional callback to configure the controller before the dialog opens
+     * @return the loader after the dialog closes, so callers can retrieve controller data
      */
     public static FXMLLoader openDialog(String fxmlPath, String title, Consumer<Object> controllerInitializer) {
         try {
@@ -163,20 +150,16 @@ public final class ScreenNavigator {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Convenience shortcuts
-    // ------------------------------------------------------------------ //
-
-    /** Navigate to the Welcome screen. */
     public static void goToWelcome()    { loadScreen(WELCOME); }
-    /** Navigate to the Setup screen. */
     public static void goToSetup()      { loadScreen(SETUP); }
-    /** Navigate to the Simulation screen. */
     public static void goToSimulation() { loadScreen(SIMULATION); }
-    /** Navigate to the Results screen. */
     public static void goToResults()    { loadScreen(RESULTS); }
 
-    /** Show the Exit-confirmation dialog; returns {@code true} if user confirmed exit. */
+    /**
+     * Shows the exit-confirm dialog and returns whether the user confirmed.
+     *
+     * @return {@code true} if the user pressed the confirm button
+     */
     public static boolean confirmExit() {
         FXMLLoader loader = openDialog(DIALOG_EXIT_CONFIRM, "Exit");
         Object controller = loader.getController();
@@ -189,15 +172,9 @@ public final class ScreenNavigator {
         return false;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Marker interfaces – controllers implement these so the navigator
-    //  can inject the stage without hard-casting to every concrete type.
-    // ------------------------------------------------------------------ //
+    // marker interfaces — controllers implement these so the navigator can inject the stage without hard-casting
 
-    /**
-     * Implemented by screen controllers that hold resources (timelines, listeners, bindings)
-     * that must be released before the screen is replaced.
-     */
+    /** Implemented by screen controllers that hold resources (timelines, listeners, bindings) needing release before navigation. */
     public interface Cleanable {
         void cleanup();
     }
@@ -212,10 +189,7 @@ public final class ScreenNavigator {
         boolean isConfirmed();
     }
 
-    /**
-     * Derives a ResourceBundle base name from an FXML resource path and attempts
-     * to load it. Returns {@code null} when no matching bundle exists.
-     */
+    // derives a bundle base name from the fxml path and loads it; returns null if no bundle exists
     private static ResourceBundle resolveBundleForFxml(String fxmlPath) {
         if (fxmlPath == null) return null;
         String baseName = fxmlPath

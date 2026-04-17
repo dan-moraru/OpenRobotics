@@ -5,39 +5,26 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 
 import java.awt.Desktop;
 import java.util.logging.Logger;
 
-/**
- * Controller for {@code WelcomeScreen.fxml}.
- *
- * <p>The welcome screen (§4.1.1) shows the application logo, branding, and
- * a changelog panel. Pressing START SETUP navigates to the Setup screen.
- */
+/** Controller for WelcomeScreen.fxml; shows branding and changelog, and routes {@code START SETUP} to the setup screen. */
 public class WelcomeController {
+    // Logging
     private static final Logger LOGGER = Logger.getLogger(WelcomeController.class.getName());
 
+    // View State
     @FXML
-    private StackPane rootPane;
+    private StackPane rootPane; // Injected by FXML but not referenced directly.
 
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
+    // Initialization
     @FXML
     private void initialize() {
         LOGGER.fine("Default JavaFX font: " + javafx.scene.text.Font.getDefault());
     }
 
-    // ------------------------------------------------------------------ //
-    //  Event Handlers
-    // ------------------------------------------------------------------ //
-
-    /**
-     * START SETUP button navigates to the Setup screen (§2.2.6).
-     */
+    // Navigation
     @FXML
     private void onStartSetup(ActionEvent event) {
         ScreenNavigator.goToSetup();

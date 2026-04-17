@@ -8,14 +8,15 @@ import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
 
-/** DAO for the run_results table */
+/** DAO for the {@code run_results} table. */
 public final class RunResultDao {
 
     private RunResultDao() {}
 
     /**
-     * inserts a run result record.
+     * Inserts a run result record.
      *
+     * @param r the run result record to insert
      * @throws SQLException on database error
      */
     public static void insert(RunResultRecord r) throws SQLException {
@@ -45,8 +46,10 @@ public final class RunResultDao {
     }
 
     /**
-     * finds a run result record by run ID.
+     * Finds a run result record by run ID.
      *
+     * @param runId the run UUID to look up
+     * @return an {@link Optional} containing the record, or empty if not found
      * @throws SQLException on database error
      */
     public static Optional<RunResultRecord> findByRunId(UUID runId) throws SQLException {
@@ -61,9 +64,10 @@ public final class RunResultDao {
     }
 
     /**
-     * deletes a run result record by run ID.
+     * Deletes a run result record by run ID.
      *
-     * @return true if a row was deleted
+     * @param runId the run UUID whose result record should be deleted
+     * @return {@code true} if a row was deleted
      * @throws SQLException on database error
      */
     public static boolean deleteByRunId(UUID runId) throws SQLException {

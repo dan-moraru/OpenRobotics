@@ -5,46 +5,41 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
-/** loads and saves simulation config files as JSON; path and class validation guard against path traversal and unsafe deserialization */
+/**
+ * Loads and saves simulation config JSON files while canonicalizing file paths and restricting
+ * deserialization targets.
+ */
 public class ConfigLoader {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final String BASE_DIR_PROPERTY = "openrobotics.config.baseDir";
 
     private ConfigLoader() {}
 
-    private static List<Path> allowedBaseDirs() throws IOException {
-        List<Path> bases = new ArrayList<>();
-        String configuredBase = System.getProperty(BASE_DIR_PROPERTY);
-        if (configuredBase != null && !configuredBase.isBlank()) {
-            bases.add(new File(configuredBase).getCanonicalFile().toPath());
-        } else {
-            bases.add(new File(System.getProperty("user.dir", ".")).getCanonicalFile().toPath());
-        }
-        bases.add(new File(System.getProperty("java.io.tmpdir", ".")).getCanonicalFile().toPath());
-        bases.add(new File(System.getProperty("user.home", ".") + File.separator
-            + ".open-robotics" + File.separator + "configs").getCanonicalFile().toPath());
-        return bases;
-    }
-
+    /**
+     * Resolves a config path to a canonical file.
+     *
+     * @param path the user-supplied file path
+     * @return the canonical file for {@code path}
+     * @throws IOException if canonicalization fails
+     * @throws IllegalArgumentException if {@code path} is {@code null} or blank
+     */
     private static File validatePath(String path) throws IOException {
         if (path == null || path.isBlank()) {
             throw new IllegalArgumentException("path must not be null or blank");
         }
-        File file = new File(path).getCanonicalFile();
-        Path filePath = file.toPath();
-        for (Path base : allowedBaseDirs()) {
-            if (filePath.startsWith(base)) {
-                return file;
-            }
-        }
-        throw new SecurityException("path is outside allowed config directories: " + file);
+        // Resolves the file and removes any relative navigation
+        return new File(path).getCanonicalFile();
     }
 
+    /**
+     * Validates that a deserialization target class is in an allowed OpenRobotics package.
+     *
+     * @param <T> the deserialization target type
+     * @param clazz the target class
+     * @throws IllegalArgumentException if {@code clazz} is {@code null}
+     * @throws SecurityException if {@code clazz} is outside the allowed packages
+     */
     private static <T> void validateTargetClass(Class<T> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz must not be null");
@@ -58,10 +53,15 @@ public class ConfigLoader {
     }
 
     /**
-     * loads and deserializes a JSON file at {@code path} into an instance of {@code clazz}.
-     * path must resolve under an allowed base directory; clazz must be in an openrobotics DTO/model package.
+     * Loads a JSON file at {@code path} into an instance of {@code clazz}.
      *
-     * @throws SecurityException if path or clazz fails validation
+     * @param <T> the deserialized type
+     * @param path the JSON file path
+     * @param clazz the target class
+     * @return the deserialized object
+     * @throws IOException if the file cannot be read or deserialized
+     * @throws IllegalArgumentException if {@code path} is blank or {@code clazz} is {@code null}
+     * @throws SecurityException if {@code clazz} is outside the allowed packages
      */
     public static <T> T load(String path, Class<T> clazz) throws IOException {
         validateTargetClass(clazz);
@@ -71,10 +71,12 @@ public class ConfigLoader {
     }
 
     /**
-     * serializes {@code obj} as pretty-printed JSON and writes it to {@code path}.
-     * path must resolve under an allowed base directory.
+     * Serializes {@code obj} as pretty-printed JSON and writes it to {@code path}.
      *
-     * @throws SecurityException if path fails validation
+     * @param path the output file path
+     * @param obj the object to serialize
+     * @throws IOException if the file cannot be written
+     * @throws IllegalArgumentException if {@code path} is blank or {@code obj} is {@code null}
      */
     public static void save(String path, Object obj) throws IOException {
         if (obj == null) {

@@ -1,6 +1,6 @@
 package com.openrobotics.logging.eventtypes;
 
-/** event types emitted by robots during simulation; used to categorize sim_logs entries */
+/** Event types emitted by robots during simulation; used to categorize {@code sim_logs} entries. */
 public enum RobotEvent {
     MOVE_INTENT, // NOTE: Is this needed? Can't think of a use case for knowing these events
     MOVE_EXECUTED,

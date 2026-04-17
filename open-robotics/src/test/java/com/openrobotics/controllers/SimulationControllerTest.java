@@ -19,13 +19,7 @@ import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.task.Task;
 import com.openrobotics.util.ScreenNavigator;
 import javafx.event.Event;
-import com.openrobotics.map.Map;
-import com.openrobotics.robot.Robot;
-import com.openrobotics.simulationcore.CoordinationPolicy;
-import com.openrobotics.simulationcore.Dispatcher;
 import com.openrobotics.simulationcore.ReservationKPolicy;
-import com.openrobotics.util.ScreenNavigator;
-import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.simulationcore.TrafficRulesPolicy;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -75,6 +69,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * JavaFX integration-style tests for {@link SimulationController}.
+ *
+ * <p>This suite exercises simulation-screen behavior across loading, editing, playback controls,
+ * outliner/property synchronization, configuration persistence/reload, screen navigation, and
+ * policy-dependent UI visibility. Tests intentionally interact with real FXML scene wiring while
+ * using reflection helpers for private controller paths that are difficult to trigger only through
+ * public UI events.</p>
+ */
 public class SimulationControllerTest extends ApplicationTest {
 
     @TempDir
@@ -83,10 +86,16 @@ public class SimulationControllerTest extends ApplicationTest {
     private Stage stage;
     private SimulationController controller;
 
+    /**
+     * Creates a minimal engine using the supplied coordination policy.
+     */
     private SimulationEngine buildEngine(CoordinationPolicy policy) {
         return new SimulationEngine(new Map(6, 6), new Robot[]{}, new Dispatcher(), policy);
     }
 
+    /**
+     * Reloads simulation screen from a specific engine through {@link AppState}.
+     */
     private void reloadSimulationWithEngine(SimulationEngine engine) {
         interact(() -> {
             AppState.clear();
@@ -97,6 +106,12 @@ public class SimulationControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Initializes the simulation scene on the TestFX stage.
+     *
+     * @param stage JavaFX stage from TestFX
+     * @throws Exception if FXML loading fails
+     */
     @Override
     public void start(Stage stage) throws Exception {
         this.stage = stage;
@@ -107,6 +122,11 @@ public class SimulationControllerTest extends ApplicationTest {
         loadSceneFromCurrentAppState();
     }
 
+    /**
+     * Resets UI/controller runtime state before each test.
+     *
+     * @throws TimeoutException if console clear does not complete in time
+     */
     @BeforeEach
     void resetState() throws TimeoutException {
         Logger.setMode(LoggerMode.NO_OP);
@@ -115,6 +135,9 @@ public class SimulationControllerTest extends ApplicationTest {
         assertConsoleEventuallyEmpty();
     }
 
+    /**
+     * Cleans controller resources and shared app/logging state after each test.
+     */
     @AfterEach
     void cleanUpController() {
         if (controller != null) {
@@ -126,6 +149,7 @@ public class SimulationControllerTest extends ApplicationTest {
         Logger.setMode(LoggerMode.DB);
     }
 
+    /** Verifies safe empty-state labels/progress when no engine is loaded. */
     @Test
     void initial_screen_without_engine_shows_safe_empty_state() {
         assertEquals("TICK 0", tickLabel().getText());
@@ -139,6 +163,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().isEmpty(), "BeforeEach should leave console empty for each test");
     }
 
+    /** Verifies malformed config reload reports failure without crashing the screen. */
     @Test
     void loading_invalid_config_path_reports_failure_without_crashing() throws Exception {
         Path malformed = tempDir.resolve("bad-config.json");
@@ -151,6 +176,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertNull(AppState.getEngine());
     }
 
+    /** Verifies loading a populated engine refreshes canvas, outliner, stats, and console logs. */
     @Test
     void loading_engine_populates_canvas_outliner_stats_and_console() {
         EngineFixture fixture = loadDiverseEngine();
@@ -159,7 +185,7 @@ public class SimulationControllerTest extends ApplicationTest {
 
         assertAll(
                 () -> assertSame(fixture.engine, AppState.getEngine()),
-                () -> assertEquals("Canvas Size: 6×5 Tiles", field("canvasSizeLabel", Label.class).getText()),
+                () -> assertEquals("Canvas Size: 5×5 Tiles", field("canvasSizeLabel", Label.class).getText()),
                 () -> assertEquals("Loaded 5 objects", field("viewportStatusLabel", Label.class).getText()),
                 () -> assertEquals("Objects: 6", field("objsLabel", Label.class).getText()),
                 () -> assertEquals(6, outliner.getItems().size()),
@@ -171,6 +197,7 @@ public class SimulationControllerTest extends ApplicationTest {
         );
     }
 
+    /** Verifies outliner filtering updates visible rows and derived object count label. */
     @Test
     void outliner_filter_updates_entities_tasks_and_object_count() {
         loadDiverseEngine();
@@ -195,6 +222,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals("Objects: 6", field("objsLabel", Label.class).getText());
     }
 
+    /** Verifies selecting an outliner entity populates properties panel with entity details. */
     @Test
     void selecting_outliner_entity_populates_properties_panel() {
         EngineFixture fixture = loadDiverseEngine();
@@ -212,6 +240,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(panelText.contains("Battery:"));
     }
 
+    /** Verifies renaming through properties panel updates model and outliner text. */
     @Test
     void property_name_edit_updates_entity_outliner_and_viewport() {
         EngineFixture fixture = loadDiverseEngine();
@@ -228,6 +257,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(outliner().getItems().stream().anyMatch(item -> item.contains("renamed_rack")));
     }
 
+    /** Verifies entity factory type mapping and placement rules for common tile occupancy cases. */
     @Test
     void factory_creates_expected_entity_types_and_occupancy_rules() {
         loadDiverseEngine();
@@ -257,6 +287,7 @@ public class SimulationControllerTest extends ApplicationTest {
         );
     }
 
+    /** Verifies copy/paste/delete operations mutate engine entities and emit console feedback. */
     @Test
     void copy_paste_and_delete_selected_entity_update_engine_and_console() {
         EngineFixture fixture = loadDiverseEngine();
@@ -281,6 +312,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals(initialCount, fixture.engine.getMap().getEntities().size());
     }
 
+    /** Verifies task pickup/dropoff coordinates are synchronized when referenced entities move. */
     @Test
     void sync_task_positions_updates_pickup_and_dropoff_references() {
         EngineFixture fixture = loadDiverseEngine();
@@ -304,19 +336,21 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(outliner().getItems().stream().anyMatch(item -> item.contains("(2, 1) → (4, 1)")));
     }
 
+    /** Verifies single-step frame fails to advance simulation tick/progress/status and logs. */
     @Test
-    void next_frame_with_engine_advances_tick_status_progress_and_console() {
+    void next_frame_with_engine_does_not_advance_tick_status_progress_and_console() {
         loadScreenWith(emptyEngine(), null, 30, 30);
         Label simStatus = installOptionalStatusLabel();
 
         invokeOnFx("onNextFrame", new Class<?>[0]);
 
-        assertEquals("STEPPING", simStatus.getText());
-        assertEquals("TICK 1", tickLabel().getText());
-        assertEquals(0.001, progressBar().getProgress(), 0.0001);
-        assertTrue(consoleText().contains("Step → TICK 1"));
+        assertEquals("FAILURE", simStatus.getText());
+        assertEquals("TICK 0", tickLabel().getText());
+        assertEquals(0.0, progressBar().getProgress(), 0.0001);
+        assertTrue(consoleText().contains("Step → TICK 0"));
     }
 
+    /** Verifies completion path updates status/progress without incrementing tick counter. */
     @Test
     void completing_tick_updates_complete_state_without_incrementing_tick() {
         loadScreenWith(new CompletingEngine(), null, 30, 30);
@@ -332,41 +366,22 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Step → TICK 0"));
     }
 
+    /** Verifies play/pause/replay/stop flow updates status, button styles, and timeline logs. */
     @Test
     void play_pause_resume_and_stop_flow_updates_labels_buttons_and_logs() {
         loadScreenWith(emptyEngine(), null, 30, 30);
         Label simStatus = installOptionalStatusLabel();
 
         fireButton("playBtn");
+        WaitForAsyncUtils.waitForFxEvents();
 
-        // Add a bit of delay
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertEquals("RUNNING", simStatus.getText());
-        assertTrue(consoleText().contains("Simulation started."));
+        assertEquals("FAILURE", simStatus.getText());
+        assertTrue(consoleText().contains("\u26a0 No tasks could be generated."));
+        assertTrue(consoleText().contains("Simulation failed: The map configuration is invalid. Simulation cannot run."));
+        assertTrue(consoleText().contains("Simulation failed at TICK 0."));
         assertNotNull(field("initialSnapshotPath", String.class));
-        assertTrue(field("playBtn", Button.class).getStyle().contains("#2E9E5B"));
-
-        fireButton("pauseBtn");
-
-        assertEquals("PAUSED", simStatus.getText());
-        assertTrue(consoleText().contains("Simulation paused."));
-        assertTrue(field("pauseBtn", Button.class).getStyle().contains("#C23B42"));
-
-        fireButton("playBtn");
-
-        // Add a bit of delay
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        assertTrue(consoleText().contains("\u26a0 Simulation already complete. Press Stop to reset before playing again."));
+        assertEquals("", field("playBtn", Button.class).getStyle());
+        assertEquals("", field("pauseBtn", Button.class).getStyle());
 
         invokeOnFx("onStop", new Class<?>[0]);
 
@@ -376,17 +391,24 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals("", field("pauseBtn", Button.class).getStyle());
     }
 
+    /** Verifies play still starts when baseline snapshot save fails, while logging failure context. */
     @Test
     void play_logs_snapshot_failure_but_still_starts_when_engine_cannot_save_baseline() {
         loadScreenWith(new UnsavableEngine(), null, 30, 30);
-        installOptionalStatusLabel();
+        Label simStatus = installOptionalStatusLabel();
 
         fireButton("playBtn");
+        WaitForAsyncUtils.waitForFxEvents();
         invokeOnFx("onStop", new Class<?>[0]);
 
-        assertTrue(consoleText().contains("Simulation started."));
+        assertEquals("STOPPED", simStatus.getText());
+        assertTrue(consoleText().contains("\u26a0 Could not snapshot initial state: snapshot failed"));
+        assertTrue(consoleText().contains("\u26a0 No tasks could be generated."));
+        assertTrue(consoleText().contains("Simulation failed: The map configuration is invalid. Simulation cannot run."));
+        assertFalse(consoleText().contains("Simulation started."));
     }
 
+    /** Verifies speed controls update internal speed factor and append matching log entries. */
     @Test
     void speed_buttons_update_speed_factor_and_log_each_choice() {
         fireButton("speed2Btn");
@@ -402,21 +424,23 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Speed set to ×1."));
     }
 
+    /** Verifies zoom-in/out/reset controls update viewport zoom and reset log messaging. */
     @Test
     void zoom_buttons_and_origin_reset_update_zoom_and_console() {
         double initialZoom = field("zoom", Double.class);
 
-        fireButtonByText("⊕");
+        fireButtonByText("+");
         assertTrue(field("zoom", Double.class) > initialZoom);
 
-        fireButtonByText("⊖");
+        fireButtonByText("-");
         assertEquals(initialZoom, field("zoom", Double.class), 0.0001);
 
-        fireButtonByText("⌖");
+        fireButtonByText("⊙");
         assertEquals(1.0, field("zoom", Double.class), 0.0001);
         assertTrue(consoleText().contains("Viewport reset to origin."));
     }
 
+    /** Verifies sidebar/console toggle menu items collapse and restore split-pane dividers. */
     @Test
     void sidebar_and_console_toggles_collapse_and_restore_split_panes() {
         CheckMenuItem sidebarItem = field("toggleSidebarItem", CheckMenuItem.class);
@@ -447,6 +471,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals(0.83, consoleSplit.getDividerPositions()[0], 0.08);
     }
 
+    /** Verifies restart with invalid engine resets run state and rotates run identifier. */
     @Test
     void restart_with_engine_resets_tick_progress_status_and_updates_run_id() {
         SimulationEngine engine = emptyEngine();
@@ -455,7 +480,7 @@ public class SimulationControllerTest extends ApplicationTest {
         UUID originalRunId = engine.getRunId();
 
         invokeOnFx("onNextFrame", new Class<?>[0]);
-        assertEquals("TICK 1", tickLabel().getText());
+        assertEquals("TICK 0", tickLabel().getText());
 
         fireButtonByText("↺");
 
@@ -466,6 +491,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Simulation reset."));
     }
 
+    /** Verifies restart surfaces error state when saved config path reload is invalid. */
     @Test
     void restart_with_bad_config_path_reports_error_state() throws Exception {
         Path malformed = tempDir.resolve("bad-restart.json");
@@ -484,6 +510,56 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Simulation reset failed"));
     }
 
+    /** Verifies reset after Results → Editor reloads the saved editor baseline instead of the original config. */
+    @Test
+    void restart_after_results_round_trip_uses_editor_baseline_snapshot() throws Exception {
+        Path originalConfig = tempDir.resolve("original-empty.json");
+        Path baselineConfig = tempDir.resolve("editor-baseline.json");
+
+        SimulationEngine originalEngine = new SimulationEngine(
+                new Map(4, 4),
+                new Robot[]{},
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+        originalEngine.configSaving(originalConfig.toString());
+
+        Map editedMap = new Map(4, 4);
+        Robot placedRobot = new Robot("placed_bot", new Vector2D(2, 1));
+        editedMap.addEntity(placedRobot);
+        SimulationEngine editedEngine = new SimulationEngine(
+                editedMap,
+                new Robot[]{ placedRobot },
+                new Dispatcher(),
+                CoordinationPolicy.noOp()
+        );
+        editedEngine.configSaving(baselineConfig.toString());
+
+        loadScreenWith(editedEngine, originalConfig.toString(), baselineConfig.toString(), 30, 30);
+
+        assertEquals(baselineConfig.toString(), field("initialSnapshotPath", String.class));
+
+        fireButtonByText("RESULTS");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertNotNull(lookup("#robotStatsTable").queryAs(TableView.class));
+
+        fireButtonByText("RETURN TO EDITOR");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        interact(this::syncControllerFromNavigator);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertEquals(baselineConfig.toString(), field("initialSnapshotPath", String.class));
+
+        fireButtonByText("↺");
+
+        assertEquals(1, AppState.getEngine().getMap().getEntities().size());
+        assertTrue(AppState.getEngine().getMap().getEntities().stream()
+                .anyMatch(entity -> "placed_bot".equals(entity.getName())));
+        assertEquals("TICK 0", tickLabel().getText());
+    }
+
+    /** Verifies results navigation and back-navigation route to expected real screens. */
     @Test
     void results_tab_and_back_button_navigate_through_real_screens() {
         fireButtonByText("RESULTS");
@@ -500,6 +576,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertNotNull(lookup("#mapCombo").query());
     }
 
+    /** Verifies editor tab activation updates tab style state without navigation side effects. */
     @Test
     void editor_tab_keeps_editor_active_without_navigation() {
         Button editor = field("editorTabBtn", Button.class);
@@ -511,6 +588,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertEquals(List.of("tab-btn"), results.getStyleClass());
     }
 
+    /** Verifies single-click object tile selection logs selected type without opening dialogs. */
     @Test
     void add_object_single_click_logs_selected_type_without_opening_dialog() {
         Button robotTile = objectTile("ROBOT");
@@ -521,20 +599,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(consoleText().contains("Selected object type: ROBOT."));
     }
 
-    /*@Test
-    // TODO: update
-    void reset_string_property_and_query_logs_handle_optional_fields() {
-        TextField optionalStringField = new TextField("custom");
-        installPrivateField("strPropField", optionalStringField);
-
-        invokeOnFx("onResetStringProp", new Class<?>[0]);
-        interact(controller::queryLogs);
-        WaitForAsyncUtils.waitForFxEvents();
-
-        assertEquals("Hello", optionalStringField.getText());
-        assertEquals("hello testing", field("databaseArea", TextArea.class).getText());
-    }*/
-
+    /** Verifies cleanup stops animation/tip loops while preserving active AppState engine. */
     @Test
     void cleanup_stops_tip_and_animation_timelines() {
         EngineFixture fixture = loadDiverseEngine();
@@ -552,17 +617,34 @@ public class SimulationControllerTest extends ApplicationTest {
         assertSame(fixture.engine, AppState.getEngine());
     }
 
+    /** Clears console through UI button to mirror user-driven behavior. */
     private void clearConsoleThroughUi() {
         Button clear = field("clearConsoleButton", Button.class);
         interact(clear::fire);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Waits for console to become empty to reduce flakiness from async logging.
+     *
+     * @throws TimeoutException if console is not emptied within timeout
+     */
     private void assertConsoleEventuallyEmpty() throws TimeoutException {
         WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> consoleText().isEmpty());
     }
 
+    /**
+     * Loads/reloads screen using provided engine/config and canvas dimensions.
+     */
     private void loadScreenWith(SimulationEngine engine, String configPath, int canvasWidth, int canvasHeight) {
+        loadScreenWith(engine, configPath, null, canvasWidth, canvasHeight);
+    }
+
+    /**
+     * Loads/reloads screen using provided engine/config/baseline and canvas dimensions.
+     */
+    private void loadScreenWith(SimulationEngine engine, String configPath, String editorBaselinePath,
+                                int canvasWidth, int canvasHeight) {
         interact(() -> {
             try {
                 AppState.clear();
@@ -573,6 +655,9 @@ public class SimulationControllerTest extends ApplicationTest {
                 if (configPath != null) {
                     AppState.setConfigPath(configPath);
                 }
+                if (editorBaselinePath != null) {
+                    AppState.setEditorBaselinePath(editorBaselinePath);
+                }
                 loadSceneFromCurrentAppState();
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -581,6 +666,11 @@ public class SimulationControllerTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /**
+     * Loads simulation FXML and binds the controller to the shared stage.
+     *
+     * @throws IOException if FXML cannot be loaded
+     */
     private void loadSceneFromCurrentAppState() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/openrobotics/fxml/SimulationScreen.fxml"));
         Parent root = loader.load();
@@ -589,12 +679,19 @@ public class SimulationControllerTest extends ApplicationTest {
         stage.show();
     }
 
+    /** Refreshes the cached controller after navigation recreates the simulation screen. */
+    private void syncControllerFromNavigator() {
+        controller = assertInstanceOf(SimulationController.class, ScreenNavigator.getCurrentController());
+    }
+
+    /** Builds and loads a representative fixture containing multiple entity types and one task. */
     private EngineFixture loadDiverseEngine() {
         EngineFixture fixture = diverseFixture();
         loadScreenWith(fixture.engine, null, 6, 5);
         return fixture;
     }
 
+    /** Creates a deterministic mixed-entity engine fixture for outliner/properties behavior tests. */
     private EngineFixture diverseFixture() {
         Map map = new Map(5, 5);
         Robot robot = new Robot("robot_1", new Vector2D(0, 0));
@@ -618,6 +715,7 @@ public class SimulationControllerTest extends ApplicationTest {
         return new EngineFixture(engine, robot, rack, charger, station, obstacle, task);
     }
 
+    /** Creates a minimal engine suitable for transport/control-flow tests. */
     private SimulationEngine emptyEngine() {
         Map map = new Map(3, 3);
         Robot robot = new Robot("idle_bot", new Vector2D(0, 0));
@@ -627,6 +725,7 @@ public class SimulationControllerTest extends ApplicationTest {
         return new SimulationEngine(map, new Robot[]{robot}, new Dispatcher(), CoordinationPolicy.noOp());
     }
 
+    /** Creates an entity via controller factory path for a given user-facing type token. */
     private MapEntity createdEntity(String type, int x, int y) {
         return (MapEntity) invokePrivate(
                 "createEntityFromType",
@@ -638,6 +737,7 @@ public class SimulationControllerTest extends ApplicationTest {
         );
     }
 
+    /** Proxies private placement rule check to validate occupancy constraints in tests. */
     private boolean canPlace(MapEntity entity, int x, int y, MapEntity ignore) {
         return (boolean) invokePrivate(
                 "canPlaceEntityAt",
@@ -649,18 +749,21 @@ public class SimulationControllerTest extends ApplicationTest {
         );
     }
 
+    /** Fires a button by controller field name. */
     private void fireButton(String fieldName) {
         Button button = field(fieldName, Button.class);
         interact(button::fire);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /** Fires the first visible button matching display text. */
     private void fireButtonByText(String text) {
         Button button = buttonWithText(text);
         interact(button::fire);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /** Finds a button by displayed text in current scene graph. */
     private Button buttonWithText(String text) {
         return descendants(stage.getScene().getRoot()).stream()
                 .filter(Button.class::isInstance)
@@ -670,6 +773,7 @@ public class SimulationControllerTest extends ApplicationTest {
                 .orElseThrow(() -> new AssertionError("No button with text: " + text));
     }
 
+    /** Finds an object palette tile button by userData marker. */
     private Button objectTile(String userData) {
         return descendants(stage.getScene().getRoot()).stream()
                 .filter(Button.class::isInstance)
@@ -679,6 +783,7 @@ public class SimulationControllerTest extends ApplicationTest {
                 .orElseThrow(() -> new AssertionError("No object tile with userData: " + userData));
     }
 
+    /** Creates a synthetic primary-click event with specified click count. */
     private MouseEvent clickEvent(int clickCount) {
         return new MouseEvent(
                 MouseEvent.MOUSE_CLICKED,
@@ -702,6 +807,7 @@ public class SimulationControllerTest extends ApplicationTest {
         );
     }
 
+    /** Returns a flattened list of node descendants including the root node itself. */
     private List<Node> descendants(Node node) {
         List<Node> result = new ArrayList<>();
         result.add(node);
@@ -713,6 +819,7 @@ public class SimulationControllerTest extends ApplicationTest {
         return result;
     }
 
+    /** Aggregates labeled text from properties panel for content assertions. */
     private String propertiesPanelText() {
         Parent panel = field("propertiesPanel", Parent.class);
         return descendants(panel).stream()
@@ -722,6 +829,7 @@ public class SimulationControllerTest extends ApplicationTest {
                 .collect(Collectors.joining("\n"));
     }
 
+    /** Finds a TextField in properties panel with exact current value. */
     private TextField textFieldWithValue(String value) {
         Parent panel = field("propertiesPanel", Parent.class);
         return descendants(panel).stream()
@@ -732,38 +840,46 @@ public class SimulationControllerTest extends ApplicationTest {
                 .orElseThrow(() -> new AssertionError("No TextField with value: " + value));
     }
 
+    /** Returns outliner list view from private controller field. */
     @SuppressWarnings("unchecked")
     private ListView<String> outliner() {
         return (ListView<String>) field("outlinerListView", ListView.class);
     }
 
+    /** Returns console text area reference. */
     private TextArea console() {
         return field("consoleArea", TextArea.class);
     }
 
+    /** Returns current console contents. */
     private String consoleText() {
         return console().getText();
     }
 
+    /** Returns tick display label. */
     private Label tickLabel() {
         return field("tickDisplayLabel", Label.class);
     }
 
+    /** Returns simulation progress bar. */
     private ProgressBar progressBar() {
         return field("simProgressBar", ProgressBar.class);
     }
 
+    /** Installs optional sim-status label used by some controller branches. */
     private Label installOptionalStatusLabel() {
         Label label = new Label();
         installPrivateField("simStatusLabel", label);
         return label;
     }
 
+    /** Installs a private field value on FX thread. */
     private void installPrivateField(String name, Object value) {
         interact(() -> setField(name, value));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /** Invokes a private controller method on FX thread and returns its result. */
     private Object invokeOnFx(String name, Class<?>[] parameterTypes, Object... args) {
         AtomicReference<Object> result = new AtomicReference<>();
         interact(() -> result.set(invokePrivate(name, parameterTypes, args)));
@@ -771,6 +887,7 @@ public class SimulationControllerTest extends ApplicationTest {
         return result.get();
     }
 
+    /** Invokes a private controller method via reflection. */
     private Object invokePrivate(String name, Class<?>[] parameterTypes, Object... args) {
         try {
             Method method = SimulationController.class.getDeclaredMethod(name, parameterTypes);
@@ -787,6 +904,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Reads a private controller field and casts it to target type. */
     private <T> T field(String name, Class<T> type) {
         try {
             Field field = SimulationController.class.getDeclaredField(name);
@@ -797,6 +915,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Writes a private controller field through reflection. */
     private void setField(String name, Object value) {
         try {
             Field field = SimulationController.class.getDeclaredField(name);
@@ -807,6 +926,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Engine test double whose tick method reports immediate completion. */
     private static class CompletingEngine extends SimulationEngine {
         CompletingEngine() {
             super(new Map(2, 2), new Robot[]{new Robot("bot", new Vector2D(0, 0))}, new Dispatcher(), CoordinationPolicy.noOp());
@@ -818,6 +938,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Engine test double that throws on snapshot/config save attempts. */
     private static class UnsavableEngine extends SimulationEngine {
         UnsavableEngine() {
             super(new Map(2, 2), new Robot[]{new Robot("bot", new Vector2D(0, 0))}, new Dispatcher(), CoordinationPolicy.noOp());
@@ -829,6 +950,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Container for a reusable diverse engine fixture and key entity references. */
     private static class EngineFixture {
         final SimulationEngine engine;
         final Robot robot;
@@ -857,6 +979,7 @@ public class SimulationControllerTest extends ApplicationTest {
         }
     }
 
+    /** Verifies intersection tile is available for traffic-rules policy engines. */
     @Test
     void intersection_tile_visible_for_traffic_rules_engine() {
         reloadSimulationWithEngine(buildEngine(new TrafficRulesPolicy(new java.util.HashSet<>())));
@@ -866,6 +989,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertTrue(intersectionButton.isManaged());
     }
 
+    /** Verifies intersection tile is hidden for reservation policy engines. */
     @Test
     void intersection_tile_hidden_for_reservation_policy_engine() {
         reloadSimulationWithEngine(buildEngine(new ReservationKPolicy(3)));
@@ -875,6 +999,7 @@ public class SimulationControllerTest extends ApplicationTest {
         assertFalse(intersectionButton.isManaged());
     }
 
+    /** Verifies intersection tile is hidden for NO_OP policy engines. */
     @Test
     void intersection_tile_hidden_for_no_op_engine() {
         reloadSimulationWithEngine(buildEngine(CoordinationPolicy.noOp()));

@@ -8,8 +8,8 @@ import com.openrobotics.robot.Robot;
 import java.util.*;
 
 /**
- * reservation-k coordination policy; a robot must hold locks for the next k tiles on its path before it can move.
- * as the robot progresses, tiles it already reached are released.
+ * Reservation-K coordination policy; a robot must hold locks for the next {@code k} tiles on its path
+ * before it can move. As the robot progresses, tiles it has already reached are released.
  */
 public class ReservationKPolicy implements CoordinationPolicy {
     private final int k;
@@ -20,6 +20,12 @@ public class ReservationKPolicy implements CoordinationPolicy {
     // Tracks the ordered reservation window for each robot.
     private final java.util.Map<UUID, Deque<String>> robotReservations = new HashMap<>();
 
+    /**
+     * Creates a Reservation-K policy with the given look-ahead window size.
+     *
+     * @param k the number of tiles ahead a robot must lock before moving; must be {@code >= 1}
+     * @throws IllegalArgumentException if {@code k < 1}
+     */
     public ReservationKPolicy(int k) {
         if (k < 1) {
             throw new IllegalArgumentException("k must be >= 1");

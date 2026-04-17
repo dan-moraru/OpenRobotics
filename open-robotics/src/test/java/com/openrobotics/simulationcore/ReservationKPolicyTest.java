@@ -1,5 +1,8 @@
 package com.openrobotics.simulationcore;
 
+import com.openrobotics.AppState;
+import com.openrobotics.logging.Logger;
+import com.openrobotics.logging.LoggerMode;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.map.Vector2D;
@@ -23,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ReservationKPolicyTest {
 
+    /** Fresh policy fixture recreated before each test. */
     private ReservationKPolicy policy;
 
     /**
@@ -33,26 +37,43 @@ public class ReservationKPolicyTest {
         policy = new ReservationKPolicy(1);
     }
 
-    // Helpers
+    /**
+     * Creates a position vector with integer tile coordinates.
+     */
+    protected Vector2D pos(int x, int y) {
+        return new Vector2D(x, y);
+    }
 
+    /**
+     * Creates a robot fixture at origin with a generated UUID.
+     */
     private static Robot makeRobot(String name) {
         return new Robot(name, new Vector2D(0, 0));
     }
 
+    /**
+     * Creates a move intention using standalone tiles (not map-owned tiles).
+     */
     private static MoveIntention move(Robot robot, int fromX, int fromY, int toX, int toY) {
         return new MoveIntention(new Tile(fromX, fromY), new Tile(toX, toY), robot);
     }
 
+    /**
+     * Creates a stay intention where source and destination are the same tile.
+     */
     private static MoveIntention stay(Robot robot, int x, int y) {
         Tile t = new Tile(x, y);
         return new MoveIntention(t, t, robot);
     }
 
+    /**
+     * Creates a generic test map used by policy-only tests.
+     */
     private static Map testMap() {
         return new Map(20, 20);
     }
 
-        /**
+    /**
      * Creates a robot with a target task and moving state.
      * @param name the name of the robot
      * @param id the id of the robot
@@ -411,6 +432,10 @@ public class ReservationKPolicyTest {
         assertMove(result, robotB, 2, 0);
     }
 
+    /**
+     * k-window reservations may block moves into farther tiles even when immediate destinations do
+     * not conflict directly.
+     */
     @Test
     void blocksMovesIntoFartherTilesReservedByTheBfsWindow() {
         Map map = new Map(5, 1);
@@ -552,12 +577,20 @@ public class ReservationKPolicyTest {
         map.addEntity(robotA);
         map.addEntity(robotB);
 
+        // Creating dispatcher and loading it with a dummy task
+        Dispatcher dispatcher = new Dispatcher();
+        Task dummyTask = new Task(1, pos(0, 1), pos(3, 1), 1);
+        dispatcher.addTask(dummyTask);
+
         SimulationEngine engine = new SimulationEngine(
                 map,
                 new Robot[] { robotA, robotB },
-                new Dispatcher(),
+                dispatcher,
                 new ReservationKPolicy(3)
         );
+
+        AppState.setEngine(engine);
+        Logger.setMode(LoggerMode.NO_OP);
 
         engine.tick();
 

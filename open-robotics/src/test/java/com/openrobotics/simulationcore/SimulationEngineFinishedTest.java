@@ -12,26 +12,49 @@ import java.lang.reflect.Field;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Tests for {@link SimulationEngine#isFinished()}. */
+/**
+ * Unit tests for {@link SimulationEngine#isFinished()} completion semantics.
+ *
+ * <p>This suite verifies tick-gating behavior, queued-task influence, and robot-state influence on
+ * the engine's finished predicate.</p>
+ */
 public class SimulationEngineFinishedTest {
 
+    /**
+     * Sets the private tick counter via reflection to create deterministic completion states.
+     *
+     * @param engine engine instance under test
+     * @param tick tick value to inject
+     * @throws Exception if reflective field access fails
+     */
     private static void setTick(SimulationEngine engine, int tick) throws Exception {
         Field f = SimulationEngine.class.getDeclaredField("tickCounter");
         f.setAccessible(true);
         f.setInt(engine, tick);
     }
 
+    /**
+     * Creates a minimal engine fixture with a fresh map and no-op coordination policy.
+     */
     private static SimulationEngine newEngine(Robot[] robots, Dispatcher dispatcher) {
         Map map = new Map(5, 5);
         return new SimulationEngine(map, robots, dispatcher, CoordinationPolicy.noOp());
     }
 
+    /**
+     * Verifies a newly created engine at tick zero is never considered finished.
+     */
     @Test
     public void notFinishedAtTickZero() {
         SimulationEngine engine = newEngine(new Robot[0], new Dispatcher());
         assertFalse(engine.isFinished(), "fresh engine at tick 0 must not be finished");
     }
 
+    /**
+     * Verifies queued tasks keep the engine unfinished even after tick advancement.
+     *
+     * @throws Exception if reflective tick injection fails
+     */
     @Test
     public void notFinishedWhenTasksStillQueued() throws Exception {
         Dispatcher dispatcher = new Dispatcher();
@@ -41,6 +64,11 @@ public class SimulationEngineFinishedTest {
         assertFalse(engine.isFinished());
     }
 
+    /**
+     * Verifies engine is finished when ticks advanced, no tasks remain, and all robots are idle.
+     *
+     * @throws Exception if reflective tick injection fails
+     */
     @Test
     public void finishedWhenTickAdvancedAllIdleNoTasks() throws Exception {
         Robot r = new Robot("r1", new Vector2D(0, 0));
@@ -50,6 +78,11 @@ public class SimulationEngineFinishedTest {
         assertTrue(engine.isFinished());
     }
 
+    /**
+     * Verifies any non-idle robot keeps the engine unfinished despite tick advancement.
+     *
+     * @throws Exception if reflective tick injection fails
+     */
     @Test
     public void notFinishedWhenARobotIsNonIdle() throws Exception {
         Robot r = new Robot("r1", new Vector2D(0, 0));

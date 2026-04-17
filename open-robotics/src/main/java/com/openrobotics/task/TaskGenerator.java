@@ -8,21 +8,30 @@ import com.openrobotics.map.entities.station.DeliveryStation;
 
 import java.util.*;
 
-/** generates Task objects by pairing rack pickup positions with delivery station dropoff positions */
+/** Generates {@link Task} objects by pairing rack pickup positions with delivery station dropoff positions. */
 public class TaskGenerator {
     private final Map map;
     private final Random random;
     private int nextTaskId = 1;
 
+    /**
+     * Creates a TaskGenerator for the given map.
+     *
+     * @param map the warehouse map to generate tasks for
+     * @param seed RNG seed for reproducible task generation
+     */
     public TaskGenerator(Map map, long seed) {
         this.map = map;
         this.random = new Random(seed);
     }
 
     /**
-     * Generates tasks by pairing rack positions (pickups) with valid delivery
-     * station positions (dropoffs). Respects per-rack boxCount and validDropoffIds.
-     * If a rack has no validDropoffIds set, all delivery stations are valid dropoffs.
+     * Generates tasks by pairing rack positions (pickups) with valid delivery station positions (dropoffs).
+     * Respects per-rack {@code boxCount} and {@code validDropoffIds}.
+     * If a rack has no {@code validDropoffIds} set, all delivery stations are valid dropoffs.
+     *
+     * @param maxCount the maximum number of tasks to generate
+     * @return list of generated tasks, at most {@code maxCount} entries
      */
     public List<Task> generateTasks(int maxCount) {
         List<Task> tasks = new ArrayList<>();
@@ -96,6 +105,11 @@ public class TaskGenerator {
     /**
      * Generates exactly {@code count} tasks by randomly sampling rack pickups and delivery station
      * dropoffs, ignoring per-rack box counts and dropoff pools. Used in Automatic task assignment mode.
+     *
+     * @param map the warehouse map to sample from
+     * @param count the exact number of tasks to generate
+     * @param seed RNG seed for reproducible output
+     * @return list of exactly {@code count} tasks, or an empty list if the map has no racks or stations
      */
     public static List<Task> generateAutomaticTasks(Map map, int count, long seed) {
         List<Vector2D> pickups = new ArrayList<>();
@@ -121,7 +135,14 @@ public class TaskGenerator {
         return tasks;
     }
 
-    /** convenience factory; constructs a TaskGenerator with the given seed and generates up to {@code count} tasks */
+    /**
+     * Convenience factory; constructs a {@link TaskGenerator} with the given seed and generates up to {@code count} tasks.
+     *
+     * @param map the warehouse map to generate tasks for
+     * @param count the maximum number of tasks to generate
+     * @param seed RNG seed for reproducible output
+     * @return list of generated tasks, at most {@code count} entries
+     */
     public static List<Task> generateRandomTasks(Map map, int count, long seed) {
         return new TaskGenerator(map, seed).generateTasks(count);
     }

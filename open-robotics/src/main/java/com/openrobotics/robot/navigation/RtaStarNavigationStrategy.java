@@ -11,12 +11,17 @@ import com.openrobotics.simulationcore.MoveIntention;
 
 import java.util.*;
 
-/** real-time A* navigation; learns heuristic values during exploration and penalizes sensor-detected obstacles */
+/** Real-time A* navigation; learns heuristic values during exploration and penalises sensor-detected obstacles. */
 public class RtaStarNavigationStrategy implements NavigationStrategy {
     private final long baseSeed;
     // per-robot navigation state keyed by robot id (same pattern as greedy/bug)
     private final java.util.Map<UUID, RtaStarNavState> navStates = new HashMap<>();
 
+    /**
+     * Creates an RTA* navigation strategy with the given base seed.
+     *
+     * @param baseSeed the seed used for deterministic tie-breaking per robot
+     */
     public RtaStarNavigationStrategy(long baseSeed) {
         this.baseSeed = baseSeed;
     }

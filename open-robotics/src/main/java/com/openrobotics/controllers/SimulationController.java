@@ -6,13 +6,10 @@ import com.openrobotics.db.dao.SimLogDao;
 import com.openrobotics.db.model.MapRecord;
 import com.openrobotics.db.model.SimLogRecord;
 import com.openrobotics.db.model.SimulationRunRecord;
-import com.openrobotics.db.model.WorkloadTaskRecord;
 import com.openrobotics.db.recordbuilders.MapRecordBuilder;
 import com.openrobotics.db.recordbuilders.SimulationRunRecordBuilder;
-import com.openrobotics.db.recordbuilders.WorkloadTaskRecordBuilder;
 import com.openrobotics.logging.Logger;
 import com.openrobotics.logging.eventtypes.SimulationRunEvent;
-import com.openrobotics.logging.eventtypes.TaskEvent;
 import com.openrobotics.map.MapEntity;
 import com.openrobotics.map.Vector2D;
 import com.openrobotics.map.entities.environment.Obstacle;
@@ -58,39 +55,39 @@ import java.util.concurrent.Executors;
 /**
  * Controller for {@code SimulationScreen.fxml}.
  *
- * <p>Manages the simulation viewport and all UI controls (§4.1.3 A + B):
+ * <p>Manages the simulation viewport and related UI controls, including:
  * <ul>
- *   <li>2-D warehouse canvas rendering</li>
- *   <li>Drag-and-drop of object tiles from sidebar onto the canvas</li>
- *   <li>Drag existing objects within the canvas to reposition them</li>
- *   <li>Outliner: Add Object / Outliner tabs</li>
- *   <li>Object properties panel</li>
- *   <li>Console output</li>
- *   <li>Playback controls: play / pause / stop / restart / speed</li>
- *   <li>Live statistics: tick, tasks done, collisions, status</li>
- *   <li>Viewport navigation (right-click pan, scroll zoom)</li>
+ *   <li>2D warehouse canvas rendering.</li>
+ *   <li>Drag-and-drop placement of object tiles from the sidebar onto the canvas.</li>
+ *   <li>Dragging existing objects within the canvas to reposition them.</li>
+ *   <li>The Add Object and Outliner tabs.</li>
+ *   <li>The object properties panel.</li>
+ *   <li>Console output.</li>
+ *   <li>Playback controls for play, pause, stop, restart, and speed changes.</li>
+ *   <li>Live statistics, including tick, completed tasks, collisions, and status.</li>
+ *   <li>Viewport navigation with right-click panning and scroll-wheel zoom.</li>
  * </ul>
  */
 public class SimulationController implements ScreenNavigator.Cleanable {
 
-    // ── TOPBAR LIVE STATS ────────────────────────────────────────────────
+    // Topbar Live Stats
     @FXML private Label objsLabel;
     @FXML private Label ramLabel;
     @FXML private Label canvasSizeLabel;
 
-    // ── LIVE STATS (not yet in FXML – guarded with null checks) ──────────
+    // Simulation Stats
     @FXML private Label tickLabel;
     @FXML private Label tasksDoneLabel;
     @FXML private Label collisionsLabel;
     @FXML private Label simStatusLabel;
 
-    // ── OUTLINER ────────────────────────────────────────────────────────
+    // Outliner
     @FXML private TabPane          outlinerTabPane;
     @FXML private ListView<String> outlinerListView;
     @FXML private TextField        outlinerSearchField;
     @FXML private Button           intersectionObjectTile;
 
-    // ── VIEWPORT ────────────────────────────────────────────────────────
+    // Viewport
     @FXML private StackPane viewportStack;
     @FXML private Canvas    warehouseCanvas;
     @FXML private Label     viewportModeLabel;
@@ -106,27 +103,28 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Label     tickDisplayLabel;
     @FXML private VBox      shortcutOverlay;
 
+    // Split Pane State
     // Saved divider positions so collapse/expand is smooth
     private double savedSidebarDivider  = 0.17;
     private double savedConsoleDivider  = 0.83;
 
-    // ── PROPERTIES PANEL ────────────────────────────────────────────────
+    // Properties Panel
     @FXML private VBox propertiesPanel;
     @FXML private Label propDescLabel;
     @FXML private TextField strPropField;
 
-    // ── CONSOLE ─────────────────────────────────────────────────────────
+    // Console
     @FXML private TextArea consoleArea;
     @FXML private Button    clearConsoleButton;
 
-    // - DATABASE LOGGING
+    // Simulation Logs
     @FXML private TextArea logArea;
 
-    // ── TAB STRIP ─────────────────────────────────────────────────────────
+    // Tab Strip
     @FXML private Button editorTabBtn;
     @FXML private Button resultsTabBtn;
 
-    // ── PLAYBACK ────────────────────────────────────────────────────────
+    // Playback
     @FXML private Button      speed1Btn;
     @FXML private Button      speed2Btn;
     @FXML private Button      speed3Btn;
@@ -135,32 +133,31 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private Button      pauseBtn;
     @FXML private ProgressBar simProgressBar;
 
-    // ── Viewport navigation state ─────────────────────────────────────────
+    // Viewport State
     private double lastMouseX;
     private double lastMouseY;
-    private double viewportMouseX = -1;  // last known mouse X over viewport (-1 = unset)
+    private double viewportMouseX = -1;  // Last known mouse X over the viewport (-1 means unset).
     private double viewportMouseY = -1;
     private double viewOffsetX = 0;
     private double viewOffsetY = 0;
     private double zoom        = 1.0;
 
-    // ── Canvas logical size (tiles) – read from AppState on init ──────────
+    // Canvas State
     private int     canvasWidthTiles;
     private int     canvasHeightTiles;
-    // Tile offset applied to all entity/object rendering so they are centred in the border
+    // Center loaded entities inside the canvas border.
     private int     entityOffsetTileX = 0;
     private int     entityOffsetTileY = 0;
-    private boolean viewportCentered  = false;  // ensures we only auto-centre once
+    private boolean viewportCentered  = false;  // Auto-center only once after layout settles.
 
-    // ── Simulation state ──────────────────────────────────────────────────
+    // Simulation State
     private boolean running = false;
     private boolean paused  = false;
     private boolean simulationFailed = false;
-    // Snapshot of engine state at the moment play was first pressed (tick 0 baseline).
-    // Restart always reloads from this, not from AppState.getConfigPath().
+    // Restart reloads the latest tick-0 editor snapshot rather than the original config path.
     private String initialSnapshotPath = null;
 
-    // ── Engine binding ────────────────────────────────────────────────────
+    // Engine Binding
     private SimulationEngine engine;
     private Timeline         simLoop;
     private double           speedFactor  = 1.0;
@@ -183,44 +180,46 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private static final Color OBJECT_SELECTION_COLOR = Color.web("#C2BEAE");
     private static final Color INTERSECTION_FILL_COLOR = Color.web("#8C7B38", 0.25);
     private static final Color INTERSECTION_STROKE_COLOR = Color.web("#6A4828");
-    // ── Object rendering ──────────────────────────────────────────────────
-    // Uses IconLoader utility for icon caching
 
-    // ── Canvas object state ───────────────────────────────────────────────
-
+    // Canvas Object State
     private final List<Object> outlinerBacking = new ArrayList<>();
     private MapEntity selectedEntity = null;
     private Rack pickingRack = null;
     private int  pickingSlot = -1;
     private Vector2D selectedIntersection = null;
     private MapEntity draggingOnCanvas = null;
-    // Position of draggingOnCanvas at the moment the drag started — used to update tasks on release
+    // Track the drag origin so related task endpoints can be updated on release.
     private com.openrobotics.map.Vector2D dragStartPosition = null;
+    // Intersections are engine-managed coordinates, not MapEntity instances.
+    private Vector2D dragStartIntersection = null;
+    private Vector2D dragIntersectionOrigin = null;
+    // Track copied entities and intersections separately.
+    private MapEntity clipboardEntity = null;
+    private Vector2D clipboardIntersection = null;
     private int nextObjId = 1;
     private Timeline tipRotationLoop;
-
-    // ── Drag-over tile highlight ──────────────────────────────────────────
     private int dragHighlightTileX = -1;
     private int dragHighlightTileY = -1;
 
-    // Animation state
+    // Animation
     private boolean animating = false;
     private double animationProgress = 0.0;
     private Timeline animTimeline = null;
     private Map<java.util.UUID, com.openrobotics.map.Vector2D> prevRobotPositions = new HashMap<>();
     private static final int ANIMATION_FRAMES = 5;
 
-    // ── Undo / Redo ─────────────────────────────────────────────────────
+    // Undo and Redo
     private final java.util.Deque<EditorAction> undoStack = new java.util.ArrayDeque<>();
     private final java.util.Deque<EditorAction> redoStack = new java.util.ArrayDeque<>();
 
-    // Used for updating simulation logs
+    // Log Polling
     private Timeline logPollingTimeline;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private long lastSeenLogId = 0;
+    private boolean restoredOutputState = false;
 
-    /** Sealed interface for reversible editor actions. */
-    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction {
+    // Editor Actions
+    private sealed interface EditorAction permits AddAction, DeleteAction, MoveAction, RenameAction, AlgorithmChangeAction, BatteryChangeAction, SensorChangeAction, IntersectionToggleAction, IntersectionMoveAction {
         void undo(SimulationController ctrl);
         void redo(SimulationController ctrl);
         String description();
@@ -274,8 +273,44 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         public void redo(SimulationController ctrl) { robot.setSensor(newSensorStrat); ctrl.drawViewport(); }
         public String description() { return "Change " + robot.getName() + " sensor " + oldSensor + " → " + newSensor; }
     }
+    // Undo/redo for intersection add/delete — toggle is its own inverse
+    private record IntersectionToggleAction(Vector2D position, boolean wasAdded) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) position.getX(), (int) position.getY());
+            ctrl.drawViewport();
+            ctrl.populateOutliner();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) position.getX(), (int) position.getY());
+            ctrl.drawViewport();
+            ctrl.populateOutliner();
+        }
+        public String description() { return (wasAdded ? "Add" : "Delete") + " INTERSECTION at " + position; }
+    }
+
+    // Undo/redo for intersection drag — stores original and final positions
+    private record IntersectionMoveAction(Vector2D from, Vector2D to) implements EditorAction {
+        public void undo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) to.getX(), (int) to.getY());
+            ctrl.engine.toggleTrafficRuleIntersection((int) from.getX(), (int) from.getY());
+            ctrl.selectedIntersection = from;
+            ctrl.drawViewport();
+        }
+        public void redo(SimulationController ctrl) {
+            if (ctrl.engine == null) return;
+            ctrl.engine.toggleTrafficRuleIntersection((int) from.getX(), (int) from.getY());
+            ctrl.engine.toggleTrafficRuleIntersection((int) to.getX(), (int) to.getY());
+            ctrl.selectedIntersection = to;
+            ctrl.drawViewport();
+        }
+        public String description() { return "Move INTERSECTION from " + from + " to " + to; }
+    }
 
     private void pushAction(EditorAction action) {
+        // Any new edit becomes the latest undo point and invalidates redo history.
         undoStack.push(action);
         redoStack.clear();
         saveEditorBaseline();
@@ -285,6 +320,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (undoStack.isEmpty()) { log("Nothing to undo."); return; }
         EditorAction action = undoStack.pop();
         action.undo(this);
+        // Keep redo symmetrical with the action that was just unwound.
         redoStack.push(action);
         log("Undo: " + action.description());
         saveEditorBaseline();
@@ -294,17 +330,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (redoStack.isEmpty()) { log("Nothing to redo."); return; }
         EditorAction action = redoStack.pop();
         action.redo(this);
+        // A redone action becomes the newest entry in undo history again.
         undoStack.push(action);
         log("Redo: " + action.description());
         saveEditorBaseline();
     }
 
-    /** Returns true if editor mutations (add/move/delete/rename/property changes) are blocked. */
     private boolean isEditorLocked() {
         return running || localTick > 0 || simulationFailed;
     }
 
-    /** Logs an error and returns true if the editor is locked. Use as a guard at the top of mutating methods. */
     private boolean guardEditor(String actionName) {
         if (isEditorLocked()) {
             log("\u26a0 Cannot " + actionName + " while the simulation is running, has advanced past tick 0, or has failed. Please reset first.");
@@ -313,9 +348,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return false;
     }
 
-    /** Saves the current editor state as the baseline for reset. Reuses a single temp file.
-     *  Only snapshots when the simulation has not yet started (tick 0, not running), so that
-     *  mid-run editor actions do not overwrite the clean baseline with a non-zero tick state. */
+    // Keep a reusable tick-0 snapshot so play and restart reflect the latest editor state.
     private void saveEditorBaseline() {
         if (engine == null) return;
         if (running || engine.getTickCounter() > 0) return; // never overwrite with mid-run state
@@ -326,19 +359,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 initialSnapshotPath = snap.getAbsolutePath();
             }
             engine.configSaving(initialSnapshotPath);
+            AppState.setEditorBaselinePath(initialSnapshotPath);
         } catch (Exception ex) {
             log("\u26a0 Could not snapshot initial state: " + ex.getMessage());
         }
     }
 
-    // ------------------------------------------------------------------ //
-    // ------------------------------------------------------------------ //
-    //  Initialisation
-    // ------------------------------------------------------------------ //
-
+    // Initialization
     @FXML
     private void initialize() {
-        // Set up periodic log polling (every 5 seconds) to fetch new logs from the database and update the logArea.
+        // Poll fresh simulation logs once per second while the screen is active.
         logPollingTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> fetchLogsAsync())
         );
@@ -349,15 +379,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             intersectionObjectTile.setVisible(false);
         }
 
-        // Read canvas size from shared state (set in Setup screen)
+        // Resume the canvas dimensions chosen on the setup screen.
         canvasWidthTiles  = AppState.getCanvasWidthTiles();
         canvasHeightTiles = AppState.getCanvasHeightTiles();
+        restoredOutputState = restorePersistedOutputState();
 
-        // Track viewport stack size with listeners (not bind) — same pattern as SetupController.
-        // Using bind() makes the Canvas report its pixel size as its preferred size to the
-        // layout engine, which then locks the SplitPane divider and prevents free dragging.
-        // With managed="false" on the Canvas and listener-driven setWidth/setHeight, the
-        // layout engine ignores the Canvas when computing preferred sizes, so dividers stay free.
+        // Use listeners instead of property binding so the canvas does not lock SplitPane layout.
         viewportStack.widthProperty().addListener((obs, oldW, newW) -> {
             warehouseCanvas.setWidth(newW.doubleValue());
             if (!viewportCentered && newW.doubleValue() > 0 && warehouseCanvas.getHeight() > 0) {
@@ -375,7 +402,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         });
 
-        // Viewport mouse interactions
         viewportStack.setOnMousePressed(this::onViewportMousePressed);
         viewportStack.setOnMouseDragged(this::onViewportMouseDragged);
         viewportStack.setOnMouseReleased(this::onViewportMouseReleased);
@@ -393,7 +419,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         });
 
-        // Drop target: accept objects dragged from the Add Object sidebar
         viewportStack.setOnDragOver(this::onCanvasDragOver);
         viewportStack.setOnDragDropped(this::onCanvasDragDropped);
         viewportStack.setOnDragExited(e -> {
@@ -403,7 +428,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             drawViewport();
         });
 
-        // Keyboard shortcuts: Delete, Cmd+C, Cmd+V, Ctrl+Z, Ctrl+Y
         viewportStack.setFocusTraversable(true);
         viewportStack.setOnKeyPressed(e -> {
             switch (e.getCode()) {
@@ -417,13 +441,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             e.consume();
         });
 
-        // Outliner search filter
         if (outlinerSearchField != null) {
             outlinerSearchField.textProperty().addListener((obs, o, n) -> filterOutliner(n));
         }
 
-        // Bind engine from shared AppState
+        if (outlinerListView != null) {
+            outlinerListView.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> onOutlinerSelect());
+        }
+
+        // Rebuild the engine lazily when the controller is opened from a saved config path.
         engine = AppState.getEngine();
+        initialSnapshotPath = AppState.getEditorBaselinePath();
         if (engine == null && AppState.hasConfigPath()) {
             engine = new SimulationEngine(AppState.getConfigPath());
             if (engine == null || engine.getMap() == null) {
@@ -439,17 +467,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             AppState.setEngine(engine);
         }
 
-        // Restore simulation tick from AppState (persists across tab switches)
         localTick = AppState.getSimulationTick();
-
-        // Update RAM display
         updateRamLabel();
 
         if (engine != null && engine.getMap() != null) {
             com.openrobotics.map.Map loadedMap = engine.getMap();
 
-            // Saving map to database.
             try {
+                // Persist the loaded map once so downstream screens can inspect it from the DB.
                 MapRecordBuilder recordBuilder = new MapRecordBuilder(loadedMap);
                 MapRecord record = recordBuilder.build();
                 MapDao.insert(record);
@@ -457,46 +482,37 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 System.out.println("Error saving map to database: " + e.getMessage());
             }
 
-            // Compute canvas to tightly fit the loaded entities, then centre them inside.
-            // The user's configured size (from SetupScreen) sets a minimum — the canvas
-            // never shrinks below that, but entities are always centred within whatever size results.
-            if (!loadedMap.getEntities().isEmpty()) {
-                int maxTileX = 0, maxTileY = 0;
-                for (MapEntity entity : loadedMap.getEntities()) {
-                    maxTileX = Math.max(maxTileX, (int) entity.getPosition().getX());
-                    maxTileY = Math.max(maxTileY, (int) entity.getPosition().getY());
-                }
-                int entitySpanX = maxTileX + 1;   // number of tiles the map occupies
-                int entitySpanY = maxTileY + 1;
-                // Default canvas = entity span + 2 tiles of padding (1 each side)
-                canvasWidthTiles  = Math.max(AppState.getCanvasWidthTiles(),  entitySpanX + 2);
-                canvasHeightTiles = Math.max(AppState.getCanvasHeightTiles(), entitySpanY + 2);
-                // Offset so entities are centred inside the border
-                entityOffsetTileX = (canvasWidthTiles  - entitySpanX) / 2;
-                entityOffsetTileY = (canvasHeightTiles - entitySpanY) / 2;
-            }
-            if (canvasSizeLabel != null)
+            // buildBuiltinMapInCanvas and loaded configs already sit at their correct absolute tile positions within the map. Adding a centering offset on top
+            // Use map dimensions directly and set offsets to zero.
+            canvasWidthTiles  = loadedMap.getWidth();
+            canvasHeightTiles = loadedMap.getHeight();
+            entityOffsetTileX = 0;
+            entityOffsetTileY = 0;
+            if (canvasSizeLabel != null) {
                 canvasSizeLabel.setText("Canvas Size: " + canvasWidthTiles + "×" + canvasHeightTiles + " Tiles");
+            }
 
             refreshIntersectionObjectTileVisibility();
             populateOutliner();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("Loaded " + loadedMap.getEntities().size() + " objects");
             }
-            log("Loaded simulation with " + loadedMap.getEntities().size() + " entities. Press \u25b6 to start.");
+            if (!restoredOutputState) {
+                log("Loaded simulation with " + loadedMap.getEntities().size() + " entities. Press \u25b6 to start.");
+            }
             drawViewport();
         } else {
             refreshIntersectionObjectTileVisibility();
             if (viewportStatusLabel != null) {
                 viewportStatusLabel.setText("No config loaded");
             }
-            log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+            if (!restoredOutputState) {
+                log("No configuration loaded. Go to Setup \u2192 Load Config first.");
+            }
         }
 
-        // Pre-load icons and initialize tips
         IconLoader.preloadAllIcons();
-        // Keep "Loaded N objects" after a successful load; otherwise show the default selection tip
-        // (replaces the transient "No config loaded" empty-state message).
+        // Preserve the load-state message; only show the default tip in the empty state.
         if (engine == null || engine.getMap() == null) {
             updateSelectionLabel();
         }
@@ -506,30 +522,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (viewportModeLabel != null) viewportModeLabel.setText("Right-click to pan, left-click to select");
         if (tipLabel != null) tipLabel.setText("TIP: " + ViewportTips.nextTip());
 
-        // Reset button colors to default CSS style (beige)
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
 
-        // Set initial sidebar position — not locked, user can drag freely
         if (mainSplitPane != null && mainSplitPane.getWidth() > 0) {
             mainSplitPane.setDividerPosition(0, 230.0 / mainSplitPane.getWidth());
         }
 
-        log("Simulation screen ready. Drag an object from the panel into the viewport.");
+        if (!restoredOutputState) {
+            log("Simulation screen ready. Drag an object from the panel into the viewport.");
+        }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Viewport rendering
-    // ------------------------------------------------------------------ //
-
-    /** Centers the viewport so the canvas border is centred in the visible area. */
+    // Viewport Rendering
     private void centerViewportOnCanvas() {
         double tileSize = 32.0 * zoom;
         viewOffsetX = (warehouseCanvas.getWidth()  - canvasWidthTiles  * tileSize) / 2.0;
         viewOffsetY = (warehouseCanvas.getHeight() - canvasHeightTiles * tileSize) / 2.0;
     }
 
-    /** Draws the warehouse grid and all placed objects on the canvas. */
     private void drawViewport() {
         GraphicsContext gc = warehouseCanvas.getGraphicsContext2D();
         double w = warehouseCanvas.getWidth();
@@ -583,7 +594,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    /** Renders every entity from the engine onto the canvas. */
     private void drawEntities(GraphicsContext gc) {
         if (engine == null || engine.getMap() == null) return;
         double tileSize = 32 * zoom;
@@ -593,6 +603,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             double ex = entity.getPosition().getX();
             double ey = entity.getPosition().getY();
 
+            // Interpolate robot sprites between ticks so movement appears continuous.
             if (animating && entity instanceof Robot && prevRobotPositions.containsKey(entity.getId())) {
                 com.openrobotics.map.Vector2D prev = prevRobotPositions.get(entity.getId());
                 ex = prev.getX() + (ex - prev.getX()) * animationProgress;
@@ -662,6 +673,14 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
             }
 
+            // Green outline for the currently selected entity
+            if (entity == selectedEntity) {
+                gc.setStroke(Color.web("#1a743f"));
+                gc.setLineWidth(Math.max(2.5, tileSize * 0.09));
+                double inset = Math.max(1.5, tileSize * 0.04);
+                gc.strokeRect(sx + inset, sy + inset, tileSize - 2 * inset, tileSize - 2 * inset);
+            }
+
             if (pickingRack != null && entity instanceof DeliveryStation) {
                 gc.setStroke(OBJECT_SELECTION_COLOR);
                 gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
@@ -699,21 +718,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             // Selection highlight — always drawn regardless of icon
             if (intersection.equals(selectedIntersection)) {
-                gc.setStroke(OBJECT_SELECTION_COLOR);
-                gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
-                gc.strokeOval(
-                        sx + Math.max(1.0, markerInset - 2.0),
-                        sy + Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0),
-                        tileSize - 2 * Math.max(1.0, markerInset - 2.0)
-                );
+                gc.setStroke(Color.web("#1a743f"));
+                gc.setLineWidth(Math.max(2.5, tileSize * 0.09));
+                double inset = Math.max(1.5, tileSize * 0.04);
+                gc.strokeRect(sx + inset, sy + inset, tileSize - 2 * inset, tileSize - 2 * inset);
                 gc.setStroke(INTERSECTION_STROKE_COLOR);
                 gc.setLineWidth(Math.max(1.5, tileSize * 0.08));
             }
         }
     }
 
-    /** Resolves the best-matching icon for an engine-loaded map entity. */
+    // Match engine-loaded entities against the closest available sidebar icon.
     private javafx.scene.image.Image resolveEntityIcon(MapEntity entity) {
         List<String> candidates = new ArrayList<>();
 
@@ -771,7 +786,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return name.contains("wall") || name.contains("obstacle");
     }
 
-    /** Returns the fill colour for each object type. */
     private String objectBodyColor(String type) {
         return switch (type) {
             case "ROBOT"   -> "#4D4B45";
@@ -791,10 +805,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Map-bounds helpers (clamp positions to the engine map, not the canvas)
-    // ------------------------------------------------------------------ //
-
+    // Map Bounds
+    // Clamp editor placement against the actual map bounds, not just the visible canvas border.
     private int maxMapTileX() {
         if (engine != null && engine.getMap() != null) return engine.getMap().getWidth() - 1;
         return Math.max(0, canvasWidthTiles - entityOffsetTileX - 1);
@@ -849,6 +861,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return false;
         }
 
+        // Build the tile occupancy as if the candidate were already placed there.
         List<MapEntity> occupants = new ArrayList<>();
         for (MapEntity entity : engine.getMap().getEntities()) {
             if (entity == ignoreEntity) {
@@ -863,14 +876,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return isValidTileOccupancy(occupants);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Drag FROM sidebar tile → canvas  (JavaFX DnD API)
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Fired when the user starts dragging an object tile button.
-     * Puts the object type string into the dragboard so the canvas can receive it.
-     */
+    // Sidebar Drag and Drop
     @FXML
     private void onObjectTileDragDetected(MouseEvent e) {
         Button source = (Button) e.getSource();
@@ -898,10 +904,24 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         content.putString(type);
         db.setContent(content);
 
-        if (source.getGraphic() != null) {
+        // Snapshot only the icon, not the full labeled button.
+        javafx.scene.Node graphic = source.getGraphic();
+        javafx.scene.image.ImageView iconView = null;
+        if (graphic instanceof javafx.scene.layout.HBox hbox) {
+            for (javafx.scene.Node child : hbox.getChildren()) {
+                if (child instanceof javafx.scene.image.ImageView iv) {
+                    iconView = iv;
+                    break;
+                }
+            }
+        } else if (graphic instanceof javafx.scene.image.ImageView iv) {
+            iconView = iv;
+        }
+        javafx.scene.Node snapTarget = iconView != null ? iconView : graphic;
+        if (snapTarget != null) {
             javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
             params.setFill(javafx.scene.paint.Color.TRANSPARENT);
-            javafx.scene.image.WritableImage snap = source.getGraphic().snapshot(params, null);
+            javafx.scene.image.WritableImage snap = snapTarget.snapshot(params, null);
             db.setDragView(snap, snap.getWidth() / 2, snap.getHeight() / 2);
         }
 
@@ -911,7 +931,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         e.consume();
     }
 
-    /** Accept the drag as long as the dragboard carries an object-type string. */
     private void onCanvasDragOver(DragEvent e) {
         if (running) { e.consume(); return; }
         if (e.getDragboard().hasString()) {
@@ -919,7 +938,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             double tileSize = 32 * zoom;
             int tx = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
             int ty = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
-            // Redraw only when the highlighted tile changes (avoids thrashing)
+            // Redraw only when the highlighted tile changes.
             if (tx != dragHighlightTileX || ty != dragHighlightTileY) {
                 dragHighlightTileX = tx;
                 dragHighlightTileY = ty;
@@ -934,7 +953,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         e.consume();
     }
 
-    /** Creates a new entity at the tile where the user dropped. */
     private void onCanvasDragDropped(DragEvent e) {
         if (guardEditor("add objects")) { e.setDropCompleted(false); e.consume(); return; }
         Dragboard db = e.getDragboard();
@@ -956,6 +974,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
             if (engine != null && engine.getMap() != null) {
                 if ("INTERSECTION".equalsIgnoreCase(type)) {
+                    // Intersection markers have their own placement rules and toggle semantics.
                     dropCompleted = handleIntersectionDrop(tx, ty);
                     if (dropCompleted && viewportStatusLabel != null) viewportStatusLabel.setText("");
                     e.setDropCompleted(dropCompleted);
@@ -1009,6 +1028,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!alreadyMarked) {
+            // Existing markers can be removed in place, but new ones cannot sit on active robot/station tiles.
             boolean hasBlockingOccupant = engine.getMap().getEntitiesAt(position).stream()
                     .anyMatch(entity -> entity instanceof Robot
                             || entity instanceof ChargingStation
@@ -1027,6 +1047,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
         drawViewport();
         log((alreadyMarked ? "Removed" : "Added") + " INTERSECTION at tile (" + tx + ", " + ty + ").");
+        pushAction(new IntersectionToggleAction(new Vector2D(tx, ty), !alreadyMarked));
         return true;
     }
 
@@ -1036,6 +1057,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         String upperType = type.toUpperCase();
         if ("ROBOT".equals(upperType)) {
             Robot robot = new Robot(id, name, pos);
+            // Fresh robots start with the same defaults used by setup-generated configs.
             robot.setNav(new GreedyNavigationStrategy(42L));
             robot.setSensor(new ProximitySensor());
             return robot;
@@ -1051,10 +1073,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         return new MapEntity(id, name, pos);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Drag existing object WITHIN canvas  (mouse events)
-    // ------------------------------------------------------------------ //
-
+    // Viewport Interaction
     private void onViewportMousePressed(MouseEvent e) {
         viewportStack.requestFocus();
         lastMouseX = e.getX();
@@ -1062,6 +1081,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         viewportMouseX = e.getX();
         viewportMouseY = e.getY();
 
+        // While assigning rack dropoffs, the next primary click is interpreted as a station picker.
         if (pickingRack != null && e.getButton() == MouseButton.PRIMARY) {
             MapEntity hit = entityAtScreenPos(e.getX(), e.getY());
             if (hit instanceof DeliveryStation ds) {
@@ -1080,19 +1100,21 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 }
             } else {
                 cancelDropoffPicking();
-                log("Dropoff assignment cancelled.");
+                log("Dropoff assignment cancelled. Please select a drop off station");
             }
             return;
         }
 
         if (e.getButton() == MouseButton.PRIMARY) {
+            // Intersections get first priority so a marker can be dragged even when a tile also contains an entity.
             Vector2D intersectionHit = intersectionAtScreenPos(e.getX(), e.getY());
             if (intersectionHit != null) {
                 selectIntersection(intersectionHit);
                 draggingOnCanvas = null;
                 dragStartPosition = null;
+                dragStartIntersection = intersectionHit;
+                dragIntersectionOrigin = intersectionHit;
             } else {
-                // Left click: select. If on an entity, also arm for drag.
                 MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
                 if (entityHit != null) {
                     selectEntity(entityHit);
@@ -1104,16 +1126,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     clearSelection();
                     draggingOnCanvas = null;
                     dragStartPosition = null;
+                    dragStartIntersection = null;
                 }
             }
         } else if (e.getButton() == MouseButton.SECONDARY) {
-            // Right click: pan mode
             draggingOnCanvas = null;
             dragStartPosition = null;
-            dragStartPosition = null;
+            dragStartIntersection = null;
         }
 
-        // Update RAM display
         updateRamLabel();
     }
 
@@ -1127,7 +1148,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 dragStartPosition = null;
                 log("\u26a0 Cannot move objects while the simulation is running or has advanced past tick 0. Reset first.");
             } else {
-                // Left-drag: move selected entity – snap to nearest tile, clamped to map bounds
+                // Update the entity live while dragging so the viewport previews the final placement.
                 double tileSize = 32 * zoom;
                 int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
                 int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
@@ -1136,14 +1157,35 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     if (viewportStatusLabel != null)
                         viewportStatusLabel.setText(
                                 "dragging(" + draggingOnCanvas.getName()
-                                + ")  →  (" + newTX + ", " + newTY + ")");
+                                        + ")  →  (" + newTX + ", " + newTY + ")");
                 } else if (viewportStatusLabel != null) {
                     viewportStatusLabel.setText("blocked at (" + newTX + ", " + newTY + ")");
                 }
                 drawViewport();
             }
+        } else if (dragStartIntersection != null && e.getButton() == MouseButton.PRIMARY) {
+            if (isEditorLocked()) {
+                dragStartIntersection = null;
+            } else {
+                double tileSize = 32 * zoom;
+                int newTX = clampTileX((int) Math.floor((e.getX() - viewOffsetX) / tileSize) - entityOffsetTileX);
+                int newTY = clampTileY((int) Math.floor((e.getY() - viewOffsetY) / tileSize) - entityOffsetTileY);
+                Vector2D newPos = new Vector2D(newTX, newTY);
+                if (!newPos.equals(dragStartIntersection)) {
+                    // Moving an intersection is modeled as toggling off the old tile and on the new tile.
+                    engine.toggleTrafficRuleIntersection(
+                            (int) dragStartIntersection.getX(),
+                            (int) dragStartIntersection.getY());
+                    engine.toggleTrafficRuleIntersection(newTX, newTY);
+                    selectedIntersection = newPos;
+                    dragStartIntersection = newPos;
+                    if (viewportStatusLabel != null)
+                        viewportStatusLabel.setText(
+                                "dragging(INTERSECTION)  →  (" + newTX + ", " + newTY + ")");
+                    drawViewport();
+                }
+            }
         } else if (e.getButton() == MouseButton.SECONDARY) {
-            // Right-drag: pan the viewport
             viewOffsetX += dx;
             viewOffsetY += dy;
             drawViewport();
@@ -1152,7 +1194,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         lastMouseX = e.getX();
         lastMouseY = e.getY();
 
-        // Update RAM display
         updateRamLabel();
     }
 
@@ -1160,30 +1201,37 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (draggingOnCanvas != null) {
             com.openrobotics.map.Vector2D endPos = draggingOnCanvas.getPosition();
             if (dragStartPosition != null && !dragStartPosition.equals(endPos)) {
+                // Only create undo history when the entity actually changed tiles.
                 pushAction(new MoveAction(draggingOnCanvas, dragStartPosition, endPos));
-                // Sync tasks to reflect the entity's new position
                 syncTaskPositions(dragStartPosition, endPos);
             }
             log("Moved " + draggingOnCanvas.getName()
-                + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
+                    + " to tile (" + (int)endPos.getX() + ", " + (int)endPos.getY() + ").");
             draggingOnCanvas = null;
             dragStartPosition = null;
+            dragStartIntersection = null;
             if (viewportStatusLabel != null) viewportStatusLabel.setText("");
             if (viewportModeLabel   != null) viewportModeLabel.setText("right-click to pan, left-click to select");
 
-            // Persist editor changes so the play-button snapshot and restart are always fresh
             persistEditorChanges();
         }
 
-        // Update RAM display
+        if (dragStartIntersection != null) {
+            if (dragIntersectionOrigin != null && !dragIntersectionOrigin.equals(dragStartIntersection)) {
+                pushAction(new IntersectionMoveAction(dragIntersectionOrigin, dragStartIntersection));
+            }
+            log("Moved INTERSECTION to tile ("
+                    + (int)dragStartIntersection.getX() + ", "
+                    + (int)dragStartIntersection.getY() + ").");
+            dragStartIntersection = null;
+            dragIntersectionOrigin = null;
+            if (viewportStatusLabel != null) viewportStatusLabel.setText("");
+        }
+
         updateRamLabel();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Hit-testing
-    // ------------------------------------------------------------------ //
-
-    /** Returns the topmost engine entity whose rendered area contains (sx, sy), or null. */
+    // Hit Testing
     private MapEntity entityAtScreenPos(double sx, double sy) {
         if (engine == null || engine.getMap() == null) return null;
         double tileSize = 32 * zoom;
@@ -1202,30 +1250,25 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (engine == null || !engine.usesTrafficRulesPolicy()) return null;
 
         double tileSize = 32 * zoom;
-        double markerInset = Math.max(3.0, tileSize * 0.22);
-        double radius = (tileSize - 2 * markerInset) / 2.0;
 
         for (Vector2D intersection : engine.getTrafficRuleIntersections()) {
-            double centerX = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize + tileSize / 2.0;
-            double centerY = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize + tileSize / 2.0;
-            double dx = sx - centerX;
-            double dy = sy - centerY;
-            if ((dx * dx) + (dy * dy) <= radius * radius) {
+            double px = viewOffsetX + (intersection.getX() + entityOffsetTileX) * tileSize;
+            double py = viewOffsetY + (intersection.getY() + entityOffsetTileY) * tileSize;
+            if (sx >= px && sx < px + tileSize && sy >= py && sy < py + tileSize) {
                 return intersection;
             }
         }
         return null;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Selection & Properties panel
-    // ------------------------------------------------------------------ //
-
+    // Selection and Properties
     private void deleteSelected() {
         if (selectedIntersection != null) {
+            Vector2D deletedIntersection = selectedIntersection;
             if (engine != null && engine.toggleTrafficRuleIntersection(
-                    selectedIntersection.getX(), selectedIntersection.getY())) {
-                log("Deleted INTERSECTION at tile (" + selectedIntersection.getX() + ", " + selectedIntersection.getY() + ").");
+                    deletedIntersection.getX(), deletedIntersection.getY())) {
+                log("Deleted INTERSECTION at tile (" + deletedIntersection.getX() + ", " + deletedIntersection.getY() + ").");
+                pushAction(new IntersectionToggleAction(deletedIntersection, false));
             }
             selectedIntersection = null;
             populateOutliner();
@@ -1246,14 +1289,36 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void copySelected() {
+        if (selectedIntersection != null) {
+            // Intersections are positional markers — copy just arms the paste target
+            clipboardIntersection = selectedIntersection;
+            clipboardEntity = null;
+            log("Copied INTERSECTION at tile (" + selectedIntersection.getX() + ", " + selectedIntersection.getY() + ").");
+            return;
+        }
         if (selectedEntity == null) return;
         clipboardEntity = selectedEntity;
+        clipboardIntersection = null;
         log("Copied " + clipboardEntity.getName() + ".");
     }
 
     private void pasteClipboard() {
+        if (clipboardIntersection != null && engine != null) {
+            if (guardEditor("paste")) return;
+            // Offset pasted markers by one tile so repeated paste stays visible.
+            int newX = clampTileX((int) clipboardIntersection.getX() + 1);
+            int newY = clampTileY((int) clipboardIntersection.getY() + 1);
+            engine.toggleTrafficRuleIntersection(newX, newY);
+            selectedIntersection = new Vector2D(newX, newY);
+            populateOutliner();
+            drawViewport();
+            log("Pasted INTERSECTION at tile (" + newX + ", " + newY + ").");
+            pushAction(new IntersectionToggleAction(new Vector2D(newX, newY), true));
+            return;
+        }
         if (clipboardEntity == null || engine == null || engine.getMap() == null) return;
         if (guardEditor("paste")) return;
+        // Offset copied entities by one tile, matching the intersection paste behavior.
         int newX = clampTileX((int)clipboardEntity.getPosition().getX() + 1);
         int newY = clampTileY((int)clipboardEntity.getPosition().getY() + 1);
         MapEntity copy = createEntityFromType(
@@ -1274,8 +1339,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    private MapEntity clipboardEntity = null;
-
     private void clearSelection() {
         selectedEntity = null;
         selectedIntersection = null;
@@ -1293,6 +1356,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (entity != null) {
             if (engine != null && engine.getMap() != null) {
                 int idx = engine.getMap().getEntities().indexOf(entity);
+                // Mirror viewport selection into the outliner when the entity is currently visible there.
                 if (outlinerListView != null && idx >= 0)
                     outlinerListView.getSelectionModel().select(idx);
             }
@@ -1343,8 +1407,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         HBox nameBox = new HBox(8);
         TextField nameField = new TextField(entity.getName());
         nameField.setStyle("-fx-font-size: 11;");
-        // Commit rename whenever the text changes (covers programmatic setText in tests and
-        // direct keyboard editing) as well as on focus-lost for undo-history bookkeeping.
+        // Commit rename on text updates so tests and direct editing behave the same way.
         nameField.textProperty().addListener((obs, oldText, newText) -> {
             if (newText == null || newText.isBlank() || newText.equals(entity.getName())) return;
             if (guardEditor("rename")) { nameField.setText(entity.getName()); return; }
@@ -1369,7 +1432,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         xSpinner.setPrefWidth(60);
         ySpinner.setPrefWidth(60);
         xSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getX()) return;
             if (guardEditor("move")) { xSpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = newVal;
             int targetY = (int) entity.getPosition().getY();
@@ -1386,7 +1449,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         });
         ySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || oldVal == null) return;
+            if (newVal == null || oldVal == null || newVal == (int) entity.getPosition().getY()) return;
             if (guardEditor("move")) { ySpinner.getValueFactory().setValue(oldVal); return; }
             int targetX = (int) entity.getPosition().getX();
             int targetY = newVal;
@@ -1410,13 +1473,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         propertiesPanel.getChildren().add(posBox);
 
         if (entity instanceof Robot robot) {
-            // Navigation algorithm dropdown
+            // Robot properties expose the live navigation/sensor configuration used by the engine.
             HBox algoBox = new HBox(8);
             algoBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             ComboBox<String> algoCombo = new ComboBox<>(
                     FXCollections.observableArrayList("GREEDY", "BUG", "RTA_STAR"));
             algoCombo.setPrefWidth(120);
-            // Determine current algorithm from the robot's nav strategy
             String detectedAlgo = robot.getNav() != null ? robot.getNav().toString() : "GREEDY";
             final String currentAlgo = algoCombo.getItems().contains(detectedAlgo) ? detectedAlgo : "GREEDY";
             algoCombo.setValue(currentAlgo);
@@ -1435,7 +1497,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             algoBox.getChildren().addAll(new Label("Algorithm:"), algoCombo);
             propertiesPanel.getChildren().add(algoBox);
 
-            // Sensor dropdown
             HBox sensorBox = new HBox(8);
             sensorBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             ComboBox<String> sensorCombo = new ComboBox<>(
@@ -1458,29 +1519,49 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             sensorBox.getChildren().addAll(new Label("Sensor:"), sensorCombo);
             propertiesPanel.getChildren().add(sensorBox);
 
-            // Battery level spinner
             HBox batteryBox = new HBox(8);
             batteryBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             float maxBattery = robot.getConfig().batteryCapacity;
+
             Spinner<Double> batterySpinner = new Spinner<>(
-                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0, maxBattery, robot.getBattery(), 1.0));
+                    new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, (double) maxBattery, (double) robot.getBattery(), 1.0));
             batterySpinner.setPrefWidth(90);
             batterySpinner.setEditable(true);
-            batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null && oldVal != null && !newVal.equals(oldVal)) {
-                    if (guardEditor("change battery")) {
-                        batterySpinner.getValueFactory().setValue(oldVal);
-                        return;
-                    }
-                    robot.setBattery(newVal.floatValue());
-                    drawViewport();
-                    pushAction(new BatteryChangeAction(robot, oldVal.floatValue(), newVal.floatValue()));
+
+            // Restrict input to positive digits and a single decimal point
+            batterySpinner.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.matches("\\d*(\\.\\d*)?")) {
+                    return change;
+                }
+                return null; // Reject the change
+            }));
+
+            // Force spinner to commit text value when the user clicks away
+            batterySpinner.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                if (!isFocused) {
+                    batterySpinner.increment(0);
                 }
             });
+
+            batterySpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null || oldVal == null || newVal.floatValue() == robot.getBattery()) return;
+                if (guardEditor("change battery")) {
+                    // Revert spinner if editor is locked
+                        Platform.runLater(() -> batterySpinner.getValueFactory().setValue(oldVal));
+                    return;
+                }
+                    float newBat = newVal.floatValue();
+                    float oldBat = oldVal.floatValue();
+
+                    robot.setBattery(newBat);
+                drawViewport();
+                pushAction(new BatteryChangeAction(robot, oldBat, newBat));
+            });
+
             batteryBox.getChildren().addAll(new Label("Battery:"), batterySpinner);
             propertiesPanel.getChildren().add(batteryBox);
 
-            // Read-only state display
             Label stateLabel = new Label("State: " + robot.getState());
             stateLabel.setStyle("-fx-text-fill: #666;");
             propertiesPanel.getChildren().add(stateLabel);
@@ -1488,37 +1569,60 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             Label stationProps = new Label("Station configuration");
             propertiesPanel.getChildren().add(stationProps);
         } else if (entity instanceof Rack rack) {
+            // Rack-specific controls only matter when the run uses manual task assignment.
             boolean globalManual = engine != null && engine.isManualTaskAssignment();
 
             if (globalManual) {
-                // ── Number of boxes (manual mode only) ──
                 HBox boxCountBox = new HBox(8);
                 boxCountBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
                 Spinner<Integer> boxCountSpinner = new Spinner<>(
-                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, rack.getBoxCount()));
+                        new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 99, rack.getBoxCount()));
                 boxCountSpinner.setPrefWidth(80);
                 boxCountSpinner.setEditable(true);
+
+                // Restrict input to positive integers only (no decimals, no negatives)
+                boxCountSpinner.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+                    if (change.getControlNewText().matches("\\d*")) {
+                        return change;
+                    }
+                    return null; // Reject non-digit characters
+                }));
+
+                // Force spinner to commit text value when the user clicks away
+                boxCountSpinner.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                    if (!isFocused) {
+                        boxCountSpinner.increment(0);
+                    }
+                });
+
                 boxCountSpinner.valueProperty().addListener((obs, oldV, newV) -> {
-                    if (newV == null || oldV == null || newV.equals(oldV)) return;
+                    if (newV == null || oldV == null || newV.equals(rack.getBoxCount())) return;
+
                     if (guardEditor("change box count")) {
-                        boxCountSpinner.getValueFactory().setValue(oldV);
+                        // Revert spinner if editor is locked
+                        javafx.application.Platform.runLater(() -> boxCountSpinner.getValueFactory().setValue(oldV));
                         return;
                     }
+
                     rack.setBoxCount(newV);
                     persistEditorChanges();
                 });
-                boxCountBox.getChildren().addAll(new Label("Number of boxes:"), boxCountSpinner);
+
+                boxCountBox.getChildren().addAll(new Label("Number of tasks:"), boxCountSpinner);
                 propertiesPanel.getChildren().add(boxCountBox);
 
-                // ── Manual dropoff assignment checkbox (manual mode only) ──
                 HBox manualBox = new HBox(8);
                 manualBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 CheckBox manualCheck = new CheckBox("Manual dropoff assignment");
                 manualCheck.setSelected(rack.isManualDropoffAssignment());
+
                 VBox dropoffArrayBox = new VBox(4);
                 dropoffArrayBox.setVisible(rack.isManualDropoffAssignment());
                 dropoffArrayBox.setManaged(rack.isManualDropoffAssignment());
+
                 manualCheck.selectedProperty().addListener((obs, oldV, newV) -> {
+                    if (newV == rack.isManualDropoffAssignment()) return;
                     if (guardEditor("toggle manual assignment")) {
                         manualCheck.setSelected(oldV);
                         return;
@@ -1529,10 +1633,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     renderRackDropoffArray(rack, dropoffArrayBox);
                     persistEditorChanges();
                 });
+
                 manualBox.getChildren().add(manualCheck);
                 propertiesPanel.getChildren().add(manualBox);
 
-                // ── Dropoff array (shown only when manual checkbox is on) ──
                 renderRackDropoffArray(rack, dropoffArrayBox);
                 propertiesPanel.getChildren().add(dropoffArrayBox);
             }
@@ -1542,14 +1646,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void renderRackDropoffArray(Rack rack, VBox container) {
         container.getChildren().clear();
 
-        // Header
         HBox header = new HBox(6);
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label headerLabel = new Label("Valid Dropoff Points");
         headerLabel.setStyle("-fx-font-weight: bold;");
         Tooltip headerTip = new Tooltip(
-            "Boxes are distributed across the valid dropoff points using round-robin. " +
-            "Null slots are ignored. At least one non-null slot is required to play.");
+                "Boxes are distributed across the valid dropoff points using round-robin. " +
+                        "Null slots are ignored. At least one non-null slot is required to play.");
         Tooltip.install(headerLabel, headerTip);
         Button addBtn = new Button("+");
         addBtn.setOnAction(ev -> {
@@ -1561,7 +1664,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         header.getChildren().addAll(headerLabel, addBtn);
         container.getChildren().add(header);
 
-        // Build station lookup
+        // Resolve stored UUIDs back to live delivery stations for display.
         java.util.Map<java.util.UUID, DeliveryStation> stationById = new java.util.HashMap<>();
         if (engine != null && engine.getMap() != null) {
             for (MapEntity e : engine.getMap().getEntities()) {
@@ -1586,7 +1689,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 DeliveryStation ds = stationById.get(id);
                 display = ds == null ? "(deleted station)"
                         : ds.getName() + " (" + (int)ds.getPosition().getX()
-                          + ", " + (int)ds.getPosition().getY() + ")";
+                        + ", " + (int)ds.getPosition().getY() + ")";
             }
             Label displayLabel = new Label(display);
             if (id == null || stationById.get(id) == null) {
@@ -1613,8 +1716,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         this.pickingRack = rack;
         this.pickingSlot = slotIndex;
         if (tipLabel != null) {
+            // Reuse the main viewport click handler for the actual station assignment.
             tipLabel.setText("TIP: Click a delivery station to assign it to slot #"
-                + slotIndex + ". Click elsewhere to cancel.");
+                    + slotIndex + ". Click elsewhere to cancel.");
         }
         viewportStack.setCursor(javafx.scene.Cursor.CROSSHAIR);
         drawViewport();
@@ -1665,7 +1769,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 new Label("Select an object."));
     }
 
-    /** Updates the selection text below the viewport with a tip. */
     private void updateSelectionLabel() {
         if (viewportStatusLabel != null) {
             String tip = ViewportTips.getRandomSelectionTip();
@@ -1673,7 +1776,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    /** Starts the tip rotation timer, cycling a new tip every 5 seconds. */
     private void startTipRotation() {
         tipRotationLoop = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
             if (tipLabel != null) {
@@ -1684,14 +1786,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         tipRotationLoop.play();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Add Object / Outliner
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Handles a click on one of the Add-Object tiles (§4.1.3 B, zone 1).
-     * A single click logs the selection; a double-click opens the Object Description dialog.
-     */
+    // Add Object and Outliner
     @FXML
     private void onAddObjectClick(MouseEvent e) {
         Button source = (Button) e.getSource();
@@ -1710,7 +1805,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    /** Handles selection in the Outliner list. */
     @FXML
     private void onOutlinerSelect(MouseEvent e) {
         onOutlinerSelect();
@@ -1739,20 +1833,20 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         populateOutliner();
     }
 
-    /** Rebuilds the outliner list from the current engine map.
-     *  Compares new entries against current list to avoid unnecessary layout invalidation. */
     private void populateOutliner() {
         if (outlinerListView == null || engine == null || engine.getMap() == null || engine.getMap().getEntities() == null) return;
         String filter = (outlinerSearchField != null && outlinerSearchField.getText() != null)
                 ? outlinerSearchField.getText().toLowerCase() : "";
         List<String> newItems = new ArrayList<>();
         List<Object> newBacking = new ArrayList<>();
+        // Keep entity rows first so editor selections stay predictable.
         for (MapEntity e : engine.getMap().getEntities()) {
-            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "  // 🤖 robot
-                    : (e instanceof Rack)     ? "\ud83d\udce6 "  // 📦 rack/shelf
-                    : (e instanceof Station)  ? "\u26a1 "        // ⚡ station
-                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "  // 🧱 wall/obstacle
-                    :                           "\u25ab ";        // ▫ generic entity
+            String icon  = (e instanceof Robot)    ? "\ud83e\udd16 "    // robot
+                    : (e instanceof Rack)     ? "\ud83d\udce6 "         // rack/shelf
+                    : (e instanceof ChargingStation)  ? "\u26a1 "       // charging station
+                    : (e instanceof DeliveryStation) ? "\uD83C\uDFC1 "             // delivery station
+                    : (e instanceof Obstacle) ? "\ud83e\uddf1 "         // wall/obstacle
+                    : "\u25ab ";                                        // generic entity
             String entry = icon + e.getName() + "  " + e.getPosition();
             if (filter.isEmpty() || entry.toLowerCase().contains(filter)) {
                 newItems.add(entry);
@@ -1772,7 +1866,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             }
         }
 
-        // Only update the ListView if content actually changed to avoid layout thrashing
+        // Skip redundant ListView updates to avoid unnecessary layout work.
         if (!newItems.equals(outlinerListView.getItems())) {
             outlinerListView.getItems().setAll(newItems);
             outlinerBacking.clear();
@@ -1785,19 +1879,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Properties panel reset
-    // ------------------------------------------------------------------ //
-
-    @FXML
-    private void onResetStringProp() {
-        if (strPropField != null) strPropField.setText("Hello");
-    }
-
-    // ------------------------------------------------------------------ //
-    //  Playback Controls (§4.1.3 B, zone 5)
-    // ------------------------------------------------------------------ //
-
+    // Playback Controls
     @FXML
     private void onPlay() {
         if (engine == null) {
@@ -1810,7 +1892,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return;
         }
 
-        logPollingTimeline.play(); // start regular polling
+        logPollingTimeline.play();
 
         if (running) {
             if (paused) {
@@ -1819,22 +1901,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     simStatusLabel.setText("RUNNING");
                     simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
                 }
-                playBtn.setStyle("-fx-background-color: #2E9E5B;");
-                pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+                playBtn.setStyle("-fx-background-color: #1a743f;");
+                pauseBtn.setStyle("-fx-background-color: #c9605a;");
                 startLoop();
                 log("Simulation resumed.");
-                // Update RAM display
                 updateRamLabel();
             }
         } else {
-            // Ensure a baseline snapshot exists before starting (editor actions save it continuously,
-            // but if no edits were made this is the first snapshot).
+            // Ensure a tick-0 baseline exists even if the editor has not been modified yet.
             if (initialSnapshotPath == null && engine != null) {
                 saveEditorBaseline();
             }
-
-
-
             running = true;
             paused  = false;
             if (simStatusLabel != null) {
@@ -1842,10 +1919,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
             }
 
-            playBtn.setStyle("-fx-background-color: #2E9E5B;");
-            pauseBtn.setStyle("-fx-background-color: #FFB3B3;");
+            playBtn.setStyle("-fx-background-color: #1a743f;");
+            pauseBtn.setStyle("-fx-background-color: #c9605a;");
 
-            // ── Validate manual-mode racks before generating tasks ──
+            // Manual mode requires every participating rack to have at least one valid dropoff.
             if (engine.getMap() != null) {
                 java.util.Set<java.util.UUID> stationIds = new java.util.HashSet<>();
                 for (MapEntity me : engine.getMap().getEntities()) {
@@ -1855,7 +1932,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 for (MapEntity me : engine.getMap().getEntities()) {
                     if (me instanceof Rack r && r.isManualDropoffAssignment()) {
                         boolean hasValid = r.getValidDropoffIds().stream()
-                            .anyMatch(uid -> uid != null && stationIds.contains(uid));
+                                .anyMatch(uid -> uid != null && stationIds.contains(uid));
                         if (!hasValid) offenders.add(r.getName());
                     }
                 }
@@ -1873,18 +1950,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                     alert.setTitle("Cannot start simulation");
                     alert.setHeaderText("Manual-mode racks have no valid dropoff points");
                     alert.setContentText(
-                        "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
-                        + String.join("\n  \u2022 ", offenders)
-                        + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
+                            "The following racks use Manual Dropoff Assignment but their pool is empty or all-null:\n\n  \u2022 "
+                                    + String.join("\n  \u2022 ", offenders)
+                                    + "\n\nAssign at least one delivery station per rack, or disable Manual Dropoff Assignment.");
                     alert.showAndWait();
                     log("\u26a0 Play aborted: " + offenders.size() + " rack(s) have an empty manual dropoff pool.");
                     return;
                 }
             }
 
-            // Generate tasks if the dispatcher is empty.
-            // Automatic mode: exactly engine.getMaxTasks() tasks, random rack+station pairs.
-            // Manual mode: one task per rack box using each rack's configured dropoff pool.
+            // Seed the dispatcher on first play if setup did not pre-populate tasks.
             if (engine.getDispatcher().getAllQueuedTasks().isEmpty() && engine.getMap() != null) {
                 List<Task> generated;
                 if (engine.isManualTaskAssignment()) {
@@ -1893,40 +1968,35 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 } else {
                     generated = com.openrobotics.task.TaskGenerator.generateAutomaticTasks(
                             engine.getMap(), engine.getMaxTasks(), engine.getSeed());
+
+                    // No task assignments could be generated due to invalid map configuration
+                    if (generated.isEmpty()) {
+                        log("\u26a0 No tasks could be generated.");
+                        engine.setSimulationError(SimulationError.INVALID_MAP_CONFIGURATION);
+                        handleSimulationFailure();
+                        return;
+                    }
                 }
                 if (!generated.isEmpty()) {
                     engine.getDispatcher().addTasks(generated);
                     log("Auto-generated " + generated.size() + " tasks from map racks and delivery stations.");
-                } else {
-                    log("\u26a0 No tasks could be generated. Ensure the map has at least one rack and one delivery station.");
                 }
             }
 
-            // Logging simulation run start event
+            // Logging simulation start event
             SimulationRunRecordBuilder simRunRecordBuilder = new SimulationRunRecordBuilder(engine);
             SimulationRunRecord record = simRunRecordBuilder.buildSimulationStartRecord();
             Logger.logSimulationRunEvent(SimulationRunEvent.RUN_STARTED, record);
 
-            // Logging task creation events for existing tasks in dispatcher at simulation start
-            List<Task> existingTasks = engine.getDispatcher().getAllQueuedTasks();
-
-            for (Task task : existingTasks) {
-                WorkloadTaskRecordBuilder taskRecordBuilder = new WorkloadTaskRecordBuilder(engine.getRunId(), task);
-                WorkloadTaskRecord taskRecord = taskRecordBuilder.buildTaskCreationRecord(engine.getTickCounter());
-                long artificialId = Logger.logTaskEvent(TaskEvent.TASK_CREATED, taskRecord);
-                task.setArtificialId(artificialId); // setting artificial ID for tracking in logs
-            }
-
             startLoop();
             log("Simulation started.");
-            // Update RAM display
             updateRamLabel();
         }
     }
 
     @FXML
     private void onPause() {
-        logPollingTimeline.stop(); // stop regular polling for sim logs
+        logPollingTimeline.stop();
 
         if (running && !paused) {
             paused = true;
@@ -1935,10 +2005,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 simStatusLabel.setText("PAUSED");
                 simStatusLabel.setStyle("-fx-text-fill: #E0B200; -fx-font-weight: bold;");
             }
-            playBtn.setStyle("-fx-background-color: #90EE90;");
-            pauseBtn.setStyle("-fx-background-color: #C23B42;");
+            playBtn.setStyle("-fx-background-color: #599068;");
+            pauseBtn.setStyle("-fx-background-color: #C0392B;");
             log("Simulation paused.");
-            // Update RAM display
             updateRamLabel();
         }
     }
@@ -1956,14 +2025,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
         log("Simulation stopped.");
-        // Update RAM display
         updateRamLabel();
     }
 
     @FXML
     private void onRestart() {
-        // If already at tick 0, not running, and there is nothing to reload, nothing to reset.
-        String earlyReloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        String earlyReloadPath = resolveReloadPath();
         if (localTick == 0 && !running && !simulationFailed && earlyReloadPath == null) {
             log("Already at tick 0. Nothing to reset.");
             return;
@@ -1973,6 +2040,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animationProgress = 0.0;
         prevRobotPositions.clear();
         selectedEntity = null;
+        // A restart returns to the saved baseline, so editor history from the previous run no longer applies.
         undoStack.clear();
         redoStack.clear();
         onStop();
@@ -1980,9 +2048,9 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         simulationFailed = false;
         lastSeenLogId = 0;
         AppState.setSimulationTick(0);
-        // Reload from the editor baseline snapshot (continuously updated on every editor action).
-        // This restores the most recent editor state, not the original config file.
-        String reloadPath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+        AppState.setSimulationLogCursor(0);
+        // Reload the latest editor baseline rather than the original config file.
+        String reloadPath = resolveReloadPath();
         if (reloadPath != null) {
             SimulationEngine reloaded = new SimulationEngine(reloadPath);
             if (reloaded == null || reloaded.getMap() == null || reloaded.getInitError() != null) {
@@ -2000,7 +2068,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             AppState.setEngine(engine);
         }
 
-        // If no engine is loaded, restart still resets the UI state safely.
         if (engine == null) {
             if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
             if (simProgressBar != null) simProgressBar.setProgress(0);
@@ -2012,7 +2079,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             return;
         }
 
-        // Resetting some internal engine state for new simulation run
         engine.reset();
 
         if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK 0");
@@ -2022,16 +2088,16 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             simStatusLabel.setStyle("-fx-text-fill: #2E9E5B; -fx-font-weight: bold;");
         }
         log("Simulation reset.");
-        // Update RAM display
         updateRamLabel();
         populateOutliner();
         drawViewport();
 
-        // Reset simulation logs text area
         if (logArea != null) {
             System.out.println("[SimulationController] Clearing log area on simulation reset.");
             logArea.clear();
         }
+        AppState.setSimulationLogText("");
+        AppState.setSimulationLogCursor(0);
     }
 
     @FXML
@@ -2046,11 +2112,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
         doTick();
         log("Step \u2192 TICK " + localTick);
-        // Update RAM display
         updateRamLabel();
 
-        Logger.flushRobotEvents(); // ensure all robot events are flushed after stepping
-        fetchLogsAsync(); // fetch logs after stepping to get latest events
+        Logger.flushRobotEvents();
+        fetchLogsAsync();
     }
 
     @FXML private void onSpeed1() { setSpeed(1); log("Speed set to ×1."); }
@@ -2058,14 +2123,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     @FXML private void onSpeed3() { setSpeed(3); log("Speed set to ×3."); }
     @FXML private void onSpeed10() { setSpeed(10); log("Speed set to ×10."); }
 
+    // Simulation Loop
     private void setSpeed(int factor) {
         speedFactor = factor;
         if (running && !paused) startLoop();
     }
-
-    // ------------------------------------------------------------------ //
-    //  Simulation loop helpers
-    // ------------------------------------------------------------------ //
 
     private void startLoop() {
         if (simLoop != null) simLoop.stop();
@@ -2078,7 +2140,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void stopLoop() {
-        logPollingTimeline.stop(); // stop regular polling for sim logs
+        logPollingTimeline.stop();
 
         if (simLoop != null) {
             simLoop.stop();
@@ -2086,15 +2148,17 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         System.out.println("[SimulationController] Flushing logs and fetching remaining logs on stop...");
-        Logger.flushRobotEvents(); // ensure all robot events are flushed when stopping
-        fetchLogsSync(); // fetch any remaining logs synchronously on stop
+        Logger.flushRobotEvents();
+        fetchLogsSync();
     }
 
-    /** Stops all timelines and unbinds canvas properties. Called by ScreenNavigator before replacing this screen. */
     @Override
     public void cleanup() {
         shutdown();
         stopLoop();
+        if (AppState.hasEngine()) {
+            persistOutputState();
+        }
         if (tipRotationLoop != null) { tipRotationLoop.stop(); tipRotationLoop = null; }
         if (animTimeline    != null) { animTimeline.stop();    animTimeline    = null; }
         warehouseCanvas.widthProperty().unbind();
@@ -2107,6 +2171,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (animating) return;
 
         if (engine.getRobots() != null) {
+            // Capture pre-tick robot positions so the renderer can tween to the new state.
             prevRobotPositions.clear();
             for (Robot robot : engine.getRobots()) {
                 prevRobotPositions.put(robot.getId(), new com.openrobotics.map.Vector2D(
@@ -2115,18 +2180,15 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
 
         if (!engine.tick()) {
-            // Sandbox mode: no robots means an empty map used for layout/stepping only —
-            // treat the tick as a no-op success so the step counter still advances.
-            if (engine.getSimulationError() == SimulationError.NO_ROBOTS_SPAWNED) {
-                // fall through to the localTick++ / display-update block below
-            } else if (engine.getSimulationError() != SimulationError.NONE) {
+            if (engine.getSimulationError() != SimulationError.NONE) {
                 handleSimulationFailure();
-                return;
             } else {
                 handleSimulationComplete();
-                return;
             }
+
+            return;
         }
+
         localTick++;
 
         AppState.setSimulationTick(localTick);
@@ -2144,6 +2206,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     }
 
     private void handleSimulationComplete() {
+        drawViewport(); // drawing the final viewport
         stopLoop();
         running = false;
         paused = false;
@@ -2159,10 +2222,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         log("Simulation complete at TICK " + localTick + ".");
     }
 
-    /**
-     * Handles simulation failure (e.g. all robots died)
-     */
     private void handleSimulationFailure() {
+        drawViewport(); // drawing the final viewport
         stopLoop();
         running = false;
         paused = false;
@@ -2176,7 +2237,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
         if (playBtn  != null) playBtn.setStyle("");
         if (pauseBtn != null) pauseBtn.setStyle("");
-        log("Simulation failed: " + engine.getSimulationErrorMessage()); // logging simulation error message
+        log("Simulation failed: " + engine.getSimulationErrorMessage());
         log("Simulation failed at TICK " + localTick + ".");
     }
 
@@ -2186,6 +2247,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animationProgress = 0.0;
         animTimeline = new Timeline();
         final int totalFrames = ANIMATION_FRAMES;
+        // Spread each logical tick across a short frame sequence for smoother robot movement.
         for (int i = 0; i < totalFrames; i++) {
             final int frame = i;
             animTimeline.getKeyFrames().add(new KeyFrame(
@@ -2205,10 +2267,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         animTimeline.play();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Viewport zoom buttons
-    // ------------------------------------------------------------------ //
-
+    // Viewport Controls
     @FXML private void onZoomIn() {
         double cx = warehouseCanvas.getWidth()  / 2;
         double cy = warehouseCanvas.getHeight() / 2;
@@ -2243,10 +2302,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void onToggleSidebar() {
         if (sidebarPanel == null || mainSplitPane == null) return;
         if (toggleSidebarItem.isSelected()) {
-            // Restore: reposition divider after the current layout pass
+            // Restore the saved divider position after the current layout pass.
             Platform.runLater(() -> mainSplitPane.setDividerPosition(0, savedSidebarDivider));
         } else {
-            // Collapse: save position, then push divider to 0
+            // Save the divider before collapsing the sidebar completely.
             if (mainSplitPane.getDividerPositions().length > 0) {
                 savedSidebarDivider = mainSplitPane.getDividerPositions()[0];
             }
@@ -2258,10 +2317,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     private void onToggleConsole() {
         if (consoleShell == null || viewportConsoleSplit == null) return;
         if (toggleConsoleItem.isSelected()) {
-            // Restore: reposition divider after the current layout pass
+            // Restore the saved divider position after the current layout pass.
             Platform.runLater(() -> viewportConsoleSplit.setDividerPosition(0, savedConsoleDivider));
         } else {
-            // Collapse: save position, then push divider to 1.0
+            // Save the divider before collapsing the console completely.
             if (viewportConsoleSplit.getDividerPositions().length > 0) {
                 savedConsoleDivider = viewportConsoleSplit.getDividerPositions()[0];
             }
@@ -2269,18 +2328,24 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Console
-    // ------------------------------------------------------------------ //
-
+    // Console and Configuration
     @FXML
     private void onClearConsole() {
         if (consoleArea != null) consoleArea.clear();
+        AppState.setSimulationConsoleText("");
     }
 
     @FXML
     private void onSaveConfig() {
-        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration");
+        ScreenNavigator.openDialog(ScreenNavigator.DIALOG_SAVE_CONFIG, "Save Configuration", ctrl -> {
+            if (ctrl instanceof SaveConfigController scc) {
+                SimulationEngine engine = AppState.getEngine();
+                String runName = engine != null ? engine.getRunName() : null;
+                if (runName != null && !runName.isEmpty()) {
+                    scc.setDefaultFileName(runName);
+                }
+            }
+        });
     }
 
     @FXML
@@ -2292,8 +2357,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         java.io.File file = lcc.getSelectedFile();
         if (file == null) return;
 
-        // Full reset: stop the loop, clear transient editor state, drop undo/redo,
-        // then rebuild the engine from the chosen file.
+        // Clear transient editor state before rebuilding the engine from the chosen file.
         stopLoop();
         running = false;
         paused = false;
@@ -2302,6 +2366,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         selectedEntity = null;
         undoStack.clear();
         redoStack.clear();
+        clearPersistedOutputState();
 
         SimulationEngine loaded = new SimulationEngine(file.getAbsolutePath());
         if (loaded == null || loaded.getMap() == null || loaded.getInitError() != null) {
@@ -2329,12 +2394,18 @@ public class SimulationController implements ScreenNavigator.Cleanable {
 
     private void log(String message) {
         System.out.println("[SimulationController] " + message);
-        if (consoleArea != null) consoleArea.appendText(message + "\n");
+        if (consoleArea != null) {
+            consoleArea.appendText(message + "\n");
+            AppState.setSimulationConsoleText(consoleArea.getText());
+        } else {
+            String existing = AppState.getSimulationConsoleText();
+            AppState.setSimulationConsoleText((existing == null ? "" : existing) + message + "\n");
+        }
     }
 
+    // Database Logging
     /**
-     * Asynchronously fetches simulation logs from the database using a background thread to
-     * avoid blocking/glitching the UI
+     * Fetches simulation logs on a background thread to avoid blocking the UI.
      */
     public void fetchLogsAsync() {
         if (engine == null) return;
@@ -2354,9 +2425,10 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         };
 
         task.setOnSucceeded(e -> {
+            // onSucceeded runs on the FX thread, so it is safe to append directly to the log area here.
             List<SimLogRecord> logs = (List<SimLogRecord>) task.getValue();
             long start = System.currentTimeMillis();
-            updateLogsArea(logs); // safe: runs on UI thread
+            updateLogsArea(logs);
             System.out.println("[SimulationController] Updated sim log area in " + (System.currentTimeMillis() - start) + " ms.");
         });
 
@@ -2364,11 +2436,11 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             task.getException().printStackTrace();
         });
 
-        executor.submit(task); // runs the task on a background thread
+        executor.submit(task);
     }
 
     /**
-     * Synchronously fetches simulation logs from the database and updates the logs area.
+     * Fetches simulation logs synchronously and updates the log area.
      */
     public void fetchLogsSync() {
         if (engine == null) return;
@@ -2385,10 +2457,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
-    /**
-     * Updates the logs area with the provided list of SimLogRecords.
-     * @param logs the list of SimLogRecords to display, or null if an error occurred during fetching
-     */
+    // Append only the newly fetched log rows and advance the database cursor.
     private void updateLogsArea(List<SimLogRecord> logs) {
         if (logs == null || logs.isEmpty()) return;
 
@@ -2399,13 +2468,58 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             lastSeenLogId = log.getId();
         }
 
-        logArea.appendText(sb.toString());
+        if (logArea != null) {
+            logArea.appendText(sb.toString());
+            AppState.setSimulationLogText(logArea.getText());
+        } else {
+            String existing = AppState.getSimulationLogText();
+            AppState.setSimulationLogText((existing == null ? "" : existing) + sb);
+        }
+        AppState.setSimulationLogCursor(lastSeenLogId);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Navigation & Menu
-    // ------------------------------------------------------------------ //
+    private boolean restorePersistedOutputState() {
+        lastSeenLogId = AppState.getSimulationLogCursor();
+        localTick = AppState.getSimulationTick();
 
+        boolean restored = false;
+
+        if (tickDisplayLabel != null) tickDisplayLabel.setText("TICK " + localTick);
+        if (consoleArea != null && AppState.getSimulationConsoleText() != null) {
+            consoleArea.setText(AppState.getSimulationConsoleText());
+            restored = restored || !consoleArea.getText().isBlank();
+        }
+        if (logArea != null && AppState.getSimulationLogText() != null) {
+            logArea.setText(AppState.getSimulationLogText());
+            restored = restored || !logArea.getText().isBlank();
+        }
+        return restored;
+    }
+
+    private void persistOutputState() {
+        if (consoleArea != null) {
+            AppState.setSimulationConsoleText(consoleArea.getText());
+        }
+        if (logArea != null) {
+            AppState.setSimulationLogText(logArea.getText());
+        }
+        AppState.setSimulationLogCursor(lastSeenLogId);
+    }
+
+    private void clearPersistedOutputState() {
+        if (consoleArea != null) {
+            consoleArea.clear();
+        }
+        if (logArea != null) {
+            logArea.clear();
+        }
+        AppState.setSimulationConsoleText("");
+        AppState.setSimulationLogText("");
+        AppState.setSimulationLogCursor(0);
+        lastSeenLogId = 0;
+    }
+
+    // Navigation
     @FXML private void onTabEditor() {
         if (editorTabBtn  != null) { editorTabBtn.getStyleClass().setAll("tab-btn-active");  }
         if (resultsTabBtn != null) { resultsTabBtn.getStyleClass().setAll("tab-btn"); }
@@ -2446,10 +2560,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         if (ScreenNavigator.confirmExit()) javafx.application.Platform.exit();
     }
 
-    /**
-     * Toggles the shortcut reference overlay on/off.
-     * The overlay sits inside viewportStack so it floats above the canvas.
-     */
     @FXML
     private void onToggleShortcutOverlay() {
         boolean nowVisible = !shortcutOverlay.isVisible();
@@ -2457,11 +2567,8 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         shortcutOverlay.setManaged(nowVisible);
     }
 
-    /**
-     * Updates any pending tasks whose pickup or dropoff location matches {@code oldPos}
-     * to use {@code newPos} instead. Called whenever an entity is moved in the editor
-     * so that tasks remain aligned with the actual rack/station positions on the map.
-     */
+    // Editor Persistence
+    // Keep queued tasks aligned when their source entity moves in the editor.
     private void syncTaskPositions(Vector2D oldPos, Vector2D newPos) {
         if (engine == null || engine.getDispatcher() == null) return;
         int updated = 0;
@@ -2479,30 +2586,39 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
         if (updated > 0) {
             log("Updated " + updated + " task(s) to reflect entity move from " + oldPos + " → " + newPos + ".");
-            populateOutliner(); // refresh task list in the outliner
+            populateOutliner();
         }
     }
 
-    /**
-     * Saves the current engine state to a temp file and updates
-     * so that pressing Play (or Restart) always uses the latest editor layout, including
-     * any rack/entity moves made before the simulation has started.
-     */
+    // Save the latest pre-run editor state so play and restart reload the current layout.
     private void persistEditorChanges() {
-        if (engine == null || running) return; // never overwrite a running sim
+        if (engine == null || running) return;
         try {
-            // Reuse the existing snapshot file if one already exists, otherwise create fresh
-            String savePath = initialSnapshotPath != null ? initialSnapshotPath : AppState.getConfigPath();
+            // Reuse the existing snapshot file when possible.
+            String savePath = resolveReloadPath();
             if (savePath == null) {
                 java.io.File tmp = java.io.File.createTempFile("openrobotics_editor_", ".json");
                 tmp.deleteOnExit();
                 savePath = tmp.getAbsolutePath();
                 initialSnapshotPath = savePath;
             }
+            // Keep restart/play anchored to the latest editable layout rather than the original import.
             engine.configSaving(savePath);
+            initialSnapshotPath = savePath;
+            AppState.setEditorBaselinePath(savePath);
         } catch (Exception ex) {
             log("\u26a0 Could not auto-save editor changes: " + ex.getMessage());
         }
+    }
+
+    private String resolveReloadPath() {
+        if (initialSnapshotPath != null && !initialSnapshotPath.isBlank()) {
+            return initialSnapshotPath;
+        }
+        if (AppState.hasEditorBaselinePath()) {
+            return AppState.getEditorBaselinePath();
+        }
+        return AppState.getConfigPath();
     }
 
     private void updateRamLabel() {
@@ -2512,18 +2628,19 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         }
     }
 
+    // Shutdown
     /**
-     * Performs necessary cleanup when the application is closing
+     * Performs controller shutdown cleanup before the application closes.
      */
     public void shutdown() {
-        // stop log polling timeline
+        // Stop polling first so no new background work is queued during shutdown.
         if (logPollingTimeline != null) {
             logPollingTimeline.stop();
         }
 
-        // shutdown the executor to stop any ongoing log fetching tasks
+        // Interrupt any in-flight log fetches after polling is stopped.
         executor.shutdownNow();
 
-        Logger.flushRobotEvents(); // ensure all logs are flushed before shutdown
+        Logger.flushRobotEvents();
     }
 }

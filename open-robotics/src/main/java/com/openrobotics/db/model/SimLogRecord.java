@@ -2,7 +2,7 @@ package com.openrobotics.db.model;
 
 import java.util.UUID;
 
-/** database record for the sim_logs table */
+/** Database record for the {@code sim_logs} table. */
 public class SimLogRecord {
 
     private Long id;

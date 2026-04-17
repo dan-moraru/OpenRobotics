@@ -19,15 +19,23 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RandomNavigationTest {
 
+    /** Shared map fixture reinitialized before each test. */
     private Map map;
+    /** Strategy under test. */
     private RandomNavigation strategy;
 
+    /**
+     * Initializes a fresh open map and navigation strategy for each test case.
+     */
     @BeforeEach
     public void setUp() {
         map = new Map(10, 10);
         strategy = new RandomNavigation();
     }
 
+    /**
+     * Creates a robot fixture at a specific tile.
+     */
     private Robot makeRobot(int x, int y) {
         return new Robot("RandomBot", new Vector2D(x, y));
     }

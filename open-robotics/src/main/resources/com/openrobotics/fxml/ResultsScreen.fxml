@@ -54,8 +54,9 @@
             </HBox>
 
             <!-- Tab strip (same structure as SimulationScreen) -->
+            <!-- minWidth matches SimulationScreen: BACK button (~80px) + 8px gap + 232px = 320px -->
             <HBox alignment="CENTER_LEFT" styleClass="tab-strip sim-tab-strip">
-                <Region minWidth="232.0" />
+                <Region minWidth="320.0" />
                 <Button onAction="#onTabEditor" styleClass="tab-btn" text="EDITOR" />
                 <Button onAction="#onTabResults" styleClass="tab-btn-active" text="RESULTS" />
             </HBox>

@@ -14,13 +14,20 @@ import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
-/** detects and resolves same-target and swap conflicts among move intentions each tick */
+/** Detects and resolves same-target and swap conflicts among move intentions each tick. */
 public class CollisionManager {
     // legal checks:
     // - no null intention/from/to
     // - robot id must be present
     // - one tile per tick max by Manhattan distance
     //   and distance 0 means wait/non move, which is fine
+    /**
+     * Returns {@code true} if the intention is structurally valid for this tick.
+     * A legal intention has non-null robot, from-tile, and to-tile, and moves at most one Manhattan step.
+     *
+     * @param intention the move intention to validate
+     * @return {@code true} if the intention is legal; {@code false} otherwise
+     */
     public boolean isLegalIntention(MoveIntention intention) {
         if (intention == null ||
                 intention.getRobot() == null ||
@@ -55,10 +62,24 @@ public class CollisionManager {
         return tile.allowsRobotOverlap();
     }
 
+    /**
+     * Resolves conflicts without map context; same-target and swap conflicts are still detected.
+     *
+     * @param intentions the raw move intentions for this tick
+     * @return the approved subset of intentions with conflicts removed
+     */
     public MoveIntention[] resolveConflicts(MoveIntention[] intentions) {
         return resolveConflicts(null, intentions);
     }
 
+    /**
+     * Resolves same-target, starting-tile occupancy, and swap conflicts among all submitted intentions.
+     * Robots blocked by a dead robot's tile are also held. Returns only the approved intentions.
+     *
+     * @param map the current warehouse map, used to detect dead-robot tile occupancy; may be {@code null}
+     * @param intentions the raw move intentions for this tick
+     * @return the approved subset of intentions with all detected conflicts removed
+     */
     public MoveIntention[] resolveConflicts(com.openrobotics.map.Map map, MoveIntention[] intentions) {
         if (intentions == null || intentions.length == 0) {
             return new MoveIntention[0];

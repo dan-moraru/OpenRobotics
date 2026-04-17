@@ -3,12 +3,13 @@ package com.openrobotics.simulationcore;
 import com.openrobotics.map.Map;
 import com.openrobotics.map.Tile;
 import com.openrobotics.robot.Robot;
+import com.openrobotics.robot.RobotState;
 
 import java.util.*;
 
 /**
- * traffic-rules coordination policy; grants exclusive access to marked intersection tiles one robot at a time,
- * using a priority queue ordered by wait time and load status
+ * Traffic-rules coordination policy; grants exclusive access to marked intersection tiles one robot at a time,
+ * using a priority queue ordered by wait time and load status.
  */
 public class TrafficRulesPolicy implements CoordinationPolicy {
     private final Set<Tile> intersections;
@@ -20,6 +21,11 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
     // The robot currently inside the intersection area, if any.
     private UUID activeIntersectionRobotId;
 
+    /**
+     * Creates a traffic-rules policy with the given set of intersection tiles.
+     *
+     * @param intersectionTiles the tiles that require exclusive access; {@code null} is treated as empty
+     */
     public TrafficRulesPolicy(Set<Tile> intersectionTiles) {
         this.intersections = (intersectionTiles == null)
                 ? new HashSet<>()
@@ -51,6 +57,12 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
             UUID robotId = robot.getId();
 
             if (!hasTiles(intention)) {
+                result.add(intention);
+                continue;
+            }
+
+            if (robot.getState() == RobotState.BATTERY_DEAD) {
+                clearRobotCoordinationState(robot);
                 result.add(intention);
                 continue;
             }
@@ -156,6 +168,11 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
             return;
         }
 
+        if (owner.getState() == RobotState.BATTERY_DEAD) {
+            activeIntersectionRobotId = null;
+            return;
+        }
+
         if (owner.getPosition() == null) {
             activeIntersectionRobotId = null;
             return;
@@ -214,8 +231,30 @@ public class TrafficRulesPolicy implements CoordinationPolicy {
         return intentions;
     }
 
+    /**
+     * Returns a copy of the registered intersection tiles.
+     *
+     * @return a new set containing the current intersection tiles
+     */
     public Set<Tile> getIntersectionTiles() {
         return new HashSet<>(intersections);
+    }
+
+    @Override
+    public void clearRobotCoordinationState(Robot robot) {
+        if (robot == null) {
+            return;
+        }
+
+        UUID robotId = robot.getId();
+        if (robotId == null) {
+            return;
+        }
+
+        intersectionQueue.remove(robotId);
+        if (robotId.equals(activeIntersectionRobotId)) {
+            activeIntersectionRobotId = null;
+        }
     }
 
     private boolean hasTiles(MoveIntention intention) {

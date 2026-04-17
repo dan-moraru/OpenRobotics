@@ -11,19 +11,12 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.sql.SQLException;
 
-/**
- * Application entry point.
- *
- * <p>Initialises the primary {@link Stage}, registers it with
- * {@link ScreenNavigator}, and navigates to the Welcome screen.
- * All subsequent screen transitions are handled by {@link ScreenNavigator}.
- */
+/** Application entry point; initialises the primary stage, connects to the database, and navigates to the welcome screen. */
 public class MainApp extends Application {
-    private SimulationController controller;
+    private SimulationController controller; 
 
     @Override
     public void init() {
-        // Database initialization
         try {
             Database.init();
             System.out.println("Database initialized successfully.");
@@ -46,7 +39,6 @@ public class MainApp extends Application {
 
     @Override
     public void stop() {
-        // Clean up resources
         try {
             Database.shutdown();
             System.out.println("Database connection closed successfully.");
@@ -54,7 +46,7 @@ public class MainApp extends Application {
             System.err.println("Database shutdown failure: " + e.getMessage());
         }
 
-        // Shutdown sim controller threads
+        // shut down the simulation controller if it is the active screen
         Object controller = ScreenNavigator.getCurrentController();
 
         if (controller instanceof SimulationController simController) {
@@ -64,6 +56,11 @@ public class MainApp extends Application {
         System.out.println("Shutdown complete.");
     }
 
+    /**
+     * Launches the JavaFX application.
+     *
+     * @param args command-line arguments forwarded to {@link javafx.application.Application#launch}.
+     */
     public static void main(String[] args) {
         launch(args);
     }

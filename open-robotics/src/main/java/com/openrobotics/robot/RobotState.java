@@ -1,11 +1,11 @@
 package com.openrobotics.robot;
 
-/** robot state machine states (design doc 3.4.3) */
+/** Robot state machine states (design doc 3.4.3). */
 public enum RobotState {
-    IDLE, // no task, waiting for assignment
+    IDLE,         // no task, waiting for assignment
     BATTERY_DEAD, // battery depleted, unable to move
-    MOVING, // navigating toward pickup or dropoff location
-    LOADING, // robot is at a rack picking up a box
-    UNLOADING, // robot is at delivery station, dropping off box
-    CHARGING, // replenishing battery
+    MOVING,       // navigating toward pickup or dropoff location
+    LOADING,      // robot is at a rack picking up a box
+    UNLOADING,    // robot is at delivery station, dropping off box
+    CHARGING,     // replenishing battery
 }
