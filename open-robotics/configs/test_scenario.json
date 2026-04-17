@@ -61,7 +61,7 @@
     } ],
     "stations" : [ {
       "id" : "00000000-0000-0000-0000-000000000010",
-      "name" : "Pickup-A",
+      "name" : "Delivery-A",
       "position" : {
         "x" : 0,
         "y" : 4
