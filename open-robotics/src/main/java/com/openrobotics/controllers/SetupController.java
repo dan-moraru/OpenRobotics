@@ -124,8 +124,7 @@ public class SetupController {
                     AppState.clear();
                     configListView.getSelectionModel().clearSelection();
                 }
-                canvasWidthSpinner.setDisable(false);
-                canvasHeightSpinner.setDisable(false);
+                setConfigParamsDisabled(false);
                 autoSetCanvasForMap(n);
             }
             refreshPreview();
@@ -197,8 +196,7 @@ public class SetupController {
                 if (success) {
                     // Config-backed maps own their dimensions, so clear the template selection.
                     mapCombo.getSelectionModel().clearSelection();
-                    canvasWidthSpinner.setDisable(true);
-                    canvasHeightSpinner.setDisable(true);
+                    setConfigParamsDisabled(true);
                     refreshPreview();
                     checkCanvasConstraint();
                 }
@@ -222,6 +220,9 @@ public class SetupController {
 
     // Reset Actions
     @FXML private void onResetMap() {
+        AppState.clear();
+        configListView.getSelectionModel().clearSelection();
+        setConfigParamsDisabled(false);
         mapCombo.getSelectionModel().selectFirst();
         refreshPreview();
         checkCanvasConstraint();
@@ -269,8 +270,7 @@ public class SetupController {
         if (isConfigFile && previewMap != null) {
             cw = previewMap.getWidth();
             ch = previewMap.getHeight();
-            canvasWidthSpinner.setDisable(true);
-            canvasHeightSpinner.setDisable(true);
+            setConfigParamsDisabled(true);
         }
 
         double padding = 16;
@@ -674,6 +674,8 @@ public class SetupController {
     @FXML
     private void onLoadConfig() {
         if (promptAndLoadConfig()) {
+            mapCombo.getSelectionModel().clearSelection();
+            setConfigParamsDisabled(true);
             refreshPreview();
             checkCanvasConstraint();
         }
@@ -1092,9 +1094,48 @@ public class SetupController {
         }));
     }
 
+    /**
+     * Disables or re-enables all user-editable parameters on the setup screen.
+     * Called with {@code true} whenever a config file is loaded and with {@code false} when switching back to a template map.
+     * The reservationK spinner has its own separate policy-driven disable logic
+     */
+    private void setConfigParamsDisabled(boolean disabled) {
+
+        // Coordination policy
+        policyCombo.setDisable(disabled);
+        if (!disabled) {
+            // Re-evaluate the policy-driven disable for reservationK
+            reservationKSpinner.setDisable(!"RESERVATION_K".equals(policyCombo.getValue()));
+        } else {
+            reservationKSpinner.setDisable(true);
+        }
+
+        // Task settings
+        if (autoTaskRadio  != null) autoTaskRadio.setDisable(disabled);
+        if (manualTaskRadio != null) manualTaskRadio.setDisable(disabled);
+        maxTasksField.setDisable(disabled);
+        workloadSeedField.setDisable(disabled);
+
+        // Robot physics
+        setDisableIfPresent(batteryCapacityField, disabled);
+        setDisableIfPresent(lowBatteryField, disabled);
+        setDisableIfPresent(chargePerTickField, disabled);
+        setDisableIfPresent(energyPerMoveField, disabled);
+
+        // Run settings
+        maxTicksField.setDisable(disabled);
+        runNameField.setDisable(disabled);
+
+        // Canvas size
+        canvasWidthSpinner.setDisable(disabled);
+        canvasHeightSpinner.setDisable(disabled);
+    }
+
+    private void setDisableIfPresent(TextField field, boolean disabled) {
+        if (field != null) field.setDisable(disabled);
+    }
+
     // Navigation
-    @FXML
-    private void onTabEditor() { /* already on setup/editor screen */ }
 
     @FXML
     private void onMenuWelcome() { ScreenNavigator.goToWelcome(); }

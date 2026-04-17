@@ -10,7 +10,9 @@
     "chargePerTick" : 5.0,
     "energyPerMove" : 1.0,
     "loadingTicks" : 1,
-    "unloadingTicks" : 1
+    "unloadingTicks" : 1,
+    "maxTasks" : 10,
+    "manualTaskAssignment" : false
   },
   "map" : {
     "mapId" : "e8b76c63-4505-499e-8070-4eb32d17b96e",
@@ -93,7 +95,8 @@
       },
       "type" : null,
       "boxCount" : 1,
-      "validDropoffIds" : null
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
     }, {
       "id" : "2222aaaa-2222-4222-a222-222222222222",
       "name" : "Rack-02",
@@ -103,7 +106,8 @@
       },
       "type" : null,
       "boxCount" : 1,
-      "validDropoffIds" : null
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
     }, {
       "id" : "3333aaaa-3333-4333-a333-333333333333",
       "name" : "Rack-03",
@@ -113,7 +117,8 @@
       },
       "type" : null,
       "boxCount" : 1,
-      "validDropoffIds" : null
+      "validDropoffIds" : null,
+      "manualDropoffAssignment" : false
     } ],
     "obstacles" : [ {
       "id" : "f0000000-0000-4000-a000-000000000001",
