@@ -117,7 +117,7 @@
     } ],
     "obstacles" : [ {
       "id" : "f0000000-0000-4000-a000-000000000001",
-      "name" : "Shelf-L1",
+      "name" : "Wall-L1",
       "position" : {
         "x" : 4,
         "y" : 3
@@ -125,7 +125,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000002",
-      "name" : "Shelf-L2",
+      "name" : "Wall-L2",
       "position" : {
         "x" : 4,
         "y" : 4
@@ -133,7 +133,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000003",
-      "name" : "Shelf-L3",
+      "name" : "Wall-L3",
       "position" : {
         "x" : 4,
         "y" : 5
@@ -141,7 +141,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000004",
-      "name" : "Shelf-L4",
+      "name" : "Wall-L4",
       "position" : {
         "x" : 4,
         "y" : 6
@@ -149,7 +149,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000005",
-      "name" : "Shelf-R1",
+      "name" : "Wall-R1",
       "position" : {
         "x" : 7,
         "y" : 3
@@ -157,7 +157,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000006",
-      "name" : "Shelf-R2",
+      "name" : "Wall-R2",
       "position" : {
         "x" : 7,
         "y" : 4
@@ -165,7 +165,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000007",
-      "name" : "Shelf-R3",
+      "name" : "Wall-R3",
       "position" : {
         "x" : 7,
         "y" : 5
@@ -173,7 +173,7 @@
       "type" : null
     }, {
       "id" : "f0000000-0000-4000-a000-000000000008",
-      "name" : "Shelf-R4",
+      "name" : "Wall-R4",
       "position" : {
         "x" : 7,
         "y" : 6
