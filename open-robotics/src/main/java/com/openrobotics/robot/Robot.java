@@ -18,6 +18,7 @@ import com.openrobotics.robot.sensors.SensorStrategy;
 import com.openrobotics.task.Task;
 import com.openrobotics.task.TaskStatus;
 import com.openrobotics.map.Vector2D;
+import com.openrobotics.common.Direction;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -42,6 +43,7 @@ public class Robot extends MapEntity {
     private boolean rerouteAttemptedForCurrentTask; // one reroute budget per task
     private Vector2D rerouteAvoidTile; // temporary avoid hint used by the next planning attempt
     private Vector2D lastRequestedNextTile; // raw pre-coordination next tile requested this tick
+    private Direction heading = Direction.DOWN; // last movement direction, default south
 
     // lifetime stats — accumulated during update(), read by results screen
     private int totalDistanceMoved;
@@ -106,6 +108,9 @@ public class Robot extends MapEntity {
     public SensorStrategy getSensor() { return sensor; }
     public Sensor getLastScan() { return lastScan; }
     public RobotState getState() { return state; }
+    public Direction getHeading() { return heading; }
+    /** True when the robot has picked up a box and is carrying it to the dropoff. */
+    public boolean isCarrying() { return hasPickedUp && currentTask != null; }
     public Task getCurrentTask() { return currentTask; }
     public int getStuckTicks() { return stuckTicks; }
     public Vector2D getPreviousPosition() { return previousPosition; }
@@ -396,6 +401,13 @@ public class Robot extends MapEntity {
                     totalEnergyConsumed += config.energyPerMove;
                     totalDistanceMoved++;
                     stuckTicks = 0;
+                    // update facing direction from movement delta
+                    int hdx = getPosition().getX() - previousPosition.getX();
+                    int hdy = getPosition().getY() - previousPosition.getY();
+                    if      (hdx > 0) heading = Direction.RIGHT;
+                    else if (hdx < 0) heading = Direction.LEFT;
+                    else if (hdy > 0) heading = Direction.DOWN;
+                    else if (hdy < 0) heading = Direction.UP;
 
                     // Logging robot movement execution event
                     SimLogRecordBuilder movementRecordBuilder = new SimLogRecordBuilder(AppState.getEngine().getRunId(), AppState.getEngine().getTickCounter(), getId(), getPosition().getX(), getPosition().getY());

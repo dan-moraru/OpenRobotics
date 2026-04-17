@@ -24,6 +24,8 @@ import com.openrobotics.simulationcore.SimulationEngine;
 import com.openrobotics.simulationcore.SimulationError;
 import com.openrobotics.task.Task;
 import com.openrobotics.util.IconLoader;
+import com.openrobotics.util.ConnectedWallRenderer;
+import com.openrobotics.util.RobotSpriteAnimator;
 import com.openrobotics.util.ScreenNavigator;
 import com.openrobotics.util.ViewportTips;
 import javafx.application.Platform;
@@ -160,6 +162,7 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // Engine Binding
     private SimulationEngine engine;
     private Timeline         simLoop;
+    private javafx.animation.AnimationTimer renderLoop; // drives continuous sprite animation
     private double           speedFactor  = 1.0;
     private int              localTick    = 0;
     private static final double BASE_TICK_MS = 100.0;
@@ -368,6 +371,20 @@ public class SimulationController implements ScreenNavigator.Cleanable {
     // Initialization
     @FXML
     private void initialize() {
+        // Continuous render loop so sprite animations cycle smoothly (~30 fps target).
+        long[] lastRender = {0};
+        renderLoop = new javafx.animation.AnimationTimer() {
+            @Override public void handle(long now) {
+                if (now - lastRender[0] > 33_000_000L) { // ~30 fps
+                    drawViewport();
+                    lastRender[0] = now;
+                }
+            }
+        };
+        renderLoop.start();
+        RobotSpriteAnimator.ensureLoaded();
+        ConnectedWallRenderer.ensureLoaded();
+
         // Poll fresh simulation logs once per second while the screen is active.
         logPollingTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> fetchLogsAsync())
@@ -599,9 +616,19 @@ public class SimulationController implements ScreenNavigator.Cleanable {
         double tileSize = 32 * zoom;
         double pad = Math.max(1.0, tileSize * 0.06);
 
-        for (MapEntity entity : engine.getMap().getEntities()) {
-            double ex = entity.getPosition().getX();
-            double ey = entity.getPosition().getY();
+        // Two-pass: draw non-robots first so robots always appear on top
+        java.util.List<MapEntity> entities = engine.getMap().getEntities();
+        java.util.List<MapEntity> robots = new java.util.ArrayList<>();
+        for (MapEntity entity : entities) {
+            if (entity instanceof Robot) robots.add(entity);
+            else drawEntity(gc, entity, tileSize, pad);
+        }
+        for (MapEntity entity : robots) drawEntity(gc, entity, tileSize, pad);
+    }
+
+    private void drawEntity(GraphicsContext gc, MapEntity entity, double tileSize, double pad) {
+        double ex = entity.getPosition().getX();
+        double ey = entity.getPosition().getY();
 
             // Interpolate robot sprites between ticks so movement appears continuous.
             if (animating && entity instanceof Robot && prevRobotPositions.containsKey(entity.getId())) {
@@ -613,52 +640,66 @@ public class SimulationController implements ScreenNavigator.Cleanable {
             double sx = viewOffsetX + (ex + entityOffsetTileX) * tileSize;
             double sy = viewOffsetY + (ey + entityOffsetTileY) * tileSize;
 
-            javafx.scene.image.Image entityIcon = resolveEntityIcon(entity);
-            boolean useFullTileIcon = isWallLikeEntity(entity);
-            if (entityIcon != null && !entityIcon.isError()) {
-                if (useFullTileIcon) {
-                    gc.drawImage(entityIcon, sx, sy, tileSize, tileSize);
-                } else {
-                    gc.drawImage(entityIcon, sx + pad, sy + pad, tileSize - 2 * pad, tileSize - 2 * pad);
-                }
-            } else if (entity instanceof Robot robot) {
-                gc.setFill(ENTITY_ROBOT_COLOR);
-                gc.fillRoundRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad, 5, 5);
-                Color dot = switch (robot.getState()) {
-                    case MOVING             -> ENTITY_STATE_MOVING_COLOR;
-                    case CHARGING           -> ENTITY_STATE_CHARGING_COLOR;
-                    case LOADING, UNLOADING -> ENTITY_STATE_LOADING_COLOR;
-                    default                 -> ENTITY_STATE_IDLE_COLOR;
+            // ── 1. Animated robot sprite ─────────────────────────────────
+            if (entity instanceof Robot robot) {
+                javafx.scene.image.Image frame = switch (robot.getState()) {
+                    case MOVING -> RobotSpriteAnimator.walkFrame(robot.getHeading(), robot.isCarrying());
+                    default     -> RobotSpriteAnimator.idleFrame(robot.getHeading());
                 };
-                gc.setFill(dot);
-                double r = Math.max(3.0, tileSize * 0.15);
-                gc.fillOval(sx + tileSize - r * 2 - pad, sy + pad, r * 2, r * 2);
-            } else if (entity instanceof Rack) {
-                gc.setFill(ENTITY_RACK_COLOR);
-                gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
-            } else if (entity instanceof Station) {
-                gc.setFill(ENTITY_STATION_COLOR);
-                gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
-            } else if (entity instanceof Obstacle) {
-                gc.setFill(ENTITY_OBSTACLE_COLOR);
-                gc.fillRect(sx, sy, tileSize, tileSize);
-            } else {
-                // Engine stores all non-robot entities as plain MapEntity;
-                // infer visual type from name so items are colour-coded.
-                String n = entity.getName().toLowerCase();
-                boolean isWall = n.contains("wall") || n.contains("obstacle");
-                if (n.contains("rack") || n.contains("shelf")) {
-                    gc.setFill(ENTITY_RACK_COLOR);
-                } else if (n.contains("station") || n.contains("charge") || n.contains("depot")
-                        || n.contains("pickup") || n.contains("delivery")) {
-                    gc.setFill(ENTITY_STATION_COLOR);
-                } else if (isWall) {
-                    gc.setFill(ENTITY_OBSTACLE_COLOR);
+                if (frame != null) {
+                    gc.drawImage(frame, sx + pad, sy + pad, tileSize - 2 * pad, tileSize - 2 * pad);
                 } else {
-                    gc.setFill(ENTITY_FALLBACK_COLOR);
+                    gc.setFill(ENTITY_ROBOT_COLOR);
+                    gc.fillRoundRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad, 5, 5);
+                    Color dot = switch (robot.getState()) {
+                        case MOVING             -> ENTITY_STATE_MOVING_COLOR;
+                        case CHARGING           -> ENTITY_STATE_CHARGING_COLOR;
+                        case LOADING, UNLOADING -> ENTITY_STATE_LOADING_COLOR;
+                        default                 -> ENTITY_STATE_IDLE_COLOR;
+                    };
+                    gc.setFill(dot);
+                    double r = Math.max(3.0, tileSize * 0.15);
+                    gc.fillOval(sx + tileSize - r * 2 - pad, sy + pad, r * 2, r * 2);
                 }
-                if (isWall) gc.fillRect(sx, sy, tileSize, tileSize);
-                else        gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+
+            // ── 2. Connected wall / obstacle ─────────────────────────────
+            } else if (entity instanceof Obstacle || ConnectedWallRenderer.isWallLike(entity)) {
+                ConnectedWallRenderer.draw(gc, sx, sy, tileSize, entity, engine.getMap());
+
+            // ── 3. Animated charger sprite ───────────────────────────────
+            } else if (entity instanceof com.openrobotics.map.entities.station.ChargingStation) {
+                javafx.scene.image.Image frame = RobotSpriteAnimator.chargerFrame();
+                if (frame != null) {
+                    gc.drawImage(frame, sx + pad, sy + pad, tileSize - 2 * pad, tileSize - 2 * pad);
+                } else {
+                    javafx.scene.image.Image icon = resolveEntityIcon(entity);
+                    if (icon != null && !icon.isError())
+                        gc.drawImage(icon, sx + pad, sy + pad, tileSize - 2 * pad, tileSize - 2 * pad);
+                }
+
+            // ── 4. Everything else: static icon then colour fallback ──────
+            } else {
+                javafx.scene.image.Image icon = resolveEntityIcon(entity);
+                if (icon != null && !icon.isError()) {
+                    gc.drawImage(icon, sx + pad, sy + pad, tileSize - 2 * pad, tileSize - 2 * pad);
+                } else if (entity instanceof Rack) {
+                    gc.setFill(ENTITY_RACK_COLOR);
+                    gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+                } else if (entity instanceof Station) {
+                    gc.setFill(ENTITY_STATION_COLOR);
+                    gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+                } else {
+                    String n = entity.getName() == null ? "" : entity.getName().toLowerCase();
+                    if (n.contains("rack") || n.contains("shelf"))
+                        gc.setFill(ENTITY_RACK_COLOR);
+                    else if (n.contains("station") || n.contains("charge") ||
+                             n.contains("depot")   || n.contains("pickup") ||
+                             n.contains("delivery"))
+                        gc.setFill(ENTITY_STATION_COLOR);
+                    else
+                        gc.setFill(ENTITY_FALLBACK_COLOR);
+                    gc.fillRect(sx + pad, sy + pad, tileSize - 2*pad, tileSize - 2*pad);
+                }
             }
 
             if (zoom >= 0.8 && tileSize >= 18) {
@@ -668,9 +709,13 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 String lbl = entity.getName().length() > maxChars
                         ? entity.getName().substring(0, maxChars - 1) + "\u2026"
                         : entity.getName();
-                gc.setFill(ENTITY_LABEL_COLOR);
-                gc.setFont(Font.font(fontSize));
+                // Draw label using DIFFERENCE blend mode with white — inverts whatever is beneath
+                gc.save();
+                gc.setGlobalBlendMode(javafx.scene.effect.BlendMode.DIFFERENCE);
+                gc.setFill(Color.WHITE);
+                gc.setFont(Font.font("System Bold", fontSize));
                 gc.fillText(lbl, sx + pad + 1, sy + tileSize - pad - 2, maxLabelWidth);
+                gc.restore();
             }
 
             // Green outline for the currently selected entity
@@ -686,7 +731,6 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 gc.setLineWidth(Math.max(2.0, tileSize * 0.1));
                 gc.strokeRect(sx + 1, sy + 1, tileSize - 2, tileSize - 2);
             }
-        }
     }
 
     private void drawTrafficRuleIntersections(GraphicsContext gc) {
@@ -1118,10 +1162,12 @@ public class SimulationController implements ScreenNavigator.Cleanable {
                 MapEntity entityHit = entityAtScreenPos(e.getX(), e.getY());
                 if (entityHit != null) {
                     selectEntity(entityHit);
-                    draggingOnCanvas = entityHit;
-                    dragStartPosition = new com.openrobotics.map.Vector2D(
-                            (int) entityHit.getPosition().getX(),
-                            (int) entityHit.getPosition().getY());
+                    if (!isEditorLocked()) {
+                        draggingOnCanvas = entityHit;
+                        dragStartPosition = new com.openrobotics.map.Vector2D(
+                                (int) entityHit.getPosition().getX(),
+                                (int) entityHit.getPosition().getY());
+                    }
                 } else {
                     clearSelection();
                     draggingOnCanvas = null;
